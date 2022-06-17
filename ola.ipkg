@@ -43,6 +43,17 @@ modules = Ola.Types
 
         , Ola.Exec
 
+        , Ola.Syntax.Types
+        , Ola.Syntax.Exprs
+        , Ola.Syntax.Stmts
+        , Ola.Syntax.Funcs
+        , Ola.Syntax.Progs
+
+        , Ola.Lexer.Token
+        , Ola.Lexer
+
+        , Ola.Parser.API
+        , Ola.Parser
         , Example
 
 -- [ EOF ]

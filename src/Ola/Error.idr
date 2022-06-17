@@ -12,11 +12,9 @@ import Toolkit.System
 import Toolkit.Text.Parser.Run
 
 import Ola.Types
--- import Ola.Lexer --@TODO
+import Ola.Lexer.Token
 
 %default total
-
-data Token : Type where -- @TODO
 
 namespace Generic -- @TODO Pull out to Toolkit?
 

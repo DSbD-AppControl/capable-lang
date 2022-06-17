@@ -16,14 +16,11 @@ import Toolkit.Text.Parser.Run
 
 import Ola.Types
 import Ola.Error
--- import Ola.Lexer --@TODO
+import Ola.Lexer.Token
 
 -- @TODO Make error messages prettier.
 
 %default total
-
-Show Token where
-  show this = ?tok -- @TODO
 
 [olaPF] Show a => Show (ParseFailure a) where
   show err
