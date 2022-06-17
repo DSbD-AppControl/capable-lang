@@ -1,0 +1,38 @@
+#+TITLE: README
+
+We are interested in how CHERI-Style Capabilities inter-play with session-types in imperative languages such as Rust/C.
+
+Ola (not that Ola but something else) is a small imperative language with ML-style references & recursion (on functions) [fn:81c9aa4b1534ae], written in Idris2 as a intrinsically-scoped/typed EDSL.
+Ola is our experimental language to see how the type-system should work.
+
+Evaluation is through definitional interpretation based on work.
+
+#+begin_quote
+Casper Bach Poulsen, Arjen Rouvoet, Andrew Tolmach, Robbert Krebbers, and Eelco Visser. 2017. Intrinsically-typed definitional interpreters for imperative languages. Proc. ACM Program. Lang. 2, POPL, Article 16 (January 2018), 34 pages. https://doi.org/10.1145/3158104
+#+end_quote
+
+This repository should be seen as the reference implementation.
+When realising on CHERIBSD (or another platform with access to capabilities through MUSL), we can use different languages.
+
+* Contributions
+
+* Things to TODO
+
+There are 'minor' TODO's in the source code.
+
++ A frontend, that is elaboration from an untyped ast to our intrinsically typed terms.
++ Soundness and completeness of Type-Checker.
++ Can we make it bi-directional... the typing annotations are inspired by the `Check` term, but there is no synthesis mode change.
++ How best to add session types, how formal should it be.
++ How best to add capabilities.
++ ...
+
+* Note
+
+This is a constant work in progress.
+
+The code is not polished.
+
+* Footnotes
+
+[fn:81c9aa4b1534ae] I more than likely have gotten recursion wrong. Will be fixed in future.
