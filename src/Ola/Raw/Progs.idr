@@ -1,30 +1,30 @@
 ||| AST for Progs
 |||
-||| Module    : Syntax/Progs.idr
+||| Module    : Raw/Progs.idr
 ||| Copyright : (c) Jan de Muijnck-Hughes
 ||| License   : see LICENSE
 |||
 ||| Let's be smart about the shape of the tree.
-module Ola.Syntax.Progs
+module Ola.Raw.Progs
 
 import Toolkit.Data.Location
 
 import Ola.Types
-import Ola.Syntax.Types
-import Ola.Syntax.Exprs
-import Ola.Syntax.Stmts
-import Ola.Syntax.Funcs
+import Ola.Raw.Types
+import Ola.Raw.Exprs
+import Ola.Raw.Stmts
+import Ola.Raw.Funcs
 
 -- @TODO Add in for and foreach directly into syntax. Will elaborate later.
 
 %default total
 
-data Nullary = MAIN Syntax.Stmt
+data Nullary = MAIN Raw.Stmt
 
-data Unary = DEFTYPE Syntax.Ty
-           | DEFFUNC  Syntax.Ty Syntax.Func
+data Unary = DEFTYPE Raw.Ty
+           | DEFFUNC  Raw.Ty Raw.Func
 
-namespace Syntax
+namespace Raw
   public export
   data Prog : Type where
     Null : FileContext -> Progs.Nullary -> Prog
@@ -32,7 +32,7 @@ namespace Syntax
 
 
 export
-setSource : String -> Syntax.Prog -> Syntax.Prog
+setSource : String -> Raw.Prog -> Raw.Prog
 
 setSource new (Null fc k)
   = Null (setSource new fc) k
@@ -45,7 +45,7 @@ setSource new (Un fc k a)
 namespace View
 
   public export
-  data Prog : (s : Syntax.Prog) -> Type where
+  data Prog : (s : Raw.Prog) -> Type where
     TypeDef : (fc : FileContext)
            -> (type  : Ty s)
            -> (p     : Prog r)
@@ -64,7 +64,7 @@ namespace View
 
 
   export
-  expand : (s : Syntax.Prog) -> Prog s
+  expand : (s : Raw.Prog) -> Prog s
   expand (Null fc (MAIN x))
     = Main fc (expand x)
 

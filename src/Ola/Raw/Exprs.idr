@@ -1,16 +1,16 @@
 ||| AST for Exprs.
 |||
-||| Module    : Syntax/Exprs.idr
+||| Module    : Exprs.idr
 ||| Copyright : (c) Jan de Muijnck-Hughes
 ||| License   : see LICENSE
 |||
 ||| Let's be smart about the shape of the tree.
-module Ola.Syntax.Exprs
+module Ola.Raw.Exprs
 
 import Toolkit.Data.Location
 
 import Ola.Types
-import Ola.Syntax.Types
+import Ola.Raw.Types
 
 public export
 data BinaryVal = UNIT | CHAR | STR | INT | BOOL
@@ -30,7 +30,7 @@ data Unary = FIRST | SECOND
            | READ  | CLOSE
            | INDEX Nat
            | OPEN HandleKind
-           | THE Syntax.Ty
+           | THE Raw.Ty
 
 public export
 data Binary = ARRAYCONS | PAIR | MUTATE | WRITE | CALL
@@ -38,7 +38,7 @@ data Binary = ARRAYCONS | PAIR | MUTATE | WRITE | CALL
 public export
 data Ternery = MATCH | COND
 
-namespace Syntax
+namespace Raw
   public export
   data Expr : Type where
     Var : Ref -> Expr
@@ -51,7 +51,7 @@ namespace Syntax
     Tri : FileContext -> Ternery -> Expr -> Expr -> Expr -> Expr
 
 export
-setSource : String -> Syntax.Expr -> Syntax.Expr
+setSource : String -> Raw.Expr -> Raw.Expr
 setSource new (Var x)
   = Var ({span $= setSource new} x)
 
@@ -83,7 +83,7 @@ setSource new (Tri fc k a b c)
 namespace View
 
   public export
-  data Expr : (s : Syntax.Expr) -> Type where
+  data Expr : (s : Raw.Expr) -> Type where
     Var : (ref : Ref) -> Expr (Var ref)
 
     U : (fc : FileContext) ->           Expr (Const fc UNIT v)
@@ -178,7 +178,7 @@ namespace View
               -> Expr (Un fc (THE t) e)
 
   export
-  expand : (s : Syntax.Expr) -> Expr s
+  expand : (s : Raw.Expr) -> Expr s
   expand (Var x)
     = Var x
 

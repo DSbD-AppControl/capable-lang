@@ -6,7 +6,7 @@
 |||
 |||
 ||| Let's be smart about the shape of the tree.
-module Ola.Syntax.Types
+module Ola.Raw.Types
 
 import Toolkit.Data.Location
 
@@ -21,14 +21,14 @@ data Nullary = CHAR | STR | INT | BOOL | UNIT
 public export
 data Binary = PAIR | UNION | FUNC
 
-namespace Syntax
+namespace Raw
   public export
 
   data Ty = TyNull FileContext Nullary
-          | TyRef FileContext Syntax.Ty
-          | TyBi FileContext Binary Syntax.Ty Syntax.Ty
+          | TyRef FileContext Raw.Ty
+          | TyBi FileContext Binary Raw.Ty Raw.Ty
 
-          | TyArray FileContext Syntax.Ty Nat
+          | TyArray FileContext Raw.Ty Nat
 
           | TyHandle FileContext HandleKind
 
@@ -36,7 +36,7 @@ namespace Syntax
 
 
 export
-setSource : String -> Syntax.Ty -> Syntax.Ty
+setSource : String -> Raw.Ty -> Raw.Ty
 setSource new (TyNull fc kind)
   = TyNull (setSource new fc) kind
 
@@ -64,7 +64,7 @@ setSource new (TyVar fc)
 
 namespace View
   public export
-  data Ty : (type : Syntax.Ty) -> Type where
+  data Ty : (type : Raw.Ty) -> Type where
     TyVar  : (ref : Ref)        -> Ty (TyVar ref)
     TyChar : (fc : FileContext) -> Ty (TyNull fc CHAR)
     TyStr  : (fc : FileContext) -> Ty (TyNull fc STR)
@@ -99,7 +99,7 @@ namespace View
                  -> Ty (TyBi fc FUNC a r)
 
   export
-  expand : (s : Syntax.Ty) -> Ty s
+  expand : (s : Raw.Ty) -> Ty s
   expand (TyNull fc CHAR)
     = TyChar fc
   expand (TyNull fc STR)

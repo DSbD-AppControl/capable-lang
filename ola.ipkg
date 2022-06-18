@@ -43,11 +43,11 @@ modules = Ola.Types
 
         , Ola.Exec
 
-        , Ola.Syntax.Types
-        , Ola.Syntax.Exprs
-        , Ola.Syntax.Stmts
-        , Ola.Syntax.Funcs
-        , Ola.Syntax.Progs
+        , Ola.Raw.Types
+        , Ola.Raw.Exprs
+        , Ola.Raw.Stmts
+        , Ola.Raw.Funcs
+        , Ola.Raw.Progs
 
         , Ola.Lexer.Token
         , Ola.Lexer

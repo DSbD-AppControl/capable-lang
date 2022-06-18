@@ -1,36 +1,36 @@
 ||| AST for Statements
 |||
-||| Module    : Syntax/Stmts.idr
+||| Module    : Raw/Stmts.idr
 ||| Copyright : (c) Jan de Muijnck-Hughes
 ||| License   : see LICENSE
 |||
 ||| Let's be smart about the shape of the tree.
-module Ola.Syntax.Stmts
+module Ola.Raw.Stmts
 
 import Toolkit.Data.Location
 
 import Ola.Types
-import Ola.Syntax.Types
-import Ola.Syntax.Exprs
+import Ola.Raw.Types
+import Ola.Raw.Exprs
 
 %default total
 
 public export
-data Nullary = END | RET Syntax.Expr
+data Nullary = END | RET Raw.Expr
 
 public export
-data Unary = PRINT Syntax.Expr
-           | SEQ   Syntax.Expr
-           | LET   Syntax.Ty Syntax.Expr
+data Unary = PRINT Raw.Expr
+           | SEQ   Raw.Expr
+           | LET   Raw.Ty Raw.Expr
 
 public export
-data Binary = WHILE Syntax.Expr
+data Binary = WHILE Raw.Expr
 
 public export
-data Ternery = MATCH Syntax.Expr
-             | COND  Syntax.Expr
+data Ternery = MATCH Raw.Expr
+             | COND  Raw.Expr
 
-namespace Syntax
+namespace Raw
   public export
   data Stmt : Type where
     Null : FileContext -> Stmts.Nullary -> Stmt
@@ -39,7 +39,7 @@ namespace Syntax
     Tri : FileContext -> Stmts.Ternery -> Stmt -> Stmt -> Stmt -> Stmt
 
 export
-setSource : String -> Syntax.Stmt -> Syntax.Stmt
+setSource : String -> Raw.Stmt -> Raw.Stmt
 setSource new (Null fc k)
   = Null (setSource new fc) k
 
@@ -65,7 +65,7 @@ setSource new (Tri fc k a b c)
 namespace View
 
   public export
-  data Stmt : (s : Syntax.Stmt) -> Type where
+  data Stmt : (s : Raw.Stmt) -> Type where
     Let : (fc : FileContext)
        -> (ty : Ty t)
        -> (ex : Expr e)
@@ -110,7 +110,7 @@ namespace View
                -> Stmt (Null fc END)
 
   export
-  expand : (s : Syntax.Stmt) -> Stmt s
+  expand : (s : Raw.Stmt) -> Stmt s
   expand (Null fc END)
     = End fc
   expand (Null fc (RET x))
