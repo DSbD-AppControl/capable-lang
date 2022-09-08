@@ -68,11 +68,19 @@ uKind : Rule (FileContext, Unary)
 uKind
     =  gives "left"   LEFT
    <|> gives "right"  RIGHT
-   <|> gives "fetch"  FETCH
+--   <|> gives "fetch"  FETCH
    <|> gives "read"   READ
    <|> gives "close"  CLOSE
 
 mutual
+  fetch : Rule Expr
+  fetch
+    = do s <- Toolkit.location
+         symbol "!"
+         ex <- expr
+         e <- Toolkit.location
+         pure (Un (newFC s e) FETCH ex)
+
   array : Rule Expr
   array
     = do s <- Toolkit.location
@@ -188,6 +196,7 @@ mutual
   expr' : Rule Expr
   expr'
       = call <|> var <|> constants
+            <|> fetch
             <|> array
             <|> unary
             <|> annot

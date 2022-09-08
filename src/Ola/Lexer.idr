@@ -20,7 +20,7 @@ namespace Ola
   public export
   Symbols : List String
   Symbols = [ -- special composite symbols
-              "->" -- , ":="
+              "->", ":="
 
               -- Deliminators
             , "[", "]", "<", ">", "{", "}" , "(", ")"
@@ -34,6 +34,7 @@ namespace Ola
             , "&"
             , "="
             , ";"
+            , "!"
             ]
 
 

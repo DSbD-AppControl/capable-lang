@@ -1,0 +1,40 @@
+func factory(b : Bool) -> &String
+{
+  print("Start of Function");
+
+  var msg = "Example 5";
+  print(!msg);
+
+  if b
+  {
+    msg := "New Message";
+
+  } else
+  {
+    print("Early End of Function");
+    return msg;
+  }
+
+  print("End of Function");
+  return msg;
+}
+
+func bump(p : &String) -> Unit
+{
+  p := "Bump!";
+}
+
+main()
+{
+
+  local b = factory(true);
+  local c = factory(false);
+
+  print(!c);
+  print(!b);
+
+  bump(b);
+  print(!b);
+  return unit;
+
+}

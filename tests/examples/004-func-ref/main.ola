@@ -1,0 +1,35 @@
+func foo(a : <String|Int>) -> &String
+{
+  var x : String = "Hello World";
+
+  print(!x);
+
+  match a
+  {
+    when left(s)
+    {
+      x := s;
+    }
+    when right(i)
+    {
+      x := "Given an int";
+    }
+  }
+
+  return x;
+}
+
+main()
+{
+
+  local bar : <String|Int> = left("AA");
+
+  print(!(foo(bar)));
+
+  local bar : <String|Int> = right(1);
+
+  print(!(foo(bar)));
+
+  return unit;
+
+}

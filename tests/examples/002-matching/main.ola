@@ -1,0 +1,24 @@
+func extract(x : <String|Int>) -> String
+{
+  match x
+  {
+    when left(s)
+    {
+      return s;
+    }
+    when right(i)
+    {
+      return "Hello!";
+    }
+  }
+  return "Default"; -- Arg!
+}
+
+main()
+{
+  local foo : <String|Int> = left("Ola");
+
+  print(extract(foo));
+  return unit;
+
+}

@@ -1,0 +1,21 @@
+main()
+{
+  var foo : String = "Hello World";
+
+  print("Example 3");
+
+  print(!foo);
+
+  if true
+  {
+    foo := "Goodbye World";
+  } else
+  {
+    foo := "Should not be printed";
+  }
+
+  print(!foo);
+
+  return unit;
+
+}

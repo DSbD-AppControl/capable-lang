@@ -20,9 +20,18 @@ tests
         , "001-basics"
         ]
 
+examples : IO TestPool
+examples
+  = testsInDir "examples"
+               (const True)
+               "Working examples"
+               []
+               Nothing
+
 covering
 main : IO ()
 main
-  = runner [ tests ]
+  = runner [ tests
+           , !examples]
 
 -- [ EOF ]
