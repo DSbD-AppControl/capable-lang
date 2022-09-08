@@ -38,6 +38,13 @@ data DList : (aTy : Type)
       -> DList aTy elemTy (x::xs)
 
 public export
+size : DList a e xs -> Nat
+size Nil
+  = Z
+size (x::xs)
+  = S (size xs)
+
+public export
 mapToList : (forall x . e x -> b)
          -> DList a e xs
          -> List b

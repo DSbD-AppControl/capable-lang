@@ -7,8 +7,12 @@
 module Ola.Terms.Exprs
 
 import Data.List.Elem
+
 import public Data.Fin
+
 import Data.Vect
+
+import public Toolkit.Data.DList
 
 import Ola.Terms.Types
 import Ola.Terms.Vars
@@ -32,7 +36,7 @@ data Expr : (types : List Ty)
     -- ## Values
     C : Char   -> Expr types stack CHAR
     S : String -> Expr types stack STR
-    I : Int    -> Expr types stack INT
+    I : Nat    -> Expr types stack INT
     B : Bool   -> Expr types stack BOOL
 
     -- ## Operations
@@ -73,14 +77,8 @@ data Expr : (types : List Ty)
         -> Expr types stack         b
         -> Expr types stack (PAIR a b)
 
-    -- ### Eliminators
-    First : {a,b : Ty}
-         -> Expr types stack (PAIR a b)
-         -> Expr types stack       a
+    -- ### Eliminators Are statements
 
-    Second : {a,b : Ty}
-          -> Expr types stack (PAIR a b)
-          -> Expr types stack         b
 
     -- ## Sums
 
@@ -92,26 +90,14 @@ data Expr : (types : List Ty)
     Right : Expr types stack          b
          -> Expr types stack (UNION a b)
 
-    -- ### Eliminators
-
-    Match : {a,b : Ty}
-         -> (expr  : Expr types     stack  (UNION a b))
-         -> (left  : Expr types (a::stack)  return)
-         -> (right : Expr types (b::stack)  return)
-                  -> Expr types     stack   return
-
+    -- ### Eliminators Are statements
     -- ## References
 
     Fetch : Expr types stack (REF t)
-          -> Expr types stack      t
+         -> Expr types stack      t
 
     Alloc : Expr types stack      type
          -> Expr types stack (REF type)
-
-    Mutate : {type : Ty}
-          -> Expr types stack (REF type)
-          -> Expr types stack      type
-          -> Expr types stack      UNIT
 
     -- ## Processes
 
@@ -137,10 +123,10 @@ data Expr : (types : List Ty)
 
     -- ## Function Application
 
-    -- @TODO Make function application n-ary.
-    Call : {a,b : Ty}
-        -> Expr types stack (FUNC a b)
-        -> Expr types stack       a
+    Call : {as : List Ty}
+        -> {b : Ty}
+        -> Expr types stack (FUNC as b)
+        -> DList Ty (Expr types stack)       as
         -> Expr types stack         b
 
     -- ## Type Ascriptions

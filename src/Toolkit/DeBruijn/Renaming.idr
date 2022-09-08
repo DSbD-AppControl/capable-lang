@@ -11,7 +11,7 @@ import Data.DPair
 
 import Toolkit.Decidable.Informative
 
-import Toolkit.Data.List.AtIndex
+import public Toolkit.Data.List.AtIndex
 import Toolkit.Data.DList
 import Toolkit.Data.DList.AtIndex
 

@@ -20,9 +20,10 @@ import Data.List.Elem
 import Data.List.Quantifiers
 
 import public Data.Singleton
-
+import public Toolkit.Data.List.AtIndex
 import Toolkit.Data.DList
-
+import public Toolkit.DeBruijn.Renaming
+import public Toolkit.DeBruijn.Environment
 import Ola.Types
 
 import Ola.Terms
@@ -39,6 +40,13 @@ Env : (stack : List Ty)
             -> Type
 Env stack store = DList Ty (Value store) stack
 
+export
+extend : DList Ty (Value store) types
+      -> Env stack store
+      -> Env (types ++ stack) store
+extend [] y = y
+extend (elem :: rest) y = elem :: extend rest y
+
 namespace Ty
   ||| We need one for types-as-terms too.
   public export
@@ -54,18 +62,18 @@ namespace Heap
                -> Type
   Heap store = DList Ty (Value store) store
 
-
   public export
   lookup : Var   store type
         -> Heap  store
         -> Value store type
-  lookup = DList.lookup
+  lookup = read
+
 
   public export
   replace : Var   store type
          -> Value store type
          -> Heap  store
          -> Heap  store
-  replace = DList.replace
+  replace = update
 
 -- [ EOF ]

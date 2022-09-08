@@ -15,72 +15,83 @@ import Ola.Terms.Exprs
 
 %default total
 
-||| A Statement.
-|||
-||| We index by both a typing context (for keeping track of typing
-||| aliases) and the stack.
-public export
-data Stmt : (types : List Ty)
-         -> (stack : List Ty)
-         -> (type  : Ty)
-                  -> Type
-  where
-    ||| Bind things to the stack!
-    Let : {type : Ty}
-       -> (ty   : Ty   types               type)
-       -> (expr : Expr types        stack  type)
-       -> (rest : Stmt types (type::stack) return)
-               -> Stmt types        stack  return
+mutual
+  ||| A Statement.
+  |||
+  ||| We index by both a typing context (for keeping track of typing
+  ||| aliases) and the stack.
+  public export
+  data Stmt : (types : List Ty)
+           -> (stackI,stackO : List Ty)
+           -> (type  : Ty)
+                    -> Type
+    where
+      ||| Bind things to the stack!
+      Let : {type : Ty}
+         -> (ty   : Ty   types                     type)
+         -> (expr : Expr types          stack      type)
+         -> (rest : Stmt types (type :: stack) out return)
+                 -> Stmt types          stack  out return
 
-    ||| Run an expression that return's nothing, and then continue.
-    |||
-    ||| We use this to capture function calls & mutations as
-    ||| statements.
-    Seq : (this    : Expr types stack UNIT)
-       -> (notThis : Stmt types stack body)
-                  -> Stmt types stack body
+      |||
+      Mutate : {type  : Ty}
+            -> (loc   : Expr types stack      (REF type))
+            -> (value : Expr types stack           type)
+            -> (rest  : Stmt types stack out  return)
+                     -> Stmt types stack out  return
 
-    ||| A statement about binary decisions.
-    Cond : (cond : Expr types stack BOOL)
-        -> (tt   : Stmt types stack return)
-        -> (ff   : Stmt types stack return)
-        -> (rest : Stmt types stack return)
-                -> Stmt types stack return
+      ||| Run a, possibly, side-effecting computation, and carry on.
+      |||
+      ||| We use this primarily to capture function calls.
+      Run : {this : Ty}
+         -> (expr : Expr types stack     this)
+         -> (rest : Stmt types stack out return)
+                 -> Stmt types stack out return
 
-    ||| A statement about matching.
-    Match : {a,b : Ty}
-         -> (expr  : Expr types     stack  (UNION a b))
-         -> (left  : Stmt types (a::stack)  return)
-         -> (right : Stmt types (b::stack)  return)
-         -> (rest  : Stmt types     stack   return)
-                  -> Stmt types     stack   return
+      ||| A statement about binary decisions.
+      Cond : (cond : Expr types stack      BOOL)
+          -> (tt   : Stmt types stack outA return)
+          -> (ff   : Stmt types stack outB return)
+          -> (rest : Stmt types stack out  return)
+                  -> Stmt types stack out  return
 
-    ||| A general while loop construct.
-    |||
-    ||| We will elaborate for, and foreach loops to this.
-    ||| We won't support Do nor other loops.
-    |||
-    ||| Breaking will be supported, but not continue...
-    While : (expr : Expr types stack BOOL)
-         -> (body : Stmt types stack return)
-         -> (rest : Stmt types stack return)
-                 -> Stmt types stack return
+      ||| A statement about matching.
+      Match : {a,b : Ty}
+           -> (expr  : Expr types     stack        (UNION a b))
+           -> (left  : Stmt types (a::stack) outA return)
+           -> (right : Stmt types (b::stack) outB return)
+           -> (rest  : Stmt types     stack  out  return )
+                    -> Stmt types     stack  out  return
 
-    ||| A side effect, run.
-    Print : (this : Expr types stack STR)
-         -> (rest : Stmt types stack return)
-                 -> Stmt types stack return
+      ||| A statement about splitting
+      Split : {a,b : Ty}
+           -> (expr : Expr types        stack      (PAIR a b))
+           -> (body : Stmt types (b::a::stack) out return)
+                   -> Stmt types        stack  out return
 
-    ||| Return a value.
-    Return : (expr : Expr types stack this)
-                  -> Stmt types stack this
+      ||| A general while loop construct.
+      |||
+      While : (expr : Expr types stack      BOOL)
+           -> (body : Stmt types stack outA return)
+           -> (rest : Stmt types stack out  return)
+                   -> Stmt types stack out  return
 
-    ||| End of computation but no value.
-    End : Stmt types stack UNIT
+      ||| A side effect, run.
+      Print : (this : Expr types stack     STR)
+           -> (rest : Stmt types stack out return)
+                   -> Stmt types stack out return
+
+
+      ||| Stop
+      End : Stmt types stack stack this
+
+      ||| Return a value.
+      Return : (expr : Expr types stack       this)
+                    -> Stmt types stack stack this
 
 -- [ NOTE ]
 --
--- TO assist in early return we distinguish between returning Unit and other expressions including Unit.
--- This might not be a good idea, we shall see.
+-- TO assist in early return we distinguish between returning values
+-- and the end of a computations:.
 
 -- [ EOF ]

@@ -23,30 +23,26 @@ ola:
 # To be activated once frontend is completed.
 
 ola-test-build:
-	${ECHO} "Todo"
-#	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
+	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
 
 ola-test-run: ola-test-build
-	${ECHO} "Todo"
-#	${MAKE} -C tests test \
-#			 IDRIS2=$(IDRIS2) \
-#			 PROG_BIN=$(TARGET) \
-#			 UPDATE='' \
-#			 ONLY=$(ONLY)
+	${MAKE} -C tests test \
+			 IDRIS2=$(IDRIS2) \
+			 PROG_BIN=$(TARGET) \
+			 UPDATE='' \
+			 ONLY=$(ONLY)
 
 ola-test-run-re: ola-test-build
-	${ECHO} "Todo"
-#	${MAKE} -C tests test-re \
-#			 IDRIS2=$(IDRIS2) \
-#			 PROG_BIN=$(TARGET) \
-#			 ONLY=$(ONLY)
+	${MAKE} -C tests test-re \
+			 IDRIS2=$(IDRIS2) \
+			 PROG_BIN=$(TARGET) \
+			 ONLY=$(ONLY)
 
 ola-test-update: ola-test-build
-	${ECHO} "Todo"
-#	${MAKE} -C tests test \
-#			 IDRIS2=$(IDRIS2) \
-#			 PROG_BIN=$(TARGET) \
-#			 ONLY=$(ONLY)
+	${MAKE} -C tests test \
+			 IDRIS2=$(IDRIS2) \
+			 PROG_BIN=$(TARGET) \
+			 ONLY=$(ONLY)
 
 ola-bench: ola ola-test-build
 	${ECHO} "Todo"

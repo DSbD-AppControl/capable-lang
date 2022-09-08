@@ -8,6 +8,8 @@ module Ola.Terms.Types
 
 import public Data.List.Elem
 
+import public Toolkit.Data.DList
+
 import public Ola.Types
 import        Ola.Terms.Vars
 
@@ -52,9 +54,9 @@ data Ty : (context : List Ty)
     TyHandle : (kind : HandleKind)
                     -> Ty ctxt (HANDLE kind)
 
-    TyFunc : (tmA : Ty ctxt a)
+    TyFunc : (tmA : DList Ty (Ty ctxt) as)
           -> (tmB : Ty ctxt b)
-                 -> Ty ctxt (FUNC a b)
+                 -> Ty ctxt (FUNC as b)
 
     TyVar : Var ctxt type
          -> Ty  ctxt type

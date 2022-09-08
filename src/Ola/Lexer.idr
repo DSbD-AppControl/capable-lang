@@ -6,6 +6,8 @@
 |||
 module Ola.Lexer
 
+import public Data.List.Elem
+
 import public Text.Lexer
 
 import public Toolkit.Text.Lexer.Run
@@ -14,37 +16,57 @@ import public Ola.Lexer.Token
 
 %default total
 
-symbols : List String
-symbols = ["->", "=>", "=", ":=", "[", "]", ":", "{", "}", ",", "(", ")", "|"
-          ]
+namespace Ola
+  public export
+  Symbols : List String
+  Symbols = [ -- special composite symbols
+              "->" -- , ":="
+
+              -- Deliminators
+            , "[", "]", "<", ">", "{", "}" , "(", ")"
+
+              -- Plain-old Symbols
+            , ","
+            , ":"
+            , "?"
+            , "+"
+            , "|"
+            , "&"
+            , "="
+            , ";"
+            ]
 
 
-keywords : List String
-keywords = [ "def", "fun", "let", "in", "rec", "main"
+  public export
+  Keywords : List String
+  Keywords = [ "func", "main", "type", "local", "var"
 
-           , "this", "that"
+             , "first", "second", "fetch", "alloc", "read", "close"
+             , "fopen", "popen", "print", "return", "while"
+             , "index", "cond"
+             , "match", "when", "split", "as"
 
-           , "match", "as", "with"
+             , "write"
 
-           , "if", "then", "else"
+             , "call"
+             , "if", "else"
 
-           , "empty", "extend"
+             -- CTors
+             , "true", "false"
+             , "unit", "pair", "left", "right"
 
-           , "true", "false"
-           , "unit"
-           , "apply"
+             -- Operations
+             , "and", "not", "or", "xor", "lessThan"
+             , "add", "sub"
+             , "pack", "unpack"
+             , "size"
+             , "toChar", "toNat", "toString"
+             , "the"
 
-           -- Operations
-           , "and", "not", "or", "xor", "lessThan"
-           , "add", "sub"
-           , "pack", "unpack"
-           , "size"
-           , "toChar", "toNat", "toString"
-
-           -- Types
-           , "Nat", "Bool", "String", "Char", "List", "Pair", "Sum"
-           , "Unit"
-           ]
+             -- Types
+             , "Int", "Bool", "String", "Char"
+             , "Unit", "FILE", "PROC"
+             ]
 
 
 identifier : Lexer
@@ -79,10 +101,10 @@ tokenMap = with List
   , (Ola.Lexer.charLit, (LitChr . stripQuotes))
   ]
   ++
-     map (\x => (exact x, Symbol)) symbols
+     map (\x => (exact x, Symbol)) Symbols
   ++
   [
-    (identifier, (\x => if elem x keywords then Keyword x else ID x))
+    (identifier, (\x => if elem x Keywords then Keyword x else ID x))
   , (any, NotRecognised)
   ]
 
@@ -96,6 +118,14 @@ keep (MkBounded t _ _) = case t of
 
 
 namespace Ola
+
+  public export
+  IsKeyword : String -> Type
+  IsKeyword s = Elem s Ola.Keywords
+
+  public export
+  IsSymbol : String -> Type
+  IsSymbol s = Elem s Ola.Symbols
 
   export
   Lexer : Lexer Token

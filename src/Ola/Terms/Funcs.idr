@@ -23,15 +23,12 @@ data Func : (types : List Ty)
                   -> Type
   where
     ||| A non-recusrive function.
-    Fun : {arg,return:Ty}
-       -> (body : Stmt types (arg::stack)           return)
-       ->         Func types stack (FUNC arg return)
-
-    ||| A recursive function
-    ||| This might be a rather dodgy way to do it...
-    ||| We shall see...
-    Rec : (func : Stmt types (arg :: stack) return)
-               -> Func types         stack  (FUNC arg return)
-
+    ||| We need this setup to ensure that we deal with eearly returns and end of computations.
+    ||| We must have a last expression to evaluate in case there are no early returns....
+    Fun : {args   : List Ty}
+       -> {return : Ty}
+       -> (body   : Stmt types (args ++ stack) out return)
+       -> (ret    : Expr types out return)
+                 -> Func types stack (FUNC args return)
 
 -- [ EOF ]

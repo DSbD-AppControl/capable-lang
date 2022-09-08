@@ -51,8 +51,7 @@ namespace Elem
   read : (idx : Elem t ctxt)
       -> (env : Env ty e ctxt)
       -> e t
-  read Here      (obj::store) = obj
-  read (There x) (obj::store) = read x store
+  read = DList.lookup
 
   ||| Add an object to our execution environment.
   |||
@@ -64,8 +63,7 @@ namespace Elem
         -> (obj : e t)
         -> (env : Env ty e ctxt)
         -> Env ty e ctxt
-  update Here      obj (_    :: store) = obj  :: store
-  update (There x) obj (obj' :: store) = obj' :: update x obj store
+  update = DList.replace
 
 namespace IsVar
   ||| Read an object from our typing environment.

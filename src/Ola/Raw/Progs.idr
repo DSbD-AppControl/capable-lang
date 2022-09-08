@@ -15,14 +15,38 @@ import Ola.Raw.Exprs
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
 
--- @TODO Add in for and foreach directly into syntax. Will elaborate later.
 
 %default total
 
-data Nullary = MAIN Raw.Stmt
+public export
+data Nullary = MAIN Raw.Func
 
-data Unary = DEFTYPE Raw.Ty
-           | DEFFUNC  Raw.Ty Raw.Func
+setSourceN : String -> Progs.Nullary -> Progs.Nullary
+setSourceN str (MAIN f)
+  = MAIN (setSource str f)
+
+Show Progs.Nullary where
+  show (MAIN a) = "(MAIN \{show a})"
+
+public export
+data Unary = DEFTYPE Ref  Raw.Ty
+           | DEFFUNC Ref  Raw.Func
+
+Show Progs.Unary where
+  show (DEFTYPE r ty) = "(DEFTYPE \{show r} \{show ty})"
+  show (DEFFUNC r f)  = "(DEFFUNC \{show r} \{show f})"
+
+setSourceU : String -> Progs.Unary -> Progs.Unary
+setSourceU str (DEFTYPE x y)
+
+  = DEFTYPE (setSource str x)
+            (setSource str y)
+
+setSourceU str (DEFFUNC x y)
+  = DEFFUNC (setSource str x)
+            (setSource str y)
+
+
 
 namespace Raw
   public export
@@ -30,48 +54,25 @@ namespace Raw
     Null : FileContext -> Progs.Nullary -> Prog
     Un : FileContext -> Progs.Unary -> Prog -> Prog
 
+export
+Show Raw.Prog where
+  show (Null x y) = "(Null \{show x} \{show y})"
+  show (Un x y z) = "(Un   \{show x} \{show y} \{show z})"
 
 export
 setSource : String -> Raw.Prog -> Raw.Prog
 
 setSource new (Null fc k)
-  = Null (setSource new fc) k
+  = Null (setSource new fc)
+         (setSourceN new k)
 
 setSource new (Un fc k a)
   = Un (setSource new fc)
-       k
+                (setSourceU new k)
        (setSource new a)
 
-namespace View
-
-  public export
-  data Prog : (s : Raw.Prog) -> Type where
-    TypeDef : (fc : FileContext)
-           -> (type  : Ty s)
-           -> (p     : Prog r)
-                    -> Prog (Un fc (DEFTYPE s) r)
-
-    DefFunc : (fc  : FileContext)
-           -> (sig : Ty t)
-           -> (def : Func s)
-           -> (p   : Prog r)
-                    -> Prog (Un fc (DEFFUNC t s) r)
-
-    Main : (fc : FileContext)
-        -> (scope : Stmt s)
-                 -> Prog (Null fc (MAIN s))
-
-
-
-  export
-  expand : (s : Raw.Prog) -> Prog s
-  expand (Null fc (MAIN x))
-    = Main fc (expand x)
-
-  expand (Un fc (DEFTYPE x) p)
-    = TypeDef fc (expand x) (expand p)
-
-  expand (Un fc (DEFFUNC x y) p)
-    = DefFunc fc (expand x) (expand y) (expand p)
-
+export
+getFC : (p : Raw.Prog) -> FileContext
+getFC (Null x y) = x
+getFC (Un x y z) = x
 -- [ EOF ]

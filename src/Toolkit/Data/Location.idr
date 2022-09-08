@@ -89,4 +89,9 @@ Show FileContext where
   show (MkFC Nothing (MkLoc _ l scol) (MkLoc _ _ ecol)) = with List concat ["global:", show l, ":", show scol, "-", show ecol, ":"]
   show (MkFC (Just x) (MkLoc _ l scol) (MkLoc _ _ ecol)) = with List concat [x, ":", show l, ":", show scol, "-", show ecol, ":"]
 
+export
+Show Ref where
+  show (MkRef span get)
+    = "(MkRef \{show span} \{show get})"
+
 -- [ EOF ]

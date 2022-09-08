@@ -35,21 +35,24 @@ data Prog : (types : List Ty)
                     -> Prog        types  stack UNIT
 
     ||| A function definition.
-    DefFunc : {arg,return : Ty}
-           -> (sig  : Ty types (FUNC arg return))
-           -> (func : Func types                     stack  (FUNC arg return))
-           -> (rest : Prog types (FUNC arg return :: stack)  UNIT)
-                   -> Prog types                     stack   UNIT
+    DefFunc : {args   : List Ty}
+           -> {return : Ty}
+           -> (sig    : Ty types (FUNC args return))
+           -> (func   : Func types                      stack   (FUNC args return))
+           -> (rest   : Prog types (FUNC args return :: stack)  UNIT)
+                     -> Prog types                      stack   UNIT
+
 
     ||| The top-level function.
-    Main : Stmt types stack UNIT
-        -> Prog types stack UNIT
+    ||| @TODO change return to INT...
+    Main : Func types stack (FUNC Nil UNIT)
+        -> Prog types stack           UNIT
 
 
 ||| A Closed program.
 public export
-Programme : Type
-Programme
+Program : Type
+Program
   = Prog Nil Nil UNIT
 
 -- [ EOF ]

@@ -8,32 +8,79 @@ module Ola.Parser
 
 import Data.List1
 
-import Ola.Lexer
+import public Ola.Lexer
 import Ola.Parser.API
 
 import Ola.Core
 import Ola.Types
 
-%default total
+import Ola.Raw.Types
+import Ola.Raw.Exprs
+import Ola.Raw.Stmts
+import Ola.Raw.Funcs
+import Ola.Raw.Progs
 
-namespace AST
-  export
-  data Expr : Type where -- @TODO
+import Ola.Parser.Types
+import Ola.Parser.Exprs
+import Ola.Parser.Stmts
+import Ola.Parser.Funcs
 
-  export
-  data Stmt : Type where -- @TODO
+%default partial
 
-  export
-  data Prog : Type where -- @TODO
-  export
-  setSource : String -> Prog -> Prog
+data Decl = DeclT FileContext Ref Raw.Ty
+          | DeclF FileContext Ref Raw.Func
 
+decls : RuleEmpty (List Decl)
+decls
+    = many (declTy <|> declFunc)
+  where
+    declTy : Rule Decl
+    declTy
+      = do s <- Toolkit.location
+           keyword "type"
+           r <- ref
+           symbol "="
+           ty <- type
+           e <- Toolkit.location
+           pure (DeclT (newFC s e) r ty)
 
-expr : Rule Expr
+    declFunc : Rule Decl
+    declFunc
+      = do s <- Toolkit.location
+           fs <- func
+           e <- Toolkit.location
+           pure (DeclF (newFC s e) (fst fs) (snd fs))
 
-statment : Rule Stmt
+main : Rule Prog
+main
+  = do s <- Toolkit.location
+       keyword "main"
+       symbol "("
+       symbol ")"
+       symbol "{"
+       b <- body
+       symbol "}"
+       e <- Toolkit.location
+       pure (Null (newFC s e)
+                  (MAIN (Null (newFC s e)
+                              $ FUNC Nil
+                                     (TyNull emptyFC UNIT)
+                                     (fst b)
+                                     (snd b))))
 
+export
 program : Rule Prog
+program
+    = do ds <- decls
+         m <- main
+         eoi
+         pure (foldr fold m ds)
+  where
+    fold : Decl -> Raw.Prog -> Raw.Prog
+    fold (DeclT fc r ty)
+      = Un fc (DEFTYPE r ty)
+    fold (DeclF fc r f)
+      = Un fc (DEFFUNC r f)
 
 namespace Ola
 
@@ -46,6 +93,6 @@ namespace Ola
                 program
                 fname
          pure (setSource fname ast)
-
+           -- @TODO write functers & show for kinds
 
 -- [ EOF ]

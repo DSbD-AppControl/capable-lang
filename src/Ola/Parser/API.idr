@@ -7,15 +7,18 @@
 module Ola.Parser.API
 
 import public Text.Parser
-
+import public Data.List.Elem
 import public Toolkit.Data.Location
 import public Toolkit.Text.Lexer.Run
 import public Toolkit.Text.Parser.Support
 import public Toolkit.Text.Parser.Location
 import public Toolkit.Text.Parser.Run
 
+import Ola.Core
+
 import public Ola.Lexer.Token
 import public Ola.Lexer
+
 
 %default total
 
@@ -29,6 +32,14 @@ namespace Ola
   RuleEmpty = RuleEmpty Unit Token
 
   export
+  fromString : (rule : Rule a)
+            -> (fname : String)
+                     -> Ola a
+  fromString rule str
+    = parseString (\p => Parse (PError str p))
+                  Ola.Lexer rule str
+
+  export
   eoi : RuleEmpty Unit
   eoi = eoi isEOI
     where
@@ -38,7 +49,8 @@ namespace Ola
 
 
   export
-  symbol : String -> Rule Unit
+  symbol : (str : String)
+               -> Rule Unit
   symbol str
     = terminal ("Expected Symbol '" ++ str ++ "'")
                (\x => case x of
@@ -47,6 +59,23 @@ namespace Ola
                              _ => Nothing)
 
   export
+  char : Rule Char
+  char = terminal "Expected char literal"
+                  (\x => case x of
+                           LitChr c =>
+                             case unpack c of
+                               Nil => Just '\0000'
+                               [x] => Just x
+                               _   => Nothing
+                           _ => Nothing)
+
+  export
+  string : Rule String
+  string = terminal "Expected str literal"
+                    (\x => case x of
+                             LitStr s => Just s
+                             _ => Nothing)
+  export
   nat : Rule Nat
   nat = terminal "Expected nat literal"
                (\x => case x of
@@ -54,7 +83,8 @@ namespace Ola
                            _ => Nothing)
 
   export
-  keyword : String -> Rule Builtin.Unit
+  keyword : (str : String)
+                -> Rule Builtin.Unit
   keyword str
     = terminal ("Expected Keyword '" ++ str ++ "'")
                  (\x => case x of
@@ -62,7 +92,6 @@ namespace Ola
                                                       else Nothing
                              _ => Nothing)
 
-  export
   identifier : Rule String
   identifier
     = terminal "Expected Identifier"
@@ -71,22 +100,35 @@ namespace Ola
                                   _ => Nothing)
 
   export
-  name : Rule String
-  name = identifier
-
-  export
   ref : Rule Ref
   ref =
     do s <- Toolkit.location
-       n <- name
+       n <- identifier
        e <- Toolkit.location
        pure (MkRef (newFC s e) n)
 
 
   export
-  gives : String -> a -> Rule a
-  gives s ctor
-    = do keyword s
-         pure ctor
+  keywordLoc : (s : String) -> Rule FileContext
+  keywordLoc str
+    = do s <- Toolkit.location
+         keyword str
+         e <- Toolkit.location
+         pure (newFC s e)
 
+
+  export
+  withLoc : Rule a -> Rule (FileContext, a)
+  withLoc r
+    = do s <- Toolkit.location
+         v <- r
+         e <- Toolkit.location
+         pure (newFC s e, v)
+
+  export
+  gives : (s : String) -> a -> Rule (FileContext, a)
+  gives str ctor
+    = withLoc
+        $ do keyword str
+             pure ctor
 -- [ EOF ]

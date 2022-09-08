@@ -26,22 +26,22 @@ sourcedir = "src"
 
 modules = Ola.Types
 
-        , Ola.Terms.Vars
-        , Ola.Terms.Types
-        , Ola.Terms.Exprs
-        , Ola.Terms.Stmts
-        , Ola.Terms.Funcs
-        , Ola.Terms.Progs
-        , Ola.Terms
-
-        , Ola.Values
-        , Ola.Env
+--        , Ola.Terms.Vars
+--        , Ola.Terms.Types
+--        , Ola.Terms.Exprs
+--        , Ola.Terms.Stmts
+--        , Ola.Terms.Funcs
+--        , Ola.Terms.Progs
+--        , Ola.Terms
+--
+--        , Ola.Values
+--        , Ola.Env
 
         , Ola.Error
         , Ola.Error.Pretty
         , Ola.Core
 
-        , Ola.Exec
+--        , Ola.Exec
 
         , Ola.Raw.Types
         , Ola.Raw.Exprs
@@ -53,7 +53,13 @@ modules = Ola.Types
         , Ola.Lexer
 
         , Ola.Parser.API
+        , Ola.Parser.Types
+        , Ola.Parser.Exprs
+        , Ola.Parser.Stmts
+        , Ola.Parser.Funcs
+
+
         , Ola.Parser
-        , Example
+--        , Example
 
 -- [ EOF ]

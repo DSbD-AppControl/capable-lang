@@ -14,6 +14,7 @@ import Toolkit.System
 import Toolkit.Text.Lexer.Run
 import Toolkit.Text.Parser.Run
 
+import Text.Lexer
 import Ola.Types
 import Ola.Error
 import Ola.Lexer.Token
@@ -36,10 +37,6 @@ import Ola.Lexer.Token
   show (LError (MkLexFail l i))
     = trim $ unlines [show l, show i]
 
-Show HandleKind where
-  show FILE = "FILE"
-  show PROCESS = "PROCESS"
-
 Show Ty where
   show CHAR        = "CHAR"
   show STR         = "STR"
@@ -51,7 +48,8 @@ Show Ty where
   show UNIT        = "UNIT"
   show (REF x)     = "(REF \{show x})"
   show (HANDLE x)  = "(HANDLE \{show x})"
-  show (FUNC x y)  = "(\{show x} -> \{show y}) "
+  show (FUNC x y)  = "(\{(assert_total $ show x)} -> \{show y}) "
+-- @TODO fix assert_total
 
 Show a => Show (Generic.Error a) where
   show (E v)
@@ -66,11 +64,41 @@ Show (Parsing.Error) where
 
 
 Show (Typing.Error) where
+  show (ArrayAppend h t)
+    = unlines ["Type Mismatch when adding to Array:"
+              , "  Given:"
+              , "    \{show h}"
+              , "  Expected:"
+              , "    \{show t}"
+              ]
+  show (ArgsExpected tys)
+    = "Arguments expected but none were given:\n\t\{unlines $ map show tys}"
+  show (RedundantArgs n)
+    = "There are \{show n} to many arguments."
+  show Unknown
+    = "Not enough information to type term."
+  show (PairExpected ty)
+    = "A pair was expected but was given:\n\t\{show ty}"
+  show (RefExpected ty)
+    = "Reference expected but was given:\n\t\{show ty}"
+  show (HandleExpected ty)
+    = "A Handle was expected but was given:\n\t\{show ty}"
+
+  show (UnionExpected ty)
+    = "A tagged union was expected but was given:\n\t\{show ty}"
+
+  show (FunctionExpected ty)
+    = "A Function was expected but was given:\n\t\{show ty}"
+
+  show (ArrayExpected ty)
+    = "Array expected but was given:\n\t\{show ty}"
+  show (NotBound ref)
+    = "Not a bound identifier:\n\t\{show ref}"
   show (Mismatch given expected)
     = unlines ["Type Mismatch:"
               , "  Given:"
               , "    \{show given}"
-              , " Expected:"
+              , "  Expected:"
               , "    \{show expected}"
               ]
 
@@ -78,7 +106,7 @@ Show (Typing.Error) where
     = unlines ["Array out-of-bounds access:"
               , "  Given:"
               , "    \{show given}"
-              , " Expected:"
+              , "  Expected:"
               , "    \{show expected}"
               ]
 
@@ -94,6 +122,8 @@ Show (Running.Error) where
 
 export
 Show (Ola.Error) where
+  show (Generic err)
+    = show err
   show (Parse x)
     = "Parsing Error\n" ++ show x
 

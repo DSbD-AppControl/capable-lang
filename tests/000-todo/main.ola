@@ -1,0 +1,79 @@
+type a = Int
+type b = Char
+type c = String
+type d = Int
+type e = Unit
+type f = Bool
+type fa = FILE
+type fb = PROC
+
+type g = [3;Bool]
+type ga = [3;[5;Bool]]
+
+type h = <Bool|Int>
+type i = (Bool+Int)
+
+type k = <[3;Bool]|[5;String]>
+
+func foo() -> Int
+{
+  return 1;
+}
+
+func foobar(c : Bool, this : Int) -> Int
+{
+  if c
+  {
+    return this;
+  } else
+  {
+    local f = "1";
+  }
+  return this;
+}
+
+
+func barfoo() -> Unit
+{
+  print("Hello");
+}
+
+
+func fb() -> Unit
+{
+  local x = pair("a","stre");
+  split x as (a,b);
+  print(a);
+  print(b);
+  return unit;
+
+
+
+}
+
+
+func bf() -> Unit
+{
+  local x : <String|Int> = left("String");
+  match x
+  {
+    when left(y)
+    {
+       print("aa");
+    }
+    when right(z)
+    {
+       print("aaa");
+    }
+  }
+  return unit;
+}
+
+
+main()
+{
+  local b = pair(1,2);
+--  local a = index(b,1);
+--  local c = cond(b,1,2);
+  return unit;
+}

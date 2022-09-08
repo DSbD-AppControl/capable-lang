@@ -35,6 +35,17 @@ namespace Parsing
 namespace Typing
   public export
   data Error : Type where
+    PairExpected : Ty -> Typing.Error
+    ArrayAppend : Ty -> Ty -> Typing.Error
+    ArgsExpected : List Ty -> Typing.Error
+    RedundantArgs : Nat -> Typing.Error
+    FunctionExpected : Ty -> Typing.Error
+    UnionExpected : Ty -> Typing.Error
+    HandleExpected : Ty -> Typing.Error
+    Unknown : Typing.Error
+    RefExpected : Ty -> Typing.Error
+    NotBound : Ref -> Typing.Error
+    ArrayExpected : Ty -> Error
     Mismatch : (given,expected : Ty)
                               -> Typing.Error
     BoundsError : (given, expected : Nat)
@@ -50,6 +61,7 @@ namespace Running
 namespace Ola
   public export
   data Error : Type where
+    Generic : String -> Ola.Error
     Parse   : Parsing.Error -> Ola.Error
     TyCheck : Generic.Error Typing.Error -> Ola.Error
     Exec    : Running.Error -> Ola.Error

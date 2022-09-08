@@ -278,6 +278,17 @@ namespace Parsing
                  | Left err => throw (onErr err)
            pure res
 
+  export
+  parseString : {e     : _}
+             -> (onErr : ParseError a -> err)
+             -> (lexer : Lexer a)
+             -> (rule  : Grammar () a e ty)
+             -> (fname : String)
+                      -> TheRug err ty
+  parseString onErr lexer rule str
+      = case parseString lexer rule str of
+          Left err => throw (onErr err)
+          Right str => pure str
 
 namespace Cheap
   export

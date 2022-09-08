@@ -18,17 +18,89 @@ import Ola.Raw.Exprs
 public export
 data Nullary = END | RET Raw.Expr
 
+Show Stmts.Nullary where
+  show END = "END"
+  show (RET x)
+    = "(RET \{show x}})"
+
+setSourceN : String -> Stmts.Nullary -> Stmts.Nullary
+setSourceN str END
+  = END
+setSourceN str (RET x)
+  = RET (setSource str x)
+
 public export
 data Unary = PRINT Raw.Expr
-           | SEQ   Raw.Expr
-           | LET   Raw.Ty Raw.Expr
+           | LET   Ref (Maybe Raw.Ty) Raw.Expr
+           | VAR   Ref (Maybe Raw.Ty) Raw.Expr
+           | MUTATE Raw.Expr Raw.Expr
+           | RUN Raw.Expr
+           | SPLIT Raw.Expr Ref Ref
+
+Show Stmts.Unary where
+  show (PRINT x)    = "(PRINT \{show x})"
+  show (LET x t y)  = "(LET \{show x} \{show t} \{show y})"
+  show (VAR x t y)  = "(VAR \{show x} \{show t} \{show y})"
+  show (MUTATE x y) = "(MUTATE \{show x} \{show y})"
+  show (RUN x)      = "(RUN \{show x})"
+  show (SPLIT x y z) = "(SPLIT \{show x} \{show y} \{show z})"
+
+setSourceU : String -> Stmts.Unary -> Stmts.Unary
+setSourceU new (PRINT x)
+  = PRINT (setSource new x)
+
+setSourceU new (LET x t y)
+  = LET (setSource new x)
+        (map (setSource new) t)
+        (setSource new y)
+
+setSourceU new (VAR x t y)
+  = VAR (setSource new x)
+        (map (setSource new) t)
+        (setSource new y)
+
+setSourceU new (MUTATE x y)
+  = MUTATE (setSource new x)
+           (setSource new y)
+
+setSourceU new (RUN x)
+  = RUN (setSource new x)
+setSourceU new (SPLIT x y z)
+  = SPLIT (setSource new x)
+          (setSource new y)
+          (setSource new z)
+
 
 public export
 data Binary = WHILE Raw.Expr
 
+
+Show Stmts.Binary where
+  show (WHILE x)     = "(WHILE \{show x})"
+
+
+setSourceB : String -> Stmts.Binary -> Stmts.Binary
+setSourceB str (WHILE x)
+  = WHILE (setSource str x)
+
+
 public export
-data Ternery = MATCH Raw.Expr
+data Ternery = MATCH Raw.Expr Ref Ref
              | COND  Raw.Expr
+
+Show Stmts.Ternery where
+  show (MATCH x y z) = "(MATCH \{show x} \{show y} \{show z})"
+  show (COND x)      = "(COND \{show x})"
+
+setSourceT : String -> Stmts.Ternery -> Stmts.Ternery
+setSourceT str (MATCH x y z)
+  = MATCH (setSource str x)
+          (setSource str y)
+          (setSource str z)
+
+setSourceT str (COND x)
+  = COND (setSource str x)
+
 
 namespace Raw
   public export
@@ -39,99 +111,41 @@ namespace Raw
     Tri : FileContext -> Stmts.Ternery -> Stmt -> Stmt -> Stmt -> Stmt
 
 export
+Show Raw.Stmt where
+  show (Null x y)      = "(Null \{show x} \{show y})"
+  show (Un x y z)      = "(Un   \{show x} \{show y} \{show z})"
+  show (Bin x y z w)   = "(Bin  \{show x} \{show y} \{show z} \{show w})"
+  show (Tri x y z w v) = "(Tri  \{show x} \{show y} \{show z} \{show w} \{show v})"
+
+export
 setSource : String -> Raw.Stmt -> Raw.Stmt
 setSource new (Null fc k)
-  = Null (setSource new fc) k
+  = Null (setSource new fc)
+         (setSourceN new k)
 
 setSource new (Un fc k a)
-  = Un (setSource new fc)
-       k
-       (setSource new a)
+  = Un (setSource  new fc)
+       (setSourceU new k)
+       (setSource  new a)
 
 setSource new (Bin fc k a b)
   = Bin (setSource new fc)
-       k
+       (setSourceB new k)
        (setSource new a)
        (setSource new b)
 
 setSource new (Tri fc k a b c)
   = Tri (setSource new fc)
-       k
+       (setSourceT new k)
        (setSource new a)
        (setSource new b)
        (setSource new c)
 
-
-namespace View
-
-  public export
-  data Stmt : (s : Raw.Stmt) -> Type where
-    Let : (fc : FileContext)
-       -> (ty : Ty t)
-       -> (ex : Expr e)
-       -> (scope : Stmt rest)
-                -> Stmt (Un fc (LET t e) rest)
-
-    Seq : (fc   : FileContext)
-       -> (this : Expr e)
-       -> (rest : Stmt r)
-               -> Stmt (Un fc (SEQ e) r)
-
-    Cond : (fc : FileContext)
-        -> (co  : Expr c)
-        -> (tt : Stmt t)
-        -> (ff : Stmt f)
-        -> (rest : Stmt r)
-                -> Stmt (Tri fc (COND c) t f r)
-
-    Match : (fc   : FileContext)
-         -> (co   : Expr c)
-         -> (le    : Stmt t)
-         -> (ri    : Stmt f)
-         -> (rest : Stmt r)
-                 -> Stmt (Tri fc (MATCH c) t f r)
-
-    While : (fc  : FileContext)
-         -> (co  : Expr c)
-         -> (body  : Stmt b)
-         -> (rest : Stmt r)
-                 -> Stmt (Bin fc (WHILE c) b r)
-
-    Print : (fc   : FileContext)
-         -> (this : Expr e)
-         -> (rest : Stmt r)
-                 -> Stmt (Un fc (PRINT e) r)
-
-    Return : (fc   : FileContext)
-          -> (this : Expr e)
-                  -> Stmt (Null fc (RET e))
-
-    End : (fc   : FileContext)
-               -> Stmt (Null fc END)
-
-  export
-  expand : (s : Raw.Stmt) -> Stmt s
-  expand (Null fc END)
-    = End fc
-  expand (Null fc (RET x))
-    = Return fc (expand x)
-
-  expand (Un fc (PRINT x) u)
-    = Print fc (expand x) (expand u)
-
-  expand (Un fc (SEQ x) u)
-    = Seq fc (expand x) (expand u)
-
-  expand (Un fc (LET x y) u)
-    = Let fc (expand x) (expand y) (expand u)
-
-  expand (Bin fc (WHILE x) a b)
-    = While fc (expand x) (expand a) (expand b)
-
-  expand (Tri fc (MATCH x) a b c)
-    = Match fc (expand x) (expand a) (expand b) (expand c)
-  expand (Tri fc (COND x) a b c)
-    = Cond fc (expand x) (expand a) (expand b) (expand c)
-
+export
+getFC : Stmt -> FileContext
+getFC (Null x y) = x
+getFC (Un x y z) = x
+getFC (Bin x y z w) = x
+getFC (Tri x y z w v) = x
 
 -- [ EOF ]

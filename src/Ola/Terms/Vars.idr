@@ -11,7 +11,7 @@ module Ola.Terms.Vars
 
 -- @TODO Make Vars efficiently erasable.
 
-import public Data.List.Elem
+import public Toolkit.DeBruijn.Renaming
 
 import Ola.Types
 
@@ -21,6 +21,6 @@ public export
 Var : (context : List Ty)
    -> (type    : Ty)
               -> Type
-Var ctxt type = Elem type ctxt
+Var ctxt type = IsVar ctxt type
 
 -- [ EOF ]
