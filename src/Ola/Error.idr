@@ -11,7 +11,7 @@ import Toolkit.Data.Location
 import Toolkit.System
 import Toolkit.Text.Lexer.Run
 import Toolkit.Text.Parser.Run
-
+import public Toolkit.Options.ArgParse
 import Ola.Types
 import Ola.Lexer.Token
 
@@ -27,6 +27,11 @@ namespace Generic -- @TODO Pull out to Toolkit?
     S : (loc : FileContext)
      -> (err : Error type)
             -> Error type
+
+namespace Options
+  public export
+  data Error : Type where
+    OError : ArgParseError -> Options.Error
 
 namespace Lexing
   public export
@@ -69,6 +74,7 @@ namespace Ola
   public export
   data Error : Type where
     Generic : String -> Ola.Error
+    Opts    : Options.Error -> Ola.Error
     Lex     : Lexing.Error -> Ola.Error
     Parse   : Parsing.Error -> Ola.Error
     TyCheck : Generic.Error Typing.Error -> Ola.Error

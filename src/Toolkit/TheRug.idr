@@ -21,8 +21,10 @@ import Toolkit.Text.Parser.Run
 import Toolkit.Data.Location
 import Toolkit.Text.Lexer.Run
 
+import public Toolkit.Options.ArgParse
+
 import Toolkit.Data.DList
-import Toolkit.Decidable.Informative
+import public Toolkit.Decidable.Informative
 
 %default total
 
@@ -149,6 +151,30 @@ tryCatch onErr prog
                   (pure . Right)
                   prog)
 
+namespace Maybe
+  export
+  %inline
+  embed : (err : b)
+       -> (result : Maybe a)
+                 -> TheRug b a
+  embed _ (Just x)
+    = pure x
+
+  embed err Nothing
+    = throw err
+
+namespace Either
+    export
+    %inline
+    embed : (f : a -> b)
+         -> (result : Either a r)
+                   -> TheRug b r
+    embed _ (Right this)
+      = pure this
+
+    embed f (Left err)
+      = throw (f err)
+
 namespace Decidable
   export
   %inline
@@ -255,6 +281,16 @@ namespace IO
   printLn = (TheRug.embed . printLn)
 
   export
+  %inline
+  exitFailure : TheRug e ()
+  exitFailure = TheRug.embed exitFailure
+
+  export
+  %inline
+  exitSuccess : TheRug e ()
+  exitSuccess = TheRug.embed exitSuccess
+
+  export
   covering -- not my fault
   readFile : (onErr : String -> FileError -> e)
           -> (fname : String)
@@ -263,6 +299,17 @@ namespace IO
     = do Right content <- (TheRug.embed (readFile fname))
            | Left err => throw (onErr fname err)
          pure content
+
+  export
+  parseArgs : (f    : ArgParseError -> e)
+           -> (def  : opts)
+           -> (conv : Arg -> opts -> Maybe opts)
+                   -> TheRug e opts
+  parseArgs f def c
+    = do args <- embed getArgs
+         case parseArgs def c args of
+           Left err => throw (f err)
+           Right o  => pure o
 
 namespace Lexing
   export

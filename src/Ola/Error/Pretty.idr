@@ -60,7 +60,10 @@ Show a => Show (Generic.Error a) where
 
 Show (Lexing.Error) where
   show (LError _ e) = show e
---    = trim $ unlines [show l, show i]
+
+Show (Options.Error) where
+  show (OError err)
+    = show err
 
 Show (Parsing.Error) where
   show (PError _ err)
@@ -128,6 +131,9 @@ export
 Show (Ola.Error) where
   show (Generic err)
     = show err
+
+  show (Opts r)
+    = "Option Error\n" ++ show r
 
   show (Lex x)
     = "Lexing Error\n" ++ show x

@@ -15,34 +15,70 @@ import Ola.Check
 import Ola.Terms
 import Ola.Exec
 
-processArgs : List String
-           -> IO String
-processArgs xs
-    = do Just f <- processArgs' xs
-           | Nothing => do putStrLn "Invalid args."
-                           exitFailure
-         pure f
-  where
-    processArgs' : List String
-                -> IO (Maybe String)
-    processArgs' (x::y::zs)
-      = pure $ Just y
+record Opts where
+  constructor O
+  justLex   : Bool
+  justCheck : Bool
+  file      : Maybe String
 
-    processArgs' _
-      = pure $ Nothing
+Show Opts where
+  show (O l c f)
+    = "O \{show l} \{show c} \{show f}"
+
+Eq Opts where
+  (==) x y
+    =  justLex x   == justLex y
+    && justCheck x == justCheck y
+    && file x      == file y
+
+convOpts : Arg -> Opts -> Maybe Opts
+
+convOpts (File x) o
+  = Just $ { file := Just x} o
+
+convOpts (KeyValue k v) o
+  = Just o
+
+convOpts (Flag x) o
+  = case x of
+      "lexOnly"
+        => Just $ { justLex := True} o
+      "checkOnly"
+        => Just $ { justCheck := True} o
+      otherwise => Nothing
+
+defOpts : Opts
+defOpts = O False False Nothing
+
 
 showToks : (List (WithBounds Token)) -> List String
 showToks = map (\(MkBounded t _ _) => show t)
 
-mainRug : String -> Ola ()
-mainRug fname
-  = do --toks <- lexFile fname
-       --putStrLn $ unwords (showToks toks)
+mainRug : Ola ()
+mainRug
+  = do opts <- parseArgs
+                 (Opts . OError)
+                 defOpts
+                 convOpts
+
+       fname <- embed
+                  (Generic "File expected.")
+                  (file opts)
+
+       when (justLex opts)
+         $ do toks <- lexFile fname
+              putStrLn $ unwords (showToks toks)
+              exitSuccess
+
        ast <- fromFile fname
        putStrLn "# Finished Parsing"
---       putStrLn ast
+
        tm <- progCheck ast
        putStrLn "# Finished Type Checking"
+
+       when (justCheck opts)
+         $ exitSuccess
+
        putStrLn "# Executing"
        putStrLn "```"
        v <- exec tm
@@ -53,8 +89,6 @@ mainRug fname
 
 main : IO ()
 main
-  = do args <- getArgs
-       fname <- processArgs args
-       Ola.run (mainRug fname)
+  = do Ola.run mainRug
 
 -- [ EOF ]
