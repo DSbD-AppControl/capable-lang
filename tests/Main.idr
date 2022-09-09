@@ -20,6 +20,14 @@ tests
         , "001-basics"
         ]
 
+files : IO TestPool
+files
+  = testsInDir "files"
+               (const True)
+               "File Handling"
+               []
+               Nothing
+
 examples : IO TestPool
 examples
   = testsInDir "examples"
@@ -32,6 +40,8 @@ covering
 main : IO ()
 main
   = runner [ tests
-           , !examples]
+           , !files
+           , !examples
+           ]
 
 -- [ EOF ]

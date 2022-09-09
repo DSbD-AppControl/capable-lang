@@ -264,6 +264,19 @@ namespace IO
            | Left err => throw (onErr fname err)
          pure content
 
+namespace Lexing
+  export
+  covering -- not my fault
+  lexFile : (onErr : LexFail -> err)
+         -> (lexer : Lexer a)
+         -> (fname : String)
+                  -> TheRug err
+                            (List (WithBounds a))
+  lexFile onErr lexer fname
+    = do Right toks <- TheRug.embed (lexFile lexer fname)
+           | Left err => throw (onErr err)
+         pure toks
+
 namespace Parsing
   export
   covering -- not my fault

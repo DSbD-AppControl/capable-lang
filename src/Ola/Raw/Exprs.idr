@@ -7,6 +7,7 @@
 ||| Let's be smart about the shape of the tree.
 module Ola.Raw.Exprs
 
+import System.File.Mode
 import Toolkit.Data.Location
 
 import Ola.Types
@@ -37,7 +38,7 @@ data Unary = LEFT  | RIGHT
            | FETCH
            | READ  | CLOSE
            | INDEX Nat
-           | OPEN HandleKind
+           | OPEN HandleKind Mode
            | THE Raw.Ty
 
 Show Unary where
@@ -47,7 +48,7 @@ Show Unary where
   show READ      = "READ"
   show CLOSE     = "CLOSE"
   show (INDEX k) = "(INDEX \{show k})"
-  show (OPEN x)  = "(OPEN \{show x})"
+  show (OPEN x m)  = "(OPEN \{show x} \{modeStr m})"
   show (THE x)   = "(THE \{show x})"
 
 setSourceU : String -> Unary -> Unary

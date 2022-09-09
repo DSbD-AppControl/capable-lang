@@ -12,6 +12,8 @@ import public Data.Fin
 
 import Data.Vect
 
+import System.File
+
 import public Toolkit.Data.DList
 
 import Ola.Terms.Types
@@ -104,21 +106,25 @@ data Expr : (types : List Ty)
     -- ### Open
 
     Open : (what : HandleKind)
+        -> (m : Mode)
         -> Expr types stack STR
         -> Expr types stack (UNION INT (HANDLE what))
 
     -- ### Read
-    ReadLn : Expr types stack (HANDLE k)
+    ReadLn : {k : HandleKind}
+          -> Expr types stack (HANDLE k)
           -> Expr types stack (UNION INT STR)
 
     -- ### Send
-    WriteLn : Expr types stack (HANDLE k)
+    WriteLn : {k : HandleKind}
+           -> Expr types stack (HANDLE k)
            -> Expr types stack STR
            -> Expr types stack (UNION INT UNIT)
 
     -- ### Close
-    Close : Expr types stack (HANDLE k)
-         -> Expr types stack (UNION INT UNIT)
+    Close : {k : HandleKind}
+         -> Expr types stack (HANDLE k)
+         -> Expr types stack UNIT
 
 
     -- ## Function Application

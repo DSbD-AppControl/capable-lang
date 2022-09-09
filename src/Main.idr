@@ -2,16 +2,18 @@ module Main
 
 import System
 
+import Data.String
+
+import Toolkit.Options.ArgParse
+
 import Ola.Core
 
+import Ola.Lexer
 import Ola.Parser
 import Ola.Check
 
 import Ola.Terms
 import Ola.Exec
-
-
---import Example
 
 processArgs : List String
            -> IO String
@@ -29,21 +31,23 @@ processArgs xs
     processArgs' _
       = pure $ Nothing
 
-Show LexError where
-  show (MkLexFail location input) = show input
+showToks : (List (WithBounds Token)) -> List String
+showToks = map (\(MkBounded t _ _) => show t)
 
 mainRug : String -> Ola ()
 mainRug fname
-  = do ast <- fromFile fname
-       printLn "# Finished Parsing"
---       printLn ast
+  = do --toks <- lexFile fname
+       --putStrLn $ unwords (showToks toks)
+       ast <- fromFile fname
+       putStrLn "# Finished Parsing"
+--       putStrLn ast
        tm <- progCheck ast
-       printLn "# Finished Type Checking"
-       printLn "# Executing"
-       printLn "```"
+       putStrLn "# Finished Type Checking"
+       putStrLn "# Executing"
+       putStrLn "```"
        v <- exec tm
-       printLn "```"
-       printLn "# Finished"
+       putStrLn "```"
+       putStrLn "# Finished"
        pure ()
 
 

@@ -7,7 +7,7 @@
 module Ola.Parser.Types
 
 import Data.List1
-
+import Data.Maybe
 import Data.Either
 
 import Ola.Core
@@ -19,6 +19,7 @@ import Ola.Parser.API
 import Ola.Raw.Types
 
 %default total
+
 
 varType : Rule Raw.Ty
 varType
@@ -66,8 +67,10 @@ mutual
 
   handle : Rule Raw.Ty
   handle
-    = do k <- (gives "FILE" FILE <|> gives "PROC" PROCESS)
-         pure (TyHandle (fst k) (snd k))
+    = do s <- Toolkit.location
+         k <- (keyword "FILE" *> pure FILE <|> keyword "PROC" *> pure PROCESS)
+         e <- Toolkit.location
+         pure (TyHandle (newFC s e) k)
 
   datatype : Rule Raw.Ty
   datatype

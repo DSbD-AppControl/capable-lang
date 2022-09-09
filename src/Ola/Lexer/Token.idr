@@ -24,6 +24,7 @@ namespace Ola
               | BlockComment String
               | Documentation String
 
+              | ModeString String
               | LitNat Nat
               | LitStr String
               | LitChr String
@@ -41,9 +42,11 @@ Show Token where
   show (ID id)             = showToken "ID" id
   show (Keyword str)       = showToken "Keyword" str
   show (LineComment str)   = showToken "LineComment" str
+
   show (BlockComment str)  = showToken "BlockComment" str
   show (Documentation str) = showToken "Documentation" str
 
+  show (ModeString str)    = showToken "ModeString" str
   show (LitNat n) = showToken "Nat" n
   show (LitStr s) = showToken "Str" s
   show (LitChr s) = showToken "Chr" s
@@ -61,6 +64,7 @@ Eq Token where
   (==) (BlockComment x) (BlockComment y) = x == y
   (==) (Keyword x) (Keyword y) = x == y
 
+  (==) (ModeString x) (ModeString y) = x == y
   (==) (LitNat x) (LitNat y) = x == y
   (==) (LitStr x) (LitStr y) = x == y
   (==) (LitChr x) (LitChr y) = x == y

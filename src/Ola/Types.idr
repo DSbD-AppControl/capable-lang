@@ -1,6 +1,7 @@
 module Ola.Types
 
 import Decidable.Equality
+
 import Toolkit.Decidable.Do
 
 %default total
@@ -10,7 +11,7 @@ data HandleKind = FILE | PROCESS
 
 export
 Show HandleKind where
-  show FILE = "FILE"
+  show FILE    = "FILE"
   show PROCESS = "PROCESS"
 
 Uninhabited (FILE = PROCESS) where
@@ -411,24 +412,5 @@ DecEq Ty where
                    Refl <- decEq y w `otherwise` (\Refl => Refl)
                    pure Refl
 
--- [ Helpers ]
---
--- Useful for proving things.
-
-export
-domain : {a,x : List Ty}
-      -> {b, y : Ty}
-      -> (prf : Equal (FUNC a b)
-                      (FUNC x y))
-             -> Equal a x
-domain {a = a} {b = b} {x = a} {y = b} Refl = Refl
-
-export
-range : {a,x : List Ty}
-     -> {b, y : Ty}
-     -> (prf : Equal (FUNC a b)
-                     (FUNC x y))
-            -> Equal b y
-range {a = a} {b = b} {x = a} {y = b} Refl = Refl
 
 -- [ EOF ]

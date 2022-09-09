@@ -90,11 +90,11 @@ mutual
 
          pure (_ ** Fetch tm)
 
-  check delta gamma (Open fc k w)
+  check delta gamma (Open fc k m w)
     = do (STR ** tm) <- check delta gamma w
            | (ty ** _) => mismatchAt fc STR ty
 
-         pure (_ ** Open k tm)
+         pure (_ ** Open k m tm)
 
   check delta gamma (Read fc h)
     = do (HANDLE k ** h) <- check delta gamma h

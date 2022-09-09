@@ -50,16 +50,13 @@ mutate
        symbol ";"
        pure (Mutate (newFC s e) l r)
 
-call : Rule S
-call
+run : Rule S
+run
   = do s <- Toolkit.location
-       l <- var
-       symbol "("
-       r <- sepBy (symbol ",") expr
-       symbol ")"
+       ex <- expr
        e <- Toolkit.location
        symbol ";"
-       pure (Run (newFC s e) $ Call (newFC s e) l r)
+       pure (Run (newFC s e) $ ex)
 
 return : Rule (FileContext, Expr)
 return
@@ -182,7 +179,7 @@ mutual
   stmt : Rule S
   stmt
     = mutate <|> print
-             <|> call
+             <|> run
              <|> local
              <|> var
              <|> while
@@ -192,7 +189,7 @@ mutual
 
   block : Rule Block
   block
-      = computeReturns <|> computeReturnsNot <|> returns
+      = returns <|> computeReturns <|> computeReturnsNot
     where
       returns : Rule Block
       returns
@@ -256,10 +253,10 @@ mutual
     = foldr' xs (Null emptyFC END)
 
   foldBlock (ComputesReturns xs (fc,e))
-    = foldr' xs (Null emptyFC (RET e))
+    = foldr' xs (Null fc (RET e))
 
   foldBlock (Returns (fc,e))
-    = (Null emptyFC (RET e))
+    = (Null fc (RET e))
 
 
   foldBlock' : Block -> (Raw.Stmt, Raw.Expr)
@@ -268,11 +265,11 @@ mutual
       , Const emptyFC UNIT ())
 
   foldBlock' (ComputesReturns xs (fc,e))
-    = ( foldr' xs (Null emptyFC END)
+    = ( foldr' xs (Null fc END)
       , e)
 
   foldBlock' (Returns (fc,e))
-    = MkPair (Null emptyFC END)
+    = MkPair (Null fc END)
              e
 
 

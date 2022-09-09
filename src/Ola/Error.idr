@@ -9,6 +9,7 @@ module Ola.Error
 import System.File
 import Toolkit.Data.Location
 import Toolkit.System
+import Toolkit.Text.Lexer.Run
 import Toolkit.Text.Parser.Run
 
 import Ola.Types
@@ -26,6 +27,11 @@ namespace Generic -- @TODO Pull out to Toolkit?
     S : (loc : FileContext)
      -> (err : Error type)
             -> Error type
+
+namespace Lexing
+  public export
+  data Error : Type where
+    LError : String -> LexFail -> Lexing.Error
 
 namespace Parsing
   public export
@@ -46,6 +52,7 @@ namespace Typing
     RefExpected : Ty -> Typing.Error
     NotBound : Ref -> Typing.Error
     ArrayExpected : Ty -> Error
+
     Mismatch : (given,expected : Ty)
                               -> Typing.Error
     BoundsError : (given, expected : Nat)
@@ -62,6 +69,7 @@ namespace Ola
   public export
   data Error : Type where
     Generic : String -> Ola.Error
+    Lex     : Lexing.Error -> Ola.Error
     Parse   : Parsing.Error -> Ola.Error
     TyCheck : Generic.Error Typing.Error -> Ola.Error
     Exec    : Running.Error -> Ola.Error

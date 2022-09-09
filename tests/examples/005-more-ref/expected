@@ -1,8 +1,8 @@
 Running Test
-"# Finished Parsing"
-"# Finished Type Checking"
-"# Executing"
-"```"
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
 Start of Function
 Example 5
 End of Function
@@ -12,5 +12,5 @@ Early End of Function
 Example 5
 New Message
 Bump!
-"```"
-"# Finished"
+```
+# Finished

@@ -21,6 +21,8 @@ import Data.Vect
 import Data.List.Elem
 import Data.List.Quantifiers
 
+import System.File
+
 import Toolkit.Data.DList
 
 import Ola.Core
@@ -154,6 +156,14 @@ namespace Heap
       = Heap.replace what with_ heap
 
 
+debase : FileError -> Nat
+debase (GenericFileError i) = minus (cast {to=Nat} i) 5
+debase FileReadError = 0
+debase FileWriteError = 1
+debase FileNotFound = 2
+debase PermissionDenied = 3
+debase FileExists = 4
+
 
 
 -- # Executing stuff
@@ -252,14 +262,60 @@ mutual
            pure (Value h'' ref (trans prf prf2))
 
     -- ### File/Process Interactions
-    eval env heap (Open what x)
-      = todo
+    eval env heap (Open k m fname) with (k)
+      eval env heap (Open k m fname) | FILE
+        = do Value h (S fname) prf <- eval env heap fname
+             val <- embed (openFile fname m)
+             case val of
+               Left err =>
+                 do let e = debase err
+                    pure (Value h (Left (I e)) prf)
+               Right fh =>
+                 do pure (Value h (Right (H FILE fh)) prf)
+
+      eval env heap (Open k m fname) | PROCESS
+        = do Value h (S fname) prf <- eval env heap fname
+             val <- embed (popen fname m)
+             case val of
+               Left err =>
+                 do let e = debase err
+                    pure (Value h (Left (I e)) prf)
+               Right fh =>
+                 pure (Value h (Right (H PROCESS fh)) prf)
+
     eval env heap (ReadLn x)
-      = todo
-    eval env heap (WriteLn x y)
-      = todo
+      = do Value h (H k fh) prf <- eval env heap x
+           res <- embed (fGetLine fh)
+           case res of
+             Left err =>
+               do let e = debase err
+                  pure (Value h (Left (I e)) prf)
+             Right str =>
+               pure (Value h (Right (S str)) prf)
+
+    eval env heap (WriteLn k s)
+      = do Value h  (H k fh) prf  <- eval env heap k
+           Value h' (S str)  prf' <- eval (weaken prf env) h s
+
+           res <- embed (fPutStrLn fh str)
+           case res of
+             Left err =>
+               do let e = debase err
+                  pure (Value h' (Left (I e)) (trans prf prf'))
+             Right str =>
+               pure (Value h' (Right U) (trans prf prf'))
+
     eval env heap (Close x)
-      = todo
+      = do Value h (H k fh) prf <- eval env heap x
+           case k of
+             PROCESS
+               => do v <- embed (pclose fh)
+                     pure (Value h U prf)
+
+             FILE
+               => do v <- embed (closeFile fh)
+                     pure (Value h U prf)
+
 
     -- ### Function Calls
 

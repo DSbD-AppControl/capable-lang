@@ -58,6 +58,10 @@ Show a => Show (Generic.Error a) where
     = unlines [show loc
               , show err]
 
+Show (Lexing.Error) where
+  show (LError _ e) = show e
+--    = trim $ unlines [show l, show i]
+
 Show (Parsing.Error) where
   show (PError _ err)
     = show @{olaPE} err
@@ -124,6 +128,10 @@ export
 Show (Ola.Error) where
   show (Generic err)
     = show err
+
+  show (Lex x)
+    = "Lexing Error\n" ++ show x
+
   show (Parse x)
     = "Parsing Error\n" ++ show x
 

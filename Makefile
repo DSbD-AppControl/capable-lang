@@ -15,7 +15,8 @@ TARGET = ${TARGETDIR}/${PROJECT}
 
 # [ Core Project Definition ]
 
-.PHONY: ola # ola-test-build ola-test-run ola-test-run-re ola-test-update ola-bench
+.PHONY: ola ola-test-build ola-test-run ola-test-run-re ola-test-update \
+       # ola-bench
 
 ola:
 	$(IDRIS2) --build ${PROJECT}.ipkg
@@ -42,6 +43,7 @@ ola-test-update: ola-test-build
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
+			 THREADS=1 \
 			 ONLY=$(ONLY)
 
 ola-bench: ola ola-test-build

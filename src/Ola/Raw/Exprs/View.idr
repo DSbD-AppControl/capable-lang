@@ -6,6 +6,7 @@
 |||
 module Ola.Raw.Exprs.View
 
+import System.File.Mode
 import Toolkit.Data.Location
 import Toolkit.Data.DList
 
@@ -58,8 +59,9 @@ data Expr : (s : Raw.Expr) -> Type where
 
   Open : (fc : FileContext)
       -> (k  : HandleKind)
+      -> (m  : Mode)
       -> (w  : Expr s)
-            -> Expr (Un fc (OPEN k) s)
+            -> Expr (Un fc (OPEN k m) s)
 
   Read : (fc : FileContext)
       -> (p  : Expr pair)
@@ -115,8 +117,8 @@ view (Un fc READ e) = Read fc (view e)
 view (Un fc CLOSE e) = Close fc (view e)
 view (Un fc (INDEX x) e)
   = Index fc x (view e)
-view (Un fc (OPEN x) e)
-  = Open fc x (view e)
+view (Un fc (OPEN x m) e)
+  = Open fc x m (view e)
 
 view (Un fc (THE x) e) with (view x)
   view (Un fc (THE x) e) | ty = The fc ty (view e)

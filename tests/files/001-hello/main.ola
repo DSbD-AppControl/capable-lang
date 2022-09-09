@@ -1,0 +1,26 @@
+main()
+{
+  print("My First Program with files");
+
+  local mfh = fopen("file.txt", #(r));
+
+  match mfh
+  { when left(e) { print("Error opening"); }
+
+    when right(fh)
+    { local resm = read(fh);
+
+      match resm
+      { when left(err) { print ("Error reading line."); }
+
+        when right(str)
+        { print("A line from the file:");
+          print(str);
+          close(fh);
+        }
+      }
+    }
+  }
+
+  return unit;
+}

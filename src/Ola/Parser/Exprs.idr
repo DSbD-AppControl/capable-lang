@@ -6,6 +6,8 @@
 |||
 module Ola.Parser.Exprs
 
+import Decidable.Equality
+
 import Data.List1
 
 import Ola.Lexer
@@ -20,6 +22,7 @@ import Ola.Raw.Exprs
 import Ola.Parser.Types
 
 %default partial -- @TODO Make exprs parsing total.
+
 
 export
 var : Rule Expr
@@ -68,7 +71,6 @@ uKind : Rule (FileContext, Unary)
 uKind
     =  gives "left"   LEFT
    <|> gives "right"  RIGHT
---   <|> gives "fetch"  FETCH
    <|> gives "read"   READ
    <|> gives "close"  CLOSE
 
@@ -106,18 +108,23 @@ mutual
          e <- Toolkit.location
          pure (Un (newFC s e) (snd k) ex)
 
+  kind : Rule HandleKind
+  kind =  do keyword "fopen"; pure FILE
+      <|> do keyword "popen"; pure PROCESS
+
     -- @TODO modes
   openE : Rule Expr
   openE
     = do s <- Toolkit.location
-         k <- (keyword "fopen" *> pure FILE <|> keyword "popen" *> pure PROCESS)
+         k <- kind
          symbol "("
          ex <- expr
-         -- symbol ","
-         -- m <- mode
+         symbol ","
+         m <- mode
          symbol ")"
          e <- Toolkit.location
-         pure (Un (newFC s e) (OPEN k) ex)
+
+         pure (Un (newFC s e) (OPEN k m) ex)
 
   annot : Rule Expr
   annot

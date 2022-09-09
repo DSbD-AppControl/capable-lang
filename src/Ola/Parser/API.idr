@@ -8,11 +8,16 @@ module Ola.Parser.API
 
 import public Text.Parser
 import public Data.List.Elem
+import public System.File.Mode
+
+import Data.Maybe
+
 import public Toolkit.Data.Location
 import public Toolkit.Text.Lexer.Run
 import public Toolkit.Text.Parser.Support
 import public Toolkit.Text.Parser.Location
 import public Toolkit.Text.Parser.Run
+
 
 import Ola.Core
 
@@ -57,6 +62,20 @@ namespace Ola
                              Symbol s => if s == str then Just MkUnit
                                                      else Nothing
                              _ => Nothing)
+
+  export
+  mode : Rule Mode
+  mode
+    = terminal "Expected mode str"
+               (\x => case x of
+                        ModeString "r"  => Just Read
+                        ModeString "r+" => Just ReadWrite
+                        ModeString "w"  => Just WriteTruncate
+                        ModeString "w+" => Just ReadWriteTruncate
+                        ModeString "a"  => Just Append
+                        ModeString "a+" => Just ReadAppend
+                        _ => Nothing)
+
 
   export
   char : Rule Char
@@ -131,4 +150,6 @@ namespace Ola
     = withLoc
         $ do keyword str
              pure ctor
+
+
 -- [ EOF ]

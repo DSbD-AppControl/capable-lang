@@ -57,6 +57,7 @@ namespace Maybe
     = pure prf
   embedAt fc err Nothing
     = throwAt fc err
+
 namespace Decidable
   export
   embedAt : FileContext
