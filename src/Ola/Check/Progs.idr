@@ -22,12 +22,14 @@ import Ola.Raw.Progs.View
 
 import Ola.Check.Common
 
+import Ola.Check.Roles
 import Ola.Check.Types
 import Ola.Check.Exprs
 import Ola.Check.Stmts
 import Ola.Check.Funcs
 
 import Ola.Terms.Vars
+import Ola.Terms.Roles
 import Ola.Terms.Types
 import Ola.Terms.Exprs
 import Ola.Terms.Stmts
@@ -37,26 +39,39 @@ import Ola.Terms.Progs
 %default total
 
 
-check : {f     : Prog}
-     -> {ds,gs : List Types.Ty}
-     -> (delta : Context Types.Ty ds)
-     -> (gamma : Context Types.Ty gs)
-     -> (prog  : Prog f)
-              -> Ola (Prog ds gs UNIT)
-check delta gamma (TypeDef fc ref val scope)
+check : {p     : Prog}
+     -> {rs    : List Ty.Role}
+     -> {ds,gs : List Ty.Base}
+     -> (rho   : Context Ty.Role rs)
+     -> (delta : Context Ty.Base ds)
+     -> (gamma : Context Ty.Base gs)
+     -> (prog  : Prog p)
+              -> Ola (Prog rs ds gs UNIT)
+check rho delta gamma (RoleDef fc ref r scope)
+  = do (r ** tm) <- roleCheck rho r
+       scope <- check
+                  (extend rho (get ref) r)
+                  delta
+                  gamma
+                  scope
+       pure (DefRole tm scope)
+
+check rho delta gamma (TypeDef fc ref val scope)
   = do (ty ** tm) <- typeCheck delta val
 
        scope <- check
+                  rho
                   (extend delta (get ref) ty)
                   gamma
                   scope
        pure (DefType tm scope)
 
-check delta gamma (FuncDef fc ref f scope)
-  = do (FUNC as r ** f) <- funcCheck delta gamma f
+check rho delta gamma (FuncDef fc ref f scope)
+  = do (FUNC as r ** f) <- funcCheck rho delta gamma f
          | (ty ** _) => throwAt fc (FunctionExpected ty)
 
        scope <- check
+                  rho
                   delta
                   (extend gamma (get ref) (FUNC as r))
                   scope
@@ -65,8 +80,8 @@ check delta gamma (FuncDef fc ref f scope)
        pure (DefFunc tyTm f scope)
 
 
-check delta gamma (Main fc f)
-  = do (FUNC Nil UNIT ** f) <- funcCheck delta gamma f
+check rho delta gamma (Main fc f)
+  = do (FUNC Nil UNIT ** f) <- funcCheck rho delta gamma f
          | (ty ** _) => mismatchAt fc (FUNC Nil UNIT) ty
 
        pure (Main f)
@@ -75,6 +90,6 @@ check delta gamma (Main fc f)
 export
 progCheck : (r : Prog) -> Ola Program
 progCheck p
-  = check Nil Nil (view p)
+  = check Nil Nil Nil (view p)
 
 -- [ EOF ]

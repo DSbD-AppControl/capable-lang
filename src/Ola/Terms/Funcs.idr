@@ -17,18 +17,19 @@ import Ola.Terms.Stmts
 %default total
 
 public export
-data Func : (types : List Ty)
-         -> (stack : List Ty)
-         -> (type  : Ty)
+data Func : (roles : List Ty.Role)
+         -> (types : List Ty.Base)
+         -> (stack : List Ty.Base)
+         -> (type  :      Ty.Base)
                   -> Type
   where
     ||| A non-recusrive function.
     ||| We need this setup to ensure that we deal with eearly returns and end of computations.
     ||| We must have a last expression to evaluate in case there are no early returns....
-    Fun : {args   : List Ty}
-       -> {return : Ty}
-       -> (body   : Stmt types (args ++ stack) out return)
-       -> (ret    : Expr types out return)
-                 -> Func types stack (FUNC args return)
+    Fun : {args   : List Ty.Base}
+       -> {return : Ty.Base}
+       -> (body   : Stmt roles types (args ++ stack) out return)
+       -> (ret    : Expr roles types out return)
+                 -> Func roles types stack (FUNC args return)
 
 -- [ EOF ]

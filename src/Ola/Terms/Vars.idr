@@ -21,6 +21,18 @@ public export
 Var : (context : List Ty)
    -> (type    : Ty)
               -> Type
-Var ctxt type = IsVar ctxt type
+Var = IsVar
+
+public export
+TyVar : (context : List Ty.Base)
+     -> (type    :      Ty.Base)
+                -> Type
+TyVar = IsVar
+
+public export
+RoleVar : (context : List Ty.Role)
+       -> (type    :      Ty.Role)
+                  -> Type
+RoleVar = IsVar
 
 -- [ EOF ]

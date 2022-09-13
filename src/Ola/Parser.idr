@@ -14,12 +14,14 @@ import Ola.Parser.API
 import Ola.Core
 import Ola.Types
 
+import Ola.Raw.Roles
 import Ola.Raw.Types
 import Ola.Raw.Exprs
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
 import Ola.Raw.Progs
 
+import Ola.Parser.Roles
 import Ola.Parser.Types
 import Ola.Parser.Exprs
 import Ola.Parser.Stmts
@@ -29,11 +31,25 @@ import Ola.Parser.Funcs
 
 data Decl = DeclT FileContext Ref Raw.Ty
           | DeclF FileContext Ref Raw.Func
+          | DeclR FileContext Ref Raw.Role
 
 decls : RuleEmpty (List Decl)
 decls
-    = many (declTy <|> declFunc)
+    = many (declTy <|> declFunc <|> declRole)
   where
+    declRole : Rule Decl
+    declRole
+      = do s <- Toolkit.location
+           keyword "role"
+           r <- ref
+           r' <- optional (symbol "=" *> role)
+           e <- Toolkit.location
+           case r' of
+             Nothing
+               => pure (DeclR (newFC s e) r (RoleDef (newFC s e)))
+             Just r'
+               => pure (DeclR (newFC s e) r r')
+
     declTy : Rule Decl
     declTy
       = do s <- Toolkit.location
@@ -77,8 +93,12 @@ program
          pure (foldr fold m ds)
   where
     fold : Decl -> Raw.Prog -> Raw.Prog
+    fold (DeclR fc r ro)
+      = Un fc (DEFROLE r ro)
+
     fold (DeclT fc r ty)
       = Un fc (DEFTYPE r ty)
+
     fold (DeclF fc r f)
       = Un fc (DEFFUNC r f)
 

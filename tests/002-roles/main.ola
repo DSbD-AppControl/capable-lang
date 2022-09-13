@@ -1,0 +1,27 @@
+type foo = String
+
+role Alice
+
+role AliceToo = Alice
+
+role Bob
+
+role Charlie
+
+func greeting() -> foo
+{
+  return "Hello World!";
+}
+
+main()
+{
+  print("My First Program");
+
+  local str = greeting();
+
+
+  print(str);
+
+
+  return unit;
+}

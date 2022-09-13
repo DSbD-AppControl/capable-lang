@@ -41,7 +41,7 @@ namespace Ola
 
   public export
   Keywords : List String
-  Keywords = [ "func", "main", "type", "local", "var"
+  Keywords = [ "func", "main", "type", "local", "var", "role"
 
              , "read", "close"
              , "fopen", "popen", "print", "return", "while"
@@ -70,6 +70,8 @@ namespace Ola
              , "Unit"
              , "FILE"
              , "PROC"
+
+             , "Role"
              ]
 
 

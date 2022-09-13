@@ -25,8 +25,8 @@ import        Ola.Terms.Vars
 |||
 ||| But that is a different set of research engineering issues.
 public export
-data Ty : (context : List Ty)
-       -> (type    : Ty)
+data Ty : (context : List Ty.Base)
+       -> (type    :      Ty.Base)
                   -> Type
   where
     TyChar : Ty ctxt CHAR
@@ -54,11 +54,11 @@ data Ty : (context : List Ty)
     TyHandle : (kind : HandleKind)
                     -> Ty ctxt (HANDLE kind)
 
-    TyFunc : (tmA : DList Ty (Ty ctxt) as)
+    TyFunc : (tmA : DList Ty.Base (Ty ctxt) as)
           -> (tmB : Ty ctxt b)
                  -> Ty ctxt (FUNC as b)
 
-    TyVar : Var ctxt type
-         -> Ty  ctxt type
+    TyVar : TyVar ctxt type
+         -> Ty    ctxt type
 
 -- [ EOF ]

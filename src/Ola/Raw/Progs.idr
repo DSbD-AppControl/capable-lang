@@ -10,6 +10,7 @@ module Ola.Raw.Progs
 import Toolkit.Data.Location
 
 import Ola.Types
+import Ola.Raw.Roles
 import Ola.Raw.Types
 import Ola.Raw.Exprs
 import Ola.Raw.Stmts
@@ -31,10 +32,12 @@ Show Progs.Nullary where
 public export
 data Unary = DEFTYPE Ref  Raw.Ty
            | DEFFUNC Ref  Raw.Func
+           | DEFROLE Ref  Raw.Role
 
 Show Progs.Unary where
   show (DEFTYPE r ty) = "(DEFTYPE \{show r} \{show ty})"
   show (DEFFUNC r f)  = "(DEFFUNC \{show r} \{show f})"
+  show (DEFROLE r ro) = "(DEFROLE \{show r} \{show ro})"
 
 setSourceU : String -> Progs.Unary -> Progs.Unary
 setSourceU str (DEFTYPE x y)
@@ -44,6 +47,10 @@ setSourceU str (DEFTYPE x y)
 
 setSourceU str (DEFFUNC x y)
   = DEFFUNC (setSource str x)
+            (setSource str y)
+
+setSourceU str (DEFROLE x y)
+  = DEFROLE (setSource str x)
             (setSource str y)
 
 

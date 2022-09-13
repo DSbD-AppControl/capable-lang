@@ -51,15 +51,15 @@ namespace Results
 
   namespace Expr
     public export
-    data Result : (store : List Ty) -> (type : Ty) -> Type where
-      Value : {new   : List Ty}
+    data Result : (store : List Ty.Base) -> (type : Ty.Base) -> Type where
+      Value : {new   : List Ty.Base}
            -> (store : Heap new)
            -> (value : Value new type)
            -> (prf   : Subset old new)
                     -> Result old type
 
     export
-    return : {store : List Ty}
+    return : {store : List Ty.Base}
           -> (heap  : Heap store)
           -> (value : Value store type)
                    -> Ola (Result store type)
@@ -68,25 +68,25 @@ namespace Results
   namespace Stmt
 
     public export
-    data Result : (stack, store : List Ty)
-               -> (type  : Ty)
+    data Result : (stack, store : List Ty.Base)
+               -> (type  : Ty.Base)
                         -> Type
       where
         ||| Captures the end of control flow that doesn't return a value
-        Continue : {newH  : List Ty}
+        Continue : {newH  : List Ty.Base}
                 -> (env   : Env stack' newH)
                 -> (store : Heap  newH)
                 -> (prf   : Subset oldH newH )
                          -> Result stack' oldH type
 
-        Value : {new   : List Ty}
+        Value : {new   : List Ty.Base}
              -> (store : Heap  new)
              -> (val   : Value new type)
              -> (prf   : Subset old new )
                       -> Result stack old type
 
     export
-    return : {store,store' : List Ty}
+    return : {store,store' : List Ty.Base}
           -> (prf  : Subset store store')
           -> (rest : Stmt.Result stack' store' b)
                   -> Ola (Stmt.Result stack' store b)
@@ -97,7 +97,7 @@ namespace Results
       = pure (Value h val (trans prf p))
 
     export
-    return2 : {store,store',store'' : List Ty}
+    return2 : {store,store',store'' : List Ty.Base}
            -> (p1   : Subset store  store')
            -> (p2   : Subset store' store'')
            -> (rest : Stmt.Result stack store'' b)
@@ -109,13 +109,13 @@ namespace Results
   namespace Args
 
     public export
-    data Results : (store : List Ty)
-                -> (types : List Ty)
+    data Results : (store : List Ty.Base)
+                -> (types : List Ty.Base)
                          -> Type
       where
-        Args : {new   : List Ty}
+        Args : {new   : List Ty.Base}
             -> (store : Heap  new)
-            -> (args  : DList Ty (Value new) types)
+            -> (args  : DList Ty.Base (Value new) types)
             -> (prf   : Subset  old new )
                      -> Results old types
 
@@ -123,8 +123,8 @@ namespace Results
 namespace Heap
   namespace Expr
     export
-    insert : {store : List Ty}
-          -> {type  : Ty}
+    insert : {store : List Ty.Base}
+          -> {type  : Ty.Base}
           -> (value : Value store type)
           -> (heap  : Heap  store)
                    -> Ola (Expr.Result store (REF type))
@@ -136,8 +136,8 @@ namespace Heap
         in pure (Value h' v' new)
 
     export
-    fetch : {store : List Ty}
-         -> (loc   : Var  store type)
+    fetch : {store : List Ty.Base}
+         -> (loc   : IsVar  store type)
          -> (heap  : Heap store)
                   -> Ola (Expr.Result store type)
     fetch loc heap
@@ -146,8 +146,8 @@ namespace Heap
 
   namespace Stmt
     export
-    mutate : {store : List Ty}
-          -> (what  : Var store type)
+    mutate : {store : List Ty.Base}
+          -> (what  : IsVar store type)
           -> (heap  : Heap store)
           -> (with_ : Val type store)
                    -> Heap store
@@ -172,11 +172,11 @@ mutual
   ||| Executing Expressions
   namespace Exprs
     %inline
-    when : {type : Ty}
+    when : {type : Ty.Base}
         -> (env  : Env stack store)
         -> (cond : Expr.Result store BOOL)
-        -> (tt   : Expr types stack type)
-        -> (ff   : Expr types stack type)
+        -> (tt   : Expr roles types stack type)
+        -> (ff   : Expr roles types stack type)
                 -> Ola (Expr.Result store type)
 
     when env (Value h (B False) prf) _ ff
@@ -190,11 +190,11 @@ mutual
 
 
     public export
-    eval : {type : Ty}
-        -> {store : List Ty}
-        -> (env   : Env        stack store)
-        -> (heap  : Heap             store)
-        -> (expr  : Expr types stack       type)
+    eval : {type  : Ty.Base}
+        -> {store : List Ty.Base}
+        -> (env   : Env              stack store)
+        -> (heap  : Heap                   store)
+        -> (expr  : Expr roles types stack       type)
                  -> Ola (Expr.Result store type)
     -- Variables
     eval env heap (Var x)
@@ -340,10 +340,10 @@ mutual
 
   namespace Args
     export
-    eval : {as,store : List Ty}
+    eval : {as,store : List Ty.Base}
         -> (env   : Env        stack store)
         -> (heap  : Heap             store)
-        -> (args  : DList Ty (Expr tys stack) as)
+        -> (args  : DList Ty.Base (Expr rs tys stack) as)
                  -> Ola (Args.Results store as)
     eval env heap []
       = pure (Args heap
@@ -360,11 +360,11 @@ mutual
   namespace Stmt
 
     ||| Bespoke join to ensure early returns
-    join : {type : Ty}
-        -> {store : List Ty}
+    join : {type : Ty.Base}
+        -> {store : List Ty.Base}
         -> (env   : Env stack store)
         -> (this  : Stmt.Result stack'' store type)
-        -> (stmt  : Stmt types stack stack' type)
+        -> (stmt  : Stmt roles types stack stack' type)
                  -> Ola (Stmt.Result stack' store type)
     join e (Continue _ h prf) stmt
       = do res <- (eval (weaken prf e) h stmt)
@@ -375,11 +375,11 @@ mutual
 
     ||| Expressions return values, statements may return early.
     public export
-    eval : {type : Ty}
-        -> {store : List Ty}
+    eval : {type : Ty.Base}
+        -> {store : List Ty.Base}
         -> (env   : Env stack store)
         -> (heap  : Heap store)
-        -> (stmt  : Stmt types stack out type)
+        -> (stmt  : Stmt roles types stack out type)
                  -> Ola (Stmt.Result out store type)
 
     -- ### Bindings
@@ -467,13 +467,13 @@ mutual
   namespace Func
     ||| Let's deal with functions separatly.
     public export
-    eval : {store : List Ty}
-        -> {as    : List Ty}
-        -> {ret : Ty}
-        -> (env   : Env        stack store)
-        -> (heap  : Heap             store)
-        -> (func  : Func types stack          (FUNC as ret))
-        -> (vals  : DList Ty (Value store) as)
+    eval : {store : List Ty.Base}
+        -> {as    : List Ty.Base}
+        -> {ret : Ty.Base}
+        -> (env   : Env              stack store)
+        -> (heap  : Heap                   store)
+        -> (func  : Func roles types stack          (FUNC as ret))
+        -> (vals  : DList Ty.Base (Value store) as)
                  -> Ola (Expr.Result store ret)
 
     eval env heap (Fun body last) args
@@ -538,7 +538,7 @@ namespace Progs
       = (read x env)
 
     resolves : (env : Env types)
-            -> (ty  : DList Ty (Ty types) tys)
+            -> (ty  : DList Ty.Base (Ty types) tys)
                    -> Singleton tys
     resolves env [] = Val []
     resolves env (x :: xs)
@@ -546,36 +546,55 @@ namespace Progs
         let Val xs = resolves env xs
         in Val (x::xs)
 
+  resolveRole : (env : Env roles)
+             -> (role : Role roles r)
+                     -> Singleton r
+  resolveRole env RoleDef
+    = Val MkRole
+  resolveRole env (RoleVar x)
+    = read x env
 
   ||| Run a programme.
   public export
-  run : {type : Ty}
-      -> {store : List Ty}
+  run : {type : Ty.Base}
+      -> {store : List Ty.Base}
+      -> (envR  : Env roles)
       -> (envT  : Env types)
       -> (env   : Env        stack store)
       -> (heap  : Heap             store)
-      -> (expr  : Prog types stack   type)
+      -> (expr  : Prog roles types stack   type)
                -> Ola (Expr.Result store type)
 
+  -- RoleDefs need resolving...
+  run er et env heap (DefRole rDef rest)
+    = do let r = resolveRole er rDef
+         run (r::er)
+             et
+             env
+             heap
+             rest
+
   -- Typedefs need resolving.
-  run et env heap (DefType tyRef rest)
+  run er et env heap (DefType tyRef rest)
     = do let ty = resolve et tyRef
-         run (ty::et)
+         run er
+             (ty::et)
              env
              heap
              rest
 
 
   -- Functions store their environment at time of definition.
-  run et env heap (DefFunc sig func rest)
-    = run et
+  run er et env heap (DefFunc sig func rest)
+    = run er
+          et
           (Clos func env :: env)
           heap
           rest
 
 
   -- The main sh-bang
-  run _ env heap (Main x)
+  run _ _ env heap (Main x)
     = eval env heap x Nil
 
 ||| Only run closed programmes.
@@ -584,7 +603,7 @@ exec : (prog : Program)
             -> Ola ()
 
 exec p
-  = do ignore (run Nil Nil Nil p)
+  = do ignore (run Nil Nil Nil Nil p)
        pure ()
 
 -- [ EOF ]

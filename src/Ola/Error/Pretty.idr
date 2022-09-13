@@ -37,7 +37,10 @@ import Ola.Lexer.Token
   show (LError (MkLexFail l i))
     = trim $ unlines [show l, show i]
 
-Show Ty where
+Show Ty.Role where
+  show MkRole = "Role"
+
+Show Ty.Base where
   show CHAR        = "CHAR"
   show STR         = "STR"
   show INT         = "INT"
@@ -50,6 +53,10 @@ Show Ty where
   show (HANDLE x)  = "(HANDLE \{show x})"
   show (FUNC x y)  = "(\{(assert_total $ show x)} -> \{show y}) "
 -- @TODO fix assert_total
+
+Show Ty where
+  show (B x) = show x
+  show (R x) = show x
 
 Show a => Show (Generic.Error a) where
   show (E v)

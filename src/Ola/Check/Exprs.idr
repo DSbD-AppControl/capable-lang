@@ -26,14 +26,16 @@ import Ola.Terms.Exprs
 %default total
 
 mutual
-  check : {r     : Expr}
-       -> {ds,gs : List Types.Ty}
-       -> (delta : Context Types.Ty ds)
-       -> (gamma : Context Types.Ty gs)
-       -> (syn   : Expr r)
-               -> Ola (DPair Types.Ty (Expr ds gs))
+  check : {e     : Expr}
+       -> {rs    : List Ty.Role}
+       -> {ds,gs : List Ty.Base}
+       -> (rho   : Context Ty.Role rs)
+       -> (delta : Context Ty.Base ds)
+       -> (gamma : Context Ty.Base gs)
+       -> (syn   : Expr e)
+               -> Ola (DPair Ty.Base (Expr rs ds gs))
 
-  check delta gamma (Var ref)
+  check rho delta gamma (Var ref)
     = do prf <- embedAtInfo
                   (span ref)
                   (NotBound ref)
@@ -41,24 +43,24 @@ mutual
          let (ty ** (loc ** prfN)) = deBruijn prf
          pure (ty ** Var (V loc prfN))
 
-  check delta gamma (U fc)
+  check rho delta gamma (U fc)
     = pure (_ ** U)
-  check delta gamma (C fc v)
+  check rho delta gamma (C fc v)
     = pure (_ ** C v)
-  check delta gamma (S fc v)
+  check rho delta gamma (S fc v)
     = pure (_ ** S v)
-  check delta gamma (I fc v)
+  check rho delta gamma (I fc v)
     = pure (_ ** I v)
-  check delta gamma (B fc v)
+  check rho delta gamma (B fc v)
     = pure (_ ** B v)
 
-  check delta gamma (Cond fc c t f)
-    = do (BOOL ** c) <- check delta gamma c
+  check rho delta gamma (Cond fc c t f)
+    = do (BOOL ** c) <- check rho delta gamma c
            | (ty ** _) => mismatchAt (getFC c) BOOL ty
 
-         (tyT ** tt) <- check delta gamma t
+         (tyT ** tt) <- check rho delta gamma t
 
-         (tyF ** ff) <- check delta gamma f
+         (tyF ** ff) <- check rho delta gamma f
 
          Refl <- embedAt
                    fc
@@ -67,8 +69,8 @@ mutual
 
          pure (_ ** Cond c tt ff)
 
-  check delta gamma (Index fc n arr)
-    = do (ARRAY ty m ** tm) <- check delta gamma arr
+  check rho delta gamma (Index fc n arr)
+    = do (ARRAY ty m ** tm) <- check rho delta gamma arr
            | (ty ** _) => throwAt fc (ArrayExpected ty)
 
          idx <- embedAt
@@ -78,47 +80,47 @@ mutual
 
          pure (_ ** Index idx tm)
 
-  check delta gamma (Pair fc a b)
-    = do (tyA ** tmA) <- check delta gamma a
-         (tyB ** tmB) <- check delta gamma b
+  check rho delta gamma (Pair fc a b)
+    = do (tyA ** tmA) <- check rho delta gamma a
+         (tyB ** tmB) <- check rho delta gamma b
 
          pure (_ ** Pair tmA tmB)
 
-  check delta gamma (Fetch fc p)
-    = do (REF t ** tm) <- check delta gamma p
+  check rho delta gamma (Fetch fc p)
+    = do (REF t ** tm) <- check rho delta gamma p
            | (ty ** tm) => throwAt fc (RefExpected ty)
 
          pure (_ ** Fetch tm)
 
-  check delta gamma (Open fc k m w)
-    = do (STR ** tm) <- check delta gamma w
+  check rho delta gamma (Open fc k m w)
+    = do (STR ** tm) <- check rho delta gamma w
            | (ty ** _) => mismatchAt fc STR ty
 
          pure (_ ** Open k m tm)
 
-  check delta gamma (Read fc h)
-    = do (HANDLE k ** h) <- check delta gamma h
+  check rho delta gamma (Read fc h)
+    = do (HANDLE k ** h) <- check rho delta gamma h
            | (ty ** _) =>  throwAt fc (HandleExpected ty)
 
          pure (_ ** ReadLn h)
 
-  check delta gamma (Write fc h s)
-    = do (HANDLE k ** h) <- check delta gamma h
+  check rho delta gamma (Write fc h s)
+    = do (HANDLE k ** h) <- check rho delta gamma h
            | (ty ** _) =>  throwAt fc (HandleExpected ty)
 
-         (STR ** s) <- check delta gamma s
+         (STR ** s) <- check rho delta gamma s
            | (ty ** _) => mismatchAt fc STR ty
 
          pure (_ ** WriteLn h s)
 
-  check delta gamma (Close fc h)
-    = do (HANDLE k ** h) <- check delta gamma h
+  check rho delta gamma (Close fc h)
+    = do (HANDLE k ** h) <- check rho delta gamma h
            | (ty ** _) => throwAt fc (HandleExpected ty)
 
          pure (_ ** Close h)
 
-  check {ds} {gs} delta gamma (Call fc f as)
-    = do (FUNC tys ty ** f) <- check delta gamma f
+  check {rs} {ds} {gs} rho delta gamma (Call fc f as)
+    = do (FUNC tys ty ** f) <- check rho delta gamma f
            | (ty ** _) => throwAt fc (FunctionExpected ty)
 
          as <- checkArgs tys as
@@ -129,10 +131,10 @@ mutual
 
     where
       checkArgs : {as   : List Expr}
-               -> (tys  : List Types.Ty)
+               -> (tys  : List Ty.Base)
                -> (args : DList Expr Expr as)
-                       -> Ola (DList Types.Ty
-                                     (Expr ds gs)
+                       -> Ola (DList Ty.Base
+                                     (Expr rs ds gs)
                                      tys)
       checkArgs [] []
         = pure Nil
@@ -144,7 +146,7 @@ mutual
         = throwAt fc (ArgsExpected (x::xs))
 
       checkArgs (x :: xs) (tm' :: tms)
-        = do (ty ** tm) <- check delta gamma tm'
+        = do (ty ** tm) <- check rho delta gamma tm'
 
              Refl <- embedAt
                        (getFC tm')
@@ -155,16 +157,16 @@ mutual
 
              pure (tm :: rest)
 
-  check delta gamma (ArrayCons fc x (Null fc'))
-    = do (ty ** tm) <- check delta gamma x
+  check rho delta gamma (ArrayCons fc x (Null fc'))
+    = do (ty ** tm) <- check rho delta gamma x
 
          pure (_ ** ArrayCons tm ArrayEmpty)
 
 
-  check delta gamma (ArrayCons fc h rest)
-    = do (ty ** head) <- check delta gamma h
+  check rho delta gamma (ArrayCons fc h rest)
+    = do (ty ** head) <- check rho delta gamma h
 
-         (ARRAY ty' n ** tail) <- check delta gamma rest
+         (ARRAY ty' n ** tail) <- check rho delta gamma rest
            | (ty ** _) => throwAt fc (ArrayExpected ty)
 
          Refl <- embedAt
@@ -178,33 +180,35 @@ mutual
   -- There is not enough information to type sums (or empty arrays) in
   -- their introduction forms.  We will type them at binder locations,
   -- ascriptions, and as arguments.
-  check delta gamma (Left fc p)
+  check rho delta gamma (Left fc p)
     = unknown fc
 
-  check delta gamma (Right fc p)
+  check rho delta gamma (Right fc p)
     = unknown fc
 
-  check delta gamma (Null fc)
+  check rho delta gamma (Null fc)
     = unknown fc
 
   -- [ NOTE ]
   --
   -- Here we check ascriptions and especially the unknowns.
-  check delta gamma (The fc ty expr)
-    = do T ty tm e <- ascript fc delta gamma ty expr
+  check rho delta gamma (The fc ty expr)
+    = do T ty tm e <- ascript fc rho delta gamma ty expr
          pure (ty ** e)
 
   export
-  ascript : {r     : Expr}
-         -> {ds,gs : List Types.Ty}
+  ascript : {e     : Expr}
+         -> {rs    : List Ty.Role}
+         -> {ds,gs : List Ty.Base}
          -> (fc    : FileContext)
-         -> (delta : Context Types.Ty ds)
-         -> (gamma : Context Types.Ty gs)
+         -> (rho   : Context Ty.Role rs)
+         -> (delta : Context Ty.Base ds)
+         -> (gamma : Context Ty.Base gs)
          -> (ty    : View.Ty t)
-         -> (syn   : Expr r)
-                  -> Ola (The ds gs)
+         -> (syn   : Expr e)
+                  -> Ola (The rs ds gs)
 
-  ascript fc delta gamma ty expr
+  ascript fc rho delta gamma ty expr
 
     = do res <- typeCheck delta ty
 
@@ -216,21 +220,25 @@ mutual
              => mismatchAt fc (ARRAY ty' (S k)) (ARRAY ty' Z)
 
            ((UNION tyL tyR ** tm), (Left fc' l))
-             => do (tyL' ** l) <- check delta gamma l
+             => do (tyL' ** l) <- check rho delta gamma l
 
                    Refl <- compare fc tyL tyL'
 
                    pure (T (UNION tyL tyR) tm (Left l))
 
            ((UNION tyL tyR ** tm), (Right fc' r))
-             => do (tyR' ** l) <- check delta gamma r
+             => do (tyR' ** l) <- check rho delta gamma r
 
                    Refl <- compare fc tyR tyR'
 
                    pure (T (UNION tyL tyR) tm (Right l))
 
            ((ty ** tm), expr)
-             => do (ty' ** e) <- check delta gamma expr
+             => do (ty' ** e) <- check
+                                   rho
+                                   delta
+                                   gamma
+                                   expr
 
                    Refl <- compare fc ty ty'
 
@@ -238,36 +246,42 @@ mutual
 
 
 export
-ascriptReflect : {r     : Expr}
-              -> {ds,gs : List Types.Ty}
-              -> (delta : Context Types.Ty ds)
-              -> (gamma : Context Types.Ty gs)
-              -> (syn   : Expr r)
-                       -> Ola (The ds gs)
-ascriptReflect delta gamma syn
-  = do (ty ** expr) <- check delta gamma syn
+ascriptReflect : {e     : Expr}
+              -> {rs    : List Ty.Role}
+              -> {ds,gs : List Ty.Base}
+              -> (rho   : Context Ty.Role rs)
+              -> (delta : Context Ty.Base ds)
+              -> (gamma : Context Ty.Base gs)
+              -> (syn   : Expr e)
+                       -> Ola (The rs ds gs)
+ascriptReflect rho delta gamma syn
+  = do (ty ** expr) <- check rho delta gamma syn
        tm <- typeReflect delta ty
        pure (T ty tm expr)
 
 
 export
-exprCheck : {r     : Expr}
-         -> {ds,gs : List Types.Ty}
-         -> (delta : Context Types.Ty ds)
-         -> (gamma : Context Types.Ty gs)
-         -> (syn   : Expr r)
-                 -> Ola (DPair Types.Ty (Expr ds gs))
+exprCheck : {e     : Expr}
+         -> {rs    : List Ty.Role}
+         -> {ds,gs : List Ty.Base}
+         -> (rho   : Context Ty.Role rs)
+         -> (delta : Context Ty.Base ds)
+         -> (gamma : Context Ty.Base gs)
+         -> (syn   : Expr e)
+                 -> Ola (DPair Ty.Base (Expr rs ds gs))
 
 exprCheck
   = check
 
 namespace Raw
   export
-  exprCheck : {ds,gs : List Types.Ty}
-           -> (delta : Context Types.Ty ds)
-           -> (gamma : Context Types.Ty gs)
+  exprCheck : {rs    : List Ty.Role}
+           -> {ds,gs : List Ty.Base}
+           -> (rho   : Context Ty.Role rs)
+           -> (delta : Context Ty.Base ds)
+           -> (gamma : Context Ty.Base gs)
            -> (syn   : Expr)
-                   -> Ola (DPair Types.Ty (Expr ds gs))
-  exprCheck d g e
-    = check d g (view e)
+                   -> Ola (DPair Ty.Base (Expr rs ds gs))
+  exprCheck r d g e
+    = check r d g (view e)
 -- [ EOF ]

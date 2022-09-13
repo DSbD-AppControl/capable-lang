@@ -33,24 +33,24 @@ import Ola.Terms.Funcs
 
 %default total
 
-data Instrs : (delta : List Types.Ty)
+data Instrs : (delta : List Ty.Base)
            -> (args  : Funcs.View.Args as)
-           -> (tys   : List Types.Ty)
+           -> (tys   : List Ty.Base)
                     -> Type
   where
     Empty : Instrs delta Empty Nil
     Arg : (ref : Ref)
-       -> (ty  : Types.Ty)
+       -> (ty  : Ty.Base)
        -> (tm  : Ty delta ty)
        -> (rest : Instrs delta as tys)
                -> Instrs delta (Extend fc ref ty' as) (ty :: tys)
 
 
-checkArgs : {ds    : List Types.Ty}
-         -> (delta : Context Types.Ty ds)
+checkArgs : {ds    : List Ty.Base}
+         -> (delta : Context Ty.Base ds)
          -> {as    : List (FileContext,Ref,Raw.Ty)}
          -> (args  : Args as)
-                  -> Ola (DPair (List Types.Ty)
+                  -> Ola (DPair (List Ty.Base)
                                 (Instrs ds args))
 checkArgs delta Empty
   = pure (_ ** Empty)
@@ -59,31 +59,35 @@ checkArgs delta (Extend fc ref ty rest)
        (_ ** rest) <- checkArgs delta rest
        pure (_ ** Arg ref ty tm rest)
 
-expand : (gamma : Context Types.Ty gs)
+expand : (gamma : Context Ty.Base gs)
       -> (is    : Instrs ds args as)
-               -> Context Types.Ty (as ++ gs)
+               -> Context Ty.Base (as ++ gs)
 expand gamma Empty
   = gamma
 expand gamma (Arg ref ty tm rest)
   = extend (expand gamma rest) (get ref) ty
 
 check : {f     : Func}
-     -> {ds,gs : List Types.Ty}
-     -> (delta : Context Types.Ty ds)
-     -> (gamma : Context Types.Ty gs)
+     -> {rs    : List Ty.Role}
+     -> {ds,gs : List Ty.Base}
+     -> (rho   : Context Ty.Role rs)
+     -> (delta : Context Ty.Base ds)
+     -> (gamma : Context Ty.Base gs)
      -> (func  : Func f)
-              -> Ola (DPair Types.Ty (Func ds gs))
+              -> Ola (DPair Ty.Base (Func rs ds gs))
 
-check delta gamma (F fc aTy rTy body last)
+check rho delta gamma (F fc aTy rTy body last)
   = do (tyAs ** as) <- checkArgs delta aTy
        (rty ** rtm) <- typeCheck delta rTy
 
        R newG rTy' body Refl <- stmtCheck
+                                  rho
                                   delta
                                   (expand gamma as)
                                   rty
                                   body
        (ty ** last) <- exprCheck
+                         rho
                          delta
                          newG
                          last
@@ -93,23 +97,27 @@ check delta gamma (F fc aTy rTy body last)
        pure (FUNC tyAs rTy' ** Fun body last)
 
 export
-funcCheck : {r     : Func}
-         -> {ds,gs : List Types.Ty}
-         -> (delta : Context Types.Ty ds)
-         -> (gamma : Context Types.Ty gs)
-         -> (syn   : Func r)
-                  -> Ola (DPair Types.Ty (Func ds gs))
+funcCheck : {f     : Func}
+         -> {rs    : List Ty.Role}
+         -> {ds,gs : List Ty.Base}
+         -> (rho   : Context Ty.Role rs)
+         -> (delta : Context Ty.Base ds)
+         -> (gamma : Context Ty.Base gs)
+         -> (syn   : Func f)
+                  -> Ola (DPair Ty.Base (Func rs ds gs))
 
 funcCheck
   = check
 
 namespace Raw
   export
-  funcCheck : {ds,gs : List Types.Ty}
-           -> (delta : Context Types.Ty ds)
-           -> (gamma : Context Types.Ty gs)
+  funcCheck : {rs    : List Ty.Role}
+           -> {ds,gs : List Ty.Base}
+           -> (rho   : Context Ty.Role rs)
+           -> (delta : Context Ty.Base ds)
+           -> (gamma : Context Ty.Base gs)
            -> (syn   : Func)
-                   -> Ola (DPair Types.Ty (Func ds gs))
-  funcCheck d g e
-    = check d g (view e)
+                   -> Ola (DPair Ty.Base (Func rs ds gs))
+  funcCheck r d g e
+    = check r d g (view e)
 -- [ EOF ]

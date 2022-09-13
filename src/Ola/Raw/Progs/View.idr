@@ -10,6 +10,9 @@ import Toolkit.Data.Location
 import Toolkit.Data.DList
 
 import Ola.Types
+
+import Ola.Raw.Roles
+
 import Ola.Raw.Types
 import Ola.Raw.Types.View
 
@@ -28,6 +31,12 @@ import Ola.Raw.Progs
 
 public export
 data Prog : (s : Raw.Prog) -> Type where
+  RoleDef : (fc    : FileContext)
+         -> (ref   : Ref)
+         -> (role  : Raw.Role)
+         -> (scope : Prog body)
+                  -> Prog (Un fc (DEFROLE ref role) body)
+
   TypeDef : (fc    : FileContext)
          -> (ref   : Ref)
          -> (val   : Ty t)
@@ -53,6 +62,8 @@ view (Un fc (DEFTYPE x y) rem)
 view (Un fc (DEFFUNC x y) rem)
   = FuncDef fc x (view y) (view rem)
 
+view (Un fc (DEFROLE x y) rem)
+  = RoleDef fc x y (view rem)
 
 export
 getFC : {s : Prog} -> Prog s -> FileContext

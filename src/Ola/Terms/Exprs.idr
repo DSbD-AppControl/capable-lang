@@ -23,30 +23,31 @@ import Ola.Terms.Vars
 
 
 public export
-data Expr : (types : List Ty)
-         -> (stack : List Ty)
+data Expr : (roles : List Ty.Role)
+         -> (types : List Ty.Base)
+         -> (stack : List Ty.Base)
 
-         -> (type  : Ty)
+         -> (type  :      Ty.Base)
                   -> Type
   where
-    Var : Var stack t -> Expr types stack t
+    Var : TyVar stack t -> Expr roles types stack t
 
-    U : Expr types stack UNIT
+    U : Expr roles types stack UNIT
 
     -- # Primitives
 
     -- ## Values
-    C : Char   -> Expr types stack CHAR
-    S : String -> Expr types stack STR
-    I : Nat    -> Expr types stack INT
-    B : Bool   -> Expr types stack BOOL
+    C : Char   -> Expr roles types stack CHAR
+    S : String -> Expr roles types stack STR
+    I : Nat    -> Expr roles types stack INT
+    B : Bool   -> Expr roles types stack BOOL
 
     -- ## Operations
 
-    Cond : (cond : Expr types stack BOOL)
-        -> (tt   : Expr types stack a)
-        -> (ff   : Expr types stack a)
-                -> Expr types stack a
+    Cond : (cond : Expr roles types stack BOOL)
+        -> (tt   : Expr roles types stack a)
+        -> (ff   : Expr roles types stack a)
+                -> Expr roles types stack a
 
     -- Rest to come...
     -- @TODO primitive operations on char
@@ -59,25 +60,25 @@ data Expr : (types : List Ty)
     -- ## Arrays
 
     -- ### Constructors
-    ArrayEmpty : Expr types stack (ARRAY type Z)
+    ArrayEmpty : Expr roles types stack (ARRAY type Z)
 
-    ArrayCons : Expr types stack        type
-             -> Expr types stack (ARRAY type    n)
-             -> Expr types stack (ARRAY type (S n))
+    ArrayCons : Expr roles types stack        type
+             -> Expr roles types stack (ARRAY type    n)
+             -> Expr roles types stack (ARRAY type (S n))
 
     -- ### Eliminators
     Index : {n : Nat}
          -> (idx   : Fin n)
-         -> (array : Expr types stack (ARRAY type n))
-                  -> Expr types stack        type
+         -> (array : Expr roles types stack (ARRAY type n))
+                  -> Expr roles types stack        type
 
     -- ## Products
 
     -- ### Constructors
-    Pair : {a,b : Ty}
-        -> Expr types stack       a
-        -> Expr types stack         b
-        -> Expr types stack (PAIR a b)
+    Pair : {a,b : Ty.Base}
+        -> Expr roles types stack       a
+        -> Expr roles types stack         b
+        -> Expr roles types stack (PAIR a b)
 
     -- ### Eliminators Are statements
 
@@ -86,20 +87,20 @@ data Expr : (types : List Ty)
 
     -- ### Constructors
 
-    Left : Expr types stack        a
-        -> Expr types stack (UNION a b)
+    Left : Expr roles types stack        a
+        -> Expr roles types stack (UNION a b)
 
-    Right : Expr types stack          b
-         -> Expr types stack (UNION a b)
+    Right : Expr roles types stack          b
+         -> Expr roles types stack (UNION a b)
 
     -- ### Eliminators Are statements
     -- ## References
 
-    Fetch : Expr types stack (REF t)
-         -> Expr types stack      t
+    Fetch : Expr roles types stack (REF type)
+         -> Expr roles types stack      type
 
-    Alloc : Expr types stack      type
-         -> Expr types stack (REF type)
+    Alloc : Expr roles types stack      type
+         -> Expr roles types stack (REF type)
 
     -- ## Processes
 
@@ -107,37 +108,37 @@ data Expr : (types : List Ty)
 
     Open : (what : HandleKind)
         -> (m : Mode)
-        -> Expr types stack STR
-        -> Expr types stack (UNION INT (HANDLE what))
+        -> Expr roles types stack STR
+        -> Expr roles types stack (UNION INT (HANDLE what))
 
     -- ### Read
     ReadLn : {k : HandleKind}
-          -> Expr types stack (HANDLE k)
-          -> Expr types stack (UNION INT STR)
+          -> Expr roles types stack (HANDLE k)
+          -> Expr roles types stack (UNION INT STR)
 
     -- ### Send
     WriteLn : {k : HandleKind}
-           -> Expr types stack (HANDLE k)
-           -> Expr types stack STR
-           -> Expr types stack (UNION INT UNIT)
+           -> Expr roles types stack (HANDLE k)
+           -> Expr roles types stack STR
+           -> Expr roles types stack (UNION INT UNIT)
 
     -- ### Close
     Close : {k : HandleKind}
-         -> Expr types stack (HANDLE k)
-         -> Expr types stack UNIT
+         -> Expr roles types stack (HANDLE k)
+         -> Expr roles types stack UNIT
 
 
     -- ## Function Application
 
-    Call : {as : List Ty}
-        -> {b : Ty}
-        -> Expr types stack (FUNC as b)
-        -> DList Ty (Expr types stack)       as
-        -> Expr types stack         b
+    Call : {as : List Ty.Base}
+        -> {b : Ty.Base}
+        -> Expr roles types stack (FUNC as b)
+        -> DList Ty.Base (Expr roles types stack) as
+        -> Expr roles types stack         b
 
     -- ## Type Ascriptions
     The : (ty   : Ty   types       type)
-       -> (expr : Expr types stack type)
-               -> Expr types stack type
+       -> (expr : Expr roles types stack type)
+               -> Expr roles types stack type
 
 -- [ EOF ]

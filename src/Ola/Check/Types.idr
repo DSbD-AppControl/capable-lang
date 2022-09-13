@@ -25,11 +25,11 @@ import Ola.Terms.Types
 %default total
 
 mutual
-  checkArgs : {types : List Types.Ty}
-           -> (ctxt  : Context Types.Ty types)
+  checkArgs : {types : List Ty.Base}
+           -> (ctxt  : Context Ty.Base types)
            -> (args  : Args as)
-                    -> Ola (DPair (List Types.Ty)
-                                  (DList Types.Ty (Ty types)))
+                    -> Ola (DPair (List Ty.Base)
+                                  (DList Ty.Base (Ty types)))
   checkArgs ctxt Empty
 
     = pure (_ ** Nil)
@@ -41,10 +41,10 @@ mutual
 
          pure (_ ** ty :: tys)
 
-  check : {types : List Types.Ty}
-       -> (ctxt : Context Types.Ty types)
+  check : {types : List Ty.Base}
+       -> (ctxt : Context Ty.Base types)
        -> (syn  : Ty r)
-               -> Ola (DPair Types.Ty (Ty types))
+               -> Ola (DPair Ty.Base (Ty types))
 
   check ctxt (TyVar x)
     = do prf <- embedAtInfo
@@ -97,27 +97,27 @@ mutual
 -- ## Check
 
 export
-typeCheck : {types : List Types.Ty}
-         -> (ctxt  : Context Types.Ty types)
+typeCheck : {types : List Ty.Base}
+         -> (ctxt  : Context Ty.Base types)
          -> (syn   : Ty r)
-                  -> Ola (DPair Types.Ty (Ty types))
+                  -> Ola (DPair Ty.Base (Ty types))
 typeCheck
   = check
 
 namespace Raw
   export
-  typeCheck : {types : List Types.Ty}
-           -> (ctxt  : Context Types.Ty types)
+  typeCheck : {types : List Ty.Base}
+           -> (ctxt  : Context Ty.Base types)
            -> (r     : Raw.Ty)
-                    -> Ola (DPair Types.Ty (Ty types))
+                    -> Ola (DPair Ty.Base (Ty types))
   typeCheck ctxt r
     = check ctxt (view r)
 
 mutual
-  typeReflectArgs : {types : List Types.Ty}
-                 -> (delta : Context Types.Ty types)
-                 -> (ts    : List Types.Ty)
-                          -> Ola (DList Types.Ty (Ty types) ts)
+  typeReflectArgs : {types : List Ty.Base}
+                 -> (delta : Context Ty.Base types)
+                 -> (ts    : List Ty.Base)
+                          -> Ola (DList Ty.Base (Ty types) ts)
   typeReflectArgs delta []
     = pure Nil
 
@@ -126,9 +126,9 @@ mutual
                   !(typeReflectArgs delta xs)
 
   export
-  typeReflect : {types : List Types.Ty}
-           -> (delta : Context Types.Ty types)
-           -> (type  : Types.Ty)
+  typeReflect : {types : List Ty.Base}
+           -> (delta : Context Ty.Base types)
+           -> (type  : Ty.Base)
                     -> Ola (Ty types type)
 
   typeReflect delta CHAR

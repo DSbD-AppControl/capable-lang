@@ -36,7 +36,7 @@ unknown : FileContext -> Ola a
 unknown fc = Common.throwAt fc Unknown
 
 export
-mismatch : (g,e : Types.Ty) -> Ola a
+mismatch : (g,e : Ty.Base) -> Ola a
 mismatch g e = Common.throw $ Mismatch g e
 
 export
@@ -44,7 +44,7 @@ notBound : Ref -> Ola a
 notBound r = throw (NotBound r)
 
 export
-mismatchAt : (fc : FileContext) -> (g,e : Types.Ty) -> Ola a
+mismatchAt : (fc : FileContext) -> (g,e : Ty.Base) -> Ola a
 mismatchAt fc g e = throwAt fc (Mismatch g e)
 
 namespace Maybe
@@ -89,18 +89,19 @@ namespace Decidable
 
 export
 compare : (fc  : FileContext)
-       -> (a,b : Types.Ty)
+       -> (a,b : Ty.Base)
               -> Ola (a = b)
 compare fc a b
   = embedAt fc (Mismatch a b)
                (decEq    a b)
 
 public export
-data The : (ds,gs : List Types.Ty)
+data The : (rs    : List Ty.Role)
+        -> (ds,gs : List Ty.Base)
                  -> Type
   where
-    T : (type : Types.Ty)
-     -> (ty   : Ty   ds    type )
-     -> (e    : Expr ds gs type)
-             -> The  ds gs
+    T : (type : Ty.Base)
+     -> (ty   : Ty      ds    type )
+     -> (e    : Expr rs ds gs type)
+             -> The  rs ds gs
 -- [ EOF ]

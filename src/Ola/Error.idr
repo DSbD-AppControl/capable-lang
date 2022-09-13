@@ -46,19 +46,19 @@ namespace Parsing
 namespace Typing
   public export
   data Error : Type where
-    PairExpected : Ty -> Typing.Error
-    ArrayAppend : Ty -> Ty -> Typing.Error
-    ArgsExpected : List Ty -> Typing.Error
+    PairExpected : Ty.Base -> Typing.Error
+    ArrayAppend : Ty.Base -> Ty.Base -> Typing.Error
+    ArgsExpected : List Ty.Base -> Typing.Error
     RedundantArgs : Nat -> Typing.Error
-    FunctionExpected : Ty -> Typing.Error
-    UnionExpected : Ty -> Typing.Error
-    HandleExpected : Ty -> Typing.Error
+    FunctionExpected : Ty.Base -> Typing.Error
+    UnionExpected : Ty.Base -> Typing.Error
+    HandleExpected : Ty.Base -> Typing.Error
     Unknown : Typing.Error
-    RefExpected : Ty -> Typing.Error
+    RefExpected : Ty.Base -> Typing.Error
     NotBound : Ref -> Typing.Error
-    ArrayExpected : Ty -> Error
+    ArrayExpected : Ty.Base -> Error
 
-    Mismatch : (given,expected : Ty)
+    Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error
     BoundsError : (given, expected : Nat)
                                   -> Typing.Error

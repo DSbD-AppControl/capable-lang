@@ -124,11 +124,11 @@ namespace Prefix
 
 ||| Values are resolved expressions, closures, and addresses.
 public export
-data Value : (store : List Ty)
-          -> (type  : Ty)
+data Value : (store : List Ty.Base)
+          -> (type  : Ty.Base)
                    -> Type
   where
-    Address : Var store type -> Value store (REF type)
+    Address : IsVar store type -> Value store (REF type)
 
     U : Value store UNIT
 
@@ -137,8 +137,8 @@ data Value : (store : List Ty)
     I : Nat    -> Value store INT
     B : Bool   -> Value store BOOL
 
-    Clos : (scope : Func types ctxt  (FUNC a b))
-        -> (env   : DList Ty (Value store) ctxt)
+    Clos : (scope : Func roles types ctxt  (FUNC a b))
+        -> (env   : DList Ty.Base (Value store) ctxt)
                  -> Value store (FUNC a b)
 
     H : (k : HandleKind) -> File -> Value store (HANDLE k)
@@ -220,15 +220,15 @@ mutual
   namespace Env
     public export
     weaken : Subset xs ys
-          -> DList Ty (Value xs) stack
-          -> DList Ty (Value ys) stack
+          -> DList Ty.Base (Value xs) stack
+          -> DList Ty.Base (Value ys) stack
     weaken prf [] = []
     weaken prf (elem :: rest)
       = weaken prf elem :: Env.weaken prf rest
 
 ||| Easier to write some type-level functions.
 public export
-Val : Ty -> List Ty -> Type
+Val : Ty.Base -> List Ty.Base -> Type
 Val type types = Value types type
 
 

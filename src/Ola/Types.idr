@@ -1,416 +1,141 @@
+|||
+|||
+||| Module    : Ola.Types
+||| Copyright : (c) Jan de Muijnck-Hughes
+||| License   : see LICENSE
+|||
 module Ola.Types
 
 import Decidable.Equality
 
-import Toolkit.Decidable.Do
+import Toolkit.Decidable.Informative
+
+import public Ola.Types.Base
+import public Ola.Types.Role
 
 %default total
 
-public export
-data HandleKind = FILE | PROCESS
-
-export
-Show HandleKind where
-  show FILE    = "FILE"
-  show PROCESS = "PROCESS"
-
-Uninhabited (FILE = PROCESS) where
-  uninhabited Refl impossible
-
-export
-DecEq HandleKind where
-  decEq FILE FILE
-    = Yes Refl
-  decEq FILE PROCESS
-    = No absurd
-  decEq PROCESS FILE
-    = No (negEqSym absurd)
-  decEq PROCESS PROCESS
-    = Yes Refl
 
 public export
-data Ty = CHAR -- Char
-        | STR  -- Strings
-        | INT  -- Integers
-        | BOOL -- Booleans
+data Ty = B Base
+        | R Role
 
-        | ARRAY Ty Nat -- Arrays
-        | PAIR  Ty Ty  -- Products
-        | UNION Ty Ty  -- Sums
-
-        | UNIT -- Unit
-
-        | REF Ty -- Reference
-
-        | HANDLE HandleKind -- For file based IPC
-
-        | FUNC (List Ty) Ty -- Functions
-
-Uninhabited (CHAR = STR) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = INT) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = BOOL) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = ARRAY ty n) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = PAIR a b) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = UNION a b) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = REF ty) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (CHAR = FUNC a b) where
-  uninhabited Refl impossible
-
--- Strings
-
-Uninhabited (STR = INT) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = BOOL) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = ARRAY ty n) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = PAIR a b) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = UNION a b) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = REF ty) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (STR = FUNC a b) where
-  uninhabited Refl impossible
-
--- Integers
-
-Uninhabited (INT = BOOL) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = ARRAY ty n) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = PAIR a b) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = UNION a b) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = REF ty) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (INT = FUNC a b) where
-  uninhabited Refl impossible
-
--- Bool
-
-Uninhabited (BOOL = ARRAY ty n) where
-  uninhabited Refl impossible
-
-Uninhabited (BOOL = PAIR a b) where
-  uninhabited Refl impossible
-
-Uninhabited (BOOL = UNION a b) where
-  uninhabited Refl impossible
-
-Uninhabited (BOOL = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (BOOL = REF ty) where
-  uninhabited Refl impossible
-
-Uninhabited (BOOL = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (BOOL = FUNC a b) where
-  uninhabited Refl impossible
-
--- Array
-
-
-Uninhabited (ARRAY ty n = PAIR a b) where
-  uninhabited Refl impossible
-
-Uninhabited (ARRAY ty n = UNION a b) where
-  uninhabited Refl impossible
-
-Uninhabited (ARRAY ty n = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (ARRAY ty n = REF tyA) where
-  uninhabited Refl impossible
-
-Uninhabited (ARRAY ty n = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (ARRAY ty n = FUNC a b) where
-  uninhabited Refl impossible
-
--- Pair
-
-Uninhabited (PAIR x y = UNION a b) where
-  uninhabited Refl impossible
-
-Uninhabited (PAIR x y = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (PAIR x y = REF tyA) where
-  uninhabited Refl impossible
-
-Uninhabited (PAIR x y = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (PAIR x y = FUNC a b) where
-  uninhabited Refl impossible
-
--- Union
-
-Uninhabited (UNION x y = UNIT) where
-  uninhabited Refl impossible
-
-Uninhabited (UNION x y = REF tyA) where
-  uninhabited Refl impossible
-
-Uninhabited (UNION x y = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (UNION x y = FUNC a b) where
-  uninhabited Refl impossible
-
--- Unit
-
-Uninhabited (UNIT = REF tyA) where
-  uninhabited Refl impossible
-
-Uninhabited (UNIT = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (UNIT = FUNC a b) where
-  uninhabited Refl impossible
-
--- REF
-
-Uninhabited (REF ty = HANDLE h) where
-  uninhabited Refl impossible
-
-Uninhabited (REF ty = FUNC a b) where
-  uninhabited Refl impossible
-
--- Handle
-
-Uninhabited (HANDLE h = FUNC a b) where
+Uninhabited (B b = R r) where
   uninhabited Refl impossible
 
 export
 DecEq Ty where
-  decEq CHAR b with (b)
-    decEq CHAR b | CHAR
+  -- [ NOTE ] base type
+  decEq (B x) b with (b)
+    decEq (B x) b | (B y) with (decEq x y)
+      decEq (B x) b | (B x) | (Yes Refl)
+        = Yes Refl
+      decEq (B x) b | (B y) | (No contra)
+        = No (\Refl => contra Refl)
+
+    decEq (B x) b | (R y)
+      = No absurd
+
+  -- [ NOTE ] Roles
+  decEq (R x) b with (b)
+    decEq (R x) b | (B y)
+      = No (negEqSym absurd)
+
+    decEq (R x) b | (R y) with (decEq x y)
+      decEq (R x) b | (R x) | (Yes Refl)
+        = Yes Refl
+      decEq (R x) b | (R y) | (No contra)
+        = No (\Refl => contra Refl)
+
+public export
+data EqualNot : (x,y : Ty)
+                 -> Type
+  where
+    BaseNotEqual : (prf : x = y -> Void)
+                      -> EqualNot (B x) (B y)
+
+    ExpectedBase : EqualNot (B b) not_base
+
+    ExpectedRole : EqualNot (R r)  not_role
+
+export
+decEq : (x,y : Ty)
+            -> DecInfo (EqualNot x y)
+                       (Equal    x y)
+
+-- [ NOTE ] Base types
+decEq (B x) y with (y)
+  decEq (B x) y | (B z) with (decEq x z)
+    decEq (B x) y | (B x) | (Yes Refl)
       = Yes Refl
-    decEq CHAR b | STR         = No absurd
-    decEq CHAR b | INT         = No absurd
-    decEq CHAR b | BOOL        = No absurd
-    decEq CHAR b | (ARRAY x k) = No absurd
-    decEq CHAR b | (PAIR x y)  = No absurd
-    decEq CHAR b | (UNION x y) = No absurd
-    decEq CHAR b | UNIT        = No absurd
-    decEq CHAR b | (REF x)     = No absurd
-    decEq CHAR b | (HANDLE x)  = No absurd
-    decEq CHAR b | (FUNC x y)  = No absurd
 
-  decEq STR b with (b)
-    decEq STR b | CHAR = No (negEqSym absurd)
-
-    decEq STR b | STR = Yes Refl
-
-    decEq STR b | INT         = No absurd
-    decEq STR b | BOOL        = No absurd
-    decEq STR b | (ARRAY x k) = No absurd
-    decEq STR b | (PAIR x y)  = No absurd
-    decEq STR b | (UNION x y) = No absurd
-    decEq STR b | UNIT        = No absurd
-    decEq STR b | (REF x)     = No absurd
-    decEq STR b | (HANDLE x)  = No absurd
-    decEq STR b | (FUNC x y)  = No absurd
-
-  decEq INT b with (b)
-    decEq INT b | CHAR = No (negEqSym absurd)
-    decEq INT b | STR  = No (negEqSym absurd)
-
-    decEq INT b | INT = Yes Refl
-
-    decEq INT b | BOOL        = No absurd
-    decEq INT b | (ARRAY x k) = No absurd
-    decEq INT b | (PAIR x y)  = No absurd
-    decEq INT b | (UNION x y) = No absurd
-    decEq INT b | UNIT        = No absurd
-    decEq INT b | (REF x)     = No absurd
-    decEq INT b | (HANDLE x)  = No absurd
-    decEq INT b | (FUNC x y)  = No absurd
-
-  decEq BOOL b with (b)
-    decEq BOOL b | CHAR = No (negEqSym absurd)
-    decEq BOOL b | STR  = No (negEqSym absurd)
-    decEq BOOL b | INT  = No (negEqSym absurd)
-
-    decEq BOOL b | BOOL = Yes Refl
-
-    decEq BOOL b | (ARRAY x k) = No absurd
-    decEq BOOL b | (PAIR x y)  = No absurd
-    decEq BOOL b | (UNION x y) = No absurd
-    decEq BOOL b | UNIT        = No absurd
-    decEq BOOL b | (REF x)     = No absurd
-    decEq BOOL b | (HANDLE x)  = No absurd
-    decEq BOOL b | (FUNC x y)  = No absurd
-
-  decEq (ARRAY ty n) b with (b)
-    decEq (ARRAY ty n) b | CHAR = No (negEqSym absurd)
-    decEq (ARRAY ty n) b | STR  = No (negEqSym absurd)
-    decEq (ARRAY ty n) b | INT  = No (negEqSym absurd)
-    decEq (ARRAY ty n) b | BOOL = No (negEqSym absurd)
-
-    decEq (ARRAY ty n) b | (ARRAY tyA nA)
-      = decDo $ do Refl <- decEq ty tyA `otherwise` (\Refl => Refl)
-                   Refl <- decEq n  nA  `otherwise` (\Refl => Refl)
-                   pure Refl
-
-    decEq (ARRAY ty n) b | (PAIR x y)  = No absurd
-    decEq (ARRAY ty n) b | (UNION x y) = No absurd
-    decEq (ARRAY ty n) b | UNIT        = No absurd
-    decEq (ARRAY ty n) b | (REF x)     = No absurd
-    decEq (ARRAY ty n) b | (HANDLE x)  = No absurd
-    decEq (ARRAY ty n) b | (FUNC x y)  = No absurd
-
-  decEq (PAIR x y) b with (b)
-    decEq (PAIR x y) b | CHAR        = No (negEqSym absurd)
-    decEq (PAIR x y) b | STR         = No (negEqSym absurd)
-    decEq (PAIR x y) b | INT         = No (negEqSym absurd)
-    decEq (PAIR x y) b | BOOL        = No (negEqSym absurd)
-    decEq (PAIR x y) b | (ARRAY z k) = No (negEqSym absurd)
-
-    decEq (PAIR x y) b | (PAIR z w)
-      = decDo $ do Refl <- decEq x z `otherwise` (\Refl => Refl)
-                   Refl <- decEq y w `otherwise` (\Refl => Refl)
-                   pure Refl
-
-    decEq (PAIR x y) b | (UNION z w) = No absurd
-    decEq (PAIR x y) b | UNIT        = No absurd
-    decEq (PAIR x y) b | (REF z)     = No absurd
-    decEq (PAIR x y) b | (HANDLE z)  = No absurd
-    decEq (PAIR x y) b | (FUNC z w)  = No absurd
-
-  decEq (UNION x y) b with (b)
-    decEq (UNION x y) b | CHAR        = No (negEqSym absurd)
-    decEq (UNION x y) b | STR         = No (negEqSym absurd)
-    decEq (UNION x y) b | INT         = No (negEqSym absurd)
-    decEq (UNION x y) b | BOOL        = No (negEqSym absurd)
-    decEq (UNION x y) b | (ARRAY z k) = No (negEqSym absurd)
-    decEq (UNION x y) b | (PAIR z w)  = No (negEqSym absurd)
-
-    decEq (UNION x y) b | (UNION z w)
-      = decDo $ do Refl <- decEq x z `otherwise` (\Refl => Refl)
-                   Refl <- decEq y w `otherwise` (\Refl => Refl)
-                   pure Refl
-
-    decEq (UNION x y) b | UNIT       = No absurd
-    decEq (UNION x y) b | (REF z)    = No absurd
-    decEq (UNION x y) b | (HANDLE z) = No absurd
-    decEq (UNION x y) b | (FUNC z w) = No absurd
-
-  decEq UNIT b with (b)
-    decEq UNIT b | CHAR        = No (negEqSym absurd)
-    decEq UNIT b | STR         = No (negEqSym absurd)
-    decEq UNIT b | INT         = No (negEqSym absurd)
-    decEq UNIT b | BOOL        = No (negEqSym absurd)
-    decEq UNIT b | (ARRAY x k) = No (negEqSym absurd)
-    decEq UNIT b | (PAIR x y)  = No (negEqSym absurd)
-    decEq UNIT b | (UNION x y) = No (negEqSym absurd)
-
-    decEq UNIT b | UNIT = Yes Refl
-
-    decEq UNIT b | (REF x)    = No absurd
-    decEq UNIT b | (HANDLE x) = No absurd
-    decEq UNIT b | (FUNC x y) = No absurd
-
-  decEq (REF x) b with (b)
-    decEq (REF x) b | CHAR        = No (negEqSym absurd)
-    decEq (REF x) b | STR         = No (negEqSym absurd)
-    decEq (REF x) b | INT         = No (negEqSym absurd)
-    decEq (REF x) b | BOOL        = No (negEqSym absurd)
-    decEq (REF x) b | (ARRAY y k) = No (negEqSym absurd)
-    decEq (REF x) b | (PAIR y z)  = No (negEqSym absurd)
-    decEq (REF x) b | (UNION y z) = No (negEqSym absurd)
-    decEq (REF x) b | UNIT        = No (negEqSym absurd)
-
-    decEq (REF x) b | (REF y)
-      = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
-                   pure Refl
-
-    decEq (REF x) b | (HANDLE y) = No absurd
-    decEq (REF x) b | (FUNC y z) = No absurd
-
-  decEq (HANDLE x) b with (b)
-    decEq (HANDLE x) b | CHAR        = No (negEqSym absurd)
-    decEq (HANDLE x) b | STR         = No (negEqSym absurd)
-    decEq (HANDLE x) b | INT         = No (negEqSym absurd)
-    decEq (HANDLE x) b | BOOL        = No (negEqSym absurd)
-    decEq (HANDLE x) b | (ARRAY y k) = No (negEqSym absurd)
-    decEq (HANDLE x) b | (PAIR y z)  = No (negEqSym absurd)
-    decEq (HANDLE x) b | (UNION y z) = No (negEqSym absurd)
-    decEq (HANDLE x) b | UNIT        = No (negEqSym absurd)
-    decEq (HANDLE x) b | (REF y)     = No (negEqSym absurd)
-
-    decEq (HANDLE x) b | (HANDLE y)
-      = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
-                   pure Refl
-
-    decEq (HANDLE x) b | (FUNC y z) = No absurd
-
-  decEq (FUNC x y) b with (b)
-    decEq (FUNC x y) b | CHAR        = No (negEqSym absurd)
-    decEq (FUNC x y) b | STR         = No (negEqSym absurd)
-    decEq (FUNC x y) b | INT         = No (negEqSym absurd)
-    decEq (FUNC x y) b | BOOL        = No (negEqSym absurd)
-    decEq (FUNC x y) b | (ARRAY z k) = No (negEqSym absurd)
-    decEq (FUNC x y) b | (PAIR z w)  = No (negEqSym absurd)
-    decEq (FUNC x y) b | (UNION z w) = No (negEqSym absurd)
-    decEq (FUNC x y) b | UNIT        = No (negEqSym absurd)
-    decEq (FUNC x y) b | (REF z)     = No (negEqSym absurd)
-    decEq (FUNC x y) b | (HANDLE z)  = No (negEqSym absurd)
-
-    decEq (FUNC x y) b | (FUNC z w)
-      = decDo $ do Refl <- assert_total $ decEq x z `otherwise` (\Refl => Refl)
-                   -- @TODO Check if above is okay.
-                   Refl <- decEq y w `otherwise` (\Refl => Refl)
-                   pure Refl
+    decEq (B x) y | (B z) | (No contra)
+      = No (BaseNotEqual contra)
+           (\Refl => contra Refl)
 
 
+  decEq (B x) y | (R z)
+    = No ExpectedBase
+         absurd
+
+-- [ NOTE ] Roles
+decEq (R x) y with (y)
+  decEq (R x) y | (B z)
+    = No ExpectedRole
+         (negEqSym absurd)
+
+  decEq (R x) y | (R z) with (decEq x z)
+    decEq (R x) y | (R x) | (Yes Refl)
+      = Yes Refl
+
+    decEq (R x) y | (R z) | (No contra)
+      = No ExpectedRole
+           (\Refl => contra Refl)
+
+{-
+namespace API
+  public export
+  CHAR : Ty
+  CHAR = B CHAR
+
+  public export
+  STR : Ty
+  STR = B STR
+
+  public export
+  INT : Ty
+  INT = B INT
+
+  public export
+  BOOL : Ty
+  BOOL = B BOOL
+
+  public export
+  UNIT : Ty
+  UNIT = B UNIT
+
+  public export
+  ARRAY : Base -> Nat -> Ty
+  ARRAY b n = B $ ARRAY b n
+
+  public export
+  PAIR : Base -> Base -> Ty
+  PAIR a b = B (PAIR a b)
+
+  public export
+  UNION : Base -> Base -> Ty
+  UNION a b = B (UNION a b)
+
+  public export
+  HANDLE : HandleKind -> Ty
+  HANDLE k = B (HANDLE k)
+
+  public export
+  REF : Base -> Ty
+  REF t = B (REF t)
+
+  public export
+  FUNC : List Base -> Base -> Ty
+  FUNC as r = B (FUNC as r)
+-}
 -- [ EOF ]

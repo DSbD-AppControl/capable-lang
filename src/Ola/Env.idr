@@ -35,42 +35,50 @@ import Ola.Values
 
 ||| The stack is a list of values.
 public export
-Env : (stack : List Ty)
-   -> (store : List Ty)
+Env : (stack : List Ty.Base)
+   -> (store : List Ty.Base)
             -> Type
-Env stack store = DList Ty (Value store) stack
+Env stack store = DList Ty.Base (Value store) stack
 
 export
-extend : DList Ty (Value store) types
+extend : DList Ty.Base (Value store) types
       -> Env stack store
       -> Env (types ++ stack) store
 extend [] y = y
 extend (elem :: rest) y = elem :: extend rest y
 
+
 namespace Ty
   ||| We need one for types-as-terms too.
   public export
-  Env : (types : List Ty)
+  Env : (types : List Ty.Base)
               -> Type
-  Env types = DList Ty Singleton types
+  Env types = DList Ty.Base Singleton types
+
+namespace Role
+  ||| We need one for types-as-terms too.
+  public export
+  Env : (roles : List Ty.Role)
+              -> Type
+  Env roles = DList Ty.Role Singleton roles
 
 
 namespace Heap
   ||| The heap.
   public export
-  Heap : (store : List Ty)
+  Heap : (store : List Ty.Base)
                -> Type
-  Heap store = DList Ty (Value store) store
+  Heap store = DList Ty.Base (Value store) store
 
   public export
-  lookup : Var   store type
+  lookup : IsVar store type
         -> Heap  store
         -> Value store type
   lookup = read
 
 
   public export
-  replace : Var   store type
+  replace : IsVar store type
          -> Value store type
          -> Heap  store
          -> Heap  store

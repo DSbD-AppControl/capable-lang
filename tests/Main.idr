@@ -18,6 +18,7 @@ tests
         Nothing
         [ "000-todo"
         , "001-basics"
+        , "002-roles"
         ]
 
 files : IO TestPool
