@@ -1,7 +1,6 @@
 ||| Types as terms because we want to mirror real programmes.
 |||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Ola.Terms.Types
@@ -29,6 +28,7 @@ data Ty : (context : List Ty.Base)
        -> (type    :      Ty.Base)
                   -> Type
   where
+
     TyChar : Ty ctxt CHAR
     TyStr  : Ty ctxt STR
     TyInt  : Ty ctxt INT
