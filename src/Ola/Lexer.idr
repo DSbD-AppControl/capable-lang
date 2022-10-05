@@ -21,13 +21,14 @@ namespace Ola
   public export
   Symbols : List String
   Symbols = [ -- special composite symbols
-              "->", ":="
+              "->", ":=", "==>"
 
               -- Deliminators
             , "[", "]", "<", ">", "{", "}" , "(", ")"
 
               -- Plain-old Symbols
             , ","
+            , "."
             , ":"
             , "?"
             , "+"
@@ -41,7 +42,7 @@ namespace Ola
 
   public export
   Keywords : List String
-  Keywords = [ "func", "main", "type", "local", "var", "role"
+  Keywords = [ "func", "main", "type", "local", "var", "role", "session"
 
              , "read", "close"
              , "fopen", "popen", "print", "return", "while"
@@ -72,6 +73,7 @@ namespace Ola
              , "PROC"
 
              , "Role"
+             , "rec", "end"
              ]
 
 

@@ -24,12 +24,14 @@ import Ola.Check.Common
 
 import Ola.Check.Roles
 import Ola.Check.Types
+import Ola.Check.Sessions
 import Ola.Check.Exprs
 import Ola.Check.Stmts
 import Ola.Check.Funcs
 
 import Ola.Terms.Vars
 import Ola.Terms.Roles
+import Ola.Terms.Sessions
 import Ola.Terms.Types
 import Ola.Terms.Exprs
 import Ola.Terms.Stmts
@@ -47,6 +49,15 @@ check : {p     : Prog}
      -> (gamma : Context Ty.Base gs)
      -> (prog  : Prog p)
               -> Ola (Prog rs ds gs UNIT)
+
+check rho delta gamma (SeshDef fc ref s scope)
+  = do (g ** tm) <- sessionCheck delta rho s
+       scope <- check
+                  rho
+                  delta
+                  gamma
+                  scope
+       pure (DefSesh tm scope)
 
 check rho delta gamma (RoleDefSyn fc ref r scope)
   = do (MkRole ** tm) <- roleCheck rho r

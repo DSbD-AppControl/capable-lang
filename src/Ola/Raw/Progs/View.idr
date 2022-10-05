@@ -16,6 +16,9 @@ import Ola.Raw.Roles
 import Ola.Raw.Types
 import Ola.Raw.Types.View
 
+import Ola.Raw.Sessions
+import Ola.Raw.Sessions.View
+
 import Ola.Raw.Exprs
 import Ola.Raw.Exprs.View
 
@@ -47,6 +50,13 @@ data Prog : (s : Raw.Prog) -> Type where
          -> (val   : Ty t)
          -> (scope : Prog body)
                   -> Prog (Un fc (DEFTYPE ref t) body)
+
+  SeshDef : (fc    : FileContext)
+         -> (ref   : Ref)
+         -> (sesh  : Sessions s)
+         -> (scope : Prog body)
+                  -> Prog (Un fc (DEFSESH ref s) body)
+
   FuncDef : (fc    : FileContext)
          -> (ref   : Ref)
          -> (val   : Func f)
@@ -72,6 +82,9 @@ view (Un fc (DEFROLE x) rem)
 
 view (Un fc (DEFROLESYN x y) rem)
   = RoleDefSyn fc x y (view rem)
+
+view (Un fc (DEFSESH ref s) rem)
+  = SeshDef fc ref (view s) (view rem)
 
 export
 getFC : {s : Prog} -> Prog s -> FileContext

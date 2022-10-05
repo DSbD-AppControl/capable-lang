@@ -124,7 +124,7 @@ sessionCheck
 
 namespace Raw
   export
-  sessionCheck : {ts    : List Base}
+  sessionCheck : {ts    : List Ty.Base}
               -> {rs    : List Ty.Role}
               -> (types : Context Ty.Base ts)
               -> (roles : Context Ty.Role rs)

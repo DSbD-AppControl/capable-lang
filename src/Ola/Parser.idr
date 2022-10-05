@@ -16,6 +16,7 @@ import Ola.Types
 
 import Ola.Raw.Roles
 import Ola.Raw.Types
+import Ola.Raw.Sessions
 import Ola.Raw.Exprs
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
@@ -23,6 +24,7 @@ import Ola.Raw.Progs
 
 import Ola.Parser.Roles
 import Ola.Parser.Types
+import Ola.Parser.Sessions
 import Ola.Parser.Exprs
 import Ola.Parser.Stmts
 import Ola.Parser.Funcs
@@ -33,11 +35,22 @@ data Decl = DeclT    FileContext Ref Raw.Ty
           | DeclF    FileContext Ref Raw.Func
           | DeclRsyn FileContext Ref Raw.Role
           | DeclR    FileContext Ref
+          | DeclS    FileContext Ref Raw.Session
 
 decls : RuleEmpty (List Decl)
 decls
-    = many (declTy <|> declFunc <|> declRole)
+    = many (declTy <|> declFunc <|> declRole <|> declSesh)
   where
+    declSesh : Rule Decl
+    declSesh
+      = do s <- Toolkit.location
+           keyword "session"
+           r <- ref
+           symbol "="
+           r' <- session
+           e <- Toolkit.location
+           pure (DeclS (newFC s e) r r')
+
     declRole : Rule Decl
     declRole
       = do s <- Toolkit.location
@@ -94,6 +107,9 @@ program
          pure (foldr fold m ds)
   where
     fold : Decl -> Raw.Prog -> Raw.Prog
+    fold (DeclS fc r s)
+      = Un fc (DEFSESH r s)
+
     fold (DeclRsyn fc r ro)
       = Un fc (DEFROLESYN r ro)
 

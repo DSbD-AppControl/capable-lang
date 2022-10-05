@@ -563,6 +563,9 @@ namespace Progs
       -> (expr  : Prog roles types stack   type)
                -> Ola (Expr.Result store type)
 
+  run er et env heap (DefSesh s scope)
+    = run er et env heap scope
+
   run er et env heap (DefRole rest)
     = do run (Val MkRole::er)
              et

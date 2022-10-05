@@ -10,11 +10,14 @@ module Ola.Raw.Progs
 import Toolkit.Data.Location
 
 import Ola.Types
+
 import Ola.Raw.Roles
 import Ola.Raw.Types
+import Ola.Raw.Sessions
 import Ola.Raw.Exprs
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
+
 
 
 %default total
@@ -34,12 +37,14 @@ data Unary = DEFTYPE    Ref  Raw.Ty
            | DEFFUNC    Ref  Raw.Func
            | DEFROLESYN Ref  Raw.Role
            | DEFROLE    Ref
+           | DEFSESH    Ref  Raw.Session
 
 Show Progs.Unary where
   show (DEFTYPE    r ty) = "(DEFTYPE \{show r} \{show ty})"
   show (DEFFUNC    r f)  = "(DEFFUNC \{show r} \{show f})"
   show (DEFROLESYN r ro) = "(DEFROLESYN \{show r} \{show ro})"
   show (DEFROLE    r)    = "(DEFROLE \{show r})"
+  show (DEFSESH    r s)  = "(DEFSESH \{show r} \{show s})"
 
 setSourceU : String -> Progs.Unary -> Progs.Unary
 setSourceU str (DEFTYPE x y)
@@ -57,6 +62,9 @@ setSourceU str (DEFROLESYN x y)
 
 setSourceU str (DEFROLE x)
   = DEFROLE (setSource str x)
+
+setSourceU str (DEFSESH x s)
+  = DEFSESH (setSource str x) (setSource str s)
 
 
 

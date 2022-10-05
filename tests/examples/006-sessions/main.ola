@@ -1,0 +1,15 @@
+role Alice
+role Bob
+
+type foo = String
+
+session pingpong = Alice ==> Bob   { ping(String)
+                 . Bob   ==> Alice { pong(String)
+                 . end }}
+
+main()
+{
+  print("My First Program");
+
+  return unit;
+}

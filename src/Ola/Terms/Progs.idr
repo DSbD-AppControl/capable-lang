@@ -12,6 +12,7 @@ import Data.Vect
 import Ola.Terms.Vars
 import Ola.Terms.Roles
 import Ola.Terms.Types
+import Ola.Terms.Sessions
 import Ola.Terms.Exprs
 import Ola.Terms.Stmts
 import Ola.Terms.Funcs
@@ -30,6 +31,10 @@ data Prog : (roles : List Ty.Role)
          -> (type  :      Ty.Base)
                   -> Type
   where
+    DefSesh : (sesh : Global Nil types roles g)
+           -> (scope : Prog roles types stack UNIT)
+                    -> Prog roles types stack UNIT
+
     DefRole : (rest : Prog (MkRole::roles) types stack UNIT)
                    -> Prog          roles  types stack UNIT
     ||| A RoleDef Synon,
