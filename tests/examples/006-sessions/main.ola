@@ -3,9 +3,9 @@ role Bob
 
 type foo = String
 
-session pingpong = Alice ==> Bob   { ping(String)
-                 . Bob   ==> Alice { pong(String)
-                 . end }}
+protocol pingpong = Alice ==> Bob   { ping(String)
+                  . Bob   ==> Alice { pong(String)
+                  . end }}
 
 main()
 {

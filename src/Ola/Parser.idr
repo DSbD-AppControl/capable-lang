@@ -44,7 +44,7 @@ decls
     declSesh : Rule Decl
     declSesh
       = do s <- Toolkit.location
-           keyword "session"
+           keyword "protocol"
            r <- ref
            symbol "="
            r' <- session
