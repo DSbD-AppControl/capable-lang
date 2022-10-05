@@ -29,9 +29,10 @@ import Ola.Parser.Funcs
 
 %default partial
 
-data Decl = DeclT FileContext Ref Raw.Ty
-          | DeclF FileContext Ref Raw.Func
-          | DeclR FileContext Ref Raw.Role
+data Decl = DeclT    FileContext Ref Raw.Ty
+          | DeclF    FileContext Ref Raw.Func
+          | DeclRsyn FileContext Ref Raw.Role
+          | DeclR    FileContext Ref
 
 decls : RuleEmpty (List Decl)
 decls
@@ -46,9 +47,9 @@ decls
            e <- Toolkit.location
            case r' of
              Nothing
-               => pure (DeclR (newFC s e) r (RoleDef (newFC s e)))
+               => pure (DeclR (newFC s e) r)
              Just r'
-               => pure (DeclR (newFC s e) r r')
+               => pure (DeclRsyn (newFC s e) r r')
 
     declTy : Rule Decl
     declTy
@@ -93,8 +94,11 @@ program
          pure (foldr fold m ds)
   where
     fold : Decl -> Raw.Prog -> Raw.Prog
-    fold (DeclR fc r ro)
-      = Un fc (DEFROLE r ro)
+    fold (DeclRsyn fc r ro)
+      = Un fc (DEFROLESYN r ro)
+
+    fold (DeclR fc r)
+      = Un fc (DEFROLE r)
 
     fold (DeclT fc r ty)
       = Un fc (DEFTYPE r ty)

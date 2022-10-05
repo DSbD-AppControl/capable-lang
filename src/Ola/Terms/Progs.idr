@@ -30,11 +30,12 @@ data Prog : (roles : List Ty.Role)
          -> (type  :      Ty.Base)
                   -> Type
   where
-    ||| A RoleDef
-    DefRole : {role    : Ty.Role}
-           -> (roleRef : Role roles role)
-           -> (rest    : Prog (role::roles) types stack UNIT)
-                      -> Prog        roles  types stack UNIT
+    DefRole : (rest : Prog (MkRole::roles) types stack UNIT)
+                   -> Prog          roles  types stack UNIT
+    ||| A RoleDef Synon,
+    DefRoleSyn : (roleRef : Role roles MkRole)
+              -> (rest    : Prog roles types stack UNIT)
+                         -> Prog roles  types stack UNIT
     ||| A Type-Def.
     DefType : {type : Ty.Base}
            -> (tyRef : Ty types type)

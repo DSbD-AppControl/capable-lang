@@ -549,9 +549,7 @@ namespace Progs
   resolveRole : (env : Env roles)
              -> (role : Role roles r)
                      -> Singleton r
-  resolveRole env RoleDef
-    = Val MkRole
-  resolveRole env (RoleVar x)
+  resolveRole env x
     = read x env
 
   ||| Run a programme.
@@ -565,10 +563,16 @@ namespace Progs
       -> (expr  : Prog roles types stack   type)
                -> Ola (Expr.Result store type)
 
+  run er et env heap (DefRole rest)
+    = do run (Val MkRole::er)
+             et
+             env
+             heap
+             rest
   -- RoleDefs need resolving...
-  run er et env heap (DefRole rDef rest)
+  run er et env heap (DefRoleSyn rDef rest)
     = do let r = resolveRole er rDef
-         run (r::er)
+         run er
              et
              env
              heap

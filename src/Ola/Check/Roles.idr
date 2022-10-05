@@ -30,8 +30,6 @@ roleCheck : {roles : List Ty.Role}
          -> (ctxt  : Context Ty.Role roles)
          -> (syn   : Raw.Role)
                   -> Ola (DPair Ty.Role (Role roles))
-roleCheck ctxt (RoleDef _)
-  = pure (_ ** RoleDef)
 
 roleCheck ctxt (RoleRef x)
   = do prf <- embedAtInfo
@@ -39,6 +37,6 @@ roleCheck ctxt (RoleRef x)
                   (NotBound x)
                   (Lookup.lookup (get x) ctxt)
        let (r ** (loc ** prfN)) = deBruijn prf
-       pure (r ** RoleVar (V loc prfN))
+       pure (r ** (V loc prfN))
 
 -- [ EOF ]

@@ -30,14 +30,16 @@ Show Progs.Nullary where
   show (MAIN a) = "(MAIN \{show a})"
 
 public export
-data Unary = DEFTYPE Ref  Raw.Ty
-           | DEFFUNC Ref  Raw.Func
-           | DEFROLE Ref  Raw.Role
+data Unary = DEFTYPE    Ref  Raw.Ty
+           | DEFFUNC    Ref  Raw.Func
+           | DEFROLESYN Ref  Raw.Role
+           | DEFROLE    Ref
 
 Show Progs.Unary where
-  show (DEFTYPE r ty) = "(DEFTYPE \{show r} \{show ty})"
-  show (DEFFUNC r f)  = "(DEFFUNC \{show r} \{show f})"
-  show (DEFROLE r ro) = "(DEFROLE \{show r} \{show ro})"
+  show (DEFTYPE    r ty) = "(DEFTYPE \{show r} \{show ty})"
+  show (DEFFUNC    r f)  = "(DEFFUNC \{show r} \{show f})"
+  show (DEFROLESYN r ro) = "(DEFROLESYN \{show r} \{show ro})"
+  show (DEFROLE    r)    = "(DEFROLE \{show r})"
 
 setSourceU : String -> Progs.Unary -> Progs.Unary
 setSourceU str (DEFTYPE x y)
@@ -49,9 +51,12 @@ setSourceU str (DEFFUNC x y)
   = DEFFUNC (setSource str x)
             (setSource str y)
 
-setSourceU str (DEFROLE x y)
+setSourceU str (DEFROLESYN x y)
+  = DEFROLESYN (setSource str x)
+               (setSource str y)
+
+setSourceU str (DEFROLE x)
   = DEFROLE (setSource str x)
-            (setSource str y)
 
 
 

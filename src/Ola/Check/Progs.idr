@@ -47,14 +47,23 @@ check : {p     : Prog}
      -> (gamma : Context Ty.Base gs)
      -> (prog  : Prog p)
               -> Ola (Prog rs ds gs UNIT)
-check rho delta gamma (RoleDef fc ref r scope)
-  = do (r ** tm) <- roleCheck rho r
+
+check rho delta gamma (RoleDefSyn fc ref r scope)
+  = do (MkRole ** tm) <- roleCheck rho r
        scope <- check
-                  (extend rho (get ref) r)
+                  rho
                   delta
                   gamma
                   scope
-       pure (DefRole tm scope)
+       pure (DefRoleSyn tm scope)
+
+check rho delta gamma (RoleDef fc ref scope)
+  = do scope <- check
+                  (extend rho (get ref) MkRole)
+                  delta
+                  gamma
+                  scope
+       pure (DefRole scope)
 
 check rho delta gamma (TypeDef fc ref val scope)
   = do (ty ** tm) <- typeCheck delta val

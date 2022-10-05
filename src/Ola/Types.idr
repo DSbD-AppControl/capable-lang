@@ -12,6 +12,7 @@ import Toolkit.Decidable.Informative
 
 import public Ola.Types.Base
 import public Ola.Types.Role
+import public Ola.Types.Session
 
 %default total
 
@@ -19,10 +20,13 @@ import public Ola.Types.Role
 public export
 data Ty = B Base
         | R Role
+        | G (Global ks rs)
+        | L (Local ks rs)
 
 Uninhabited (B b = R r) where
   uninhabited Refl impossible
 
+{- Need to reinstate
 export
 DecEq Ty where
   -- [ NOTE ] base type
@@ -91,51 +95,6 @@ decEq (R x) y with (y)
     decEq (R x) y | (R z) | (No contra)
       = No ExpectedRole
            (\Refl => contra Refl)
-
-{-
-namespace API
-  public export
-  CHAR : Ty
-  CHAR = B CHAR
-
-  public export
-  STR : Ty
-  STR = B STR
-
-  public export
-  INT : Ty
-  INT = B INT
-
-  public export
-  BOOL : Ty
-  BOOL = B BOOL
-
-  public export
-  UNIT : Ty
-  UNIT = B UNIT
-
-  public export
-  ARRAY : Base -> Nat -> Ty
-  ARRAY b n = B $ ARRAY b n
-
-  public export
-  PAIR : Base -> Base -> Ty
-  PAIR a b = B (PAIR a b)
-
-  public export
-  UNION : Base -> Base -> Ty
-  UNION a b = B (UNION a b)
-
-  public export
-  HANDLE : HandleKind -> Ty
-  HANDLE k = B (HANDLE k)
-
-  public export
-  REF : Base -> Ty
-  REF t = B (REF t)
-
-  public export
-  FUNC : List Base -> Base -> Ty
-  FUNC as r = B (FUNC as r)
 -}
+
 -- [ EOF ]

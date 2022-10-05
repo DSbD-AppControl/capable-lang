@@ -57,6 +57,8 @@ Show Ty.Base where
 Show Ty where
   show (B x) = show x
   show (R x) = show x
+  show (G g) = show "G"
+  show (L l) = show "L"
 
 Show a => Show (Generic.Error a) where
   show (E v)

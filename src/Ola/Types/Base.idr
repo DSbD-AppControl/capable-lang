@@ -6,6 +6,8 @@
 |||
 module Ola.Types.Base
 
+import Control.Function
+
 import Decidable.Equality
 
 import Toolkit.Decidable.Do
@@ -52,6 +54,19 @@ namespace Ty
           | HANDLE HandleKind -- For file based IPC
 
           | FUNC (List Base) Base -- Functions
+
+export
+Biinjective ARRAY where
+  biinjective Refl = (Refl, Refl)
+
+export
+Biinjective PAIR where
+  biinjective Refl = (Refl, Refl)
+
+export
+Biinjective UNION where
+  biinjective Refl = (Refl, Refl)
+
 
 Uninhabited (CHAR = STR) where
   uninhabited Refl impossible
