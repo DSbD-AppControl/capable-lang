@@ -58,6 +58,8 @@ namespace Typing
     NotBound : Ref -> Typing.Error
     ArrayExpected : Ty.Base -> Error
 
+    MismatchRole : Ref -> Ref -> Typing.Error
+
     Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error
     BoundsError : (given, expected : Nat)

@@ -118,6 +118,14 @@ Show (Typing.Error) where
               , "    \{show expected}"
               ]
 
+  show (MismatchRole given expected)
+    = unlines ["Roles matched:"
+              , "  Given:"
+              , "    \{show given}"
+              , "  Expected:"
+              , "    \{show expected}"
+              ]
+
   show (BoundsError given expected)
     = unlines ["Array out-of-bounds access:"
               , "  Given:"
