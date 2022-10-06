@@ -73,6 +73,29 @@ namespace Local
     DecEq (Local ks rs) where
       decEq = Local.Ty.decEq
 
+namespace Selection
+  namespace List
+    public export
+    data Select : (label : String) -> List (String, Base, Local ks rs) -> (Base, Local ks rs) -> Type where
+      Here : (prf : this = that)
+                 -> Select this ((that,type,cont)::bs) (type,cont)
+
+      There:  (later : Select this bs (type,cont))
+                    -> Select this ((that,type',cont')::bs) (type,cont)
+  namespace List1
+    public export
+    data Select : (label : String) -> List1 (String, Base, Local ks rs) -> (Base, Local ks rs) -> Type where
+      S1 : Select this (b::bs)  (type,cont)
+        -> Select this (b:::bs) (type,cont)
+
+
+  public export
+  data Select : (label : String) -> Local ks rs -> (Base, Local ks rs) -> Type where
+    S : Select label                     bs  (type,cont)
+     -> Select label (Choice SELECT whom bs) (type,cont)
+
+
+
 namespace Projection
 
   public export
