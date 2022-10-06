@@ -16,7 +16,7 @@ import Ola.Types
 
 import Ola.Raw.Roles
 import Ola.Raw.Types
-import Ola.Raw.Sessions
+import Ola.Raw.Protocols
 import Ola.Raw.Exprs
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
@@ -24,7 +24,7 @@ import Ola.Raw.Progs
 
 import Ola.Parser.Roles
 import Ola.Parser.Types
-import Ola.Parser.Sessions
+import Ola.Parser.Protocols
 import Ola.Parser.Exprs
 import Ola.Parser.Stmts
 import Ola.Parser.Funcs
@@ -35,7 +35,7 @@ data Decl = DeclT    FileContext Ref Raw.Ty
           | DeclF    FileContext Ref Raw.Func
           | DeclRsyn FileContext Ref Raw.Role
           | DeclR    FileContext Ref
-          | DeclS    FileContext Ref Raw.Session
+          | DeclS    FileContext Ref Raw.Protocol
 
 decls : RuleEmpty (List Decl)
 decls
@@ -47,7 +47,7 @@ decls
            keyword "protocol"
            r <- ref
            symbol "="
-           r' <- session
+           r' <- protocol
            e <- Toolkit.location
            pure (DeclS (newFC s e) r r')
 

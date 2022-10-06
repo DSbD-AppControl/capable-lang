@@ -1,7 +1,7 @@
 ||| Copyright : (c) Jan de Muijnck-Hughes
 ||| License   : see LICENSE
 |||
-module Ola.Parser.Sessions
+module Ola.Parser.Protocols
 
 import Data.List1
 import Data.Maybe
@@ -15,7 +15,7 @@ import Ola.Parser.API
 
 import Ola.Raw.Roles
 import Ola.Raw.Types
-import Ola.Raw.Sessions
+import Ola.Raw.Protocols
 
 import Ola.Parser.Roles
 import Ola.Parser.Types
@@ -23,14 +23,14 @@ import Ola.Parser.Types
 %default total
 
 
-end : Rule Raw.Session
+end : Rule Raw.Protocol
 end
   = do s <- Toolkit.location
        keyword "end"
        e <- Toolkit.location
        pure (Null (newFC s e) END)
 
-call : Rule Raw.Session
+call : Rule Raw.Protocol
 call
   = do s <- Toolkit.location
        keyword "call"
@@ -41,7 +41,7 @@ call
        pure (Null (newFC s e) (CALL r))
 
 mutual
-  rec : Rule Raw.Session
+  rec : Rule Raw.Protocol
   rec
     = do s <- Toolkit.location
          keyword "rec"
@@ -49,21 +49,21 @@ mutual
          r <- Ola.ref
          symbol ")"
          symbol "."
-         sesh <- session
+         sesh <- protocol
          e <- Toolkit.location
          pure (Un (newFC s e) (REC r) sesh)
 
-  branch : Rule (String, Raw.Ty, Raw.Session)
+  branch : Rule (String, Raw.Ty, Raw.Protocol)
   branch
     = do l <- Ola.ref
          symbol "("
          t <- type
          symbol ")"
          symbol "."
-         s <- session
+         s <- protocol
          pure (get l,t,s)
 
-  choice : Rule Raw.Session
+  choice : Rule Raw.Protocol
   choice
     = do s <- Toolkit.location
          a <- role
@@ -76,8 +76,8 @@ mutual
          pure (N1 (newFC s e) (CHOICE a b) bs)
 
   export
-  session : Rule Raw.Session
-  session
+  protocol : Rule Raw.Protocol
+  protocol
      =  end
     <|> call
     <|> rec

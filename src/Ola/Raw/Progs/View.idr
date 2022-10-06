@@ -16,8 +16,8 @@ import Ola.Raw.Roles
 import Ola.Raw.Types
 import Ola.Raw.Types.View
 
-import Ola.Raw.Sessions
-import Ola.Raw.Sessions.View
+import Ola.Raw.Protocols
+import Ola.Raw.Protocols.View
 
 import Ola.Raw.Exprs
 import Ola.Raw.Exprs.View
@@ -53,7 +53,7 @@ data Prog : (s : Raw.Prog) -> Type where
 
   SeshDef : (fc    : FileContext)
          -> (ref   : Ref)
-         -> (sesh  : Sessions s)
+         -> (sesh  : Protocols s)
          -> (scope : Prog body)
                   -> Prog (Un fc (DEFSESH ref s) body)
 

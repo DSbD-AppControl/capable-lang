@@ -3,7 +3,7 @@
 ||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
-module Ola.Terms.Sessions
+module Ola.Terms.Protocols
 
 import Decidable.Equality
 

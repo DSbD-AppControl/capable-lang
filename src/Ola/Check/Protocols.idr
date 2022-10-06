@@ -2,7 +2,7 @@
 ||| Copyright : (c) Jan de Muijnck-Hughes
 ||| License   : see LICENSE
 |||
-module Ola.Check.Sessions
+module Ola.Check.Protocols
 
 import Toolkit.Data.Location
 import Toolkit.Data.DList
@@ -15,8 +15,8 @@ import Ola.Core
 
 import Ola.Raw.Roles
 
-import Ola.Raw.Sessions
-import Ola.Raw.Sessions.View
+import Ola.Raw.Protocols
+import Ola.Raw.Protocols.View
 
 import Ola.Raw.Types
 import Ola.Raw.Types.View
@@ -28,7 +28,7 @@ import Ola.Check.Roles
 import Ola.Terms.Vars
 import Ola.Terms.Roles
 import Ola.Terms.Types
-import Ola.Terms.Sessions
+import Ola.Terms.Protocols
 
 %default total
 
@@ -86,7 +86,7 @@ mutual
        -> (kinds : Context Kind    ks)
        -> (types : Context Ty.Base ts)
        -> (roles : Context Ty.Role rs)
-       -> (syn   : Sessions g)
+       -> (syn   : Protocols g)
                -> Ola (DPair (Ty.Global ks rs) (Global ks ts rs))
   check kinds types roles (End fc)
     = pure (_ ** End)
@@ -112,25 +112,25 @@ mutual
            No prf => pure (_ ** Choice stm rtm prf tm)
 
 export
-sessionCheck : {ts    : List Base}
+protocolCheck : {ts    : List Base}
             -> {rs    : List Ty.Role}
             -> (types : Context Ty.Base ts)
             -> (roles : Context Ty.Role rs)
-            -> (sesh  : Sessions s)
+            -> (sesh  : Protocols s)
                      -> Ola (DPair (Ty.Global Nil rs) (Global Nil ts rs))
-sessionCheck
+protocolCheck
   = check Nil
 
 
 namespace Raw
   export
-  sessionCheck : {ts    : List Ty.Base}
+  protocolCheck : {ts    : List Ty.Base}
               -> {rs    : List Ty.Role}
               -> (types : Context Ty.Base ts)
               -> (roles : Context Ty.Role rs)
-              -> (sesh  : Raw.Session)
+              -> (sesh  : Raw.Protocol)
                        -> Ola (DPair (Ty.Global Nil rs) (Global Nil ts rs))
-  sessionCheck types roles s
+  protocolCheck types roles s
     = check Nil types roles (view s)
 
 

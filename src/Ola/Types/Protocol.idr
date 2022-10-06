@@ -1,10 +1,8 @@
 |||
-|||
-||| Module    : Ola.Types.Role
 ||| Copyright : (c) Jan de Muijnck-Hughes
 ||| License   : see LICENSE
 |||
-module Ola.Types.Session
+module Ola.Types.Protocol
 
 import Decidable.Equality
 

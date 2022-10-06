@@ -13,7 +13,7 @@ import Ola.Types
 
 import Ola.Raw.Roles
 import Ola.Raw.Types
-import Ola.Raw.Sessions
+import Ola.Raw.Protocols
 import Ola.Raw.Exprs
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
@@ -37,7 +37,7 @@ data Unary = DEFTYPE    Ref  Raw.Ty
            | DEFFUNC    Ref  Raw.Func
            | DEFROLESYN Ref  Raw.Role
            | DEFROLE    Ref
-           | DEFSESH    Ref  Raw.Session
+           | DEFSESH    Ref  Raw.Protocol
 
 Show Progs.Unary where
   show (DEFTYPE    r ty) = "(DEFTYPE \{show r} \{show ty})"

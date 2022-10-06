@@ -8,12 +8,12 @@
 |||
 ||| We reduce the *raw* AST to a single tree in which the node values
 ||| represent extra information about the children.
-module Ola.Raw.Sessions
+module Ola.Raw.Protocols
 
 import Data.List1
 import Toolkit.Data.Location
 
-import Ola.Types.Session
+import Ola.Types.Protocol
 
 import Ola.Raw.Roles
 import Ola.Raw.Types
@@ -23,11 +23,11 @@ import Ola.Raw.Types
 public export
 data Nullary = END | CALL Ref
 
-Show Sessions.Nullary where
+Show Protocols.Nullary where
   show END = "END"
   show (CALL r) = "(CALL \{show r})"
 
-setSourceNull : String -> Sessions.Nullary -> Sessions.Nullary
+setSourceNull : String -> Protocols.Nullary -> Protocols.Nullary
 setSourceNull str END = END
 setSourceNull str (CALL r) = CALL (setSource str r)
 
@@ -48,22 +48,22 @@ setSourceN str (CHOICE a b) = CHOICE (setSource str a) (setSource str b)
 
 namespace Raw
   public export
-  data Session = Null FileContext Sessions.Nullary
-               | Un   FileContext Unary Raw.Session
-               | N1   FileContext N1Ary (List1 (String, Raw.Ty, Session))
+  data Protocol = Null FileContext Protocols.Nullary
+               | Un   FileContext Unary Raw.Protocol
+               | N1   FileContext N1Ary (List1 (String, Raw.Ty, Protocol))
 
 mutual
-  setSources : String -> List (String, Raw.Ty, Session) -> List (String, Raw.Ty, Session)
+  setSources : String -> List (String, Raw.Ty, Protocol) -> List (String, Raw.Ty, Protocol)
   setSources str [] = []
   setSources str ((x, y,z) :: xs)
     = (x, setSource str y, setSource str z) :: setSources str xs
 
-  setSources1 : String -> List1 (String, Raw.Ty, Session) -> List1 (String, Raw.Ty, Session)
+  setSources1 : String -> List1 (String, Raw.Ty, Protocol) -> List1 (String, Raw.Ty, Protocol)
   setSources1 str ((x,y,z) ::: tail)
     = (x, setSource str y, setSource str z) ::: setSources str tail
 
   export
-  setSource : String -> Raw.Session -> Raw.Session
+  setSource : String -> Raw.Protocol -> Raw.Protocol
   setSource str (Null fc y)
     = Null (setSource     str fc)
            (setSourceNull str y)
@@ -79,7 +79,7 @@ mutual
          (setSources1 str xs)
 
 export
-Show Raw.Session where
+Show Raw.Protocol where
 
   show (Null x y) = "(NULL \{show x} \{show y})"
   show (Un x y z) = "(UN \{show x} \{show y} \{show z})"
@@ -87,7 +87,7 @@ Show Raw.Session where
 
 
 export
-getFC : Raw.Session -> FileContext
+getFC : Raw.Protocol -> FileContext
 getFC (Null x y) = x
 getFC (Un x y z) = x
 getFC (N1 x y xs) = x

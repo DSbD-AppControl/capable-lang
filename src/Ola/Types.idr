@@ -12,7 +12,7 @@ import Toolkit.Decidable.Informative
 
 import public Ola.Types.Base
 import public Ola.Types.Role
-import public Ola.Types.Session
+import public Ola.Types.Protocol
 
 %default total
 
