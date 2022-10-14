@@ -159,6 +159,13 @@ namespace Projection
            -> Protocol.Project ks rs role        g         l
            -> Branch.Project   ks rs role (B m t g) (B m t l)
 
+
+      export
+      funProject : Branch.Project ks rs whom b x ->
+                   Branch.Project ks rs whom b y ->
+                   x === y
+      funProject (B m t p) (B m t q) = cong (B m t) (funProject p q)
+
     namespace Protocol
       ||| Plain projection
       public export
@@ -190,6 +197,29 @@ namespace Projection
                -> (prf   : Same1 ks rs whom gs (B l t c))
                         -> Project ks rs whom (Choice s r notsr gs)
                                          c
+
+      export
+      funProject : Protocol.Project ks rs whom b x ->
+                   Protocol.Project ks rs whom b y ->
+                   x === y
+      funProject End End = Refl
+      funProject Call Call = Refl
+      funProject (Rec rec) (Rec z) = cong Rec (funProject rec z)
+      funProject (Select {ys = ys1} (Same Refl Refl) ps) (Select {ys = ys2} (Same Refl Refl) qs)
+        = cong (Choice SELECT _) (funProject ps qs)
+      funProject (Select {notsr} (Same Refl Refl) bs) (Offer (Same Refl Refl) w)
+        = void (notsr (Same Refl Refl))
+      funProject (Select (Same Refl Refl) bs) (Merge prfS prfR z)
+        = void (prfS (Same Refl Refl))
+      funProject (Offer (Same Refl Refl) bs) (Select {notsr} (Same Refl Refl) w)
+        = void (notsr (Same Refl Refl))
+      funProject (Offer _ p) (Offer _ q) = cong (Choice BRANCH _) (funProject p q)
+      funProject (Offer (Same Refl Refl) bs) (Merge prfS prfR z)
+        = void (prfR (Same Refl Refl))
+      funProject (Merge prfS prfR prf) (Select (Same Refl Refl) bs) = void (prfS (Same Refl Refl))
+      funProject (Merge prfS prfR prf) (Offer (Same Refl Refl) bs) = void (prfR (Same Refl Refl))
+      funProject (Merge _ _ p) (Merge _ _ q) = funSame1 p q
+
     namespace List
       public export
       data Project : (ks : List Kind)
@@ -203,6 +233,13 @@ namespace Projection
           (::) : Branch.Project ks rs whom  x       y
               -> List.Project   ks rs whom     xs      ys
               -> List.Project   ks rs whom (x::xs) (y::ys)
+
+      export
+      funProject : List.Project ks rs whom b x ->
+                   List.Project ks rs whom b y ->
+                   x === y
+      funProject [] [] = Refl
+      funProject (p :: ps) (q :: qs) = cong2 (::) (funProject p q) (funProject ps qs)
 
       namespace Same
         public export
@@ -238,6 +275,14 @@ namespace Projection
           Proj : Project ks rs whom (x:: xs) (y:: ys)
               -> Project ks rs whom (x:::xs) (y:::ys)
 
+      export
+      funProject : List1.Project ks rs whom b x ->
+                   List1.Project ks rs whom b y ->
+                   x === y
+      funProject (Proj (p :: ps)) (Proj (q :: qs))
+         = cong2 (:::) (funProject p q) (funProject ps qs)
+
+
       public export
       data Same1 : (ks : List Kind)
                 -> (rs : List Role)
@@ -249,6 +294,14 @@ namespace Projection
           S1 : {l : _} -> {ls : _} -> (projs : List1.Project ks rs whom (g:::gs) (l:::ls))
              -> (prf   : All (Equal l) ls)
                      -> Same1             ks rs whom (g:::gs) l
+
+
+      export
+      funSame1 : Same1 ks rs whom gs (B l1 t1 x) ->
+                 Same1 ks rs whom gs (B l2 t2 y) ->
+                 x === y
+      funSame1 (S1 (Proj (p :: ps)) eqp) (S1 (Proj (q :: qs)) eqq)
+        = case funProject p q of Refl => Refl
 
 
 -- [ EOF ]

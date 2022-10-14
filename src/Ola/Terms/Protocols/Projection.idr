@@ -225,34 +225,11 @@ mutual
         same1 whom (Bs1 x) | (Yes (R (yt :: yts) (y :: ys))) | (Yes prfWhy)
           = Yes (R _ (S1 (Proj (y :: ys)) prfWhy))
         same1 whom (Bs1 x) | (Yes (R (yt :: yts) (y :: ys))) | (No msg no)
-          = No () ?rhs -- (\case (R l (S1 (Proj z) prf)) => no ?same1_rhs_)
+          = No () $ \case (R l (S1 (Proj (p :: ps)) prf)) =>
+                           no $ rewrite sym (funProject p y) in
+                                rewrite sym (funProject ps ys) in
+                                prf
       same1 whom (Bs1 x) | (No msg no)
         = No () (\case (R _ (S1 (Proj y) prf)) => no (R _ y))
-
-data Foo = F Nat
-data Bar = B Char
-
-data Cast : Nat -> Char -> Type where
-  C : Cast Z '0'
-  CA : Cast (S n) '1'
-
-cast : (n : Nat) -> Dec (DPair Char (Cast n))
-cast 0 = Yes ('0' ** C)
-cast (S k) = Yes ('1' ** CA)
-
-data T : Foo -> Bar -> Type where
-  Z : Cast f b -> T (F f) (B b)
-  A : Cast f b -> (b = '1') -> T (F f) (B '2')
-
-t : (f : Foo) -> Dec (DPair Bar (T f))
-t (F 0) = Yes (B '0' ** Z C)
-t (F (S k)) with (cast (S k))
-  t (F (S k)) | (Yes ((fst ** snd))) with (decEq fst '1')
-    t (F (S k)) | (Yes ((fst ** snd))) | (Yes prf) = Yes (B '2' ** A snd prf)
-    t (F (S k)) | (Yes ((fst ** snd))) | (No contra)
-      = No (\case (((B c) ** y)) => ?biscuits)
-
-  t (F (S k)) | (No contra)
-    = No (\case ((fst ** snd)) => contra ('1' ** CA))
 
 -- [ EOF ]
