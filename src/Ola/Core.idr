@@ -16,6 +16,7 @@ import        Data.String
 import public Toolkit.TheRug
 import        Toolkit.System
 
+import public Ola.Bootstrap
 import public Ola.Error
 import        Ola.Error.Pretty
 

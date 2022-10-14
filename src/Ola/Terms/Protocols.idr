@@ -27,31 +27,32 @@ namespace Global
     data Branch : (ks : List Kind)
                -> (ts : List Base)
                -> (rs : List Role)
-               -> (b  : (String, Base, Global ks rs))
+               -> (b  : Global.Branch ks rs)
                      -> Type
       where
-        B : (label  : String)
+        B : {t : Base}
+         -> (label  : String)
          -> (type   : Ty ts t)
          -> (choice : Global ks ts rs g)
-                   -> Branch ks ts rs (label, t, g)
+                   -> Branch ks ts rs (B label t g)
 
     public export
     data Branches : (ks : List Kind)
                  -> (ts : List Base)
                  -> (rs : List Role)
-                 -> (b  : List (String, Base, Global ks rs))
+                 -> (b  : Global.Branches ks rs)
                        -> Type
       where
         Nil  : Branches ks ts rs Nil
-        (::) : (b  : Branch   ks ts rs b')
-            -> (bs : Branches ks ts rs bs')
+        (::) : (b  : Branch   ks ts rs  b')
+            -> (bs : Branches ks ts rs      bs')
                   -> Branches ks ts rs (b'::bs')
 
     public export
     data Branches1 : (ks : List Kind)
                   -> (ts : List Base)
                   -> (rs : List Role)
-                  -> (b  : List1 (String, Base, Global ks rs))
+                  -> (b  : Global.Branches1 ks rs)
                         -> Type
       where
         Bs1 : (bs : Branches  ks ts rs (b':: bs'))
@@ -72,7 +73,7 @@ namespace Global
 
         Choice : (sender   : Role rs MkRole)
               -> (receiver : Role rs MkRole)
-              -> (prf              : Not (sender = receiver))
+              -> (prf              : Not (Equals Role (IsVar rs) sender receiver))
               -> (choices          : Branches1 ks ts rs bs)
                                   -> Global ks ts rs (Choice sender receiver prf bs)
 

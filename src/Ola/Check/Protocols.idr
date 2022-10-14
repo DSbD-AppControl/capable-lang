@@ -32,23 +32,6 @@ import Ola.Terms.Protocols
 
 %default total
 
-Uninhabited (AtIndex x [] n) where
-  uninhabited at impossible
-
-
-irrelevantAtIndex : (p, q : AtIndex x xs n) -> p === q
-irrelevantAtIndex Here Here = Refl
-irrelevantAtIndex (There p) (There q) = cong There (irrelevantAtIndex p q)
-
-Uninhabited (IsVar [] x) where
-  uninhabited (V n prf) = void (uninhabited prf)
-
-DecEq (IsVar ctxt type) where
-  decEq (V m p) (V n q) with (decEq m n)
-    decEq (V m p) (V .(m) q) | Yes Refl
-      = Yes (rewrite irrelevantAtIndex p q in Refl)
-    _ | No neq = No (\case Refl => neq Refl)
-
 mutual
   checkBS : {ts : List Base}
          -> {rs : List Ty.Role}
