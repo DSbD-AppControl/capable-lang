@@ -15,51 +15,14 @@ import Ola.Check
 import Ola.Terms
 import Ola.Exec
 
-record Opts where
-  constructor O
-  justLex   : Bool
-  justCheck : Bool
-  file      : Maybe String
-
-Show Opts where
-  show (O l c f)
-    = "O \{show l} \{show c} \{show f}"
-
-Eq Opts where
-  (==) x y
-    =  justLex x   == justLex y
-    && justCheck x == justCheck y
-    && file x      == file y
-
-convOpts : Arg -> Opts -> Maybe Opts
-
-convOpts (File x) o
-  = Just $ { file := Just x} o
-
-convOpts (KeyValue k v) o
-  = Just o
-
-convOpts (Flag x) o
-  = case x of
-      "lexOnly"
-        => Just $ { justLex := True} o
-      "checkOnly"
-        => Just $ { justCheck := True} o
-      otherwise => Nothing
-
-defOpts : Opts
-defOpts = O False False Nothing
-
+import Ola.Options
 
 showToks : (List (WithBounds Token)) -> List String
 showToks = map (\(MkBounded t _ _) => show t)
 
 mainRug : Ola ()
 mainRug
-  = do opts <- parseArgs
-                 (Opts . OError)
-                 defOpts
-                 convOpts
+  = do opts <- getOpts
 
        fname <- embed
                   (Generic "File expected.")
