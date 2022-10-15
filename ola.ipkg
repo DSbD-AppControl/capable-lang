@@ -2,9 +2,9 @@ package ola
 -- version =
 -- authors =
 -- maintainers =
--- license =
+-- license = LICENSE
 -- brief =
--- readme =
+-- readme = README.org
 -- homepage =
 -- sourceloc =
 -- bugtracker =
@@ -19,47 +19,8 @@ main = Main
 executable = ola
 -- opts =
 
-
 sourcedir = "src"
 
--- modules to install
-
-modules = Ola.Types
-
---        , Ola.Terms.Vars
---        , Ola.Terms.Types
---        , Ola.Terms.Exprs
---        , Ola.Terms.Stmts
---        , Ola.Terms.Funcs
---        , Ola.Terms.Progs
---        , Ola.Terms
---
---        , Ola.Values
---        , Ola.Env
-
-        , Ola.Error
-        , Ola.Error.Pretty
-        , Ola.Core
-
---        , Ola.Exec
-
-        , Ola.Raw.Types
-        , Ola.Raw.Exprs
-        , Ola.Raw.Stmts
-        , Ola.Raw.Funcs
-        , Ola.Raw.Progs
-
-        , Ola.Lexer.Token
-        , Ola.Lexer
-
-        , Ola.Parser.API
-        , Ola.Parser.Types
-        , Ola.Parser.Exprs
-        , Ola.Parser.Stmts
-        , Ola.Parser.Funcs
-
-
-        , Ola.Parser
---        , Example
+modules = Main
 
 -- [ EOF ]

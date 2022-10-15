@@ -40,7 +40,8 @@ mutual
          -> (types : Context Ty.Base ts)
          -> (roles : Context Ty.Role rs)
          -> (bs    : Branches bs')
-                  -> Ola (DPair (List (String, Base, Global ks rs)) (Branches ks ts rs))
+                  -> Ola (DPair (Global.Branches ks    rs)
+                                (Branches        ks ts rs))
   checkBS kinds types roles []
     = pure (Nil ** Nil)
 
@@ -57,7 +58,8 @@ mutual
          -> (types : Context Ty.Base ts)
          -> (roles : Context Ty.Role rs)
          -> (bs1   : Branches1 bs)
-                  -> Ola (DPair (List1 (String, Base, Global ks rs)) (Branches1 ks ts rs))
+                  -> Ola (DPair (Global.Branches1 ks    rs)
+                                (Branches1        ks ts rs))
   checkB1 kinds types roles (B1 bs)
     = do ((b::bs) ** tm) <- checkBS kinds types roles bs
            | (Nil ** _) => throw (Generic "internal checking nil branch when branches expected")
@@ -70,7 +72,8 @@ mutual
        -> (types : Context Ty.Base ts)
        -> (roles : Context Ty.Role rs)
        -> (syn   : Protocols g)
-               -> Ola (DPair (Ty.Global ks rs) (Global ks ts rs))
+               -> Ola (DPair (Ty.Global ks    rs)
+                             (Global    ks ts rs))
   check kinds types roles (End fc)
     = pure (_ ** End)
 
@@ -90,8 +93,8 @@ mutual
     = do (MkRole ** stm) <- roleCheck roles s
          (MkRole ** rtm) <- roleCheck roles r
          (bs ** tm) <- checkB1 kinds types roles branches
-         case decEq stm rtm of
-           Yes Refl => throwAt fc (MismatchRole s' r')
+         case Index.decEq stm rtm of
+           Yes (Same Refl Refl) => throwAt fc (MismatchRole s' r')
            No prf => pure (_ ** Choice stm rtm prf tm)
 
 export
@@ -100,7 +103,8 @@ protocolCheck : {ts    : List Base}
             -> (types : Context Ty.Base ts)
             -> (roles : Context Ty.Role rs)
             -> (sesh  : Protocols s)
-                     -> Ola (DPair (Ty.Global Nil rs) (Global Nil ts rs))
+                     -> Ola (DPair (Ty.Global Nil    rs)
+                                      (Global Nil ts rs))
 protocolCheck
   = check Nil
 
@@ -112,7 +116,8 @@ namespace Raw
               -> (types : Context Ty.Base ts)
               -> (roles : Context Ty.Role rs)
               -> (sesh  : Raw.Protocol)
-                       -> Ola (DPair (Ty.Global Nil rs) (Global Nil ts rs))
+                       -> Ola (DPair (Ty.Global Nil    rs)
+                                        (Global Nil ts rs))
   protocolCheck types roles s
     = check Nil types roles (view s)
 

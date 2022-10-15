@@ -76,47 +76,6 @@ namespace Local
         data Branch : List Kind -> List Role -> Type where
           B : String -> Base -> Local ks rs -> Branch ks rs
 
-        public export
-        data Extract : (Local.Branch ks rs) -> Local ks rs-> Type where
-          E : Extract (B s b l) l
-
-    public export
-    decEq : (a,b : Local ks rs) -> Dec (Equal a b)
-
-    public export
-    DecEq (Local ks rs) where
-      decEq = Local.Ty.decEq
-
-    export
-    branchEq : (a,b : Local.Branch ks rs) -> DecInfo () (a = b)
-    branchEq a b = ?branchEq_rhs
-
-    export
-    branchesEq : (b  : Local.Branch ks rs)
-              -> (bs : List (Local.Branch ks rs))
-              -> DecInfo () (All (Equal b) bs)
-{-
-namespace Selection
-  namespace List
-    public export
-    data Select : (label : String) -> List (String, Base, Local ks rs) -> (Base, Local ks rs) -> Type where
-      Here : (prf : this = that)
-                 -> Select this ((that,type,cont)::bs) (type,cont)
-
-      There:  (later : Select this bs (type,cont))
-                    -> Select this ((that,type',cont')::bs) (type,cont)
-  namespace List1
-    public export
-    data Select : (label : String) -> List1 (String, Base, Local ks rs) -> (Base, Local ks rs) -> Type where
-      S1 : Select this (b::bs)  (type,cont)
-        -> Select this (b:::bs) (type,cont)
-
-
-  public export
-  data Select : (label : String) -> Local ks rs -> (Base, Local ks rs) -> Type where
-    S : Select label                     bs  (type,cont)
-     -> Select label (Choice SELECT whom bs) (type,cont)
--}
 namespace Global
   public export
   Branches : List Kind -> List Role -> Type
@@ -199,26 +158,42 @@ namespace Projection
                                          c
 
       export
-      funProject : Protocol.Project ks rs whom b x ->
-                   Protocol.Project ks rs whom b y ->
-                   x === y
-      funProject End End = Refl
-      funProject Call Call = Refl
-      funProject (Rec rec) (Rec z) = cong Rec (funProject rec z)
+      funProject : Protocol.Project ks rs whom b x
+                -> Protocol.Project ks rs whom b y
+                -> x === y
+      funProject End End
+        = Refl
+
+      funProject Call Call
+        = Refl
+
+      funProject (Rec rec) (Rec z)
+        = cong Rec (funProject rec z)
+
       funProject (Select {ys = ys1} (Same Refl Refl) ps) (Select {ys = ys2} (Same Refl Refl) qs)
         = cong (Choice SELECT _) (funProject ps qs)
+
       funProject (Select {notsr} (Same Refl Refl) bs) (Offer (Same Refl Refl) w)
         = void (notsr (Same Refl Refl))
+
       funProject (Select (Same Refl Refl) bs) (Merge prfS prfR z)
         = void (prfS (Same Refl Refl))
+
       funProject (Offer (Same Refl Refl) bs) (Select {notsr} (Same Refl Refl) w)
         = void (notsr (Same Refl Refl))
-      funProject (Offer _ p) (Offer _ q) = cong (Choice BRANCH _) (funProject p q)
+
+      funProject (Offer _ p) (Offer _ q)
+        = cong (Choice BRANCH _) (funProject p q)
+
       funProject (Offer (Same Refl Refl) bs) (Merge prfS prfR z)
         = void (prfR (Same Refl Refl))
-      funProject (Merge prfS prfR prf) (Select (Same Refl Refl) bs) = void (prfS (Same Refl Refl))
-      funProject (Merge prfS prfR prf) (Offer (Same Refl Refl) bs) = void (prfR (Same Refl Refl))
-      funProject (Merge _ _ p) (Merge _ _ q) = funSame1 p q
+
+      funProject (Merge prfS prfR prf) (Select (Same Refl Refl) bs)
+        = void (prfS (Same Refl Refl))
+      funProject (Merge prfS prfR prf) (Offer (Same Refl Refl) bs)
+        = void (prfR (Same Refl Refl))
+      funProject (Merge _ _ p) (Merge _ _ q)
+        = funSame1 p q
 
     namespace List
       public export
@@ -235,11 +210,15 @@ namespace Projection
               -> List.Project   ks rs whom (x::xs) (y::ys)
 
       export
-      funProject : List.Project ks rs whom b x ->
-                   List.Project ks rs whom b y ->
-                   x === y
-      funProject [] [] = Refl
-      funProject (p :: ps) (q :: qs) = cong2 (::) (funProject p q) (funProject ps qs)
+      funProject : List.Project ks rs whom b x
+                -> List.Project ks rs whom b y
+                -> x === y
+      funProject [] []
+        = Refl
+      funProject (p :: ps) (q :: qs)
+        = cong2 (::)
+                (funProject p  q)
+                (funProject ps qs)
 
       namespace Same
         public export
@@ -276,11 +255,13 @@ namespace Projection
               -> Project ks rs whom (x:::xs) (y:::ys)
 
       export
-      funProject : List1.Project ks rs whom b x ->
-                   List1.Project ks rs whom b y ->
-                   x === y
+      funProject : List1.Project ks rs whom b x
+                -> List1.Project ks rs whom b y
+                -> x === y
       funProject (Proj (p :: ps)) (Proj (q :: qs))
-         = cong2 (:::) (funProject p q) (funProject ps qs)
+         = cong2 (:::)
+                 (funProject p  q)
+                 (funProject ps qs)
 
 
       public export
@@ -291,17 +272,40 @@ namespace Projection
                 -> (l    :  Local.Branch    ks rs)
                         -> Type
         where
-          S1 : {l : _} -> {ls : _} -> (projs : List1.Project ks rs whom (g:::gs) (l:::ls))
-             -> (prf   : All (Equal l) ls)
-                     -> Same1             ks rs whom (g:::gs) l
+          S1 : {l  : _} -- TODO Fix.
+            -> {ls : _}
+            -> (projs : List1.Project ks rs whom (g:::gs) (l:::ls))
+            -> (prf   : All (Equal l) ls)
+                     -> Same1 ks rs whom (g:::gs) l
 
 
       export
-      funSame1 : Same1 ks rs whom gs (B l1 t1 x) ->
-                 Same1 ks rs whom gs (B l2 t2 y) ->
-                 x === y
+      funSame1 : Same1 ks rs whom gs (B l1 t1 x)
+              -> Same1 ks rs whom gs (B l2 t2 y)
+              -> x === y
       funSame1 (S1 (Proj (p :: ps)) eqp) (S1 (Proj (q :: qs)) eqq)
         = case funProject p q of Refl => Refl
 
+{-
+namespace Selection
+  namespace List
+    public export
+    data Select : (label : String) -> List (String, Base, Local ks rs) -> (Base, Local ks rs) -> Type where
+      Here : (prf : this = that)
+                 -> Select this ((that,type,cont)::bs) (type,cont)
 
+      There:  (later : Select this bs (type,cont))
+                    -> Select this ((that,type',cont')::bs) (type,cont)
+  namespace List1
+    public export
+    data Select : (label : String) -> List1 (String, Base, Local ks rs) -> (Base, Local ks rs) -> Type where
+      S1 : Select this (b::bs)  (type,cont)
+        -> Select this (b:::bs) (type,cont)
+
+
+  public export
+  data Select : (label : String) -> Local ks rs -> (Base, Local ks rs) -> Type where
+    S : Select label                     bs  (type,cont)
+     -> Select label (Choice SELECT whom bs) (type,cont)
+-}
 -- [ EOF ]

@@ -84,13 +84,6 @@ namespace Branches1
       where
         R : (l : _) -> (proj : Same1 ks rs whom gs l) -> Result ks rs whom gs
 
-{-
-se (BSEQ Refl) => ?as_1)
-
-equivs pa (Next proj ltr)
-   = ?equivs_rhs_1
--}
-
 mutual
 
   export
@@ -204,14 +197,6 @@ mutual
              (\case (R1 _ (Proj y)) => no (R _ y))
 
   namespace Same
-
-    helper : {b' : Global.Branch ks rs}
-          -> {bs' : Global.Branches ks rs}
-          -> (y  : Branch.Project ks rs whom b'  yt)
-          -> (ys : List.Project ks rs whom bs' yts)
-          -> (no : All (Equal yt) yts -> Void)
-          -> Same1 ks rs whom (b' ::: bs') yt
-          -> Void
 
     export
     same1 : {rs   : _}
