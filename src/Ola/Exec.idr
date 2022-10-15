@@ -546,12 +546,6 @@ namespace Progs
         let Val xs = resolves env xs
         in Val (x::xs)
 
-  resolveRole : (env : Env roles)
-             -> (role : Role roles r)
-                     -> Singleton r
-  resolveRole env x
-    = read x env
-
   ||| Run a programme.
   public export
   run : {type : Ty.Base}
@@ -572,14 +566,8 @@ namespace Progs
              env
              heap
              rest
-  -- RoleDefs need resolving...
-  run er et env heap (DefRoleSyn rDef rest)
-    = do let r = resolveRole er rDef
-         run er
-             et
-             env
-             heap
-             rest
+
+
 
   -- Typedefs need resolving.
   run er et env heap (DefType tyRef rest)

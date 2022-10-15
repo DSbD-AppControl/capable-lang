@@ -33,7 +33,6 @@ import Ola.Parser.Funcs
 
 data Decl = DeclT    FileContext Ref Raw.Ty
           | DeclF    FileContext Ref Raw.Func
-          | DeclRsyn FileContext Ref Raw.Role
           | DeclR    FileContext Ref
           | DeclS    FileContext Ref Raw.Protocol
 
@@ -56,13 +55,8 @@ decls
       = do s <- Toolkit.location
            keyword "role"
            r <- ref
-           r' <- optional (symbol "=" *> role)
            e <- Toolkit.location
-           case r' of
-             Nothing
-               => pure (DeclR (newFC s e) r)
-             Just r'
-               => pure (DeclRsyn (newFC s e) r r')
+           pure (DeclR (newFC s e) r)
 
     declTy : Rule Decl
     declTy
@@ -109,9 +103,6 @@ program
     fold : Decl -> Raw.Prog -> Raw.Prog
     fold (DeclS fc r s)
       = Un fc (DEFSESH r s)
-
-    fold (DeclRsyn fc r ro)
-      = Un fc (DEFROLESYN r ro)
 
     fold (DeclR fc r)
       = Un fc (DEFROLE r)

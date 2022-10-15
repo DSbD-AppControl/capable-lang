@@ -35,14 +35,12 @@ Show Progs.Nullary where
 public export
 data Unary = DEFTYPE    Ref  Raw.Ty
            | DEFFUNC    Ref  Raw.Func
-           | DEFROLESYN Ref  Raw.Role
            | DEFROLE    Ref
            | DEFSESH    Ref  Raw.Protocol
 
 Show Progs.Unary where
   show (DEFTYPE    r ty) = "(DEFTYPE \{show r} \{show ty})"
   show (DEFFUNC    r f)  = "(DEFFUNC \{show r} \{show f})"
-  show (DEFROLESYN r ro) = "(DEFROLESYN \{show r} \{show ro})"
   show (DEFROLE    r)    = "(DEFROLE \{show r})"
   show (DEFSESH    r s)  = "(DEFSESH \{show r} \{show s})"
 
@@ -55,10 +53,6 @@ setSourceU str (DEFTYPE x y)
 setSourceU str (DEFFUNC x y)
   = DEFFUNC (setSource str x)
             (setSource str y)
-
-setSourceU str (DEFROLESYN x y)
-  = DEFROLESYN (setSource str x)
-               (setSource str y)
 
 setSourceU str (DEFROLE x)
   = DEFROLE (setSource str x)

@@ -59,15 +59,6 @@ check rho delta gamma (SeshDef fc ref s scope)
                   scope
        pure (DefSesh tm scope)
 
-check rho delta gamma (RoleDefSyn fc ref r scope)
-  = do (MkRole ** tm) <- roleCheck rho r
-       scope <- check
-                  rho
-                  delta
-                  gamma
-                  scope
-       pure (DefRoleSyn tm scope)
-
 check rho delta gamma (RoleDef fc ref scope)
   = do scope <- check
                   (extend rho (get ref) MkRole)

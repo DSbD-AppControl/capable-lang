@@ -34,12 +34,6 @@ import Ola.Raw.Progs
 
 public export
 data Prog : (s : Raw.Prog) -> Type where
-  RoleDefSyn : (fc    : FileContext)
-            -> (ref   : Ref)
-            -> (role  : Raw.Role)
-            -> (scope : Prog body)
-                     -> Prog (Un fc (DEFROLESYN ref role) body)
-
   RoleDef : (fc    : FileContext)
          -> (ref   : Ref)
          -> (scope : Prog body)
@@ -79,9 +73,6 @@ view (Un fc (DEFFUNC x y) rem)
 
 view (Un fc (DEFROLE x) rem)
   = RoleDef fc x (view rem)
-
-view (Un fc (DEFROLESYN x y) rem)
-  = RoleDefSyn fc x y (view rem)
 
 view (Un fc (DEFSESH ref s) rem)
   = SeshDef fc ref (view s) (view rem)

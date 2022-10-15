@@ -37,10 +37,7 @@ data Prog : (roles : List Ty.Role)
 
     DefRole : (rest : Prog (MkRole::roles) types stack UNIT)
                    -> Prog          roles  types stack UNIT
-    ||| A RoleDef Synon,
-    DefRoleSyn : (roleRef : Role roles MkRole)
-              -> (rest    : Prog roles types stack UNIT)
-                         -> Prog roles  types stack UNIT
+
     ||| A Type-Def.
     DefType : {type : Ty.Base}
            -> (tyRef : Ty types type)
