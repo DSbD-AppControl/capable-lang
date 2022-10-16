@@ -87,7 +87,7 @@ namespace Branches1
 mutual
 
   export
-  project : {rs : List Role}
+  project : {rs : List Role} -> {ks : _}
          -> {0 global : Global ks rs}
          -> (whom : Role rs MkRole)
          -> (type : Global ks ts rs global)
@@ -145,7 +145,7 @@ mutual
 
   namespace Branch
     export
-    project : {rs : _}
+    project : {rs : _} -> {ks : _}
            -> (whom : Role rs MkRole)
            -> {0 g  : Global.Branch ks rs}
            -> (type : Branch ks ts rs g)
@@ -159,7 +159,7 @@ mutual
 
   namespace Branches
     export
-    project : {rs : _}
+    project : {rs : _} -> {ks : _}
            -> (whom   : Role rs MkRole)
            -> {0  bs : Global.Branches ks rs}
            -> (type   : Branches ks ts rs bs)
@@ -182,7 +182,7 @@ mutual
 
   namespace Branches1
     export
-    project : {rs : _}
+    project : {rs : _} -> {ks : _}
            -> (whom   : Role rs MkRole)
            -> { 0 bs : Global.Branches1 ks rs}
            -> (type   : Branches1 ks ts rs bs)
@@ -199,7 +199,7 @@ mutual
   namespace Same
 
     export
-    same1 : {rs   : _}
+    same1 : {rs   : _} -> {ks : _}
          -> {0 bs : Global.Branches1 ks rs}
          -> (whom : Role rs MkRole)
          -> (gs   : Branches1 ks ts rs bs)

@@ -17,6 +17,7 @@ import Ola.Raw.Exprs
 
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
+import Ola.Raw.Roles
 import Ola.Raw.Progs
 import Ola.Raw.Progs.View
 
@@ -24,6 +25,7 @@ import Ola.Check.Common
 
 import Ola.Check.Roles
 import Ola.Check.Types
+import Ola.Check.Roles
 import Ola.Check.Protocols
 import Ola.Check.Exprs
 import Ola.Check.Stmts
@@ -60,12 +62,15 @@ check rho delta gamma (SeshDef fc ref s scope)
        pure (DefSesh tm scope)
 
 check rho delta gamma (RoleDef fc ref scope)
-  = do scope <- check
-                  (extend rho (get ref) MkRole)
+  = do let rho = (extend rho (get ref) MkRole)
+       role <- roleCheck rho (RoleRef ref)
+       scope <- check
+                  rho
                   delta
                   gamma
                   scope
        pure (DefRole scope)
+
 
 check rho delta gamma (TypeDef fc ref val scope)
   = do (ty ** tm) <- typeCheck delta val

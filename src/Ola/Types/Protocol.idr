@@ -5,16 +5,21 @@
 module Ola.Types.Protocol
 
 import Decidable.Equality
+import Data.String
 
 import Toolkit.Decidable.Do
 import public Toolkit.Decidable.Informative
 import public Toolkit.Decidable.Equality.Indexed
+
+import Toolkit.Data.List.Quantifiers
 
 import public Toolkit.DeBruijn.Renaming
 
 import Data.List.Elem
 import Data.List1
 import Data.List.Quantifiers
+
+import Ola.Bootstrap
 import Ola.Types.Role
 import Ola.Types.Base
 
@@ -22,6 +27,10 @@ import Ola.Types.Base
 
 public export
 data Kind = R -- To capture recursion variables
+
+export
+DecEq Kind where
+  decEq R R = Yes Refl
 
 namespace Global
   mutual
@@ -64,7 +73,7 @@ namespace Local
       public export
       data Local : List Kind -> List Role -> Type where
         End : Local ks rs
-        Call : IsVar vs R -> Local ks rs
+        Call : {vs : _} -> IsVar vs R -> Local vs rs
         Rec : Local (R::vs) rs -> Local vs rs
         Choice : (kind : ChoiceTy)
               -> (whom : IsVar rs MkRole)
@@ -74,7 +83,98 @@ namespace Local
       namespace Local
         public export
         data Branch : List Kind -> List Role -> Type where
-          B : String -> Base -> Local ks rs -> Branch ks rs
+          B : String -> Ty.Base -> Local ks rs -> Branch ks rs
+
+    Uninhabited (Local.Ty.End = (Local.Ty.Call x)) where
+      uninhabited Refl impossible
+
+    Uninhabited (Local.Ty.End = (Local.Ty.Rec x)) where
+      uninhabited Refl impossible
+
+    Uninhabited (Local.Ty.End = (Local.Ty.Choice a b c)) where
+      uninhabited Refl impossible
+
+    Uninhabited (Local.Ty.Call x = (Local.Ty.Rec y)) where
+      uninhabited Refl impossible
+
+    Uninhabited (Local.Ty.Call x = (Local.Ty.Choice a b c)) where
+      uninhabited Refl impossible
+
+    Uninhabited (Local.Ty.Rec x = (Local.Ty.Choice a b c)) where
+      uninhabited Refl impossible
+
+    mutual
+      -- TODO
+      public export
+      decEq : (a,b : Local ks rs) -> Dec (Equal a b)
+      decEq End End = Yes Refl
+      decEq End (Call x)                   = No absurd
+      decEq End (Rec x)                    = No absurd
+      decEq End (Choice kind whom choices) = No absurd
+
+      decEq (Call x) End = No (negEqSym absurd)
+
+      decEq (Call x) (Call y)
+        = case Index.decEq x y of
+               No no => No (\Refl => no (Same Refl Refl))
+               Yes (Same Refl Refl) => Yes Refl
+
+      decEq (Call x) (Rec y)                    = No absurd
+      decEq (Call x) (Choice kind whom choices) = No absurd
+
+      decEq (Rec x) End      = No (negEqSym absurd)
+      decEq (Rec x) (Call y) = No (negEqSym absurd)
+
+      decEq (Rec x) (Rec y) with (Ty.decEq x y)
+        decEq (Rec x) (Rec x) | (Yes Refl) = Yes Refl
+        decEq (Rec x) (Rec y) | (No contra)
+          = No (\Refl => contra Refl)
+
+      decEq (Rec x) (Choice kind whom choices) = No absurd
+
+      decEq (Choice kind whom choices) End      = No (negEqSym absurd)
+      decEq (Choice kind whom choices) (Call x) = No (negEqSym absurd)
+      decEq (Choice kind whom choices) (Rec x)  = No (negEqSym absurd)
+      decEq (Choice a b cs) (Choice x y zs)
+        = decDo $ do Refl <- decEq a x `otherwise` (\Refl => Refl)
+                     Refl <- decEq b y `otherwise` (\Refl => Refl)
+                     Refl <- decEq cs zs `otherwise` (\Refl => Refl)
+                     pure Refl
+
+      public export
+      DecEq (Local ks rs) where
+        decEq = Local.Ty.decEq
+
+      export
+      branchEq' : (a,b : Local.Branch ks rs) -> Dec (a = b)
+      branchEq' (B a b c) (B x y z)
+        = decDo $ do Refl <- decEq a x `otherwise` (\Refl => Refl)
+                     Refl <- decEq b y `otherwise` (\Refl => Refl)
+                     Refl <- assert_total $ Ty.decEq c z `otherwise` (\Refl => Refl)
+                     pure Refl
+
+      export
+      DecEq (Local.Branch ks rs) where
+        decEq = branchEq'
+
+      export
+      branchEq : (a,b : Local.Branch ks rs) -> DecInfo () (a = b)
+      branchEq a b with (branchEq' a b)
+        branchEq a b | (Yes prf)
+          = Yes prf
+        branchEq a b | (No contra)
+          = No () contra
+
+      export
+      branchesEq : (b  : Local.Branch ks rs)
+                -> (bs : List (Local.Branch ks rs))
+                -> DecInfo () (All (Equal b) bs)
+      branchesEq b bs with (all (branchEq b) bs)
+        branchesEq b bs | (Yes prf)
+          = Yes prf
+        branchesEq b bs | (No msg no)
+          = No () -- TODO
+               (\case pat => no pat)
 
 namespace Global
   public export
@@ -100,6 +200,34 @@ namespace Local
   Branches1 : List Kind -> List Role -> Type
   Branches1 ks rs
     = List1 (Local.Branch ks rs)
+
+Show (IsVar ks R) where
+  show (V pos prf) = "(RecVar \{show pos})"
+
+mutual
+  toStringBranch : Local.Branch ks rs -> String
+  toStringBranch (B str x y)
+    = "\{str}(\{show x}) => \{toString y}"
+
+  choices : Local.Branches1 ks rs -> String
+  choices bs = assert_total $ unwords $ intersperse "|" $ map toStringBranch (forget bs)
+
+  export
+  toString : Local ks rs -> String
+  toString End
+    = "End"
+  toString (Call x)
+    = "(Call \{show x})"
+
+  toString (Rec x)
+    = "(Rec \{toString x})"
+
+  toString (Choice BRANCH whom cs)
+    = "(Branch \{show whom} \{choices cs})"
+
+  toString (Choice SELECT whom cs)
+    = "(Select \{show whom} \{choices cs})"
+
 
 namespace Projection
   mutual

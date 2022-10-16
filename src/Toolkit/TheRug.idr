@@ -143,13 +143,28 @@ when True f
 
 export
 %inline
-tryCatch : (onErr : ea -> eb)
-        -> (prog  : TheRug ea a)
-                 -> TheRug eb a
-tryCatch onErr prog
-  = MkTheRug (run (pure . Left . onErr)
-                  (pure . Right)
-                  prog)
+tryCatch : (prog  : TheRug ea a)
+        -> (onErr : ea -> TheRug ea a)
+                 -> TheRug ea a
+tryCatch (MkTheRug this) onErr
+  = MkTheRug (do res <- this
+                 either (rugRun . onErr)
+                        (pure   . Right)
+                        res
+                   )
+
+export
+%inline
+handleWith : Show ea => (when : ea -> Maybe ea)
+          -> (prog :       TheRug ea a)
+          -> (next : Lazy (TheRug ea a))
+                  ->       TheRug ea a
+handleWith when prog next
+  = tryCatch prog
+             (\err => maybe next
+                            throw
+                            (when err)
+             )
 
 namespace Maybe
   export

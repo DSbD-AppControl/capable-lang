@@ -9,12 +9,16 @@ import Data.String
 import Toolkit.Options.ArgParse
 
 import Ola.Core
+import Ola.Error.Pretty
 
 import Ola.Lexer
 import Ola.Parser
+import Ola.Check.Common
 import Ola.Check
+import Ola.Check.Roles
 
 import Ola.Terms
+import Ola.Terms.Protocols.Projection
 import Ola.Exec
 
 import Ola.REPL.Load
@@ -91,9 +95,27 @@ prompt : String
 prompt
   = ">"
 
+
+
+
+
+
 todo : State -> Ola State
 todo st = do putStrLn "Not yet implemented"
              pure st
+
+
+roleCheck' : {roles : List Ty.Role}
+          -> (ctxt  : Context Ty.Role roles)
+          -> (syn   : String)
+                   -> Maybe (DPair Ty.Role (Role roles))
+
+roleCheck' ctxt str
+  = case Lookup.lookup str ctxt of
+      No _ _ => Nothing
+      Yes prf
+        => let (r ** (loc ** prfN)) = deBruijn prf
+           in pure (r ** (V loc prfN))
 
 process : State -> SubCommand -> Ola State
 process st (Load str)
@@ -108,9 +130,23 @@ process st Help
 
 process st (Run mstr)
   = todo st
-process st (Proj str str1)
-  = todo st
 
+process st (Proj str str1)
+  = do Just (P r p) <- getProtocol st str
+         | Nothing => do putStrLn "Not a bound protocol: \{str}"
+                         pure st
+
+
+       case roleCheck' r str1 of
+         Nothing => do putStrLn "Not a bound role: \{str1}"
+                       pure st
+
+         Just (MkRole ** rs) =>
+           case Projection.project rs p of
+             No msg _ => do putStrLn "Error"
+                            pure st
+             Yes (R l _) => do putStrLn (toString l)
+                               pure st
 
 onInput : State -> String -> Ola (Maybe State)
 onInput st l

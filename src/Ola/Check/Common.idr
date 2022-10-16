@@ -70,6 +70,7 @@ namespace Decidable
     = throwAt fc err
 
   namespace Informative
+
     export
     embedAt : FileContext
            -> Typing.Error

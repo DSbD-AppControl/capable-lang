@@ -22,6 +22,10 @@ export
 DecEq Role where
   decEq MkRole MkRole = Yes Refl
 
+export
+Show (IsVar ks MkRole) where
+  show (V pos prf) = "(RoleVar \{show pos})"
+
 
 public export
 data Involved : (rs : List Role)

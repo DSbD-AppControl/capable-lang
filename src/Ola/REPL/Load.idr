@@ -11,6 +11,7 @@ import Ola.Raw.Exprs
 
 import Ola.Raw.Stmts
 import Ola.Raw.Funcs
+import Ola.Raw.Roles
 import Ola.Raw.Progs
 import Ola.Raw.Progs.View
 
@@ -20,6 +21,7 @@ import Ola.Parser
 import Ola.Check.Common
 import Ola.Check.Roles
 import Ola.Check.Types
+import Ola.Check.Roles
 import Ola.Check.Protocols
 import Ola.Check.Exprs
 import Ola.Check.Stmts
@@ -48,16 +50,18 @@ check rho delta gamma st (SeshDef fc ref s scope)
                        rho
                        delta
                        gamma
-                       ({protocols $= insert (get ref) (P tm)} st)
+                       ({protocols $= insert (get ref) (P rho tm)} st)
                        scope
        pure (DefSesh tm scope, st)
 
 check rho delta gamma st (RoleDef fc ref scope)
-  = do (scope, st) <- check
-                       (extend rho (get ref) MkRole)
+  = do let rho = (extend rho (get ref) MkRole)
+       (MkRole ** role) <- roleCheck rho (RoleRef ref)
+       (scope, st) <- check
+                       rho
                        delta
                        gamma
-                       ({roles $= insert (get ref)} st)
+                       ({roles $= insert (get ref) (R (role))} st)
                        scope
        pure (DefRole scope, st)
 

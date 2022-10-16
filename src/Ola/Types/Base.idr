@@ -435,4 +435,17 @@ DecEq Base where
                    pure Refl
 
 
+export
+Show Ty.Base where
+  show CHAR        = "CHAR"
+  show STR         = "STR"
+  show INT         = "INT"
+  show BOOL        = "BOOL"
+  show (ARRAY x k) = "(ARRAY \{show x} \{show k})"
+  show (PAIR x y)  = "(PAIR \{show x} \{show y})"
+  show (UNION x y) = "(UNION \{show x} \{show y})"
+  show UNIT        = "UNIT"
+  show (REF x)     = "(REF \{show x})"
+  show (HANDLE x)  = "(HANDLE \{show x})"
+  show (FUNC x y)  = "(\{(assert_total $ show x)} -> \{show y}) "
 -- [ EOF ]
