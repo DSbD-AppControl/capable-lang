@@ -2,9 +2,13 @@
 |||
 ||| Borrowed from Idris2 `Rug` is the core computation context that
 ||| brings the computations together.
+|||
+||| Copyright : see COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.TheRug
 
-import System
+import public System
 import System.File
 import System.Clock
 import Data.Vect
@@ -21,10 +25,11 @@ import Toolkit.Text.Parser.Run
 import Toolkit.Data.Location
 import Toolkit.Text.Lexer.Run
 
-import public Toolkit.Options.ArgParse
+import Toolkit.Options.ArgParse
+import Toolkit.Commands
 
 import Toolkit.Data.DList
-import public Toolkit.Decidable.Informative
+import Toolkit.Decidable.Informative
 
 %default total
 
@@ -57,26 +62,49 @@ throw : (msg : e) -> TheRug e a
 throw = fail
 
 export
-%inline
-map : (a -> b)
-    -> TheRug e a
-    -> TheRug e b
-map f (MkTheRug a)
-  = MkTheRug (map (map f) a)
+Functor (TheRug e) where
+  map f (MkTheRug a)
+    = MkTheRug (map f <$> a)
 
 export
 %inline
-ignore : TheRug e a -> TheRug e ()
-ignore
-  = map (\_ => ())
+bind : TheRug       e a
+     -> (a -> TheRug e b)
+     -> TheRug e b
+bind (MkTheRug act) f
+  = MkTheRug (act >>=
+             (\res =>
+                case res of
+                  Left  err => pure (Left err)
+                  Right val => rugRun (f val)))
+
+export
+Applicative (TheRug e) where
+  pure a = MkTheRug (pure (pure a))
+  mf <*> mx = bind mf (<$> mx)
+
+export
+Monad (TheRug e) where
+  (>>=) = bind
 
 export
 %inline
-embed : (this : IO       a)
-             -> TheRug e a
-embed op
-  = MkTheRug (do o <- op
-                 pure (Right o))
+during : (e -> e')
+       -> TheRug e a
+       -> TheRug e' a
+during f (MkTheRug a)
+  = MkTheRug (mapFst f <$> a)
+
+export
+HasIO (TheRug e) where
+  liftIO op = MkTheRug $
+    do o <- op
+       pure (Right o)
+
+%inline
+export
+embed : IO a -> TheRug e a
+embed = liftIO
 
 export
 %inline
@@ -86,60 +114,14 @@ embed_ this = ignore (embed this)
 
 export
 %inline
-(>>=) : TheRug       e a
-     -> (a -> TheRug e b)
-     -> TheRug e b
-(>>=) (MkTheRug act) f
-  = MkTheRug (act >>=
-             (\res =>
-                case res of
-                  Left  err => pure (Left err)
-                  Right val => rugRun (f val)))
-
-export
-%inline
-(>>) : TheRug e ()
-    -> TheRug e a
-    -> TheRug e a
-(>>) ma mb = ma >>= const mb
-
-export
-%inline
-pure : a -> TheRug e a
-pure x = MkTheRug (pure (pure x))
-
-export
-(<*>) : TheRug e (a -> b)
-     -> TheRug e  a
-     -> TheRug e       b
-(<*>) (MkTheRug f)
-      (MkTheRug a) = MkTheRug [| f <*> a |]
-
-
-export
-(*>) : TheRug e a
-    -> TheRug e b
-    -> TheRug e b
-(*>) (MkTheRug a)
-     (MkTheRug b) = MkTheRug [| a *> b |]
-
-export
-(<*) : TheRug e a
-    -> TheRug e b
-    -> TheRug e a
-(<*) (MkTheRug a)
-     (MkTheRug b) = MkTheRug [| a <* b |]
-
-export
-%inline
-when : (test : Bool)
-    -> Lazy (TheRug e ())
-    -> TheRug e ()
-when False _
-  = pure ()
-
-when True f
-  = f
+(<|>) : TheRug e a
+     -> Lazy (TheRug e a)
+     -> TheRug e a
+(<|>) (MkTheRug first) backup
+  = MkTheRug (do res <- first
+                 case res of
+                   (Left _)    => rugRun backup
+                   (Right val) => pure (Right val))
 
 export
 %inline
@@ -179,16 +161,16 @@ namespace Maybe
     = throw err
 
 namespace Either
-    export
-    %inline
-    embed : (f : a -> b)
-         -> (result : Either a r)
-                   -> TheRug b r
-    embed _ (Right this)
-      = pure this
+  export
+  %inline
+  embed : (f      : e -> b)
+       -> (result : Either e r)
+                 -> TheRug b r
+  embed _ (Right val)
+    = pure val
 
-    embed f (Left err)
-      = throw (f err)
+  embed f (Left err)
+    = throw (f err)
 
 namespace Decidable
   export
@@ -269,41 +251,6 @@ namespace Traverse
       = [| f x :: traverse f xs |]
 
 namespace IO
-  export
-  %inline
-  putStr : (s : String)
-             -> TheRug e ()
-  putStr = (TheRug.embed . putStr)
-
-  export
-  %inline
-  putStrLn : (s : String)
-               -> TheRug e ()
-  putStrLn = (TheRug.embed . putStrLn)
-
-  export
-  %inline
-  print : Show a
-       => (this : a)
-               -> TheRug e ()
-  print = (TheRug.embed . print)
-
-  export
-  %inline
-  printLn : Show a
-         => (this : a)
-                 -> TheRug e ()
-  printLn = (TheRug.embed . printLn)
-
-  export
-  %inline
-  exitFailure : TheRug e ()
-  exitFailure = TheRug.embed exitFailure
-
-  export
-  %inline
-  exitSuccess : TheRug e ()
-  exitSuccess = TheRug.embed exitSuccess
 
   export
   covering -- not my fault
@@ -314,7 +261,6 @@ namespace IO
     = do Right content <- (TheRug.embed (readFile fname))
            | Left err => throw (onErr fname err)
          pure content
-
   export
   parseArgs : (f    : ArgParseError -> e)
            -> (def  : opts)
@@ -417,6 +363,57 @@ namespace Cheap
                                 (f val))
            pure res
 
+namespace REPL
+  ||| Adapted from `System.REPL`
+  |||
+  ||| We assume that `onInput` exits cleanly...
+  covering export
+  repl : (prompt  : String)
+      -> (state   : a)
+      -> (onInput : (state : a)
+                 -> (str   : String)
+                          -> TheRug e a)
+                 -> TheRug e ()
+  repl prompt state onInput
+    = do eof <- fEOF stdin
+         if eof
+           then pure ()
+           else do putStr prompt
+                   putStr " " -- intentional
+                   fflush stdout
+
+                   str <- getLine
+                   new_state <- onInput state str
+
+                   repl prompt new_state onInput
+
+  namespace Command
+
+    covering export
+    repl : (prompt  : String)
+        -> (cmds    : Commands c)
+        -> (state   : a)
+        -> (onInput : (state : a)
+                   -> (str   : c)
+                            -> TheRug e a)
+        -> (onErr : Commands.Error -> TheRug e ())
+                   -> TheRug e ()
+    repl prompt cmds state onInput onErr
+      = do eof <- fEOF stdin
+           if eof
+             then pure ()
+             else do putStr prompt
+                     putStr " " -- intentional
+                     fflush stdout
+
+                     str <- getLine
+
+                     case processCommand cmds str of
+                       Left err => do onErr err
+                                      repl prompt cmds state onInput onErr
+                       Right cmd
+                         => do nst <- onInput state cmd
+                               repl prompt cmds nst onInput onErr
 
 
 -- [ EOF ]

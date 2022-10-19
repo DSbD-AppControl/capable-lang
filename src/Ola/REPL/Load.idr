@@ -3,6 +3,7 @@ module Ola.REPL.Load
 import Toolkit.Data.Location
 
 import Ola.Types
+import Ola.Error.Pretty
 import Ola.Core
 
 import Ola.Raw.Types
@@ -105,13 +106,15 @@ checkProg p
        pure ({prog := Just p} st)
 
 export
-load : String -> Ola State
-load fname
-  = do ast <- fromFile fname
-       putStrLn "# Finished Parsing"
+load : State -> String -> Ola State
+load st fname
+  = tryCatch (do ast <- fromFile fname
+                 putStrLn "# Finished Parsing"
 
-       st <- checkProg ast
-       putStrLn "# Finished Type Checking"
+                 st <- checkProg ast
+                 putStrLn "# Finished Type Checking"
 
-       pure st
+                 pure st
+              )
+              (\err => do printLn err; pure st)
 -- [ EOF ]

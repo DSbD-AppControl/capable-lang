@@ -56,4 +56,5 @@ export
 getRole : State -> String -> Ola (Maybe State.Role)
 getRole st key
   = pure $ lookup key (roles st)
+
 -- [ EOF ]
