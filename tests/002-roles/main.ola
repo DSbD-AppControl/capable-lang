@@ -2,8 +2,6 @@ type foo = String
 
 role Alice
 
-role AliceToo = Alice
-
 role Bob
 
 role Charlie

@@ -16,10 +16,10 @@ import Ola.Terms
 
 public export
 data Protocol : Type where
-  P : {rs : _} -> {ks : _}
-   -> { type : Global ks rs}
+  P : {rs : _}
+   -> { type : Global Nil rs}
    -> (Context Ty.Role rs)
-   -> (Global.Global ks ts rs type)
+   -> (Global.Global Nil ts rs type)
    -> Protocol
 
 public export

@@ -11,6 +11,8 @@ import Toolkit.Options.ArgParse
 import Ola.Core
 import Ola.Error.Pretty
 
+import Data.Nat
+import Data.String
 import Ola.Lexer
 import Ola.Parser
 import Ola.Check.Common
@@ -32,7 +34,55 @@ todo : State -> Ola State
 todo st = do putStrLn "Not yet implemented"
              pure st
 
+reflect : (ctxt  : Context a rs)
+       -> (loc   : IsVar rs l)
+                -> String
+reflect [] (V _ Here) impossible
+reflect [] (V _ (There later)) impossible
 
+reflect ((I name x) :: rest) (V 0 prf) = name
+reflect (elem :: rest) (V (S k) (There later)) = reflect rest (V k later)
+
+showAcc : Nat -> String
+showAcc n
+  = if lt n 26
+         then singleton (chr (cast (plus 97 n)))
+         else (singleton (chr (cast (plus 97 (mod n 26))))) <+> (assert_total $ showAcc  (minus n 26))
+mutual
+  toStringB : (acc : Nat)
+           -> (kctxt : Context Kind ks)
+           -> (rctxt : Context Ty.Role rs)
+           -> Local.Branch ks rs
+           -> String
+  toStringB acc kctxt rctxt (B label type c)
+    = "\{label}(\{show type}) => \{REPL.toString acc kctxt rctxt c}"
+
+  toStringBS : (acc : Nat)
+            -> (kctxt : Context Kind ks)
+            -> (rctxt : Context Ty.Role rs)
+            -> Local.Branches1 ks rs
+            -> String
+  toStringBS acc kctxt rctxt xs
+      = assert_total $ unwords (intersperse "|" (map (toStringB acc kctxt rctxt) (forget xs)))
+
+  toString : (acc : Nat)
+          -> (kctxt : Context Kind ks)
+          -> (rctxt : Context Ty.Role rs)
+          -> (ltype : Local ks rs)
+          -> String
+  toString acc kctxt rctxt End
+    = "End"
+  toString acc kctxt rctxt (Call x)
+    = "(Call \{reflect kctxt x})"
+  toString acc kctxt rctxt (Rec x)
+    = let x' = toString (S acc) (extend kctxt (showAcc acc) R) rctxt x
+      in "(Rec \{x'})"
+  toString acc kctxt rctxt (Choice BRANCH whom cs)
+    = "(Branch \{reflect rctxt whom} \{toStringBS acc kctxt rctxt cs})"
+  toString acc kctxt rctxt (Choice SELECT whom cs)
+    = "(Select \{reflect rctxt whom} \{toStringBS acc kctxt rctxt cs})"
+
+-- acc kctxt rctxt
 roleCheck' : {roles : List Ty.Role}
           -> (ctxt  : Context Ty.Role roles)
           -> (syn   : String)
@@ -82,7 +132,7 @@ process st (Project str str1)
            case Projection.project rs p of
              No msg _ => do putStrLn "Error"
                             todo st
-             Yes (R l _) => do putStrLn (toString l)
+             Yes (R l _) => do putStrLn (REPL.toString Z Nil r l)
                                pure st
 
 export covering
