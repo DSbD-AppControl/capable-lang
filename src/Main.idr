@@ -12,10 +12,10 @@ mainRug : Ola ()
 mainRug
   = do opts <- getOpts
 
-       when (launchREPL opts) $ do repl
-                                   exitSuccess
+       if (launchREPL opts)
+         then repl
+         else pipeline opts
 
-       pipeline opts
        exitSuccess
 
 

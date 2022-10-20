@@ -1,0 +1,7 @@
+Running Test
+Ola> # Finished Parsing
+# Finished Type Checking
+Ola> (Select Bob syn(INT) => (Branch Bob synack((PAIR INT (PAIR INT INT))) => (Select Bob fin((PAIR INT (PAIR INT INT))) => End)))
+Ola> (Branch Alice syn(INT) => (Select Charlie syn(INT) => (Branch Charlie synack((PAIR INT INT)) => (Select Alice synack((PAIR INT (PAIR INT INT))) => (Branch Alice fin((PAIR INT (PAIR INT INT))) => (Select Charlie fin((PAIR INT (PAIR INT INT))) => End))))))
+Ola> (Branch Bob syn(INT) => (Select Bob synack((PAIR INT INT)) => (Branch Bob fin((PAIR INT (PAIR INT INT))) => End)))
+Ola> Exiting the REPL

@@ -1,0 +1,5 @@
+:load main.ola
+:project handshake Alice
+:project handshake Bob
+:project handshake Charlie
+:q

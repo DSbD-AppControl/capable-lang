@@ -7,6 +7,12 @@ protocol pingpong = Alice ==> Bob   { ping(String)
                   . Bob   ==> Alice { pong(String)
                   . end }}
 
+protocol pingpongR = rec(x)
+                   . Alice ==> Bob   { ping(String)
+                   . Bob   ==> Alice { pong(String) . call(x)
+                                     | quit(String) . end
+                                     }}
+
 main()
 {
   print("My First Program");

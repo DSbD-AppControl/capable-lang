@@ -80,7 +80,7 @@ mutual
   protocol
      =  end
     <|> call
-    <|> rec
     <|> choice
+    <|> rec
 
 -- [ EOF ]
