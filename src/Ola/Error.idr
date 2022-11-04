@@ -72,6 +72,7 @@ namespace Running
     Panic : String -> Running.Error
     Outside : FileError -> Running.Error
     NotYetImplemented : Running.Error
+    OOB : Nat -> Nat -> Running.Error
 
 namespace Ola
   public export

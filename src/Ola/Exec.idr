@@ -18,6 +18,7 @@
 module Ola.Exec
 
 import Data.Vect
+import Data.String
 import Data.List.Elem
 import Data.List.Quantifiers
 
@@ -205,6 +206,50 @@ mutual
     eval heap (S s) [] = return heap (S s)
     eval heap (I i) [] = return heap (I i)
     eval heap (B b) [] = return heap (B b)
+
+    -- can be better with a view.
+
+    -- ## Char Ops
+    eval heap (CharOp Ord) [C c]
+      = return heap (I (ord c))
+
+    eval heap (CharOp Chr) [I i]
+      = return heap (C (chr (cast i)))
+
+    eval heap (CharOp Singleton) [C c]
+      = return heap (S (singleton c))
+
+
+    -- ## String Ops
+    eval heap (StrOp Length) [S s] = return heap (I (cast (length s)))
+
+    eval heap (StrOp Cons)   [C c, S s] = return heap (S (singleton c ++ s))
+
+    eval heap (StrOp Slice)  [I st, I ed, S s]
+      = return heap (S (strSubstr st ed s))
+
+    -- ## Maths
+    eval heap (BinOpInt ADD) [I a, I b] = return heap (I $ (+) a b)
+    eval heap (BinOpInt SUB) [I a, I b] = return heap (I $ (-) a b)
+    eval heap (BinOpInt DIV) [I a, I b] = return heap (I $ div a b)
+    eval heap (BinOpInt MUL) [I a, I b] = return heap (I $ (*) a b)
+
+    -- ## Binary
+    eval heap (BinOpBool AND) [B a, B b] = return heap (B $ (&&) a b)
+    eval heap (BinOpBool OR)  [B a, B b] = return heap (B $ (||) a b)
+
+    eval heap Not [B b]
+      = return heap (B (not b))
+
+    -- can be better with a view.
+    eval heap (Cmp CC LT) [C a, C b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CC EQ) [C a, C b] = return heap (B $ (==) a b)
+    eval heap (Cmp CS LT) [S a, S b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CS EQ) [S a, S b] = return heap (B $ (==) a b)
+    eval heap (Cmp CI LT) [I a, I b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CI EQ) [I a, I b] = return heap (B $ (==) a b)
+    eval heap (Cmp CB LT) [B a, B b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CB EQ) [B a, B b] = return heap (B $ (==) a b)
 
     -- ## Memory
     eval heap Fetch [(Address adr)]

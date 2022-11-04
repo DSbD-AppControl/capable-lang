@@ -5,7 +5,7 @@
 |||
 module Ola.Terms.Builtins
 
-import Data.List.Elem
+import public Data.List.Elem
 
 import public Data.Fin
 
@@ -18,6 +18,40 @@ import public Toolkit.Data.DList
 import Ola.Terms.Types
 
 %default total
+
+public export
+data CharOpKind : (inputs  : Base)
+           -> (returns : Base)
+                      -> Type
+  where
+    Ord : CharOpKind CHAR INT
+    Chr : CharOpKind INT  CHAR -- (UNION UNIT CHAR)
+    Singleton : CharOpKind CHAR STR
+
+public export
+data BinOpIntKind = ADD | SUB | DIV | MUL
+
+public export
+data BinOpBoolKind = AND | OR
+
+public export
+data BinOpCmpKind = LT | EQ
+
+public export
+data StringOpKind : (inputs  : List Base)
+                 -> (returns : Base)
+                            -> Type
+  where
+    Length : StringOpKind [STR]           INT
+    Cons   : StringOpKind [CHAR, STR]     STR
+    Slice  : StringOpKind [INT, INT, STR] STR
+
+public export
+data CmpTy : Base -> Type where
+  CC : CmpTy CHAR
+  CS : CmpTy STR
+  CI : CmpTy INT
+  CB : CmpTy BOOL
 
 ||| Operations on constants
 public export
@@ -32,10 +66,24 @@ data Builtin : (inputs : List Base)
     I : Int    -> Builtin Nil INT
     B : Bool   -> Builtin Nil BOOL
 
-    -- @TODO primitive operations on char
-    -- @TODO primitive operations on str
-    -- @TODO primitive operations on Int
-    -- @TODO primitive operations on bool
+    CharOp : CharOpKind i r
+          -> Builtin [i] r
+
+    StrOp : StringOpKind is r -> Builtin is r
+
+    -- ## Int Ops
+    BinOpInt : (operator : BinOpIntKind)
+                        -> Builtin [INT, INT] INT
+
+    -- ## Bool Ops
+    BinOpBool : (operator : BinOpBoolKind)
+                         -> Builtin [BOOL, BOOL] BOOL
+
+    Not : Builtin [BOOL] BOOL
+
+    Cmp : CmpTy type
+       -> BinOpCmpKind
+       -> Builtin [type, type] BOOL
 
     -- ## Memory
 

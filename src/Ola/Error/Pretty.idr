@@ -135,6 +135,9 @@ Show (Running.Error) where
   show (NotYetImplemented)
     = "Not Yet Implemented"
 
+  show (OOB e g)
+    = "String Index Out of Bounds: Given \{show g}; Expected: \{show e}."
+
 export
 Show (Ola.Error) where
   show (Generic err)
