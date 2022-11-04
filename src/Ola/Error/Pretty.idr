@@ -69,6 +69,8 @@ Show (Parsing.Error) where
 
 
 Show (Typing.Error) where
+  show (NatExpected)
+    = "Array indices are natural numbers."
   show (ArrayAppend h t)
     = unlines ["Type Mismatch when adding to Array:"
               , "  Given:"

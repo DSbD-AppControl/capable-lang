@@ -44,7 +44,7 @@ mutual
       TyUnit : (fc : FileContext) -> Ty (TyNull fc UNIT)
 
       TyArray : (fc : FileContext)
-             -> (n  : Nat)
+             -> (n  : Int)
              -> (ty : Ty t)
                    -> Ty (TyArray fc t n)
 

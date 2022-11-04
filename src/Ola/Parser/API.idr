@@ -94,11 +94,12 @@ namespace Ola
                     (\x => case x of
                              LitStr s => Just s
                              _ => Nothing)
+
   export
-  nat : Rule Nat
-  nat = terminal "Expected nat literal"
+  int : Rule Int
+  int = terminal "Expected int literal"
                (\x => case x of
-                           LitNat i => Just i
+                           LitInt i => Just i
                            _ => Nothing)
 
   export

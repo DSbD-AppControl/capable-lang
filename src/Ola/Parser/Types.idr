@@ -58,7 +58,7 @@ mutual
   array
     = do s <- Toolkit.location
          symbol "["
-         i <- nat
+         i <- int
          symbol ";"
          l <- type
          symbol "]"

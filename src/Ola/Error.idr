@@ -46,6 +46,7 @@ namespace Parsing
 namespace Typing
   public export
   data Error : Type where
+    NatExpected : Typing.Error
     PairExpected : Ty.Base -> Typing.Error
     ArrayAppend : Ty.Base -> Ty.Base -> Typing.Error
     ArgsExpected : List Ty.Base -> Typing.Error

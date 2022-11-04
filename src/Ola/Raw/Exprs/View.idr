@@ -25,7 +25,7 @@ data Expr : (s : Raw.Expr) -> Type where
   U : (fc : FileContext) ->                 Expr (Const fc UNIT v)
   C : (fc : FileContext) -> (v : Char  ) -> Expr (Const fc CHAR v)
   S : (fc : FileContext) -> (v : String) -> Expr (Const fc STR  v)
-  I : (fc : FileContext) -> (v : Nat   ) -> Expr (Const fc INT  v)
+  I : (fc : FileContext) -> (v : Int   ) -> Expr (Const fc INT  v)
   B : (fc : FileContext) -> (v : Bool  ) -> Expr (Const fc BOOL v)
 
   Cond : (fc : FileContext)
@@ -35,7 +35,7 @@ data Expr : (s : Raw.Expr) -> Type where
             -> Expr (Tri fc COND cond tt ff)
 
   Index : (fc : FileContext)
-       -> (n  : Nat)
+       -> (n  : Int)
        -> (arr : Expr a)
               -> Expr (Un fc (INDEX n) a)
 

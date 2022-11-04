@@ -67,7 +67,9 @@ mutual
 
   check ctxt (TyArray fc n ty)
     = do (ty ** tm) <- check ctxt ty
-         pure (_ ** TyArray tm n)
+         if n < 0
+           then throwAt fc NatExpected
+           else pure (_ ** TyArray tm (cast {to=Nat} n))
 
   check ctxt (TyPair fc a b)
     = do (tyA ** a) <- check ctxt a

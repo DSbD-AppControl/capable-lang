@@ -116,7 +116,7 @@ tokenMap = with List
   , (lineComment (exact "|||"), Documentation)
   , (blockComment (exact "{-|") (exact "|-}"), Documentation)
 
-  , (digits, \x => LitNat (integerToNat $ cast {to=Integer} x))
+  , (digits, \x => LitInt (cast {to=Int} x))
   , (modeStr, (ModeString . stripM))
   , (stringLit, (LitStr . stripQuotes))
   , (Ola.Lexer.charLit, (LitChr . stripQuotes))

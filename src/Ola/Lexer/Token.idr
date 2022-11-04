@@ -25,7 +25,7 @@ namespace Ola
               | Documentation String
 
               | ModeString String
-              | LitNat Nat
+              | LitInt Int
               | LitStr String
               | LitChr String
 
@@ -47,7 +47,7 @@ Show Token where
   show (Documentation str) = showToken "Documentation" str
 
   show (ModeString str)    = showToken "ModeString" str
-  show (LitNat n) = showToken "Nat" n
+  show (LitInt n) = showToken "Int" n
   show (LitStr s) = showToken "Str" s
   show (LitChr s) = showToken "Chr" s
 
@@ -65,7 +65,7 @@ Eq Token where
   (==) (Keyword x) (Keyword y) = x == y
 
   (==) (ModeString x) (ModeString y) = x == y
-  (==) (LitNat x) (LitNat y) = x == y
+  (==) (LitInt x) (LitInt y) = x == y
   (==) (LitStr x) (LitStr y) = x == y
   (==) (LitChr x) (LitChr y) = x == y
 

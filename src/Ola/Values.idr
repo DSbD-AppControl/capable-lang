@@ -122,6 +122,7 @@ namespace Prefix
   trans (Extend x rest) (Extend x z)
     = Extend x (trans rest z)
 
+
 ||| Values are resolved expressions, closures, and addresses.
 public export
 data Value : (store : List Ty.Base)
@@ -130,11 +131,11 @@ data Value : (store : List Ty.Base)
   where
     Address : IsVar store type -> Value store (REF type)
 
-    U : Value store UNIT
+    U :           Value store UNIT
 
-    C : Char -> Value store CHAR
+    C : Char   -> Value store CHAR
     S : String -> Value store STR
-    I : Nat    -> Value store INT
+    I : Int    -> Value store INT
     B : Bool   -> Value store BOOL
 
     Clos : (scope : Func roles types ctxt  (FUNC a b))

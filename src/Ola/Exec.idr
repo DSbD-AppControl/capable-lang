@@ -156,8 +156,8 @@ namespace Heap
       = Heap.replace what with_ heap
 
 
-debase : FileError -> Nat
-debase (GenericFileError i) = minus (cast {to=Nat} i) 5
+debase : FileError -> Int
+debase (GenericFileError i) =  i - 5
 debase FileReadError = 0
 debase FileWriteError = 1
 debase FileNotFound = 2
@@ -169,6 +169,81 @@ debase FileExists = 4
 -- # Executing stuff
 
 mutual
+
+  namespace Args
+    export
+    eval : {as,store : List Ty.Base}
+        -> (env   : Env        stack store)
+        -> (heap  : Heap             store)
+        -> (args  : DList Ty.Base (Expr rs tys stack) as)
+                 -> Ola (Args.Results store as)
+    eval env heap []
+      = pure (Args heap
+                   Nil
+                   (noChange _))
+
+    eval env heap (x :: xs)
+      = do Value h v  p <- eval env heap x
+           Args  h vs ps <- eval (weaken p env) h xs
+           pure (Args h
+                      ((weaken ps v)::vs)
+                      (trans p ps))
+
+  namespace Builtins
+    ||| Executing builtins
+    export
+    eval : {0  inputs : List Base}
+        -> {  store  : List Base}
+        -> (  heap : Heap store)
+        -> (  desc : Builtin   inputs       ret)
+        -> (  args : Env       inputs store)
+                  -> Ola (Expr.Result store ret)
+
+    -- ## Constants
+    eval heap U     [] = return heap U
+    eval heap (C c) [] = return heap (C c)
+    eval heap (S s) [] = return heap (S s)
+    eval heap (I i) [] = return heap (I i)
+    eval heap (B b) [] = return heap (B b)
+
+    -- ## Memory
+    eval heap Fetch [(Address adr)]
+      = pure !(fetch adr heap)
+
+    eval heap Alloc [this]
+      = pure !(insert this heap)
+
+    -- ## Process
+    eval heap (Open what m) [(S fname)]
+      = either (\err => return heap (Left  (I (debase err))))
+               (\fh  => return heap (Right (H what fh)))
+               (!(getHandle what))
+
+
+      where getHandle : (k : HandleKind)
+                     -> Ola (Either FileError File)
+            getHandle FILE    = embed (openFile fname m)
+            getHandle PROCESS = embed (popen    fname m)
+
+    eval heap ReadLn [H k fh]
+      = either (\err => return heap (Left  (I (debase err))))
+               (\str => return heap (Right (S str)))
+               (!(embed $ fGetLine fh))
+
+    eval heap WriteLn [H k fh, (S str)]
+      = either (\err => return heap (Left  (I (debase err))))
+               (\str => return heap (Right U))
+               (!(embed $ fPutStrLn fh str))
+
+    eval heap Close [H k fh]
+      = case k of
+           FILE
+             => do embed (closeFile fh)
+                   return heap U
+           PROCESS
+             => do v <- embed (pclose fh)
+                   return heap U
+
   ||| Executing Expressions
   namespace Exprs
     %inline
@@ -201,12 +276,11 @@ mutual
       = return heap
                (read x env)
 
-    -- ### Constants
-    eval env heap U     = return heap U
-    eval env heap (C x) = return heap (C x)
-    eval env heap (S x) = return heap (S x)
-    eval env heap (I x) = return heap (I x)
-    eval env heap (B x) = return heap (B x)
+    -- ### Builtins
+    eval env heap (Builtin desc args)
+      = do Args h args prf1 <- Args.eval env heap args
+           Value h' v prf2 <- Builtins.eval h desc args
+           pure (Value h' v (trans prf1 prf2))
 
     -- ### Ternary operations.
     eval env heap (Cond cond tt ff)
@@ -246,76 +320,6 @@ mutual
       = do Value h' x p1 <- eval env heap x
            pure (Value h' (Right x) p1)
 
-    -- ### References
-
-    eval env heap (Fetch x)
-      = do Value h' (Address x) prf <- eval env heap x
-
-           Value h'' v pr2 <- fetch x h'
-
-           pure (Value h'' v (trans prf pr2))
-
-    eval env heap (Alloc x)
-      = do Value h'  res prf  <- eval env heap x
-           Value h'' ref prf2 <- insert res h'
-
-           pure (Value h'' ref (trans prf prf2))
-
-    -- ### File/Process Interactions
-    eval env heap (Open k m fname) with (k)
-      eval env heap (Open k m fname) | FILE
-        = do Value h (S fname) prf <- eval env heap fname
-             val <- embed (openFile fname m)
-             case val of
-               Left err =>
-                 do let e = debase err
-                    pure (Value h (Left (I e)) prf)
-               Right fh =>
-                 do pure (Value h (Right (H FILE fh)) prf)
-
-      eval env heap (Open k m fname) | PROCESS
-        = do Value h (S fname) prf <- eval env heap fname
-             val <- embed (popen fname m)
-             case val of
-               Left err =>
-                 do let e = debase err
-                    pure (Value h (Left (I e)) prf)
-               Right fh =>
-                 pure (Value h (Right (H PROCESS fh)) prf)
-
-    eval env heap (ReadLn x)
-      = do Value h (H k fh) prf <- eval env heap x
-           res <- embed (fGetLine fh)
-           case res of
-             Left err =>
-               do let e = debase err
-                  pure (Value h (Left (I e)) prf)
-             Right str =>
-               pure (Value h (Right (S str)) prf)
-
-    eval env heap (WriteLn k s)
-      = do Value h  (H k fh) prf  <- eval env heap k
-           Value h' (S str)  prf' <- eval (weaken prf env) h s
-
-           res <- embed (fPutStrLn fh str)
-           case res of
-             Left err =>
-               do let e = debase err
-                  pure (Value h' (Left (I e)) (trans prf prf'))
-             Right str =>
-               pure (Value h' (Right U) (trans prf prf'))
-
-    eval env heap (Close x)
-      = do Value h (H k fh) prf <- eval env heap x
-           case k of
-             PROCESS
-               => do v <- embed (pclose fh)
-                     pure (Value h U prf)
-
-             FILE
-               => do v <- embed (closeFile fh)
-                     pure (Value h U prf)
-
 
     -- ### Function Calls
 
@@ -338,24 +342,6 @@ mutual
     eval env heap (The _ expr)
       = eval env heap expr
 
-  namespace Args
-    export
-    eval : {as,store : List Ty.Base}
-        -> (env   : Env        stack store)
-        -> (heap  : Heap             store)
-        -> (args  : DList Ty.Base (Expr rs tys stack) as)
-                 -> Ola (Args.Results store as)
-    eval env heap []
-      = pure (Args heap
-                   Nil
-                   (noChange _))
-
-    eval env heap (x :: xs)
-      = do Value h v  p <- eval env heap x
-           Args  h vs ps <- eval (weaken p env) h xs
-           pure (Args h
-                      ((weaken ps v)::vs)
-                      (trans p ps))
   ||| Executing a Statement
   namespace Stmt
 

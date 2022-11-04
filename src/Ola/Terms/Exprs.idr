@@ -17,6 +17,7 @@ import System.File
 import public Toolkit.Data.DList
 
 import Ola.Terms.Types
+import Ola.Terms.Builtins
 import Ola.Terms.Vars
 
 %default total
@@ -32,29 +33,24 @@ data Expr : (roles : List Ty.Role)
   where
     Var : TyVar stack t -> Expr roles types stack t
 
-    U : Expr roles types stack UNIT
+    -- # Builtins
 
-    -- # Primitives
+    ||| Builtin Operations
+    |||
+    ||| Covers:
+    |||   1. Builtin constants
+    |||   2. Operations on contant things.
+    |||   3. Memory & Process APIs
+    Builtin : {inputs : List Base}
+           -> (desc : Builtin                             inputs return)
+           -> (args : DList Base (Expr roles types stack) inputs)
+                   -> Expr             roles types stack         return
 
-    -- ## Values
-    C : Char   -> Expr roles types stack CHAR
-    S : String -> Expr roles types stack STR
-    I : Nat    -> Expr roles types stack INT
-    B : Bool   -> Expr roles types stack BOOL
 
-    -- ## Operations
-
-    Cond : (cond : Expr roles types stack BOOL)
-        -> (tt   : Expr roles types stack a)
-        -> (ff   : Expr roles types stack a)
-                -> Expr roles types stack a
-
-    -- Rest to come...
-    -- @TODO primitive operations on char
-    -- @TODO primitive operations on str
-    -- @TODO primitive operations on Int
-    -- @TODO primitive operations on bool
-
+    Cond : Expr roles types stack BOOL
+        -> Expr roles types stack a
+        -> Expr roles types stack a
+        -> Expr roles types stack a
     -- # Data Structures
 
     -- ## Arrays
@@ -94,39 +90,6 @@ data Expr : (roles : List Ty.Role)
          -> Expr roles types stack (UNION a b)
 
     -- ### Eliminators Are statements
-    -- ## References
-
-    Fetch : Expr roles types stack (REF type)
-         -> Expr roles types stack      type
-
-    Alloc : Expr roles types stack      type
-         -> Expr roles types stack (REF type)
-
-    -- ## Processes
-
-    -- ### Open
-
-    Open : (what : HandleKind)
-        -> (m : Mode)
-        -> Expr roles types stack STR
-        -> Expr roles types stack (UNION INT (HANDLE what))
-
-    -- ### Read
-    ReadLn : {k : HandleKind}
-          -> Expr roles types stack (HANDLE k)
-          -> Expr roles types stack (UNION INT STR)
-
-    -- ### Send
-    WriteLn : {k : HandleKind}
-           -> Expr roles types stack (HANDLE k)
-           -> Expr roles types stack STR
-           -> Expr roles types stack (UNION INT UNIT)
-
-    -- ### Close
-    Close : {k : HandleKind}
-         -> Expr roles types stack (HANDLE k)
-         -> Expr roles types stack UNIT
-
 
     -- ## Function Application
 

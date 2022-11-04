@@ -30,14 +30,14 @@ InterpBVal : BinaryVal -> Type
 InterpBVal UNIT = ()
 InterpBVal CHAR = Char
 InterpBVal STR = String
-InterpBVal INT = Nat
+InterpBVal INT = Int
 InterpBVal BOOL = Bool
 
 public export
 data Unary = LEFT  | RIGHT
            | FETCH
            | READ  | CLOSE
-           | INDEX Nat
+           | INDEX Int
            | OPEN HandleKind Mode
            | THE Raw.Ty
 

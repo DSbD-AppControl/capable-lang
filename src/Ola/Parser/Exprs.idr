@@ -57,7 +57,7 @@ constants
     int : Ola.Rule Raw.Expr
     int
       = do s  <- Toolkit.location
-           st <- Ola.nat
+           st <- Ola.int
            e  <- Toolkit.location
            pure (Const (newFC s e) INT st)
 
@@ -180,7 +180,7 @@ mutual
          symbol "("
          k <- expr
          symbol ","
-         t <- nat
+         t <- Ola.int
          symbol ")"
          e <- Toolkit.location
          pure (Un (newFC s e) (INDEX t) k)

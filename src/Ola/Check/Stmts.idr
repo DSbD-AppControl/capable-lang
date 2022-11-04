@@ -117,7 +117,7 @@ check rho delta gamma ty (VarTy fc this ty' val scope)
 
        Refl <- compare fc ty tyR
 
-       pure (R newG tyR (Let (TyRef t) (Alloc val) tm) Refl)
+       pure (R newG tyR (Let (TyRef t) (Builtin Alloc [val]) tm) Refl)
 
 check rho delta gamma ty (Var fc this val' scope)
 
@@ -132,7 +132,7 @@ check rho delta gamma ty (Var fc this val' scope)
 
        Refl <- compare fc ty tyR
 
-       pure (R newG tyR (Let (TyRef t) (Alloc val) tm) Refl)
+       pure (R newG tyR (Let (TyRef t) (Builtin Alloc [val]) tm) Refl)
 
 check rho delta gamma ty (Mutate fc this value scope)
   = do (REF t ** this) <- exprCheck

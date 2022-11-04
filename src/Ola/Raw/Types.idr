@@ -44,7 +44,7 @@ namespace Raw
           | TyFunc FileContext (List (FileContext, Raw.Ty))
                                Raw.Ty
 
-          | TyArray FileContext Raw.Ty Nat
+          | TyArray FileContext Raw.Ty Int
 
           | TyHandle FileContext HandleKind
 

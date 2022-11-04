@@ -20,6 +20,7 @@ import Ola.Check.Common
 import Ola.Check.Types
 
 import Ola.Terms.Vars
+import public Ola.Terms.Builtins
 import Ola.Terms.Types
 import Ola.Terms.Exprs
 
@@ -44,15 +45,15 @@ mutual
          pure (ty ** Var (V loc prfN))
 
   check rho delta gamma (U fc)
-    = pure (_ ** U)
+    = pure (_ ** Builtin U Nil)
   check rho delta gamma (C fc v)
-    = pure (_ ** C v)
+    = pure (_ ** Builtin (C v) Nil)
   check rho delta gamma (S fc v)
-    = pure (_ ** S v)
+    = pure (_ ** Builtin (S v) [])
   check rho delta gamma (I fc v)
-    = pure (_ ** I v)
+    = pure (_ ** Builtin (I v) [])
   check rho delta gamma (B fc v)
-    = pure (_ ** B v)
+    = pure (_ ** Builtin (B v) [])
 
   check rho delta gamma (Cond fc c t f)
     = do (BOOL ** c) <- check rho delta gamma c
@@ -73,12 +74,14 @@ mutual
     = do (ARRAY ty m ** tm) <- check rho delta gamma arr
            | (ty ** _) => throwAt fc (ArrayExpected ty)
 
-         idx <- embedAt
-                  fc
-                  (BoundsError n m)
-                  (natToFin n m)
+         if n < 0
+           then throwAt fc NatExpected
+           else do idx <- embedAt
+                            fc
+                            (BoundsError (cast n) m)
+                            (natToFin (cast n) m)
 
-         pure (_ ** Index idx tm)
+                   pure (_ ** Index idx tm)
 
   check rho delta gamma (Pair fc a b)
     = do (tyA ** tmA) <- check rho delta gamma a
@@ -90,19 +93,19 @@ mutual
     = do (REF t ** tm) <- check rho delta gamma p
            | (ty ** tm) => throwAt fc (RefExpected ty)
 
-         pure (_ ** Fetch tm)
+         pure (_ ** Builtin Fetch [tm])
 
   check rho delta gamma (Open fc k m w)
     = do (STR ** tm) <- check rho delta gamma w
            | (ty ** _) => mismatchAt fc STR ty
 
-         pure (_ ** Open k m tm)
+         pure (_ ** Builtin (Open k m) [tm])
 
   check rho delta gamma (Read fc h)
     = do (HANDLE k ** h) <- check rho delta gamma h
            | (ty ** _) =>  throwAt fc (HandleExpected ty)
 
-         pure (_ ** ReadLn h)
+         pure (_ ** Builtin ReadLn [h])
 
   check rho delta gamma (Write fc h s)
     = do (HANDLE k ** h) <- check rho delta gamma h
@@ -111,13 +114,13 @@ mutual
          (STR ** s) <- check rho delta gamma s
            | (ty ** _) => mismatchAt fc STR ty
 
-         pure (_ ** WriteLn h s)
+         pure (_ ** Builtin WriteLn [h, s])
 
   check rho delta gamma (Close fc h)
     = do (HANDLE k ** h) <- check rho delta gamma h
            | (ty ** _) => throwAt fc (HandleExpected ty)
 
-         pure (_ ** Close h)
+         pure (_ ** Builtin Close [h])
 
   check {rs} {ds} {gs} rho delta gamma (Call fc f as)
     = do (FUNC tys ty ** f) <- check rho delta gamma f
