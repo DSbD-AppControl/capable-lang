@@ -27,6 +27,62 @@ import Ola.Terms.Exprs
 %default total
 
 mutual
+  checkBinOpB : {a,b     : Expr}
+          -> {rs    : List Ty.Role}
+          -> {ds,gs : List Ty.Base}
+          -> (rho   : Context Ty.Role rs)
+          -> (delta : Context Ty.Base ds)
+          -> (gamma : Context Ty.Base gs)
+          -> (fc    : FileContext)
+          -> (synA   : Expr a)
+          -> (synb  : Expr b)
+                   -> BinOpBoolKind
+               -> Ola (Expr rs ds gs BOOL)
+  checkBinOpB rho delta gamma fc l r k
+    = do T tyTm l <- ascript fc rho delta gamma TyBool l
+         T tyTm r <- ascript fc rho delta gamma TyBool r
+
+         pure (Builtin (BinOpBool k) [l, r])
+
+  checkBinOpI : {a,b     : Expr}
+          -> {rs    : List Ty.Role}
+          -> {ds,gs : List Ty.Base}
+          -> (rho   : Context Ty.Role rs)
+          -> (delta : Context Ty.Base ds)
+          -> (gamma : Context Ty.Base gs)
+          -> (fc    : FileContext)
+          -> (synA   : Expr a)
+          -> (synb  : Expr b)
+                   -> BinOpIntKind
+               -> Ola (Expr rs ds gs INT)
+  checkBinOpI rho delta gamma fc l r k
+    = do T tyTm l <- ascript fc rho delta gamma TyInt l
+         T tyTm r <- ascript fc rho delta gamma TyInt r
+
+         pure (Builtin (BinOpInt k) [l, r])
+
+
+  checkCmp : {a,b     : Expr}
+          -> {rs    : List Ty.Role}
+          -> {ds,gs : List Ty.Base}
+          -> (rho   : Context Ty.Role rs)
+          -> (delta : Context Ty.Base ds)
+          -> (gamma : Context Ty.Base gs)
+          -> (fc    : FileContext)
+          -> (synA   : Expr a)
+          -> (synb  : Expr b)
+          -> BinOpCmpKind
+               -> Ola (Expr rs ds gs BOOL)
+  checkCmp rho delta gamma fc l r k
+    = do (tyL ** l) <- check rho delta gamma l
+         (tyR ** r) <- check rho delta gamma r
+
+         Refl <- compare fc tyL tyR
+
+         maybe (throwAt fc Uncomparable)
+               (\prf => pure (Builtin (Cmp prf k) [l, r]))
+               (cmpTy tyL)
+
   check : {e     : Expr}
        -> {rs    : List Ty.Role}
        -> {ds,gs : List Ty.Base}
@@ -55,18 +111,86 @@ mutual
   check rho delta gamma (B fc v)
     = pure (_ ** Builtin (B v) [])
 
+  check rho delta gamma (And fc l r)
+    = pure (_ ** !(checkBinOpB rho delta gamma fc l r AND))
+
+  check rho delta gamma (Or fc l r)
+    = pure (_ ** !(checkBinOpB rho delta gamma fc l r OR))
+
+  check rho delta gamma (Not fc l)
+    = do T tyTm l <- ascript fc rho delta gamma (TyBool) l
+         pure ( _ ** Builtin Not [l])
+
+  check rho delta gamma (LT fc l r)
+    = pure (_ ** !(checkCmp rho delta gamma fc l r LT))
+
+  check rho delta gamma (LTE fc l r)
+    = pure (_ ** !(checkCmp rho delta gamma fc l r LTE))
+
+  check rho delta gamma (GT fc l r)
+    = pure (_ ** !(checkCmp rho delta gamma fc l r GT))
+
+  check rho delta gamma (GTE fc l r)
+    = pure (_ ** !(checkCmp rho delta gamma fc l r GTE))
+
+  check rho delta gamma (EQ fc l r)
+    = pure (_ ** !(checkCmp rho delta gamma fc l r EQ))
+
+  check rho delta gamma (Sub fc l r)
+    = pure (_ ** !(checkBinOpI rho delta gamma fc l r SUB))
+
+  check rho delta gamma (Div fc l r)
+    = pure (_ ** !(checkBinOpI rho delta gamma fc l r DIV))
+
+  check rho delta gamma (Mul fc l r)
+    = pure (_ ** !(checkBinOpI rho delta gamma fc l r MUL))
+
+  check rho delta gamma (Add fc l r)
+    = pure (_ ** !(checkBinOpI rho delta gamma fc l r ADD))
+
+  check rho delta gamma (Ord fc l)
+    = do T tyTm l <- ascript fc rho delta gamma (TyChar) l
+         pure (_ ** Builtin (CharOp Ord) [l])
+
+  check rho delta gamma (Chr fc l)
+    = do T tyTm l <- ascript fc rho delta gamma (TyInt) l
+         pure (_ ** Builtin (CharOp Chr) [l])
+
+  check rho delta gamma (Str fc l)
+    = do T tyTm l <- ascript fc rho delta gamma (TyChar) l
+         pure (_ ** Builtin (CharOp Singleton) [l])
+
+  check rho delta gamma (ToString fc l)
+    = do (ty ** l) <- check rho delta gamma l
+
+         maybe (throwAt fc Uncomparable)
+               (\prf => pure (_ ** Builtin (ToString prf) [l]))
+               (cmpTy ty)
+
+  check rho delta gamma (Slice fc l k j)
+    = do T tyTm l <- ascript fc rho delta gamma (TyInt) l
+         T tyTm k <- ascript fc rho delta gamma (TyInt) k
+         T tyTm j <- ascript fc rho delta gamma (TyStr) j
+         pure (_ ** Builtin (StrOp Slice) [l, k, j])
+
+  check rho delta gamma (Size fc l)
+    = do T tyTm l <- ascript fc rho delta gamma (TyStr)  l
+         pure (_ ** Builtin (StrOp Length) [l])
+
+  check rho delta gamma (Cons fc l r)
+    = do T tyTm l <- ascript fc rho delta gamma (TyChar) l
+         T tyTm r <- ascript fc rho delta gamma (TyStr)  r
+         pure (_ ** Builtin (StrOp Cons) [l, r])
+
+
   check rho delta gamma (Cond fc c t f)
-    = do (BOOL ** c) <- check rho delta gamma c
-           | (ty ** _) => mismatchAt (getFC c) BOOL ty
+    = do T _ c <- ascript (getFC c) rho delta gamma TyBool c
 
          (tyT ** tt) <- check rho delta gamma t
 
          (tyF ** ff) <- check rho delta gamma f
 
-         Refl <- embedAt
-                   fc
-                   (Mismatch tyT tyF)
-                   (decEq tyT tyF)
+         Refl <- compare fc tyT tyF
 
          pure (_ ** Cond c tt ff)
 
@@ -196,57 +320,61 @@ mutual
   --
   -- Here we check ascriptions and especially the unknowns.
   check rho delta gamma (The fc ty expr)
-    = do T ty tm e <- ascript fc rho delta gamma ty expr
-         pure (ty ** e)
+    = do (_ ** T tm e) <- ascript fc rho delta gamma ty expr
+         pure (_ ** e)
+
+
+  namespace View
+    export
+    ascript : {e     : Expr}
+           -> {rs    : List Ty.Role}
+           -> {ds,gs : List Ty.Base}
+           -> (fc    : FileContext)
+           -> (rho   : Context Ty.Role rs)
+           -> (delta : Context Ty.Base ds)
+           -> (gamma : Context Ty.Base gs)
+           -> (ty    : View.Ty t)
+           -> (syn   : Expr e)
+                    -> Ola (DPair Base (The rs ds gs))
+    ascript fc rho delta gamma ty syn
+       = do (ty ** tm) <- typeCheck delta ty
+            res <- ascript fc rho delta gamma tm syn
+            pure (ty ** res)
 
   export
-  ascript : {e     : Expr}
+  ascript : {t     : Base}
+         -> {e     : Expr}
          -> {rs    : List Ty.Role}
          -> {ds,gs : List Ty.Base}
          -> (fc    : FileContext)
          -> (rho   : Context Ty.Role rs)
          -> (delta : Context Ty.Base ds)
          -> (gamma : Context Ty.Base gs)
-         -> (ty    : View.Ty t)
+         -> (ty    : Ty ds t)
          -> (syn   : Expr e)
-                  -> Ola (The rs ds gs)
+                  -> Ola (The rs ds gs t)
 
-  ascript fc rho delta gamma ty expr
+  ascript {t = (ARRAY type 0)} fc rho delta gamma (TyArray tmType 0) (Null fc')
+    = pure (T (TyArray tmType 0) ArrayEmpty)
 
-    = do res <- typeCheck delta ty
+  ascript {t = (ARRAY type (S k))} fc rho delta gamma (TyArray tmType (S k)) (Null fc')
+    = mismatchAt fc (ARRAY type (S k)) (ARRAY type Z)
 
-         case (res,expr) of
-           ((ARRAY ty' Z ** tm), Null fc')
-             => pure (T (ARRAY ty' Z) tm ArrayEmpty)
+  ascript {t = (UNION a b)} fc rho delta gamma (TyUnion tmA tmB) (Left  fc' l)
+    = do (tyL' ** l') <- check rho delta gamma l
+         Refl <- compare fc a tyL'
+         pure (T (TyUnion tmA tmB) (Left l'))
 
-           ((ARRAY ty' (S k) ** tm), Null fc')
-             => mismatchAt fc (ARRAY ty' (S k)) (ARRAY ty' Z)
+  ascript {t = (UNION a b)} fc rho delta gamma (TyUnion tmA tmB) (Right fc' r)
+    = do (tyR' ** r') <- check rho delta gamma r
+         Refl <- compare fc b tyR'
+         pure (T (TyUnion tmA tmB) (Right r'))
 
-           ((UNION tyL tyR ** tm), (Left fc' l))
-             => do (tyL' ** l) <- check rho delta gamma l
 
-                   Refl <- compare fc tyL tyL'
-
-                   pure (T (UNION tyL tyR) tm (Left l))
-
-           ((UNION tyL tyR ** tm), (Right fc' r))
-             => do (tyR' ** l) <- check rho delta gamma r
-
-                   Refl <- compare fc tyR tyR'
-
-                   pure (T (UNION tyL tyR) tm (Right l))
-
-           ((ty ** tm), expr)
-             => do (ty' ** e) <- check
-                                   rho
-                                   delta
-                                   gamma
-                                   expr
-
-                   Refl <- compare fc ty ty'
-
-                   pure (T ty tm e)
-
+  ascript {t = t} fc rho delta gamma ty expr
+    = do (ty' ** e) <- check rho delta gamma expr
+         Refl <- compare fc t ty'
+         pure (T ty e)
 
 export
 ascriptReflect : {e     : Expr}
@@ -256,11 +384,11 @@ ascriptReflect : {e     : Expr}
               -> (delta : Context Ty.Base ds)
               -> (gamma : Context Ty.Base gs)
               -> (syn   : Expr e)
-                       -> Ola (The rs ds gs)
+                       -> Ola (DPair Base (The rs ds gs))
 ascriptReflect rho delta gamma syn
   = do (ty ** expr) <- check rho delta gamma syn
        tm <- typeReflect delta ty
-       pure (T ty tm expr)
+       pure (_ ** T tm expr)
 
 
 export
@@ -287,4 +415,5 @@ namespace Raw
                    -> Ola (DPair Ty.Base (Expr rs ds gs))
   exprCheck r d g e
     = check r d g (view e)
+
 -- [ EOF ]

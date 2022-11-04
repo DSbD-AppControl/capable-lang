@@ -99,10 +99,10 @@ compare fc a b
 public export
 data The : (rs    : List Ty.Role)
         -> (ds,gs : List Ty.Base)
+        -> (type  : Base)
                  -> Type
   where
-    T : (type : Ty.Base)
-     -> (ty   : Ty      ds    type )
+    T : (ty   : Ty      ds    type )
      -> (e    : Expr rs ds gs type)
-             -> The  rs ds gs
+             -> The  rs ds gs type
 -- [ EOF ]

@@ -35,7 +35,7 @@ public export
 data BinOpBoolKind = AND | OR
 
 public export
-data BinOpCmpKind = LT | EQ
+data BinOpCmpKind = LT | LTE | EQ | GTE | GT
 
 public export
 data StringOpKind : (inputs  : List Base)
@@ -52,6 +52,21 @@ data CmpTy : Base -> Type where
   CS : CmpTy STR
   CI : CmpTy INT
   CB : CmpTy BOOL
+
+export
+cmpTy : (b : Base) -> Maybe (CmpTy b)
+cmpTy CHAR = Just CC
+cmpTy STR  = Just CS
+cmpTy INT  = Just CI
+cmpTy BOOL = Just CB
+
+cmpTy (ARRAY x k) = Nothing
+cmpTy (PAIR x y)  = Nothing
+cmpTy (UNION x y) = Nothing
+cmpTy UNIT        = Nothing
+cmpTy (REF x)     = Nothing
+cmpTy (HANDLE x)  = Nothing
+cmpTy (FUNC xs x) = Nothing
 
 ||| Operations on constants
 public export
@@ -84,6 +99,8 @@ data Builtin : (inputs : List Base)
     Cmp : CmpTy type
        -> BinOpCmpKind
        -> Builtin [type, type] BOOL
+
+    ToString : CmpTy type -> Builtin [type] STR
 
     -- ## Memory
 

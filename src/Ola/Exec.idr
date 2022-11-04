@@ -228,6 +228,11 @@ mutual
     eval heap (StrOp Slice)  [I st, I ed, S s]
       = return heap (S (strSubstr st ed s))
 
+    eval heap (ToString CC) [C c] = return heap (S (singleton c))
+    eval heap (ToString CS) [S s] = return heap (S s)
+    eval heap (ToString CI) [I i] = return heap (S (show i))
+    eval heap (ToString CB) [B b] = return heap (S (show b))
+
     -- ## Maths
     eval heap (BinOpInt ADD) [I a, I b] = return heap (I $ (+) a b)
     eval heap (BinOpInt SUB) [I a, I b] = return heap (I $ (-) a b)
@@ -242,14 +247,29 @@ mutual
       = return heap (B (not b))
 
     -- can be better with a view.
-    eval heap (Cmp CC LT) [C a, C b] = return heap (B $ (<)  a b)
-    eval heap (Cmp CC EQ) [C a, C b] = return heap (B $ (==) a b)
-    eval heap (Cmp CS LT) [S a, S b] = return heap (B $ (<)  a b)
-    eval heap (Cmp CS EQ) [S a, S b] = return heap (B $ (==) a b)
-    eval heap (Cmp CI LT) [I a, I b] = return heap (B $ (<)  a b)
-    eval heap (Cmp CI EQ) [I a, I b] = return heap (B $ (==) a b)
-    eval heap (Cmp CB LT) [B a, B b] = return heap (B $ (<)  a b)
-    eval heap (Cmp CB EQ) [B a, B b] = return heap (B $ (==) a b)
+    eval heap (Cmp CC LT)  [C a, C b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CC LTE) [C a, C b] = return heap (B $ (<=) a b)
+    eval heap (Cmp CC EQ)  [C a, C b] = return heap (B $ (==) a b)
+    eval heap (Cmp CC GT)  [C a, C b] = return heap (B $ (>)  a b)
+    eval heap (Cmp CC GTE) [C a, C b] = return heap (B $ (>=) a b)
+
+    eval heap (Cmp CS LT)  [S a, S b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CS LTE) [S a, S b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CS EQ)  [S a, S b] = return heap (B $ (==) a b)
+    eval heap (Cmp CS GT)  [S a, S b] = return heap (B $ (>)  a b)
+    eval heap (Cmp CS GTE) [S a, S b] = return heap (B $ (>=) a b)
+
+    eval heap (Cmp CI LT)  [I a, I b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CI LTE) [I a, I b] = return heap (B $ (<=) a b)
+    eval heap (Cmp CI EQ)  [I a, I b] = return heap (B $ (==) a b)
+    eval heap (Cmp CI GT)  [I a, I b] = return heap (B $ (>)  a b)
+    eval heap (Cmp CI GTE) [I a, I b] = return heap (B $ (>=) a b)
+
+    eval heap (Cmp CB LT)  [B a, B b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CB LTE) [B a, B b] = return heap (B $ (<=) a b)
+    eval heap (Cmp CB EQ)  [B a, B b] = return heap (B $ (==) a b)
+    eval heap (Cmp CB GT)  [B a, B b] = return heap (B $ (>)  a b)
+    eval heap (Cmp CB GTE) [B a, B b] = return heap (B $ (>=) a b)
 
     -- ## Memory
     eval heap Fetch [(Address adr)]

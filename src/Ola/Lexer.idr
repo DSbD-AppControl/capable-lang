@@ -59,11 +59,15 @@ namespace Ola
              , "unit", "pair", "left", "right"
 
              -- Operations
-             , "and", "not", "or", "xor", "lessThan"
-             , "add", "sub"
-             , "pack", "unpack"
-             , "size"
-             , "toChar", "toNat", "toString"
+             , "and", "not", "or"
+             , "lt", "lte", "eq", "gt", "gte"
+
+             , "add", "sub", "mul", "div"
+
+             , "size", "cons", "slice"
+
+             , "ord", "chr", "string", "toString"
+
              , "the"
 
              -- Types

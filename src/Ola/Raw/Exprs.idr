@@ -40,6 +40,12 @@ data Unary = LEFT  | RIGHT
            | INDEX Int
            | OPEN HandleKind Mode
            | THE Raw.Ty
+           | NOT
+           | SIZE
+           | ORD
+           | CHR
+           | STRO
+           | TOSTR
 
 Show Unary where
   show LEFT      = "LEFT"
@@ -50,6 +56,12 @@ Show Unary where
   show (INDEX k) = "(INDEX \{show k})"
   show (OPEN x m)  = "(OPEN \{show x} \{modeStr m})"
   show (THE x)   = "(THE \{show x})"
+  show NOT  = "NOT"
+  show SIZE = "SIZE"
+  show ORD  = "ORD"
+  show CHR  = "CHR"
+  show STRO  = "STR"
+  show TOSTR = "TOSTR"
 
 setSourceU : String -> Unary -> Unary
 setSourceU new (THE x)
@@ -58,17 +70,43 @@ setSourceU _ x = x
 
 public export
 data Binary = PAIR | WRITE | ARRAYCONS
+            | AND
+            | OR
+            | LT
+            | LTE
+            | EQ
+            | GT
+            | GTE
+            | ADD
+            | SUB
+            | MUL
+            | DIV
+            | CONS
+
 
 Show Exprs.Binary where
   show PAIR      = "PAIR"
   show WRITE     = "WRITE"
   show ARRAYCONS = "ARRAYCONS"
+  show AND       = "AND"
+  show OR        = "OR"
+  show LT        = "LT"
+  show LTE       = "LTE"
+  show EQ        = "EQ"
+  show GT        = "GT"
+  show GTE       = "GTE"
+  show ADD       = "ADD"
+  show SUB       = "SUB"
+  show MUL       = "MUL"
+  show DIV       = "DIV"
+  show CONS      = "CONS"
 
 public export
-data Ternery = COND
+data Ternery = COND | SLICE
 
 Show Exprs.Ternery where
-  show COND = "COND"
+  show COND  = "COND"
+  show SLICE = "SLICE"
 
 namespace Raw
   public export

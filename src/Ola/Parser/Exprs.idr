@@ -73,6 +73,27 @@ uKind
    <|> gives "right"  RIGHT
    <|> gives "read"   READ
    <|> gives "close"  CLOSE
+   <|> gives "not"    NOT
+   <|> gives "size"   SIZE
+   <|> gives "ord"    ORD
+   <|> gives "chr"    CHR
+   <|> gives "string"    STRO
+   <|> gives "toString"    TOSTR
+
+bKind : Rule (FileContext, Exprs.Binary)
+bKind
+    =  gives "and"   AND
+   <|> gives "or"    OR
+   <|> gives "lt"    LT
+   <|> gives "lte"   LTE
+   <|> gives "eq"    EQ
+   <|> gives "gt"    GT
+   <|> gives "gte"   GTE
+   <|> gives "add"   ADD
+   <|> gives "sub"   SUB
+   <|> gives "mul"   MUL
+   <|> gives "div"   DIV
+   <|> gives "cons"  CONS
 
 mutual
   fetch : Rule Expr
@@ -102,17 +123,30 @@ mutual
   unary
     = do s <- Toolkit.location
          k <- uKind
+         commit
          symbol "("
          ex <- expr
          symbol ")"
          e <- Toolkit.location
          pure (Un (newFC s e) (snd k) ex)
 
+  binary : Rule Expr
+  binary
+    = do s <- Toolkit.location
+         k <- bKind
+         commit
+         symbol "("
+         ex <- expr
+         symbol ","
+         ey <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (Bin (newFC s e) (snd k) ex ey)
+
   kind : Rule HandleKind
   kind =  do keyword "fopen"; pure FILE
       <|> do keyword "popen"; pure PROCESS
 
-    -- @TODO modes
   openE : Rule Expr
   openE
     = do s <- Toolkit.location
@@ -188,7 +222,7 @@ mutual
   ternary : Rule Expr
   ternary
     = do s <- Toolkit.location
-         keyword "cond"
+         k <- (gives "cond" COND <|> gives "slice" SLICE)
          symbol "("
          c <- expr
          symbol ","
@@ -197,7 +231,7 @@ mutual
          r <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Tri (newFC s e) COND c l r)
+         pure (Tri (newFC s e) (snd k) c l r)
 
 
   expr' : Rule Expr
@@ -206,6 +240,7 @@ mutual
             <|> fetch
             <|> array
             <|> unary
+            <|> binary
             <|> annot
             <|> pair <|> write
             <|> openE

@@ -76,7 +76,7 @@ check rho delta gamma ty (Print fc e scope)
        pure (R g1 ty' (Print term scope) Refl)
 
 check rho delta gamma ty (LetTy fc this ty' val scope)
-  = do (T ty' t val) <- ascript fc rho delta gamma ty' val
+  = do (ty' ** T t val) <- ascript fc rho delta gamma ty' val
 
        (R newG tyR tm Refl) <- check
                                  rho
@@ -90,7 +90,7 @@ check rho delta gamma ty (LetTy fc this ty' val scope)
        pure (R newG tyR (Let t val tm) Refl)
 
 check rho delta gamma ty (Let fc this val' scope)
-  = do (T ty' t val) <- ascriptReflect rho delta gamma val'
+  = do (ty' ** T t val) <- ascriptReflect rho delta gamma val'
 
        (R newG tyR tm Refl) <- check
                                 rho
@@ -106,7 +106,7 @@ check rho delta gamma ty (Let fc this val' scope)
 
 check rho delta gamma ty (VarTy fc this ty' val scope)
 
-  = do (T ty' t val) <- ascript fc rho delta gamma ty' val
+  = do (ty' ** T tyTm val) <- ascript fc rho delta gamma ty' val
 
        (R newG tyR tm Refl) <- check
                                  rho
@@ -117,11 +117,11 @@ check rho delta gamma ty (VarTy fc this ty' val scope)
 
        Refl <- compare fc ty tyR
 
-       pure (R newG tyR (Let (TyRef t) (Builtin Alloc [val]) tm) Refl)
+       pure (R newG tyR (Let (TyRef tyTm) (Builtin Alloc [val]) tm) Refl)
 
 check rho delta gamma ty (Var fc this val' scope)
 
-  = do (T ty' t val) <- ascriptReflect rho delta gamma val'
+  = do (ty' ** T t val) <- ascriptReflect rho delta gamma val'
 
        (R newG tyR tm Refl) <- check
                                  rho

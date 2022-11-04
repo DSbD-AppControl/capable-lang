@@ -69,6 +69,9 @@ Show (Parsing.Error) where
 
 
 Show (Typing.Error) where
+
+  show Uncomparable
+    = "Not a comparable type."
   show (NatExpected)
     = "Array indices are natural numbers."
   show (ArrayAppend h t)

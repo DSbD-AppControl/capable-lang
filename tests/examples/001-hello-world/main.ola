@@ -9,10 +9,10 @@ main()
 {
   print("My First Program");
 
-  local str = greeting();
+  local str1 = greeting();
 
 
-  print(str);
+  print(str1);
 
 
   return unit;

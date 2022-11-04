@@ -28,6 +28,33 @@ data Expr : (s : Raw.Expr) -> Type where
   I : (fc : FileContext) -> (v : Int   ) -> Expr (Const fc INT  v)
   B : (fc : FileContext) -> (v : Bool  ) -> Expr (Const fc BOOL v)
 
+  ToString : (fc : FileContext) -> (l : Expr a)                 -> Expr (Un  fc TOSTR a)
+
+  And : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc AND a b)
+  Or  : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc OR  a b)
+  Not : (fc : FileContext) -> (l : Expr a)                 -> Expr (Un  fc NOT a)
+
+  LT  : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc LT  a b)
+  LTE : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc LTE  a b)
+  GT  : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc GT  a b)
+  GTE : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc GTE  a b)
+  EQ  : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc EQ  a b)
+
+  Sub : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc SUB a b)
+  Div : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc DIV a b)
+  Mul : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc MUL a b)
+  Add : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc ADD a b)
+
+  Size : (fc : FileContext) -> (l : Expr a) -> Expr (Un  fc SIZE a)
+  Cons : (fc : FileContext) -> (l : Expr a) -> (r : Expr b) -> Expr (Bin fc CONS  a b)
+
+  Ord : (fc : FileContext) -> (l : Expr a) -> Expr (Un  fc ORD  a)
+  Chr : (fc : FileContext) -> (l : Expr a) -> Expr (Un  fc CHR  a)
+  Str : (fc : FileContext) -> (l : Expr a) -> Expr (Un  fc STRO a)
+
+  Slice : (fc : FileContext) -> (l : Expr a) -> (k : Expr b) -> (j : Expr c) -> Expr (Tri  fc SLICE a b c)
+
+
   Cond : (fc : FileContext)
       -> (c  : Expr cond)
       -> (t  : Expr tt)
@@ -123,11 +150,48 @@ view (Un fc (OPEN x m) e)
 view (Un fc (THE x) e) with (view x)
   view (Un fc (THE x) e) | ty = The fc ty (view e)
 
+view (Un fc NOT e)
+  = Not fc (view e)
+view (Un fc SIZE e)
+  = Size fc (view e)
+view (Un fc ORD e)
+  = Ord fc (view e)
+
+view (Un fc CHR e)
+  = Chr fc (view e)
+
+view (Un fc STRO e)
+  = Str fc (view e)
+
+view (Un fc TOSTR e)
+  = ToString fc (view e)
+
+view (Bin fc AND a b)
+  = And fc (view a) (view b)
+view (Bin fc OR  a b)
+  = Or  fc (view a) (view b)
+
+view (Bin fc LT  a b) = LT fc (view a) (view b)
+view (Bin fc LTE a b) = LTE fc (view a) (view b)
+view (Bin fc EQ  a b) = EQ fc (view a) (view b)
+view (Bin fc GT  a b) = GT fc (view a) (view b)
+view (Bin fc GTE a b) = GTE fc (view a) (view b)
+
+view (Bin fc ADD a b)  = Add  fc (view a) (view b)
+view (Bin fc MUL a b)  = Mul  fc (view a) (view b)
+view (Bin fc SUB a b)  = Sub  fc (view a) (view b)
+view (Bin fc DIV a b)  = Div  fc (view a) (view b)
+view (Bin fc CONS a b) = Cons fc (view a) (view b)
+
+
 view (Bin fc PAIR a b)
   = Pair fc (view a) (view b)
 
 view (Bin fc WRITE a b)
   = Write fc (view a) (view b)
+
+view (Tri fc SLICE a b c)
+  = Slice fc (view a) (view b) (view c)
 
 view (Tri fc COND a b c)
   = Cond fc (view a) (view b) (view c)
