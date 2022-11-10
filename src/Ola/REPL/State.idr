@@ -23,9 +23,6 @@ data Protocol : Type where
    -> Protocol
 
 public export
-data Role = R (Role rs MkRole)
-
-public export
 data Func = F (Func rs ts s type)
 
 
@@ -37,7 +34,7 @@ record State where
   constructor S
   file      : Maybe String
   protocols : SortedMap String Protocol
-  roles     : SortedMap String State.Role
+  roles     : SortedMap String Role
   types     : SortedMap String State.Ty
   funcs     : SortedMap String Func
   prog      : Maybe Program
@@ -53,7 +50,7 @@ getProtocol st key
   = pure $ lookup key (protocols st)
 
 export
-getRole : State -> String -> Ola (Maybe State.Role)
+getRole : State -> String -> Ola (Maybe Role)
 getRole st key
   = pure $ lookup key (roles st)
 

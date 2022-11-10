@@ -1,13 +1,8 @@
-|||
-|||
-||| Module    : Exprs.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
-||| License   : see LICENSE
-|||
 module Ola.Parser.Exprs
 
 import Decidable.Equality
 
+import Data.List.Views
 import Data.List1
 
 import Ola.Lexer
@@ -16,71 +11,73 @@ import Ola.Parser.API
 import Ola.Core
 import Ola.Types
 
-import Ola.Raw.Types
-import Ola.Raw.Exprs
+import Ola.Raw.AST
 
 import Ola.Parser.Types
+
+import Debug.Trace
 
 %default partial -- @TODO Make exprs parsing total.
 
 
 export
-var : Rule Expr
-var
-  = pure (Var !Ola.ref)
+var : Rule EXPR
+var = do r <- Ola.ref
+         pure (null (VAR (get r)) (span r))
 
-constants : Rule Expr
+
+constants : Rule EXPR
 constants
-    = unit <|> char <|> string <|> int <|> bool
+    =      unit
+       <|> char <|> string <|> int <|> bool
   where
-    unit : Rule Expr
+    unit : Rule EXPR
     unit
       = do s <- Toolkit.location
            keyword "unit"
            e <- Toolkit.location
-           pure (Const (newFC s e) UNIT ())
+           pure (null (CONST UNIT ()) (newFC s e))
 
-    char : Ola.Rule Raw.Expr
+    char : Ola.Rule EXPR
     char
       = do s <- Toolkit.location
            c <- Ola.char
            e <- Toolkit.location
-           pure (Const (newFC s e) CHAR c)
+           pure (null (CONST CHAR c)(newFC s e))
 
-    string : Ola.Rule Raw.Expr
+    string : Ola.Rule EXPR
     string
       = do s  <- Toolkit.location
            st <- Ola.string
            e  <- Toolkit.location
-           pure (Const (newFC s e) STR st)
+           pure (null (CONST STR st) (newFC s e))
 
-    int : Ola.Rule Raw.Expr
+    int : Ola.Rule EXPR
     int
       = do s  <- Toolkit.location
            st <- Ola.int
            e  <- Toolkit.location
-           pure (Const (newFC s e) INT st)
+           pure (null (CONST INT st) (newFC s e))
 
-    bool : Ola.Rule Raw.Expr
+    bool : Ola.Rule EXPR
     bool
-      = do st <- (gives "false" False <|> gives "true" True)
-           pure (Const (fst st) BOOL (snd st))
+      =   givesWithLoc "false" (null (CONST BOOL False))
+      <|> givesWithLoc "true"  (null (CONST BOOL True))
 
-
-uKind : Rule (FileContext, Unary)
+uKind : Rule BuiltinUnOps
 uKind
-    =  gives "left"   LEFT
-   <|> gives "right"  RIGHT
-   <|> gives "read"   READ
-   <|> gives "close"  CLOSE
-   <|> gives "not"    NOT
-   <|> gives "size"   SIZE
-   <|> gives "ord"    ORD
-   <|> gives "chr"    CHR
+    =  gives "read"      READ
+   <|> gives "close"     CLOSE
+   <|> gives "not"       NOT
+   <|> gives "size"      SIZE
+   <|> gives "ord"       ORD
+   <|> gives "chr"       CHR
    <|> gives "string"    STRO
-   <|> gives "toString"    TOSTR
+   <|> gives "toString"  TOSTR
+   <|> gives "print"     PRINT
 
-bKind : Rule (FileContext, Exprs.Binary)
+
+bKind : Rule BuiltinBinOps
 bKind
     =  gives "and"   AND
    <|> gives "or"    OR
@@ -93,18 +90,20 @@ bKind
    <|> gives "sub"   SUB
    <|> gives "mul"   MUL
    <|> gives "div"   DIV
-   <|> gives "cons"  CONS
+   <|> gives "write"   WRITE
+   <|> gives "strCons"  STRCONS
 
 mutual
-  fetch : Rule Expr
+  fetch : Rule EXPR
   fetch
     = do s <- Toolkit.location
          symbol "!"
+         commit
          ex <- expr
          e <- Toolkit.location
-         pure (Un (newFC s e) FETCH ex)
+         pure (un (BUN FETCH) (newFC s e) ex)
 
-  array : Rule Expr
+  array : Rule EXPR
   array
     = do s <- Toolkit.location
          symbol "{"
@@ -112,14 +111,14 @@ mutual
          symbol "}"
          e <- Toolkit.location
          -- Some rewriting to turn array literals into cons arrays.
-         pure (foldr (cons e) (Null (newFC e e)) xs)
+         pure (foldr (cons e) (null NIL (newFC e e)) xs)
     where
-      cons : Location -> Expr -> Expr -> Expr
+      cons : Location -> EXPR -> EXPR -> EXPR
       cons e x xs
         = let fc = { end := e} (getFC x)
-          in Bin fc ARRAYCONS x xs
+          in bin CONS fc x xs
 
-  unary : Rule Expr
+  unary : Rule EXPR
   unary
     = do s <- Toolkit.location
          k <- uKind
@@ -128,9 +127,10 @@ mutual
          ex <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Un (newFC s e) (snd k) ex)
+         pure (un (BUN k) (newFC s e) ex)
 
-  binary : Rule Expr
+
+  binary : Rule EXPR
   binary
     = do s <- Toolkit.location
          k <- bKind
@@ -141,16 +141,18 @@ mutual
          ey <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Bin (newFC s e) (snd k) ex ey)
+         pure (bin (BBIN k) (newFC s e) ex ey)
+
 
   kind : Rule HandleKind
   kind =  do keyword "fopen"; pure FILE
       <|> do keyword "popen"; pure PROCESS
 
-  openE : Rule Expr
+  openE : Rule EXPR
   openE
     = do s <- Toolkit.location
          k <- kind
+         commit
          symbol "("
          ex <- expr
          symbol ","
@@ -158,71 +160,78 @@ mutual
          symbol ")"
          e <- Toolkit.location
 
-         pure (Un (newFC s e) (OPEN k m) ex)
+         pure (un (BUN (OPEN k m)) (newFC s e) ex)
 
-  annot : Rule Expr
+  annot : Rule EXPR
   annot
     = do s <- Toolkit.location
-         symbol "("
          keyword "the"
+         commit
+         symbol "("
          t <- type
          k <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Un (newFC s e) (THE t) k)
+         pure (bin THE (newFC s e) t k)
 
 
-  pair : Rule Expr
+  pair : Rule EXPR
   pair
     = do s <- Toolkit.location
          keyword "pair"
-
+         commit
          symbol "("
          l <- expr
          symbol ","
          r <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Bin (newFC s e) PAIR l r)
+         pure (bin PAIR (newFC s e) l r)
 
-  write : Rule Expr
-  write
+  union : Rule EXPR
+  union
     = do s <- Toolkit.location
-         keyword "write"
+         k <- (keyword "left" *> pure LEFT <|> keyword "right" *> pure RIGHT)
+         commit
          symbol "("
          l <- expr
-         symbol ","
-         r <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Bin (newFC s e) WRITE l r)
+         pure (un k (newFC s e) l)
 
-  call : Rule Expr
+  call : Rule EXPR
   call
     = do s <- Toolkit.location
          l <- var
-         symbol "("
-         r <- sepBy (symbol ",") expr
-         symbol ")"
+         a <- args
          e <- Toolkit.location
-         pure (Call (newFC s e) l r)
+         pure (Branch CALL (newFC s e) (l::fromList a))
 
-  index : Rule Expr
+    where args : Rule (List EXPR)
+          args =  symbol "(" *> symbol ")" *> pure Nil
+              <|> do as <- symbol "(" *> sepBy1 (symbol ",") expr <* symbol ")"
+                     pure (forget as)
+
+
+
+  index : Rule EXPR
   index
     = do s <- Toolkit.location
          keyword "index"
+
          symbol "("
          k <- expr
          symbol ","
-         t <- Ola.int
+         t <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Un (newFC s e) (INDEX t) k)
+         pure (bin IDX (newFC s e) t k)
 
-  ternary : Rule Expr
-  ternary
+  slice : Rule EXPR
+  slice
     = do s <- Toolkit.location
-         k <- (gives "cond" COND <|> gives "slice" SLICE)
+         keyword "slice"
+
          symbol "("
          c <- expr
          symbol ","
@@ -231,26 +240,169 @@ mutual
          r <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (Tri (newFC s e) (snd k) c l r)
+         pure (tri SLICE (newFC s e) c l r)
 
+  mutate :  Rule EXPR
+  mutate
+    = do s <- Toolkit.location
+         keyword "set"
+         commit
+         l <- expr
+         keyword "to"
+         r <- expr
+         e <- Toolkit.location
+         pure (bin (BBIN MUT) (newFC s e) l r)
 
-  expr' : Rule Expr
-  expr'
-      = call <|> var <|> constants
-            <|> fetch
-            <|> array
-            <|> unary
-            <|> binary
-            <|> annot
-            <|> pair <|> write
-            <|> openE
-            <|> ternary
-            <|> index
+  cond : Rule EXPR
+  cond
+    = do s <- Toolkit.location
+         keyword "if"
+         commit
+         c <- expr
+         lb <- block
+         keyword "else"
+         rb <- block
+         e <- Toolkit.location
+         pure (tri COND (newFC s e) c lb rb)
+
+  loop : Rule EXPR
+  loop
+    = do s <- Toolkit.location
+         keyword "loop"
+         commit
+         b <- block
+         keyword "until"
+         c <- expr
+         e <- Toolkit.location
+         pure (bin LOOP (newFC s e) b c)
+
+  match : Rule EXPR
+  match
+    = do s <- Toolkit.location
+         keyword "match"
+         commit
+         c <- expr
+         symbol "{"
+         keyword "when"
+         keyword "left"
+         symbol "("
+         l <- Ola.ref
+         symbol ")"
+         lb <- block
+         keyword "when"
+         keyword "right"
+         symbol "("
+         r <- Ola.ref
+         symbol ")"
+         rb <- block
+         symbol "}"
+         e <- Toolkit.location
+         pure (tri (MATCH (get l) (get r)) (newFC s e) c lb rb)
+
+  let_ : String -> Stored ->  Rule EXPR
+  let_ l sto
+    = do s <- Toolkit.location
+         keyword l
+         commit
+         v <- Ola.ref
+         t <- optional (symbol ":" *> type)
+         symbol "="
+         ex <- expr
+         keyword "in"
+         e <- Toolkit.location
+         scope <- (block)
+         maybe        (pure (bin (LET   sto (get v)) (newFC s e)    ex scope))
+               (\ty => pure (tri (LETTY sto (get v)) (newFC s e) ty ex scope))
+               t
+  split : Rule EXPR
+  split
+    = do s <- Toolkit.location
+         keyword "split"
+         commit
+         c <- expr
+         keyword "as"
+         symbol "("
+         l <- Ola.ref
+         symbol ","
+         r <- Ola.ref
+         symbol ")"
+         e <- Toolkit.location
+         keyword "in"
+         e <- Toolkit.location
+         scope <- block
+         pure (bin (SPLIT (get l) (get r)) (newFC s e) c scope)
 
   export
-  expr : Rule Expr
+  block : Rule EXPR
+  block
+    = do s <- Toolkit.location
+         symbol "{"
+         xs <- sepBy1 (symbol ";") expr
+         symbol "}"
+         e <- Toolkit.location
+         pure (build (head xs) (tail xs))
+
+    where fold : EXPR -> EXPR -> EXPR
+          fold e acc
+            = (bin SEQ (merge (getFC e) (getFC acc)) e acc)
+
+          build : EXPR -> List EXPR -> EXPR
+          build e xs with (snocList xs)
+            build e [] | Empty
+              = e
+            build e (ys ++ [x]) | (Snoc x ys rec)
+              = foldr fold x (e::ys)
+
+  expr' : Rule EXPR
+  expr'
+      =   call
+      <|> var
+      <|> constants
+      <|> let_ "local" STACK
+      <|> let_ "var"   HEAP
+      <|> unary
+      <|> binary
+      <|> split
+      <|> match
+      <|> loop
+      <|> cond
+      <|> array
+      <|> annot
+      <|> pair
+      <|> union
+      <|> openE
+      <|> slice
+      <|> index
+      <|> fetch
+      <|> mutate
+
+  exprT : Rule EXPR
+  exprT
+      =   (trace "\{show !Toolkit.location} call"      call)
+      <|> (trace "\{show !Toolkit.location} var"       var)
+      <|> (trace "\{show !Toolkit.location} constants" constants)
+      <|> (trace "\{show !Toolkit.location} local"     $ let_ "local" STACK)
+      <|> (trace "\{show !Toolkit.location} new"       $ let_ "var"   HEAP)
+      <|> (trace "\{show !Toolkit.location} mutate"    mutate)
+      <|> (trace "\{show !Toolkit.location} un"        unary  )
+      <|> (trace "\{show !Toolkit.location} bi"        binary )
+      <|> (trace "\{show !Toolkit.location} split"     split)
+      <|> (trace "\{show !Toolkit.location} match"     match)
+      <|> (trace "\{show !Toolkit.location} loop"      loop   )
+      <|> (trace "\{show !Toolkit.location} if"        cond   )
+      <|> (trace "\{show !Toolkit.location} ar"        array  )
+      <|> (trace "\{show !Toolkit.location} the"       annot  )
+      <|> (trace "\{show !Toolkit.location} pait"      pair   )
+      <|> (trace "\{show !Toolkit.location} union"     union  )
+      <|> (trace "\{show !Toolkit.location} open"      openE  )
+      <|> (trace "\{show !Toolkit.location} slice"     slice  )
+      <|> (trace "\{show !Toolkit.location} index"     index  )
+      <|> (trace "\{show !Toolkit.location} !"         fetch  )
+
+
+  export
+  expr : Rule EXPR
   expr
-    =   symbol "(" *> expr' <* symbol ")"
-    <|> expr'
+    = expr'
 
 -- [ EOF ]

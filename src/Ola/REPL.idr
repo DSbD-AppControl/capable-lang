@@ -95,6 +95,7 @@ roleCheck' ctxt str
         => let (r ** (loc ** prfN)) = deBruijn prf
            in pure (r ** (V loc prfN))
 
+export
 process : State -> Cmd -> Ola State
 process st Quit
   = do putStrLn "Exiting the REPL"

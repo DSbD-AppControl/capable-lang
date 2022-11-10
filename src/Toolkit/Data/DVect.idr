@@ -61,6 +61,20 @@ toList : Vect q a -> List a
 toList Nil = Nil
 toList (x::xs) = x :: DVect.toList xs
 
+export
+fromVect : {x : _} -> Vect n (e x)
+        -> DVect a e n (replicate n x)
+fromVect [] = []
+fromVect (y :: xs)
+  = y :: fromVect xs
+
+export
+fromList : {x : _} -> (xs : List (e x))
+        -> DVect a e (length xs) (replicate (length xs) x)
+fromList [] = []
+fromList (y :: xs) = y :: fromList xs
+
+
 ||| Function to show a `DList`.
 |||
 ||| Due to limitations in idris wrt to class instances on dependent

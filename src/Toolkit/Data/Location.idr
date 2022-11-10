@@ -25,6 +25,11 @@ record Ref where
   get  : String
 
 
+export
+merge : FileContext -> FileContext -> FileContext
+merge a b
+  = MkFC Nothing (start a) (end b)
+
 public export
 FC : Type
 FC = FileContext

@@ -1,4 +1,4 @@
-||| Functions are perhaps recursive
+||| Functions/methods/procedures...
 |||
 ||| Module    : Funcs.idr
 ||| Copyright : (c) Jan de Muijnck-Hughes
@@ -12,7 +12,6 @@ import Data.Vect
 import Ola.Terms.Types
 import Ola.Terms.Vars
 import Ola.Terms.Exprs
-import Ola.Terms.Stmts
 
 %default total
 
@@ -23,13 +22,10 @@ data Func : (roles : List Ty.Role)
          -> (type  :      Ty.Base)
                   -> Type
   where
-    ||| A non-recusrive function.
-    ||| We need this setup to ensure that we deal with eearly returns and end of computations.
-    ||| We must have a last expression to evaluate in case there are no early returns....
+    ||| A non-recusive. function.
     Fun : {args   : List Ty.Base}
        -> {return : Ty.Base}
-       -> (body   : Stmt roles types (args ++ stack) out return)
-       -> (ret    : Expr roles types out return)
+       -> (body   : Expr roles types (args ++ stack) return)
                  -> Func roles types stack (FUNC args return)
 
 -- [ EOF ]

@@ -16,7 +16,7 @@ protocol handshake
 
 main()
 {
-  print("My First Program");
+  print("My First Program")
+; print(toString('\n'))
 
-  return unit;
 }

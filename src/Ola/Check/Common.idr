@@ -105,4 +105,51 @@ data The : (rs    : List Ty.Role)
     T : (ty   : Ty      ds    type )
      -> (e    : Expr rs ds gs type)
              -> The  rs ds gs type
+
+export
+lookup : {type, types : _}
+      -> (ctxt  : Context type types)
+      -> (s     : Ref)
+               -> Ola (DPair type (IsVar types))
+lookup ctxt s
+  = do prf <- embedAtInfo
+                (span s)
+                (NotBound s)
+                (Lookup.lookup (get s) ctxt)
+       let (r ** loc ** prfN) = deBruijn prf
+       pure (r ** V loc prfN)
+
+
+namespace Env
+  public export
+  record Env (rs : List Ty.Role)
+             (ds,gs : List Ty.Base)
+    where
+      constructor E
+      rho   : Context Ty.Role rs
+      delta : Context Ty.Base ds
+      gamma : Context Ty.Base gs
+
+
+  export
+  empty : Env Nil Nil Nil
+  empty = E Nil Nil Nil
+
+  namespace Rho
+    export
+    extend : (env : Env rs ds gs)
+          -> (s   : String)
+                 -> Env (MkRole::rs) ds gs
+    extend (E rho delta gamma) s
+      = E (I s MkRole :: rho) delta gamma
+
+  namespace Gamma
+    export
+    extend : (env : Env rs ds gs)
+          -> (s   : String)
+          -> (ty  : Base)
+                 -> Env rs ds (ty::gs)
+    extend (E rho delta gamma) s ty
+      = E rho delta (I s ty :: gamma)
+
 -- [ EOF ]

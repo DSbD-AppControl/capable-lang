@@ -14,7 +14,6 @@ import Ola.Terms.Roles
 import Ola.Terms.Types
 import Ola.Terms.Protocols
 import Ola.Terms.Exprs
-import Ola.Terms.Stmts
 import Ola.Terms.Funcs
 
 %default total

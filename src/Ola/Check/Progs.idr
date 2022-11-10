@@ -11,24 +11,19 @@ import Toolkit.Data.Location
 import Ola.Types
 import Ola.Core
 
+import Ola.Raw.AST
 import Ola.Raw.Types
-import Ola.Raw.Types.View
 import Ola.Raw.Exprs
 
-import Ola.Raw.Stmts
 import Ola.Raw.Funcs
-import Ola.Raw.Roles
+import Ola.Raw.Role
 import Ola.Raw.Progs
-import Ola.Raw.Progs.View
-
 import Ola.Check.Common
 
-import Ola.Check.Roles
 import Ola.Check.Types
 import Ola.Check.Roles
 import Ola.Check.Protocols
 import Ola.Check.Exprs
-import Ola.Check.Stmts
 import Ola.Check.Funcs
 
 import Ola.Terms.Vars
@@ -36,76 +31,79 @@ import Ola.Terms.Roles
 import Ola.Terms.Protocols
 import Ola.Terms.Types
 import Ola.Terms.Exprs
-import Ola.Terms.Stmts
 import Ola.Terms.Funcs
 import Ola.Terms.Progs
 
+import Ola.REPL.State
+
 %default total
 
-
-check : {p     : Prog}
+check : {p     : PROG}
      -> {rs    : List Ty.Role}
      -> {ds,gs : List Ty.Base}
-     -> (rho   : Context Ty.Role rs)
-     -> (delta : Context Ty.Base ds)
-     -> (gamma : Context Ty.Base gs)
+     -> (env   : Env rs ds gs)
+     -> (state : State)
      -> (prog  : Prog p)
-              -> Ola (Prog rs ds gs UNIT)
+              -> Ola (Prog rs ds gs UNIT, State)
+check env state (Main fc m)
+  = do (tyM ** m) <- synth env m
 
-check rho delta gamma (SeshDef fc ref s scope)
-  = do (g ** tm) <- protocolCheck delta rho s
-       scope <- check
-                  rho
-                  delta
-                  gamma
-                  scope
-       pure (DefSesh tm scope)
+       Refl <- compare fc (FUNC Nil UNIT) tyM
 
-check rho delta gamma (RoleDef fc ref scope)
-  = do let rho = (extend rho (get ref) MkRole)
-       role <- roleCheck rho (RoleRef ref)
-       scope <- check
-                  rho
-                  delta
-                  gamma
-                  scope
-       pure (DefRole scope)
+       pure (Main m, state)
 
+check env state (Def fc TYPE n val scope)
+  = do (ty ** tm) <- synth (delta env) val
 
-check rho delta gamma (TypeDef fc ref val scope)
-  = do (ty ** tm) <- typeCheck delta val
+       let env   = { delta $= \c => extend c n ty} env
+       let state = { types $= insert n (T tm)} state
 
-       scope <- check
-                  rho
-                  (extend delta (get ref) ty)
-                  gamma
-                  scope
-       pure (DefType tm scope)
+       (scope, state) <- check env state scope
 
-check rho delta gamma (FuncDef fc ref f scope)
-  = do (FUNC as r ** f) <- funcCheck rho delta gamma f
+       pure (DefType tm scope, state)
+
+check env state (Def fc FUNC n val scope)
+  = do (FUNC as r ** tm) <- synth env val
          | (ty ** _) => throwAt fc (FunctionExpected ty)
 
-       scope <- check
-                  rho
-                  delta
-                  (extend gamma (get ref) (FUNC as r))
-                  scope
+       let env   = Gamma.extend env n (FUNC as r)
+       let state = { funcs $= insert n (F tm)} state
 
-       tyTm <- typeReflect delta (FUNC as r)
-       pure (DefFunc tyTm f scope)
+       (scope, state) <- check env state scope
+
+       tyTm <- reflect (delta env) (FUNC as r)
+
+       pure (DefFunc tyTm tm scope, state)
+
+check env state (Def fc ROLE n val scope)
+
+  = do let env = extend env n
+
+       (MkRole ** role) <- synth (rho env) val
+
+       let state = {roles $= insert n (MkRole)} state
+
+       (scope, state) <- check env state scope
+
+       pure (DefRole scope, state)
 
 
-check rho delta gamma (Main fc f)
-  = do (FUNC Nil UNIT ** f) <- funcCheck rho delta gamma f
-         | (ty ** _) => mismatchAt fc (FUNC Nil UNIT) ty
+check env state (Def fc PROT n val scope)
+  = do (g ** tm) <- synth (delta env) (rho env) val
 
-       pure (Main f)
+       let state = {protocols $= insert n (P (rho env) tm)} state
+
+       (scope, state) <- check env state scope
+
+       pure (DefSesh tm scope, state)
 
 
-export
-progCheck : (r : Prog) -> Ola Program
-progCheck p
-  = check Nil Nil Nil (view p)
+namespace Raw
+  export
+  check : (r : PROG) -> Ola (Program,State)
+  check p
+    = check empty defaultState (toProg p)
+
+
 
 -- [ EOF ]

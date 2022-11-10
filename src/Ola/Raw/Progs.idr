@@ -8,85 +8,54 @@
 module Ola.Raw.Progs
 
 import Toolkit.Data.Location
+import Toolkit.AST
 
+import Data.Vect.Quantifiers
 import Ola.Types
-
-import Ola.Raw.Roles
-import Ola.Raw.Types
+import Ola.Raw.AST
+import Ola.Raw.Role
 import Ola.Raw.Protocols
+import Ola.Raw.Types
 import Ola.Raw.Exprs
-import Ola.Raw.Stmts
 import Ola.Raw.Funcs
-
-
 
 %default total
 
 public export
-data Nullary = MAIN Raw.Func
+CalcDef : (kind : DefKind l) -> (AST l -> Type)
+CalcDef TYPE = Ty
+CalcDef FUNC = Fun
+CalcDef ROLE = Role
+CalcDef PROT = Protocol
 
-setSourceN : String -> Progs.Nullary -> Progs.Nullary
-setSourceN str (MAIN f)
-  = MAIN (setSource str f)
-
-Show Progs.Nullary where
-  show (MAIN a) = "(MAIN \{show a})"
+toDef : (x : DefKind k) -> (p : AST k) -> CalcDef x p
+toDef TYPE = toType
+toDef FUNC = toFun
+toDef ROLE = toRole
+toDef PROT = toProtocol
 
 public export
-data Unary = DEFTYPE    Ref  Raw.Ty
-           | DEFFUNC    Ref  Raw.Func
-           | DEFROLE    Ref
-           | DEFSESH    Ref  Raw.Protocol
+data Prog : (p : PROG) -> Type
+  where
+    Main : (fc : FileContext)
+        -> (m  : Fun f)
+              -> Prog (Branch MAIN fc [f])
 
-Show Progs.Unary where
-  show (DEFTYPE    r ty) = "(DEFTYPE \{show r} \{show ty})"
-  show (DEFFUNC    r f)  = "(DEFFUNC \{show r} \{show f})"
-  show (DEFROLE    r)    = "(DEFROLE \{show r})"
-  show (DEFSESH    r s)  = "(DEFSESH \{show r} \{show s})"
-
-setSourceU : String -> Progs.Unary -> Progs.Unary
-setSourceU str (DEFTYPE x y)
-
-  = DEFTYPE (setSource str x)
-            (setSource str y)
-
-setSourceU str (DEFFUNC x y)
-  = DEFFUNC (setSource str x)
-            (setSource str y)
-
-setSourceU str (DEFROLE x)
-  = DEFROLE (setSource str x)
-
-setSourceU str (DEFSESH x s)
-  = DEFSESH (setSource str x) (setSource str s)
-
-
-
-namespace Raw
-  public export
-  data Prog : Type where
-    Null : FileContext -> Progs.Nullary -> Prog
-    Un : FileContext -> Progs.Unary -> Prog -> Prog
+    Def : (fc    : FileContext)
+       -> (what  : DefKind k)
+       -> (s     : String)
+       -> (val   : CalcDef what p)
+       -> (scope : Prog rest)
+                -> Prog (Branch (DEF s what) fc [p,rest])
 
 export
-Show Raw.Prog where
-  show (Null x y) = "(Null \{show x} \{show y})"
-  show (Un x y z) = "(Un   \{show x} \{show y} \{show z})"
+toProg : (p : PROG) -> Prog p
+toProg (Branch MAIN fc [f])
+  = Main fc (toFun f)
 
-export
-setSource : String -> Raw.Prog -> Raw.Prog
+toProg (Branch (DEF s x) fc [p,rest])
+  = Def fc x s
+             (toDef x p)
+             (toProg rest)
 
-setSource new (Null fc k)
-  = Null (setSource new fc)
-         (setSourceN new k)
-
-setSource new (Un fc k a)
-  = Un (setSource new fc)
-                (setSourceU new k)
-       (setSource new a)
-
-export
-getFC : (p : Raw.Prog) -> FileContext
-getFC (Null x y) = x
-getFC (Un x y z) = x
 -- [ EOF ]

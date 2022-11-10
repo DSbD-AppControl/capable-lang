@@ -1,9 +1,7 @@
 ||| How to run Ola programmes.
 |||
-||| Module    : Exec.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
-|||
 |||
 ||| Inspired by:
 |||
@@ -17,6 +15,7 @@
 |||
 module Ola.Exec
 
+import Data.Maybe
 import Data.Vect
 import Data.String
 import Data.List.Elem
@@ -59,53 +58,33 @@ namespace Results
            -> (prf   : Subset old new)
                     -> Result old type
 
-    export
-    return : {store : List Ty.Base}
-          -> (heap  : Heap store)
-          -> (value : Value store type)
-                   -> Ola (Result store type)
-    return heap value = pure (Value heap value (noChange _))
+    namespace NoChange
+      export
+      return : {store : List Ty.Base}
+            -> (heap  : Heap store)
+            -> (value : Value store type)
+                     -> Ola (Result store type)
+      return heap value = pure (Value heap value (noChange _))
 
-  namespace Stmt
+    namespace Changed
+      export
+      return : {store,store' : List Ty.Base}
+            -> (prf          : Subset store store')
+            -> (res          : Result       store' type)
+                            -> Ola (Result store   type)
 
-    public export
-    data Result : (stack, store : List Ty.Base)
-               -> (type  : Ty.Base)
-                        -> Type
-      where
-        ||| Captures the end of control flow that doesn't return a value
-        Continue : {newH  : List Ty.Base}
-                -> (env   : Env stack' newH)
-                -> (store : Heap  newH)
-                -> (prf   : Subset oldH newH )
-                         -> Result stack' oldH type
+      return prf (Value h val p)
+        = pure (Value h val (trans prf p))
 
-        Value : {new   : List Ty.Base}
-             -> (store : Heap  new)
-             -> (val   : Value new type)
-             -> (prf   : Subset old new )
-                      -> Result stack old type
-
-    export
-    return : {store,store' : List Ty.Base}
-          -> (prf  : Subset store store')
-          -> (rest : Stmt.Result stack' store' b)
-                  -> Ola (Stmt.Result stack' store b)
-    return prf (Continue e h p)
-      = pure (Continue e h (trans prf p))
-
-    return prf (Value h val p)
-      = pure (Value h val (trans prf p))
-
-    export
-    return2 : {store,store',store'' : List Ty.Base}
-           -> (p1   : Subset store  store')
-           -> (p2   : Subset store' store'')
-           -> (rest : Stmt.Result stack store'' b)
-                   -> Ola (Stmt.Result stack store b)
-    return2 p1 p2 rest
-      = do res <- return p2 rest
-           return p1 res
+      export
+      return2 : {store,store',store'' : List Ty.Base}
+             -> (p1   : Subset store  store')
+             -> (p2   : Subset        store' store'')
+             -> (rest : Result store'' b)
+                     -> Ola (Result store b)
+      return2 p1 p2 rest
+        = do res <- return p2 rest
+             return p1 res
 
   namespace Args
 
@@ -122,39 +101,40 @@ namespace Results
 
 ||| An API to support expressions that interact with the heap.
 namespace Heap
-  namespace Expr
-    export
-    insert : {store : List Ty.Base}
-          -> {type  : Ty.Base}
-          -> (value : Value store type)
-          -> (heap  : Heap  store)
-                   -> Ola (Expr.Result store (REF type))
-    insert {store} {type} v h
-      = let new = snoc_add type store              -- Extend type-level context
-        in let v' = Address (snoc_elem store type) -- Generate address
-        in let h' = snoc (map (weaken new) h)      -- Update heap
-                         (weaken new v)
-        in pure (Value h' v' new)
 
-    export
-    fetch : {store : List Ty.Base}
-         -> (loc   : IsVar  store type)
-         -> (heap  : Heap store)
-                  -> Ola (Expr.Result store type)
-    fetch loc heap
-      = let val = Heap.lookup loc heap
-        in pure (Value heap val (noChange _))
+  export
+  insert : {store : List Ty.Base}
+        -> {type  : Ty.Base}
+        -> (value : Value store type)
+        -> (heap  : Heap  store)
+                 -> Ola (Expr.Result store (REF type))
+  insert {store} {type} v h
+    = let new = snoc_add type store              -- Extend type-level context
+      in let v' = Address (snoc_elem store type) -- Generate address
+      in let h' = snoc (map (weaken new) h)      -- Update heap
+                       (weaken new v)
+      in pure (Value h' v' new)
 
-  namespace Stmt
-    export
-    mutate : {store : List Ty.Base}
-          -> (what  : IsVar store type)
-          -> (heap  : Heap store)
-          -> (with_ : Val type store)
-                   -> Heap store
+  export
+  fetch : {store : List Ty.Base}
+       -> (loc   : IsVar  store type)
+       -> (heap  : Heap store)
+                -> Ola (Expr.Result store type)
+  fetch loc heap
+    = let val = Heap.lookup loc heap
+      in return heap val
 
-    mutate what heap with_
-      = Heap.replace what with_ heap
+
+  export
+  mutate : {store : List Ty.Base}
+        -> (loc   : IsVar store type)
+        -> (heap  : Heap store)
+        -> (val   : Val type store)
+                 -> Ola (Expr.Result store UNIT)
+
+  mutate loc heap val
+    = let new_heap = Heap.replace loc val heap
+      in return new_heap U
 
 
 debase : FileError -> Int
@@ -184,7 +164,7 @@ mutual
                    (noChange _))
 
     eval env heap (x :: xs)
-      = do Value h v  p <- eval env heap x
+      = do Value h v  p  <- eval env heap x
            Args  h vs ps <- eval (weaken p env) h xs
            pure (Args h
                       ((weaken ps v)::vs)
@@ -221,11 +201,13 @@ mutual
 
 
     -- ## String Ops
-    eval heap (StrOp Length) [S s] = return heap (I (cast (length s)))
+    eval heap (StrOp Length) [S s]
+      = return heap (I (cast (length s)))
 
-    eval heap (StrOp Cons)   [C c, S s] = return heap (S (singleton c ++ s))
+    eval heap (StrOp Cons) [C c, S s]
+      = return heap (S (singleton c ++ s))
 
-    eval heap (StrOp Slice)  [I st, I ed, S s]
+    eval heap (StrOp Slice) [I st, I ed, S s]
       = return heap (S (strSubstr st ed s))
 
     eval heap (ToString CC) [C c] = return heap (S (singleton c))
@@ -273,10 +255,14 @@ mutual
 
     -- ## Memory
     eval heap Fetch [(Address adr)]
-      = pure !(fetch adr heap)
+      = fetch adr heap
 
     eval heap Alloc [this]
-      = pure !(insert this heap)
+      = insert this heap
+
+    eval heap Mutate [Address adr, val]
+      = mutate adr heap val
+
 
     -- ## Process
     eval heap (Open what m) [(S fname)]
@@ -309,6 +295,11 @@ mutual
              => do v <- embed (pclose fh)
                    return heap U
 
+    -- ## Misc
+    eval heap Print [S s]
+      = do putStr s
+           return heap U
+
   ||| Executing Expressions
   namespace Exprs
     %inline
@@ -328,7 +319,6 @@ mutual
            pure (Value hf vf (trans prf prfF))
 
 
-
     public export
     eval : {type  : Ty.Base}
         -> {store : List Ty.Base}
@@ -336,10 +326,22 @@ mutual
         -> (heap  : Heap                   store)
         -> (expr  : Expr roles types stack       type)
                  -> Ola (Expr.Result store type)
-    -- Variables
+    -- ### Variables
     eval env heap (Var x)
       = return heap
                (read x env)
+
+    -- ### Bindings
+    eval env heap (Let _ expr rest)
+      = do Value h v p <- eval env heap expr
+           res <- eval (v::weaken p env) h rest
+           return p res
+
+    -- ## Sequences
+    eval env heap (Seq this that)
+      = do Value h v p <- eval env heap this
+           res <- eval (weaken p env) h that
+           return p res
 
     -- ### Builtins
     eval env heap (Builtin desc args)
@@ -363,12 +365,19 @@ mutual
 
 
     eval env heap (Index idx array)
-        = do Value h' xs p1 <- eval env heap array
-             let x = index idx xs
-             pure (Value h' x p1)
+        = do Value h'  (I idx) p1 <- eval env heap idx
+             Value h'' arr     p2 <- eval (weaken p1 env) h' array
+             let Val s = size arr
+
+             if idx < 0
+              then throw (OOB idx s)
+              else maybe (throw (OOB idx s))
+                         (\idx => pure (Value h'' (index idx arr) (trans p1 p2)))
+                         (natToFin (cast idx) s)
 
     -- ### Data Structures
 
+    -- #### Products
     eval env heap (Pair x y)
       = do Value h'  l p1 <- eval            env  heap x
            Value h'' r p2 <- eval (weaken p1 env) h'   y
@@ -377,6 +386,12 @@ mutual
                              r)
                        (trans p1 p2))
 
+    eval env heap (Split expr rest)
+      = do Value h (Pair a b) p <- eval env heap expr
+           r <- eval (b::a::weaken p env) h rest
+           return p r
+
+    -- ### Sums
     eval env heap (Left x)
       = do Value h' x p1 <- eval env heap x
            pure (Value h' (Left x) p1)
@@ -385,6 +400,17 @@ mutual
       = do Value h' x p1 <- eval env heap x
            pure (Value h' (Right x) p1)
 
+    -- ### Matching
+    eval env heap (Match expr left right)
+      = do Value h v p <- eval env heap expr
+           case v of
+             Left l
+               => do l <- eval (l::weaken p env) h left
+                     return p l
+
+             Right r
+               => do r <- eval (r::weaken p env) h right
+                     return p r
 
     -- ### Function Calls
 
@@ -407,113 +433,19 @@ mutual
     eval env heap (The _ expr)
       = eval env heap expr
 
-  ||| Executing a Statement
-  namespace Stmt
 
-    ||| Bespoke join to ensure early returns
-    join : {type : Ty.Base}
-        -> {store : List Ty.Base}
-        -> (env   : Env stack store)
-        -> (this  : Stmt.Result stack'' store type)
-        -> (stmt  : Stmt roles types stack stack' type)
-                 -> Ola (Stmt.Result stack' store type)
-    join e (Continue _ h prf) stmt
-      = do res <- (eval (weaken prf e) h stmt)
-           return prf res
+    eval env heap (Loop body expr)
+      = do Value h' res  p  <- eval env heap body
+           Value h  cres p2 <- eval (weaken p env) h' expr
+           case cres of
+             B True -- Loop
+               => do r <- eval (weaken p2 (weaken p env))
+                               h
+                               (Loop body expr)
+                     return2 p p2 r
 
-    join _ (Value h val prf) _
-      = pure (Value h val prf)
-
-    ||| Expressions return values, statements may return early.
-    public export
-    eval : {type : Ty.Base}
-        -> {store : List Ty.Base}
-        -> (env   : Env stack store)
-        -> (heap  : Heap store)
-        -> (stmt  : Stmt roles types stack out type)
-                 -> Ola (Stmt.Result out store type)
-
-    -- ### Bindings
-    eval env heap (Let _ expr rest)
-      = do Value h v p <- eval env heap expr
-           res <- eval (v::weaken p env) h rest
-           return p res
-
-    -- ### Mutations
-    eval env heap (Mutate loc value rest)
-      = do Value h (Address adr) p1 <- eval            env  heap loc
-           Value h nu            p2 <- eval (weaken p1 env) h    value
-           let h' = mutate (expand adr p2) h nu
-
-           res <- eval (weaken p2 $ weaken p1 env) h' rest
-
-           return2 p1 p2 res
-
-    -- ### Run side-effecting programs.
-    eval env heap (Run expr rest)
-      = do Value h _ p <- eval env heap expr
-           res <- eval (weaken p env) h rest
-           return p res
-
-    -- ### Conditionals
-    eval env heap (Cond cond tt ff rest)
-      = do Value h v p <- eval env heap cond
-           case v of
-             B True
-               => do t <- eval (weaken p env) h tt
-                     r <- join (weaken p env) t rest
-                     return p r
-
-             B False
-               => do t <- eval (weaken p env) h ff
-                     r <- join (weaken p env) t rest
-                     return p r
-
-    -- ### Matching
-    eval env heap (Match expr left right rest)
-      = do Value h v p <- eval env heap expr
-           case v of
-             Left l
-               => do l <- eval (l::weaken p env) h left
-                     r <- join (weaken p env) l rest
-                     return p r
-
-             Right r
-               => do l <- eval (r::weaken p env) h right
-                     r <- join (weaken p env) l rest
-                     return p r
-
-    eval env heap (Split expr rest)
-      = do Value h (Pair a b) p <- eval env heap expr
-           r <- eval (b::a::weaken p env) h rest
-           return p r
-
-    -- ## While Loops
-    eval env heap (While expr body rest)
-      = do Value h c p <- eval env heap expr
-           case c of
-             B True -- Satisfied, loop
-               => do r <- eval (weaken p env) h body
-                     r <- join (weaken p env) r (While expr body rest)
-                     return p r
              B False -- Return
-               => do r <- eval (weaken p env) h rest
-                     return p r
-
-    -- ### Printing
-    eval env heap (Print this rest)
-      = do Value h (S t) p <- eval env heap this
-           putStrLn t
-           res <- eval (weaken p env) h rest
-           return p res
-
-    -- ### End of computations...
-    eval env heap End
-      = pure (Continue env heap (noChange _))
-
-    eval env heap (Return expr)
-      = do Value h v p <- eval env heap expr
-           pure (Value h v p)
+               => pure (Value h (weaken p2 res) (trans p p2))
 
   namespace Func
     ||| Let's deal with functions separatly.
@@ -526,14 +458,8 @@ mutual
         -> (func  : Func roles types stack          (FUNC as ret))
         -> (vals  : DList Ty.Base (Value store) as)
                  -> Ola (Expr.Result store ret)
-
-    eval env heap (Fun body last) args
-      = do res <- eval (extend args env) heap body
-           case res of
-             Continue e h p
-               => do Value h v p' <- eval e h last
-                     pure (Value h v (trans p p'))
-             Value h v p => pure (Value h v p)
+    eval env heap (Fun body) args
+      = eval (extend args env) heap body
 
 
 namespace Progs

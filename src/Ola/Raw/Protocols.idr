@@ -1,95 +1,103 @@
-||| AST for Global MPST.
+||| AST for Global MPST by being a views on the AST.
 |||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
-||| Let's be smart about the shape of the AST for types.
-|||
-||| We reduce the *raw* AST to a single tree in which the node values
-||| represent extra information about the children.
 module Ola.Raw.Protocols
 
-import Data.List1
+import Data.Vect
+import Data.Vect.Quantifiers
+
+import Toolkit.Data.DVect
+
 import Toolkit.Data.Location
 
-import Ola.Types.Protocol
-
-import Ola.Raw.Roles
+import Ola.Types
+import Ola.Raw.AST
+import Ola.Raw.Role
 import Ola.Raw.Types
 
 %default total
 
-public export
-data Nullary = END | CALL Ref
+mutual
 
-Show Protocols.Nullary where
-  show END = "END"
-  show (CALL r) = "(CALL \{show r})"
-
-setSourceNull : String -> Protocols.Nullary -> Protocols.Nullary
-setSourceNull str END = END
-setSourceNull str (CALL r) = CALL (setSource str r)
-
-public export
-data Unary = REC Ref
-
-Show Unary where
-  show (REC r) = "(REC \{show r})"
-
-public export
-data N1Ary = CHOICE Role Role
-
-Show N1Ary where
-  show (CHOICE a b)  = "(CHOICE \{show a} \{show b})"
-
-setSourceN : String -> N1Ary -> N1Ary
-setSourceN str (CHOICE a b) = CHOICE (setSource str a) (setSource str b)
-
-namespace Raw
   public export
-  data Protocol = Null FileContext Protocols.Nullary
-               | Un   FileContext Unary Raw.Protocol
-               | N1   FileContext N1Ary (List1 (String, Raw.Ty, Protocol))
+  data Branches1 : (bs : Vect (S n) (AST BRANCH))
+                -> Type
+    where
+      B1 : All Branch (b::bs)
+        -> Branches1 (b::bs)
+
+  public export
+  data Branch : (b : Raw.AST.BRANCH)
+                  -> Type
+    where
+      B : (fc    : FileContext)
+       -> (label : String)
+       -> (type  : Ty t)
+       -> (cont  : Protocol c)
+                -> Branch (Branch (BRANCHP label)
+                          fc
+                          [t,c])
+
+  public export
+  data Protocol : (r : Raw.AST.PROT)
+                     -> Type
+    where
+      End : (fc : FileContext)
+               -> Protocol (Branch STOP fc Nil)
+
+      Call : (fc  : FileContext)
+          -> (r   : Ref)
+          -> (prf : AsRef s fc r)
+                 -> Protocol (Branch (CALLP s) fc Nil)
+
+      Rec : (fc : FileContext)
+         -> (r  : Ref)
+         -> (prf : AsRef s fc r)
+         -> (scope : Protocol b)
+                  -> Protocol (Branch (RECP s) fc [b])
+
+      Choice : (fc : FileContext)
+            -> (s  : Role sr)
+            -> (r  : Role rr)
+            -> (prf : AsVect bs vs)
+            -> (branches : Branches1 vs)
+                        -> Protocol (Branch CHOICE fc (sr::rr::bs))
 
 mutual
-  setSources : String -> List (String, Raw.Ty, Protocol) -> List (String, Raw.Ty, Protocol)
-  setSources str [] = []
-  setSources str ((x, y,z) :: xs)
-    = (x, setSource str y, setSource str z) :: setSources str xs
+  toBranch : (b : Raw.AST.BRANCH)
+               -> Branch b
+  toBranch (Branch (BRANCHP l) fc [t,c])
+    = B fc l (toType t)
+             (toProtocol c)
 
-  setSources1 : String -> List1 (String, Raw.Ty, Protocol) -> List1 (String, Raw.Ty, Protocol)
-  setSources1 str ((x,y,z) ::: tail)
-    = (x, setSource str y, setSource str z) ::: setSources str tail
+  toBranches : (bs : Vect n Raw.AST.BRANCH)
+                  -> All Branch bs
+  toBranches [] = []
+  toBranches (x :: xs)
+    = toBranch x :: toBranches xs
+
 
   export
-  setSource : String -> Raw.Protocol -> Raw.Protocol
-  setSource str (Null fc y)
-    = Null (setSource     str fc)
-           (setSourceNull str y)
+  toProtocol : (r : Raw.AST.PROT)
+                 -> Protocol r
+  toProtocol (Branch STOP fc Nil)
+    = End fc
 
-  setSource str (Un fc y z)
-    = Un (setSource str fc)
-         y
-         (setSource str z)
+  toProtocol (Branch (CALLP str) fc Nil)
+    = Call fc (MkRef fc str) R
 
-  setSource str (N1 fc y xs)
-    = N1 (setSource  str fc)
-         (setSourceN str y)
-         (setSources1 str xs)
+  toProtocol (Branch (RECP str) fc [c])
+    = Rec fc (MkRef fc str) R (toProtocol c)
 
-export
-Show Raw.Protocol where
-
-  show (Null x y) = "(NULL \{show x} \{show y})"
-  show (Un x y z) = "(UN \{show x} \{show y} \{show z})"
-  show (N1 x y xs) = "(N1 \{show x} \{show y} \{assert_total $ show xs})"
-
-
-export
-getFC : Raw.Protocol -> FileContext
-getFC (Null x y) = x
-getFC (Un x y z) = x
-getFC (N1 x y xs) = x
+  toProtocol (Branch CHOICE fc (s::r::nodes))
+    = let ((v::vs) ** prf) = asVect nodes
+      in Choice fc
+                (toRole s)
+                (toRole r)
+                prf
+                (B1 $ assert_total
+                    $ toBranches (v::vs))
 
 -- [ EOF ]

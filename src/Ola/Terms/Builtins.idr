@@ -110,6 +110,9 @@ data Builtin : (inputs : List Base)
     Alloc : Builtin [    type]
                     (REF type)
 
+    Mutate : Builtin [ REF type, type]
+                                 UNIT
+
     -- ## 'Process' API
     Open : (what : HandleKind)
         -> (m    : Mode)
@@ -124,3 +127,10 @@ data Builtin : (inputs : List Base)
 
     Close : Builtin [HANDLE k]
                     UNIT
+
+    -- ## Misc
+    Print : Builtin [ STR ]
+                      UNIT
+
+
+-- [ EOF ]

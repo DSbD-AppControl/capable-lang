@@ -1,7 +1,5 @@
 |||
-|||
-||| Module    : Roles.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Ola.Parser.Roles
@@ -16,18 +14,18 @@ import Ola.Types
 import Ola.Lexer
 import Ola.Parser.API
 
-import Ola.Raw.Roles
+import Ola.Raw.AST
 
 %default total
 
-roleVar : Rule Raw.Role
+roleVar : Rule ROLE
 roleVar
   = do r <- Ola.ref
-       pure (RoleRef r)
+       pure (null (ROLE (get r)) (span r))
 
 ||| Roles
 export
-role : Rule Raw.Role
+role : Rule ROLE
 role
     = roleVar
 

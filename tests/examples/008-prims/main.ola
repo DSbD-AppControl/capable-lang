@@ -1,25 +1,26 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
 type foo = String
 
 func greeting() -> Int
 {
-  return add(1,2);
+  add(1,2)
 }
 
 main()
 {
-  print("My First Program");
-
-  local str1 = greeting();
-
-
-  if eq(str1,3)
-  {
-    print(toString(str1));
-  } else {
-    print("no");
-  }
-
-
-
-  return unit;
+  printLn("My First Program")
+; local str1 = greeting()
+  in { if eq(str1,3)
+       {
+         printLn(toString(str1))
+       } else {
+         printLn("no")
+       }
+     }
 }

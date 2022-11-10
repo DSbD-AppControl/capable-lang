@@ -1,35 +1,35 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
 func foo(a : <String|Int>) -> &String
 {
-  var x : String = "Hello World";
-
-  print(!x);
-
-  match a
-  {
-    when left(s)
-    {
-      x := s;
-    }
-    when right(i)
-    {
-      x := "Given an int";
-    }
-  }
-
-  return x;
-}
+  var x : String = "Hello World"
+  in { printLn(!x)
+     ; set x to match a
+                {
+                  when left(s)
+                  {
+                    s
+                  }
+                  when right(i)
+                  {
+                    "Given an int"
+                  }
+                }
+    ; x
+    }}
 
 main()
 {
 
-  local bar : <String|Int> = left("AA");
-
-  print(!(foo(bar)));
-
-  local bar : <String|Int> = right(1);
-
-  print(!(foo(bar)));
-
-  return unit;
-
+  local bar : <String|Int> = left("AA")
+  in { printLn(!foo(bar))
+     ; local bar : <String|Int> = right(1)
+       in { printLn(!foo(bar))
+          }
+     }
 }

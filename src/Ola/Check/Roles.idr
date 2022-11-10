@@ -14,7 +14,9 @@ import Data.Singleton
 import Ola.Types
 import Ola.Core
 
-import Ola.Raw.Roles
+import Ola.Raw.AST
+import Ola.Raw.Role
+
 import Ola.Check.Common
 
 import Ola.Terms.Vars
@@ -26,18 +28,12 @@ import Ola.Terms.Roles
 -- ## Check
 
 export
-roleCheck : {roles : List Ty.Role}
-         -> (ctxt  : Context Ty.Role roles)
-         -> (syn   : Raw.Role)
-                  -> Ola (DPair Ty.Role (Role roles))
-
-roleCheck ctxt (RoleRef x)
-  = do prf <- embedAtInfo
-                  (span x)
-                  (NotBound x)
-                  (Lookup.lookup (get x) ctxt)
-       let (r ** (loc ** prfN)) = deBruijn prf
-       pure (r ** (V loc prfN))
+synth : {roles : List Ty.Role}
+     -> (ctxt  : Context Ty.Role roles)
+     -> (syn   : Role r)
+              -> Ola (DPair Ty.Role (Role roles))
+synth ctxt (R x)
+  = lookup ctxt (MkRef emptyFC x)
 
 
 -- [ EOF ]

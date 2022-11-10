@@ -16,34 +16,28 @@ import Ola.Types
 import Ola.Lexer
 import Ola.Parser.API
 
-import Ola.Raw.Types
-
 %default total
 
-
-varType : Rule Raw.Ty
+varType : Rule TYPE
 varType
   = do r <- Ola.ref
-       pure (TyVar r)
+       pure (null (VARTY (get r)) (span r))
 
-baseType' : Rule (FileContext, Nullary)
-baseType' =   gives "Char"   CHAR
-          <|> gives "String" STR
-          <|> gives "Int"    INT
-          <|> gives "Unit"   UNIT
-          <|> gives "Bool"   BOOL
+baseType' : Rule TYPE
+baseType' =   givesWithLoc "Char"   (null CHAR)
+          <|> givesWithLoc "String" (null STR)
+          <|> givesWithLoc "Int"    (null INT)
+          <|> givesWithLoc "Unit"   (null UNIT)
+          <|> givesWithLoc "Bool"   (null BOOL)
 
-baseType : Rule Raw.Ty
-baseType = do res <- baseType'
-              pure (TyNull (fst res) (snd res))
 mutual
 
-  bi : (k : Types.Binary )
+  bi : (k : BIN Shape TYPE TYPE TYPE)
     -> (lb,rb,sep : String)
     -> IsSymbol lb
     => IsSymbol rb
     => IsSymbol sep
-    => Rule Raw.Ty
+    => Rule TYPE
   bi k lb rb sep
     = do s <- Toolkit.location
          symbol lb
@@ -52,9 +46,9 @@ mutual
          r <- type
          symbol rb
          e <- Toolkit.location
-         pure (TyBi (newFC s e) k l r)
+         pure (bin k (newFC s e) l r)
 
-  array : Rule Raw.Ty
+  array : Rule TYPE
   array
     = do s <- Toolkit.location
          symbol "["
@@ -63,37 +57,38 @@ mutual
          l <- type
          symbol "]"
          e <- Toolkit.location
-         pure (TyArray (newFC s e) l i)
+         pure (un (ARRAY i) (newFC s e) l)
 
-  handle : Rule Raw.Ty
+  handle : Rule TYPE
   handle
     = do s <- Toolkit.location
          k <- (keyword "FILE" *> pure FILE <|> keyword "PROC" *> pure PROCESS)
          e <- Toolkit.location
-         pure (TyHandle (newFC s e) k)
+         pure (null (HANDLE k) (newFC s e))
 
-  datatype : Rule Raw.Ty
+  datatype : Rule TYPE
   datatype
-      =  bi PAIR  "(" ")" "+"
+      =  bi PROD  "(" ")" "+"
      <|> bi UNION "<" ">" "|"
 
-  ref : Rule Raw.Ty
+  ref : Rule TYPE
   ref
     = do s <- Toolkit.location
          symbol "&"
          l <- type
          e <- Toolkit.location
-         pure (TyRef (newFC s e) l)
+         pure (un REF (newFC s e) l)
 
 
   ||| Parser types aside from Function types.
   export
-  type : Rule Raw.Ty
+  type : Rule TYPE
+
   type
       =   handle
       <|> array
       <|> datatype
-      <|> baseType
+      <|> baseType'
       <|> ref
       <|> varType
 

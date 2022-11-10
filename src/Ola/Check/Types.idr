@@ -14,8 +14,8 @@ import Data.Singleton
 import Ola.Types
 import Ola.Core
 
+import Ola.Raw.AST
 import Ola.Raw.Types
-import Ola.Raw.Types.View
 
 import Ola.Check.Common
 
@@ -24,143 +24,134 @@ import Ola.Terms.Types
 
 %default total
 
+
 mutual
-  checkArgs : {types : List Ty.Base}
+
+  synthArgs : {types : List Ty.Base}
            -> (ctxt  : Context Ty.Base types)
            -> (args  : Args as)
                     -> Ola (DPair (List Ty.Base)
                                   (DList Ty.Base (Ty types)))
-  checkArgs ctxt Empty
-
+  synthArgs ctxt []
     = pure (_ ** Nil)
 
-  checkArgs ctxt (Extend fc ty rest)
-
-    = do (a ** ty) <- check ctxt ty
-         (as ** tys) <- checkArgs ctxt rest
-
+  synthArgs ctxt (ty :: rest)
+    = do (a  ** ty)  <- synth ctxt ty
+         (as ** tys) <- synthArgs ctxt rest
          pure (_ ** ty :: tys)
 
-  check : {types : List Ty.Base}
+  export
+  synth : {types : List Ty.Base}
        -> (ctxt : Context Ty.Base types)
-       -> (syn  : Ty r)
+       -> (syn  : Ty t)
                -> Ola (DPair Ty.Base (Ty types))
 
-  check ctxt (TyVar x)
-    = do prf <- embedAtInfo
-                  (span x)
-                  (NotBound x)
-                  (Lookup.lookup (get x) ctxt)
-         let (ty ** (loc ** prfN)) = deBruijn prf
-         pure (ty ** TyVar (V loc prfN))
+  synth ctxt (TyVar x prf)
+    = do (ty ** idx) <- lookup ctxt x
+         pure (_ ** TyVar idx)
 
-  check ctxt (TyChar fc)
+  synth ctxt (TyChar fc)
     = pure (_ ** TyChar)
-  check ctxt (TyStr fc)
+
+  synth ctxt (TyStr fc)
     = pure (_ ** TyStr)
-  check ctxt (TyInt fc)
+
+  synth ctxt (TyInt fc)
     = pure (_ ** TyInt)
-  check ctxt (TyBool fc)
+
+  synth ctxt (TyBool fc)
     = pure (_ ** TyBool)
-  check ctxt (TyUnit fc)
+
+  synth ctxt (TyUnit fc)
     = pure (_ ** TyUnit)
 
-  check ctxt (TyArray fc n ty)
-    = do (ty ** tm) <- check ctxt ty
-         if n < 0
-           then throwAt fc NatExpected
-           else pure (_ ** TyArray tm (cast {to=Nat} n))
+  synth ctxt (TyArray fc n ty)
+    = do (ty ** tm) <- synth ctxt ty
+         ifThenElse (n < 0)
+                    (throwAt fc NatExpected)
+                    (pure (_ ** TyArray tm (cast n)))
 
-  check ctxt (TyPair fc a b)
-    = do (tyA ** a) <- check ctxt a
-         (tyB ** b) <- check ctxt b
+  synth ctxt (TyPair fc f s)
+    = do (tyF ** tmF) <- synth ctxt f
+         (tyS ** tmS) <- synth ctxt s
 
-         pure (_ ** TyPair a b)
+         pure (_ ** TyPair tmF tmS)
 
-  check ctxt (TyUnion fc a b)
-    = do (tyA ** a) <- check ctxt a
-         (tyB ** b) <- check ctxt b
+  synth ctxt (TyUnion fc l r)
+    = do (tyF ** tmF) <- synth ctxt l
+         (tyS ** tmS) <- synth ctxt r
 
-         pure (_ ** TyUnion a b)
+         pure (_ ** TyUnion tmF tmS)
 
-  check ctxt (TyRef fc ty)
-    = do (ty ** tm) <- check ctxt ty
+  synth ctxt (TyRef fc ty)
+    = do (ty ** tm) <- synth ctxt ty
          pure (_ ** TyRef tm)
 
-  check ctxt (TyHandle fc k)
+  synth ctxt (TyHandle fc k)
     = pure (_ ** TyHandle k)
 
-  check ctxt (TyFunc fc argty retty)
-    = do (tyA ** args) <- checkArgs ctxt argty
-         (tyR ** ret)  <- check     ctxt retty
-
+  synth ctxt (TyFunc fc prf args retty)
+    = do (tyAS ** args) <- synthArgs ctxt args
+         (tyR  ** ret)  <- synth     ctxt retty
          pure (_ ** TyFunc args ret)
-
--- ## Check
-
-export
-typeCheck : {types : List Ty.Base}
-         -> (ctxt  : Context Ty.Base types)
-         -> (syn   : Ty r)
-                  -> Ola (DPair Ty.Base (Ty types))
-typeCheck
-  = check
 
 namespace Raw
   export
-  typeCheck : {types : List Ty.Base}
-           -> (ctxt  : Context Ty.Base types)
-           -> (r     : Raw.Ty)
-                    -> Ola (DPair Ty.Base (Ty types))
-  typeCheck ctxt r
-    = check ctxt (view r)
+  synth : {types : List Ty.Base}
+       -> (ctxt  : Context Ty.Base types)
+       -> (raw   : TYPE)
+                -> Ola (DPair Ty.Base (Ty types))
+  synth ctxt r
+    = synth ctxt (toType r)
+
+-- ## Reflect
 
 mutual
-  typeReflectArgs : {types : List Ty.Base}
-                 -> (delta : Context Ty.Base types)
-                 -> (ts    : List Ty.Base)
-                          -> Ola (DList Ty.Base (Ty types) ts)
-  typeReflectArgs delta []
+  reflectArgs : {types : List Ty.Base}
+             -> (delta : Context Ty.Base types)
+             -> (ts    : List Ty.Base)
+                      -> Ola (DList Ty.Base (Ty types) ts)
+  reflectArgs delta []
     = pure Nil
 
-  typeReflectArgs delta (x :: xs)
-    = pure $ (::) !(typeReflect     delta x)
-                  !(typeReflectArgs delta xs)
+  reflectArgs delta (x :: xs)
+    = pure $ (::) !(reflect     delta x)
+                  !(reflectArgs delta xs)
 
   export
-  typeReflect : {types : List Ty.Base}
-           -> (delta : Context Ty.Base types)
-           -> (type  : Ty.Base)
-                    -> Ola (Ty types type)
+  reflect : {types : List Ty.Base}
+         -> (delta : Context Ty.Base types)
+         -> (type  : Ty.Base)
+                  -> Ola (Ty types type)
 
-  typeReflect delta CHAR
+  reflect delta CHAR
     = pure TyChar
-  typeReflect delta STR
+  reflect delta STR
     = pure TyStr
-  typeReflect delta INT
+  reflect delta INT
     = pure TyInt
-  typeReflect delta BOOL
+  reflect delta BOOL
     = pure TyBool
-  typeReflect delta (ARRAY x k)
-    = pure (TyArray !(typeReflect delta x) k)
-  typeReflect delta (PAIR x y)
-    = pure (TyPair !(typeReflect delta x)
-                   !(typeReflect delta y))
+  reflect delta (ARRAY x k)
+    = pure (TyArray !(reflect delta x) k)
+  reflect delta (PAIR x y)
+    = pure (TyPair !(reflect delta x)
+                   !(reflect delta y))
 
-  typeReflect delta (UNION x y)
-    = pure (TyUnion !(typeReflect delta x)
-                    !(typeReflect delta y))
+  reflect delta (UNION x y)
+    = pure (TyUnion !(reflect delta x)
+                    !(reflect delta y))
 
-  typeReflect delta UNIT
+  reflect delta UNIT
     = pure TyUnit
 
-  typeReflect delta (REF x)
-    = pure (TyRef !(typeReflect delta x))
+  reflect delta (REF x)
+    = pure (TyRef !(reflect delta x))
 
-  typeReflect delta (HANDLE x)
+  reflect delta (HANDLE x)
     = pure (TyHandle x)
-  typeReflect delta (FUNC xs x)
-    = pure (TyFunc !(typeReflectArgs delta xs)
-                   !(typeReflect     delta x))
+  reflect delta (FUNC xs x)
+    = pure (TyFunc !(reflectArgs delta xs)
+                   !(reflect     delta x))
 
 -- [ EOF ]

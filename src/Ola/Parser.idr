@@ -14,27 +14,20 @@ import Ola.Parser.API
 import Ola.Core
 import Ola.Types
 
-import Ola.Raw.Roles
-import Ola.Raw.Types
-import Ola.Raw.Protocols
-import Ola.Raw.Exprs
-import Ola.Raw.Stmts
-import Ola.Raw.Funcs
-import Ola.Raw.Progs
+import Ola.Raw.AST
 
 import Ola.Parser.Roles
 import Ola.Parser.Types
 import Ola.Parser.Protocols
 import Ola.Parser.Exprs
-import Ola.Parser.Stmts
 import Ola.Parser.Funcs
 
 %default partial
 
-data Decl = DeclT    FileContext Ref Raw.Ty
-          | DeclF    FileContext Ref Raw.Func
-          | DeclR    FileContext Ref
-          | DeclS    FileContext Ref Raw.Protocol
+data Decl = DeclT    FileContext String TYPE
+          | DeclF    FileContext String FUNC
+          | DeclR    FileContext String
+          | DeclS    FileContext String PROT
 
 decls : RuleEmpty (List Decl)
 decls
@@ -48,7 +41,7 @@ decls
            symbol "="
            r' <- protocol
            e <- Toolkit.location
-           pure (DeclS (newFC s e) r r')
+           pure (DeclS (newFC s e) (get r) r')
 
     declRole : Rule Decl
     declRole
@@ -56,7 +49,7 @@ decls
            keyword "role"
            r <- ref
            e <- Toolkit.location
-           pure (DeclR (newFC s e) r)
+           pure (DeclR (newFC s e) (get r))
 
     declTy : Rule Decl
     declTy
@@ -66,64 +59,61 @@ decls
            symbol "="
            ty <- type
            e <- Toolkit.location
-           pure (DeclT (newFC s e) r ty)
+           pure (DeclT (newFC s e) (get r) ty)
 
     declFunc : Rule Decl
     declFunc
       = do s <- Toolkit.location
            fs <- func
            e <- Toolkit.location
-           pure (DeclF (newFC s e) (fst fs) (snd fs))
+           pure (DeclF (newFC s e) (get $ fst fs) (snd fs))
 
-main : Rule Prog
+main : Rule PROG
 main
   = do s <- Toolkit.location
        keyword "main"
        symbol "("
        symbol ")"
-       symbol "{"
-       b <- body
-       symbol "}"
+       b <- block
        e <- Toolkit.location
-       pure (Null (newFC s e)
-                  (MAIN (Null (newFC s e)
-                              $ FUNC Nil
-                                     (TyNull emptyFC UNIT)
-                                     (fst b)
-                                     (snd b))))
+       pure (un MAIN (newFC s e)
+                     $ (tri FUN (newFC s e)
+                                (Branch ARGS emptyFC Nil)
+                                (null UNIT emptyFC)
+                                b
+                                 ))
 
 export
-program : Rule Prog
+program : Rule PROG
 program
     = do ds <- decls
          m <- main
          eoi
          pure (foldr fold m ds)
   where
-    fold : Decl -> Raw.Prog -> Raw.Prog
+    fold : Decl -> PROG -> PROG
     fold (DeclS fc r s)
-      = Un fc (DEFSESH r s)
+      = bin (DEF r PROT) fc s
 
     fold (DeclR fc r)
-      = Un fc (DEFROLE r)
+      = bin (DEF r ROLE) fc (null (ROLE r) fc)
 
     fold (DeclT fc r ty)
-      = Un fc (DEFTYPE r ty)
+      = bin (DEF r TYPE) fc ty
 
     fold (DeclF fc r f)
-      = Un fc (DEFFUNC r f)
+      = bin (DEF r FUNC) fc f
 
 namespace Ola
 
   export
   fromFile : (fname : String)
-                   -> Ola Prog
+                   -> Ola PROG
   fromFile fname
     = do ast <- parseFile (\p => Parse (PError fname p))
                 Ola.Lexer
                 program
                 fname
-         pure (setSource fname ast)
-           -- @TODO write functers & show for kinds
+         pure (AST.setSource fname ast)
 
 -- [ EOF ]

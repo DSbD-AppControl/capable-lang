@@ -1,5 +1,6 @@
+||| Type-checker for protocols.
 |||
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Ola.Check.Protocols
@@ -13,13 +14,12 @@ import Data.Singleton
 import Ola.Types
 import Ola.Core
 
-import Ola.Raw.Roles
 
-import Ola.Raw.Protocols
-import Ola.Raw.Protocols.View
-
+import Ola.Raw.AST
+import Ola.Raw.Role
 import Ola.Raw.Types
-import Ola.Raw.Types.View
+import Ola.Raw.Exprs
+import Ola.Raw.Protocols
 
 import Ola.Check.Common
 import Ola.Check.Types
@@ -33,93 +33,102 @@ import Ola.Terms.Protocols
 %default total
 
 mutual
-  checkBS : {ts : List Base}
-         -> {rs : List Ty.Role}
-         -> {ks : List Kind}
-         -> (kinds : Context Kind    ks)
-         -> (types : Context Ty.Base ts)
-         -> (roles : Context Ty.Role rs)
-         -> (bs    : Branches bs')
-                  -> Ola (DPair (Global.Branches ks    rs)
-                                (Branches        ks ts rs))
-  checkBS kinds types roles []
-    = pure (Nil ** Nil)
+  branch : {ts    : List Base}
+        -> {rs    : List Ty.Role}
+        -> {ks    : List Protocol.Kind}
+        -> (kinds : Context Protocol.Kind    ks)
+        -> (types : Context Ty.Base ts)
+        -> (roles : Context Ty.Role rs)
+        -> (bs1   : Branch b)
+                 -> Ola (DPair (Global.Branch ks    rs)
+                               (Branch        ks ts rs))
+  branch kinds types roles (B fc label type cont)
+    = do (t ** type) <- synth types type
+         (g ** cont) <- synth kinds types roles cont
 
-  checkBS kinds types roles (Add s ty cont rest)
-    = do (ty ** tm) <- typeCheck types ty
-         (g  ** tmg) <- check kinds types roles cont
-         (bs ** tmb) <- checkBS kinds types roles rest
-         pure (_ ** B s tm tmg :: tmb)
+         pure (_ ** B label type cont)
 
-  checkB1 : {ts : List Base}
-         -> {rs : List Ty.Role}
-         -> {ks : List Kind}
-         -> (kinds : Context Kind    ks)
-         -> (types : Context Ty.Base ts)
-         -> (roles : Context Ty.Role rs)
-         -> (bs1   : Branches1 bs)
-                  -> Ola (DPair (Global.Branches1 ks    rs)
-                                (Branches1        ks ts rs))
-  checkB1 kinds types roles (B1 bs)
-    = do ((b::bs) ** tm) <- checkBS kinds types roles bs
-           | (Nil ** _) => throw (Generic "internal checking nil branch when branches expected")
-         pure (b:::bs ** Bs1 tm)
+  branches : {ts    : List Base}
+          -> {rs    : List Ty.Role}
+          -> {ks    : List Protocol.Kind}
+          -> (kinds : Context Protocol.Kind    ks)
+          -> (types : Context Ty.Base ts)
+          -> (roles : Context Ty.Role rs)
+          -> (bs1   : All Branch bs)
+                   -> Ola (DPair (Global.Branches ks    rs)
+                                 (Branches        ks ts rs))
+  branches kinds types roles []
+    = pure (_ ** Nil)
+  branches kinds types roles (x :: y)
+    = do (tyB  ** b)  <- branch   kinds types roles x
+         (tyBS ** bs) <- branches kinds types roles y
 
-  check : {ts : List Base}
-       -> {ks : List Kind}
+         pure (_ ** b::bs)
+
+
+  synth : {ts : List Base}
+       -> {ks : List Protocol.Kind}
        -> {rs : List Ty.Role}
-       -> (kinds : Context Kind    ks)
+       -> (kinds : Context Protocol.Kind    ks)
        -> (types : Context Ty.Base ts)
        -> (roles : Context Ty.Role rs)
-       -> (syn   : Protocols g)
-               -> Ola (DPair (Ty.Global ks    rs)
-                             (Global    ks ts rs))
-  check kinds types roles (End fc)
+       -> (syn   : Protocol g)
+                -> Ola (DPair (Ty.Global ks    rs)
+                              (Global    ks ts rs))
+  synth kinds types roles (End fc)
     = pure (_ ** End)
 
-  check kinds types roles (Call fc r)
-    = do prf <- embedAtInfo
-                    (span r)
-                    (NotBound r)
-                    (Lookup.lookup (get r) kinds)
-         let (R ** (loc ** prfN)) = deBruijn prf
-         pure (_ ** Call (V loc prfN))
+  synth kinds types roles (Call fc r prf)
+    = do (R ** idx) <- lookup kinds r
 
-  check kinds types roles (Rec fc r scope)
-    = do (g ** scope) <- check (extend kinds (get r) R) types roles scope
+         pure (_ ** Call idx)
+
+  synth kinds types roles (Rec fc r prf scope)
+    = do (g ** scope) <- synth (extend kinds (get r) R)
+                               types
+                               roles
+                               scope
+
          pure (_ ** Rec scope)
 
-  check kinds types roles (Choice fc s@(RoleRef s') r@(RoleRef r') branches)
-    = do (MkRole ** stm) <- roleCheck roles s
-         (MkRole ** rtm) <- roleCheck roles r
-         (bs ** tm) <- checkB1 kinds types roles branches
+  synth kinds types roles (Choice fc s r prf (B1 (x::xs)))
+    = do (MkRole ** stm) <- synth roles s
+         (MkRole ** rtm) <- synth roles r
+
+         (tyB  ** tmB)  <- branch kinds types roles x
+         (tyBs ** tmBs) <- branches kinds types roles xs
+
          case Index.decEq stm rtm of
-           Yes (Same Refl Refl) => throwAt fc (MismatchRole s' r')
-           No prf => pure (_ ** Choice stm rtm prf tm)
+           Yes (Same Refl Refl)
+             => do let R s' = s
+                   let R r' = r
+                   throwAt fc (MismatchRole (MkRef emptyFC s') (MkRef emptyFC r'))
+           No prf
+             => pure (_ ** Choice stm rtm prf (Bs1 (tmB::tmBs)))
 
-export
-protocolCheck : {ts    : List Base}
-            -> {rs    : List Ty.Role}
-            -> (types : Context Ty.Base ts)
-            -> (roles : Context Ty.Role rs)
-            -> (sesh  : Protocols s)
-                     -> Ola (DPair (Ty.Global Nil    rs)
-                                      (Global Nil ts rs))
-protocolCheck
-  = check Nil
-
+namespace View
+  export
+  synth : {ts : List Base}
+       -> {rs : List Ty.Role}
+       -> (types : Context Ty.Base ts)
+       -> (roles : Context Ty.Role rs)
+       -> (syn   : Protocol g)
+                -> Ola (DPair (Ty.Global Nil    rs)
+                              (Global    Nil ts rs))
+  synth types roles p
+    = synth Nil types roles p
 
 namespace Raw
-  export
-  protocolCheck : {ts    : List Ty.Base}
-              -> {rs    : List Ty.Role}
-              -> (types : Context Ty.Base ts)
-              -> (roles : Context Ty.Role rs)
-              -> (sesh  : Raw.Protocol)
-                       -> Ola (DPair (Ty.Global Nil    rs)
-                                        (Global Nil ts rs))
-  protocolCheck types roles s
-    = check Nil types roles (view s)
 
+  export
+  synth : {ts    : List Ty.Base}
+       -> {rs    : List Ty.Role}
+       -> (types : Context Ty.Base ts)
+       -> (roles : Context Ty.Role rs)
+       -> (sesh  : PROT)
+                -> Ola (DPair (Ty.Global Nil    rs)
+                                 (Global Nil ts rs))
+  synth types roles p
+    = synth Nil types roles (toProtocol p)
 
 -- [ EOF ]

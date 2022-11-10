@@ -6,6 +6,7 @@
 |||
 module Ola.Parser.API
 
+
 import public Text.Parser
 import public Data.List.Elem
 import public System.File.Mode
@@ -23,9 +24,12 @@ import Ola.Core
 
 import public Ola.Lexer.Token
 import public Ola.Lexer
+import public Ola.Raw.AST
 
+import Ola.Parser.API.Borrowed
 
 %default total
+
 
 namespace Ola
   public export
@@ -81,11 +85,8 @@ namespace Ola
   char : Rule Char
   char = terminal "Expected char literal"
                   (\x => case x of
-                           LitChr c =>
-                             case unpack c of
-                               Nil => Just '\0000'
-                               [x] => Just x
-                               _   => Nothing
+                           LitChr c => getCharLit c
+
                            _ => Nothing)
 
   export
@@ -146,11 +147,15 @@ namespace Ola
          pure (newFC s e, v)
 
   export
-  gives : (s : String) -> a -> Rule (FileContext, a)
+  gives : (s : String) -> a -> Rule a
   gives str ctor
-    = withLoc
-        $ do keyword str
-             pure ctor
+    = do keyword str
+         pure ctor
 
+  export
+  givesWithLoc : (s : String) -> (FileContext -> a) -> Rule a
+  givesWithLoc str ctor
+    = do loc <- withLoc (keyword str)
+         pure (ctor (fst loc))
 
 -- [ EOF ]

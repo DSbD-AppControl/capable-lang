@@ -120,14 +120,6 @@ Show (Typing.Error) where
               , "    \{show expected}"
               ]
 
-  show (BoundsError given expected)
-    = unlines ["Array out-of-bounds access:"
-              , "  Given:"
-              , "    \{show given}"
-              , "  Expected:"
-              , "    \{show expected}"
-              ]
-
 Show (Running.Error) where
   show (Panic x)
     = "Panic:\n" ++ x
@@ -139,7 +131,7 @@ Show (Running.Error) where
     = "Not Yet Implemented"
 
   show (OOB e g)
-    = "String Index Out of Bounds: Given \{show g}; Expected: \{show e}."
+    = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."
 
 export
 Show (Ola.Error) where

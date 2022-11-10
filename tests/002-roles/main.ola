@@ -6,20 +6,22 @@ role Bob
 
 role Charlie
 
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
 func greeting() -> foo
 {
-  return "Hello World!";
+  "Hello World!"
 }
 
 main()
 {
-  print("My First Program");
+  printLn("My First Program");
 
-  local str = greeting();
-
-
-  print(str);
-
-
-  return unit;
+  local s = greeting()
+  in { printLn(s) }
 }

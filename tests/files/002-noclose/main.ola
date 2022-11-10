@@ -1,26 +1,30 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
 main()
 {
-  print("My First Program with files");
+  printLn("My First Program with files")
+; local mfh = fopen("file.txt", #(r))
+  in { match mfh
+       { when left(e) { printLn("Error opening") }
 
-  local mfh = fopen("file.txt", #(r));
+         when right(fh)
+         { local resm = read(fh)
+           in { match resm
+                { when left(err) { printLn("Error reading line.") }
 
-  match mfh
-  { when left(e) { print("Error opening"); }
-
-    when right(fh)
-    { local resm = read(fh);
-
-      match resm
-      { when left(err) { print ("Error reading line."); }
-
-        when right(str)
-        { print("A line from the file:");
-          print(str);
-          print("Not closing file.");
-        }
-      }
+                  when right(str)
+                  { printLn("A line from the file:")
+                  ; printLn(str)
+                  ; printLn("Not closing file.")
+                  }
+                }
+              }
+         }
+       }
     }
-  }
-
-  return unit;
 }

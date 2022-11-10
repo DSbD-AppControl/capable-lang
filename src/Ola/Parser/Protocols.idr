@@ -13,9 +13,7 @@ import Ola.Types
 import Ola.Lexer
 import Ola.Parser.API
 
-import Ola.Raw.Roles
-import Ola.Raw.Types
-import Ola.Raw.Protocols
+import Ola.Raw.AST
 
 import Ola.Parser.Roles
 import Ola.Parser.Types
@@ -23,14 +21,14 @@ import Ola.Parser.Types
 %default total
 
 
-end : Rule Raw.Protocol
+end : Rule PROT
 end
   = do s <- Toolkit.location
        keyword "end"
        e <- Toolkit.location
-       pure (Null (newFC s e) END)
+       pure (null STOP (newFC s e))
 
-call : Rule Raw.Protocol
+call : Rule PROT
 call
   = do s <- Toolkit.location
        keyword "call"
@@ -38,10 +36,10 @@ call
        r <- Ola.ref
        symbol ")"
        e <- Toolkit.location
-       pure (Null (newFC s e) (CALL r))
+       pure (null (CALLP (get r)) (newFC s e))
 
 mutual
-  rec : Rule Raw.Protocol
+  rec : Rule PROT
   rec
     = do s <- Toolkit.location
          keyword "rec"
@@ -51,19 +49,21 @@ mutual
          symbol "."
          sesh <- protocol
          e <- Toolkit.location
-         pure (Un (newFC s e) (REC r) sesh)
+         pure (un (RECP (get r)) (newFC s e) sesh)
 
-  branch : Rule (String, Raw.Ty, Raw.Protocol)
+  branch : Rule BRANCH
   branch
-    = do l <- Ola.ref
+    = do s <- Toolkit.location
+         l <- Ola.ref
          symbol "("
          t <- type
          symbol ")"
          symbol "."
-         s <- protocol
-         pure (get l,t,s)
+         c <- protocol
+         e <- Toolkit.location
+         pure (bin (BRANCHP (get l)) (newFC s e) t c)
 
-  choice : Rule Raw.Protocol
+  choice : Rule PROT
   choice
     = do s <- Toolkit.location
          a <- role
@@ -73,10 +73,10 @@ mutual
          bs <- sepBy1 (symbol "|") branch
          symbol "}"
          e <- Toolkit.location
-         pure (N1 (newFC s e) (CHOICE a b) bs)
+         pure (Branch CHOICE (newFC s e) $ a::b::head bs:: fromList (tail bs))
 
   export
-  protocol : Rule Raw.Protocol
+  protocol : Rule PROT
   protocol
      =  end
     <|> call

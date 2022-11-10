@@ -21,7 +21,7 @@ namespace Ola
   public export
   Symbols : List String
   Symbols = [ -- special composite symbols
-              "->", ":=", "==>"
+              "->", "==>"
 
               -- Deliminators
             , "[", "]", "<", ">", "{", "}" , "(", ")"
@@ -45,14 +45,15 @@ namespace Ola
   Keywords = [ "func", "main", "type", "local", "var", "role", "session", "protocol"
 
              , "read", "close"
-             , "fopen", "popen", "print", "return", "while"
-             , "index", "cond"
+             , "fopen", "popen", "print", "loop", "until"
+             , "index"
              , "match", "when", "split", "as"
 
+             , "set", "to"
              , "write"
 
              , "call"
-             , "if", "else"
+             , "if", "else", "in"
 
              -- CTors
              , "true", "false"
@@ -64,7 +65,7 @@ namespace Ola
 
              , "add", "sub", "mul", "div"
 
-             , "size", "cons", "slice"
+             , "size", "strCons", "slice"
 
              , "ord", "chr", "string", "toString"
 
@@ -100,9 +101,6 @@ modeStr
   <+> opt (is '+')
   <+> is ')'
 
-charLit : Lexer
-charLit = is '\'' <+> alphaNum <+> is '\''
-
 stripQuotes : String -> String
 stripQuotes str = substr 1 (length str `minus` 2) str
 
@@ -122,8 +120,8 @@ tokenMap = with List
 
   , (digits, \x => LitInt (cast {to=Int} x))
   , (modeStr, (ModeString . stripM))
+  , (charLit, (LitChr . stripQuotes))
   , (stringLit, (LitStr . stripQuotes))
-  , (Ola.Lexer.charLit, (LitChr . stripQuotes))
   ]
   ++
      map (\x => (exact x, Symbol)) Symbols

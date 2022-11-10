@@ -1,68 +1,63 @@
-||| AST for Funcs
+||| A view on Funcs
 |||
-||| Module    : Raw/Funcs.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 ||| Let's be smart about the shape of the tree.
 module Ola.Raw.Funcs
 
 import Toolkit.Data.Location
+import Toolkit.AST
 
+import Data.Vect.Quantifiers
 import Ola.Types
+import Ola.Raw.AST
 import Ola.Raw.Types
 import Ola.Raw.Exprs
-import Ola.Raw.Stmts
 
 %default total
 
 public export
-data Nullary
-  = FUNC (List (FileContext, Ref, Raw.Ty))  -- Args
-         Raw.Ty                             -- Return
-         Raw.Stmt                           -- Body
-         Raw.Expr                           -- Last Expr
+data Arg : (s : Raw.AST.ARG) -> Type
+  where
+    A : (fc   : FileContext)
+     -> (n    : String)
+     -> (type : Ty t)
+             -> Arg (Branch (ARG n) fc [t])
 
-Show Funcs.Nullary where
-  show (FUNC xs x y z)
-    = "(FUNC \{show xs} \{show x} \{show y} \{show z})"
+toArg : (a : Raw.AST.ARG) -> Arg a
+toArg (Branch (ARG str) fc [t])
+  = A fc str (toType t)
 
+public export
+data Fun : (f : Raw.AST.FUNC) -> Type
+  where
+    Func : {  az   : Vect n Raw.AST.ARG}
+        -> (  fc   : FileContext)
+        -> (  prf  : AsVect as az)
+        -> (  args : All Arg az)
+        -> (  ret  : Ty r)
+        -> (  scope : Expr body)
+                   -> Fun (Branch FUN fc
+                                  [ Branch ARGS fc' as
+                                  , r
+                                  , body
+                                  ])
 
-setSourceA : String -> (FileContext, Ref, Raw.Ty) -> (FileContext, Ref, Raw.Ty)
-setSourceA str (x, y, z)
-  = (setSource str x, setSource str y, setSource str z)
-
-setSourceAS : String -> List (FileContext, Ref, Raw.Ty) -> List (FileContext, Ref, Raw.Ty)
-setSourceAS str []
+toArgs : (as : Vect n Raw.AST.ARG)
+            -> All Arg as
+toArgs []
   = []
-
-setSourceAS str (x :: xs)
-  = setSourceA str x :: setSourceAS str xs
-
-setSourceN : String -> Funcs.Nullary -> Funcs.Nullary
-setSourceN str (FUNC xs x y z)
-  = FUNC (setSourceAS str xs)
-         (setSource str x)
-         (setSource str y)
-         (setSource str z)
-
-namespace Raw
-  public export
-  data Func : Type where
-    Null : FileContext -> Funcs.Nullary -> Func
+toArgs (x :: xs)
+  = toArg x :: toArgs xs
 
 export
-Show Raw.Func where
-  show (Null x y) = "(Null \{show x} \{show y})"
-
-export
-setSource : String -> Raw.Func -> Raw.Func
-setSource new (Null fc k)
-  = Null (setSource new fc)
-         (setSourceN new k)
-
-export
-getFC : Raw.Func -> FileContext
-getFC (Null x y) = x
+toFun : (f : Raw.AST.FUNC)
+          -> Fun f
+toFun (Branch FUN fc [Branch ARGS _ as,r,b])
+  = let (az ** prf) = asVect as
+    in Func fc prf (toArgs az)
+                   (toType r)
+                   (toExpr b)
 
 -- [ EOF ]

@@ -10,10 +10,12 @@ import Ola.Core
 
 import Ola.Lexer
 import Ola.Parser
+import Ola.Raw.AST
 import Ola.Check
 
 import Ola.Terms
 import Ola.Exec
+import Ola.REPL.State
 
 import Ola.Options
 
@@ -31,13 +33,13 @@ pipeline opts
 
        when (justLex opts)
          $ do toks <- lexFile fname
-              putStrLn $ unwords (showToks toks)
+              putStrLn $ unlines (showToks toks)
               exitSuccess
 
        ast <- fromFile fname
        putStrLn "# Finished Parsing"
 
-       tm <- progCheck ast
+       (tm,_) <- check ast
        putStrLn "# Finished Type Checking"
 
        when (justCheck opts)

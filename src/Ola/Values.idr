@@ -22,6 +22,7 @@ import Toolkit.Data.List.AtIndex
 import Toolkit.DeBruijn.Renaming
 
 import Data.Vect
+import public Data.Singleton
 
 import public System.File
 
@@ -177,6 +178,12 @@ Show (Value x type) where
   show (Pair x y) = "(\{show x}, \{show y})"
   show (Left x) = "(Left \{show x}})"
   show (Right x) = "(Right \{show x}})"
+
+public export
+size : Value store (ARRAY type n)
+    -> (Singleton n)
+size ArrayEmpty = (Val Z)
+size (ArrayCons x y) = let Val y' = (size y) in Val (S y')
 
 ||| Best way to do it.
 public export

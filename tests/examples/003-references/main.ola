@@ -1,21 +1,23 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
 main()
 {
-  var foo : String = "Hello World";
+  var foo : String = "Hello World"
+  in { printLn("Example 3")
+     ; printLn(!foo)
+     ; set foo to if true
+                  {
+                    "Goodbye World"
+                  } else
+                  {
+                    "Should not be printed"
+                  }
 
-  print("Example 3");
-
-  print(!foo);
-
-  if true
-  {
-    foo := "Goodbye World";
-  } else
-  {
-    foo := "Should not be printed";
-  }
-
-  print(!foo);
-
-  return unit;
-
+     ; printLn(!foo)
+     }
 }

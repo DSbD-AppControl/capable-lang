@@ -1,40 +1,43 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
 func factory(b : Bool) -> &String
 {
-  print("Start of Function");
+  printLn("Start of Function")
 
-  var msg = "Example 5";
-  print(!msg);
-
-  if b
-  {
-    msg := "New Message";
-
-  } else
-  {
-    print("Early End of Function");
-    return msg;
-  }
-
-  print("End of Function");
-  return msg;
+; var msg = "Example 5"
+  in { printLn(!msg)
+     ; if b
+       {
+         set msg to "New Message"
+       ; msg
+       } else
+       {
+         msg
+       }
+     }
 }
 
 func bump(p : &String) -> Unit
 {
-  p := "Bump!";
+  set p to "Bump!"
 }
 
 main()
 {
 
-  local b = factory(true);
-  local c = factory(false);
+  local b = factory(true)
+  in { local c = factory(false)
+       in { printLn(!c)
+          ; printLn(!b)
 
-  print(!c);
-  print(!b);
+          ; bump(b)
+          ; printLn(!b)
+          }
 
-  bump(b);
-  print(!b);
-  return unit;
-
+     }
 }

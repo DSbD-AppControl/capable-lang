@@ -1,24 +1,27 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
 func extract(x : <String|Int>) -> String
 {
   match x
   {
     when left(s)
     {
-      return s;
+      s
     }
     when right(i)
     {
-      return "Hello!";
+      "Hello!"
     }
   }
-  return "Default"; -- Arg!
 }
 
 main()
 {
-  local foo : <String|Int> = left("Ola");
-
-  print(extract(foo));
-  return unit;
-
+  local foo : <String|Int> = left("Ola")
+  in { printLn(extract(foo))
+     }
 }

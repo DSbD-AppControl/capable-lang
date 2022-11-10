@@ -2,18 +2,18 @@ type foo = String
 
 func greeting() -> foo
 {
-  return "Hello World!";
+  "Hello World!"
 }
 
 main()
 {
-  print("My First Program");
+  print("My First Program")
+; print(toString('\n'))
 
-  local str1 = greeting();
+; local str1 = greeting()
 
+  in { print(str1)
+     ; print(toString('\n'))
+     }
 
-  print(str1);
-
-
-  return unit;
 }

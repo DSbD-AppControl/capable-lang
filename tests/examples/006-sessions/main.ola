@@ -15,7 +15,6 @@ protocol pingpongR = rec(x)
 
 main()
 {
-  print("My First Program");
-
-  return unit;
+  print("My First Program")
+; print(toString('\n'))
 }

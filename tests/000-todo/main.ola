@@ -17,63 +17,60 @@ type k = <[3;Bool]|[5;String]>
 
 func foo() -> Int
 {
-  return 1;
+  1
 }
 
 func foobar(c : Bool, this : Int) -> Int
 {
-  if c
-  {
-    return this;
-  } else
-  {
-    local f = "1";
-  }
-  return this;
+  local x = if c
+            {
+              this
+            } else
+            {
+              local f = "1" in {1}
+            }
+  in
+  {x}
 }
 
 
 func barfoo() -> Unit
 {
-  print("Hello");
+  print("Hello")
 }
 
 
 func fb() -> Unit
 {
-  local x = pair("a","stre");
-  split x as (a,b);
+  local x = pair("a","stre") in {
+  split x as (a,b) in {
   print(a);
-  print(b);
-  return unit;
-
-
-
-}
+  print(b)
+  }
+}}
 
 
 func bf() -> Unit
 {
-  local x : <String|Int> = left("String");
+  local x : <String|Int> = left("String") in {
   match x
   {
     when left(y)
     {
-       print("aa");
+       print("aa")
     }
     when right(z)
     {
-       print("aaa");
+       print("aaa")
     }
-  }
-  return unit;
+  }}
 }
 
 
 main()
 {
-  local b = pair(1,2);
+  local b = pair(1,2) in {
 --  local a = index(b,1);
 --  local c = cond(b,1,2);
-  return unit;
+  unit}
 }

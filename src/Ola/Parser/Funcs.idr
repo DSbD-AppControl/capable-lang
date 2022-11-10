@@ -1,45 +1,45 @@
 |||
 |||
-||| Module    : Funcs.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
-||| License   : see LICENSE
-|||
 module Ola.Parser.Funcs
 
 import Data.List1
 import Data.Maybe
 
+import Toolkit.Data.DVect
 import Ola.Lexer
 import Ola.Parser.API
 
 import Ola.Core
 import Ola.Types
 
-import Ola.Raw.Types
-import Ola.Raw.Exprs
-import Ola.Raw.Stmts
-import Ola.Raw.Funcs
+import Ola.Raw.AST
 
 import Ola.Parser.Types
-import Ola.Parser.Stmts
+import Ola.Parser.Exprs
 
 %default partial -- @TODO Make func parsing total.
 
 total
-arg : Rule (FileContext, (Ref, Raw.Ty))
+arg : Rule ARG
 arg
-  = withLoc
-      $ do n <- ref
-           symbol ":"
-           t <- type
-           pure (n, t)
+  = do s <- Toolkit.location
+       n <- ref
+       symbol ":"
+       t <- type
+       e <- Toolkit.location
+       pure (un (ARG (get n)) (newFC s e) t)
 
-args : Rule (List (FileContext, Ref, Raw.Ty))
+args : Rule ARGS
 args
-  = symbol "(" *> sepBy (symbol ",") arg <* symbol ")"
+  = do s <- Toolkit.location
+       symbol "("
+       as <- sepBy (symbol ",") arg
+       symbol ")"
+       e <- Toolkit.location
+       pure (Branch ARGS (newFC s e) (fromList as))
 
 export
-func : Rule (Ref, Raw.Func)
+func : Rule (Ref, FUNC)
 func
   = do s <- Toolkit.location
        keyword "func"
@@ -47,11 +47,9 @@ func
        as <- args
        symbol "->"
        t <- type
-       symbol "{"
-       b <- body
-       symbol "}"
+       b <- block
        e <- Toolkit.location
-       pure (n, Null (newFC s e) (FUNC as t (fst b) (snd b)))
+       pure (n, tri FUN (newFC s e) as t b)
 
 
 

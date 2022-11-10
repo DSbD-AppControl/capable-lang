@@ -33,6 +33,19 @@ data Expr : (roles : List Ty.Role)
   where
     Var : TyVar stack t -> Expr roles types stack t
 
+
+    ||| Bind things to the stack!
+    Let : {type : Ty.Base}
+       -> (ty   : Ty         types                 type)
+       -> (expr : Expr roles types          stack  type)
+       -> (rest : Expr roles types (type :: stack) return)
+               -> Expr roles types          stack  return
+
+    |||
+    Seq : (this : Expr roles types stack UNIT)
+       -> (that : Expr roles types stack typeB)
+               -> Expr roles types stack typeB
+
     -- # Builtins
 
     ||| Builtin Operations
@@ -47,11 +60,14 @@ data Expr : (roles : List Ty.Role)
                    -> Expr             roles types stack         return
 
 
+    -- # Data Structures
+
+    -- ## Boolean Eliminator
     Cond : Expr roles types stack BOOL
         -> Expr roles types stack a
         -> Expr roles types stack a
         -> Expr roles types stack a
-    -- # Data Structures
+
 
     -- ## Arrays
 
@@ -64,7 +80,7 @@ data Expr : (roles : List Ty.Role)
 
     -- ### Eliminators
     Index : {n : Nat}
-         -> (idx   : Fin n)
+         -> (idx   : Expr roles types stack INT)
          -> (array : Expr roles types stack (ARRAY type n))
                   -> Expr roles types stack        type
 
@@ -76,8 +92,12 @@ data Expr : (roles : List Ty.Role)
         -> Expr roles types stack         b
         -> Expr roles types stack (PAIR a b)
 
-    -- ### Eliminators Are statements
+    -- ### Eliminators
 
+    Split : {a,b : Ty.Base}
+         -> (expr : Expr roles types        stack  (PAIR a b))
+         -> (body : Expr roles types (b::a::stack) return)
+                 -> Expr roles types        stack  return
 
     -- ## Sums
 
@@ -89,7 +109,13 @@ data Expr : (roles : List Ty.Role)
     Right : Expr roles types stack          b
          -> Expr roles types stack (UNION a b)
 
-    -- ### Eliminators Are statements
+    -- ### Eliminators
+
+    Match : {a,b : Ty.Base}
+         -> (expr  : Expr roles types     stack   (UNION a b))
+         -> (left  : Expr roles types (a::stack) return)
+         -> (right : Expr roles types (b::stack) return)
+                  -> Expr roles types     stack  return
 
     -- ## Function Application
 
@@ -103,5 +129,13 @@ data Expr : (roles : List Ty.Role)
     The : (ty   : Ty   types       type)
        -> (expr : Expr roles types stack type)
                -> Expr roles types stack type
+
+    -- ## Loops
+    ||| A general do-until loop construct.
+    |||
+    Loop : (body : Expr roles types stack return)
+        -> (expr : Expr roles types stack BOOL)
+                -> Expr roles types stack return
+
 
 -- [ EOF ]

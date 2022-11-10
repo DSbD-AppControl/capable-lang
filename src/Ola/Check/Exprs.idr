@@ -1,81 +1,81 @@
 ||| Type-checker for expressions.
 |||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
+||| [ NOTE ]
+|||
+||| There is not enough information to type sums (or empty arrays) in
+||| their introduction forms.  We will type them at binder locations,
+||| ascriptions, as arguments, and for empty arrays also /in situ/ in
+||| a cons cell.
 module Ola.Check.Exprs
 
 import Toolkit.Data.Location
+import Toolkit.Data.DVect
 
 import Ola.Types
 import Ola.Core
 
+import Ola.Raw.AST
 import Ola.Raw.Types
-import Ola.Raw.Types.View
 import Ola.Raw.Exprs
-import Ola.Raw.Exprs.View
 
 import Ola.Check.Common
 import Ola.Check.Types
 
-import Ola.Terms.Vars
+import        Ola.Terms.Vars
 import public Ola.Terms.Builtins
-import Ola.Terms.Types
-import Ola.Terms.Exprs
+import        Ola.Terms.Types
+import        Ola.Terms.Exprs
 
 %default total
 
+
 mutual
-  checkBinOpB : {a,b     : Expr}
-          -> {rs    : List Ty.Role}
-          -> {ds,gs : List Ty.Base}
-          -> (rho   : Context Ty.Role rs)
-          -> (delta : Context Ty.Base ds)
-          -> (gamma : Context Ty.Base gs)
-          -> (fc    : FileContext)
-          -> (synA   : Expr a)
-          -> (synb  : Expr b)
-                   -> BinOpBoolKind
-               -> Ola (Expr rs ds gs BOOL)
-  checkBinOpB rho delta gamma fc l r k
-    = do T tyTm l <- ascript fc rho delta gamma TyBool l
-         T tyTm r <- ascript fc rho delta gamma TyBool r
+  checkBinOpB : {a,b   : EXPR}
+             -> {rs    : List Ty.Role}
+             -> {ds,gs : List Ty.Base}
+             -> (env   : Env rs ds gs)
+             -> (fc    : FileContext)
+             -> (synA  : Expr a)
+             -> (synb  : Expr b)
+             -> (k     : BinOpBoolKind)
+                      -> Ola (Expr rs ds gs BOOL)
+  checkBinOpB env fc l r k
+    = do T tyTm l <- check fc env TyBool l
+         T tyTm r <- check fc env TyBool r
 
          pure (Builtin (BinOpBool k) [l, r])
 
-  checkBinOpI : {a,b     : Expr}
-          -> {rs    : List Ty.Role}
-          -> {ds,gs : List Ty.Base}
-          -> (rho   : Context Ty.Role rs)
-          -> (delta : Context Ty.Base ds)
-          -> (gamma : Context Ty.Base gs)
-          -> (fc    : FileContext)
-          -> (synA   : Expr a)
-          -> (synb  : Expr b)
-                   -> BinOpIntKind
-               -> Ola (Expr rs ds gs INT)
-  checkBinOpI rho delta gamma fc l r k
-    = do T tyTm l <- ascript fc rho delta gamma TyInt l
-         T tyTm r <- ascript fc rho delta gamma TyInt r
+  checkBinOpI : {a,b   : EXPR}
+             -> {rs    : List Ty.Role}
+             -> {ds,gs : List Ty.Base}
+             -> (env   : Env rs ds gs)
+             -> (fc    : FileContext)
+             -> (synA  : Expr a)
+             -> (synb  : Expr b)
+             -> (k     : BinOpIntKind)
+                      -> Ola (Expr rs ds gs INT)
+  checkBinOpI env fc l r k
+    = do T tyTm l <- check fc env TyInt l
+         T tyTm r <- check fc env TyInt r
 
          pure (Builtin (BinOpInt k) [l, r])
 
 
-  checkCmp : {a,b     : Expr}
+  checkCmp : {a,b   : EXPR}
           -> {rs    : List Ty.Role}
           -> {ds,gs : List Ty.Base}
-          -> (rho   : Context Ty.Role rs)
-          -> (delta : Context Ty.Base ds)
-          -> (gamma : Context Ty.Base gs)
+          -> (env   : Env rs ds gs)
           -> (fc    : FileContext)
-          -> (synA   : Expr a)
+          -> (synA  : Expr a)
           -> (synb  : Expr b)
-          -> BinOpCmpKind
-               -> Ola (Expr rs ds gs BOOL)
-  checkCmp rho delta gamma fc l r k
-    = do (tyL ** l) <- check rho delta gamma l
-         (tyR ** r) <- check rho delta gamma r
+          -> (k     : BinOpCmpKind)
+                   -> Ola (Expr rs ds gs BOOL)
+  checkCmp env fc l r k
+    = do (tyL ** l) <- synth env l
+         (tyR ** r) <- synth env r
 
          Refl <- compare fc tyL tyR
 
@@ -83,337 +83,381 @@ mutual
                (\prf => pure (Builtin (Cmp prf k) [l, r]))
                (cmpTy tyL)
 
-  check : {e     : Expr}
+  export
+  synth : {e     : EXPR}
        -> {rs    : List Ty.Role}
        -> {ds,gs : List Ty.Base}
-       -> (rho   : Context Ty.Role rs)
-       -> (delta : Context Ty.Base ds)
-       -> (gamma : Context Ty.Base gs)
+       -> (env   : Env rs ds gs)
        -> (syn   : Expr e)
-               -> Ola (DPair Ty.Base (Expr rs ds gs))
+                -> Ola (DPair Ty.Base (Expr rs ds gs))
+  synth env (Var ref prf)
+    = do (ty ** idx) <- lookup (gamma env) ref
+         pure (_ ** Var idx)
 
-  check rho delta gamma (Var ref)
-    = do prf <- embedAtInfo
-                  (span ref)
-                  (NotBound ref)
-                  (Lookup.lookup (get ref) gamma)
-         let (ty ** (loc ** prfN)) = deBruijn prf
-         pure (ty ** Var (V loc prfN))
+  synth env (LetTy fc ref st ty val scope)
+    = do (tyVal ** T tyTmVal val) <- check fc env ty val
 
-  check rho delta gamma (U fc)
-    = pure (_ ** Builtin U Nil)
-  check rho delta gamma (C fc v)
-    = pure (_ ** Builtin (C v) Nil)
-  check rho delta gamma (S fc v)
-    = pure (_ ** Builtin (S v) [])
-  check rho delta gamma (I fc v)
-    = pure (_ ** Builtin (I v) [])
-  check rho delta gamma (B fc v)
-    = pure (_ ** Builtin (B v) [])
+         case st of
+           HEAP
+             => do (tyS ** scope) <- synth (extend env ref (REF tyVal)) scope
 
-  check rho delta gamma (And fc l r)
-    = pure (_ ** !(checkBinOpB rho delta gamma fc l r AND))
+                   pure (_ ** Let (TyRef tyTmVal) (Builtin Alloc [val]) scope)
+           STACK
+             => do (tyS ** scope) <- synth (extend env ref tyVal) scope
 
-  check rho delta gamma (Or fc l r)
-    = pure (_ ** !(checkBinOpB rho delta gamma fc l r OR))
+                   pure (_ ** Let tyTmVal val scope)
 
-  check rho delta gamma (Not fc l)
-    = do T tyTm l <- ascript fc rho delta gamma (TyBool) l
+
+  synth env (Let fc ref st val scope)
+    = do (tyVal ** T tyTmVal val) <- synthReflect env val
+
+         case st of
+           HEAP
+             => do (tyS ** scope) <- synth (extend env ref (REF tyVal)) scope
+
+                   pure (_ ** Let (TyRef tyTmVal) (Builtin Alloc [val]) scope)
+           STACK
+             => do (tyS ** scope) <- synth (extend env ref tyVal) scope
+
+                   pure (_ ** Let tyTmVal val scope)
+
+
+  -- ## Builtins
+
+  -- ### Constants
+  synth env (Const fc UNIT v) = pure (_ ** Builtin  U    Nil)
+  synth env (Const fc CHAR v) = pure (_ ** Builtin (C v) Nil)
+  synth env (Const fc STR v)  = pure (_ ** Builtin (S v) Nil)
+  synth env (Const fc INT v)  = pure (_ ** Builtin (I v) Nil)
+  synth env (Const fc BOOL v) = pure (_ ** Builtin (B v) Nil)
+
+  -- [ NOTE ] @TODO The builtins could be factored out better.
+
+  -- ### Boolean ops
+  synth env (OpBin fc AND l r)
+    = pure (_ ** !(checkBinOpB env fc l r AND))
+
+  synth env (OpBin fc OR  l r)
+    = pure (_ ** !(checkBinOpB env fc l r OR))
+
+  synth env (OpUn  fc NOT o)
+    = do T tyTm l <- check fc env TyBool o
          pure ( _ ** Builtin Not [l])
 
-  check rho delta gamma (LT fc l r)
-    = pure (_ ** !(checkCmp rho delta gamma fc l r LT))
+  -- ### Comparators
+  synth env (OpBin fc LT l r)
+    = pure (_ ** !(checkCmp env fc l r LT))
 
-  check rho delta gamma (LTE fc l r)
-    = pure (_ ** !(checkCmp rho delta gamma fc l r LTE))
+  synth env (OpBin fc LTE l r)
+     = pure (_ ** !(checkCmp env fc l r LTE))
 
-  check rho delta gamma (GT fc l r)
-    = pure (_ ** !(checkCmp rho delta gamma fc l r GT))
+  synth env (OpBin fc EQ l r)
+    = pure (_ ** !(checkCmp env fc l r EQ))
 
-  check rho delta gamma (GTE fc l r)
-    = pure (_ ** !(checkCmp rho delta gamma fc l r GTE))
+  synth env (OpBin fc GT l r)
+      = pure (_ ** !(checkCmp env fc l r GT))
 
-  check rho delta gamma (EQ fc l r)
-    = pure (_ ** !(checkCmp rho delta gamma fc l r EQ))
+  synth env (OpBin fc GTE l r)
+    = pure (_ ** !(checkCmp env fc l r GTE))
 
-  check rho delta gamma (Sub fc l r)
-    = pure (_ ** !(checkBinOpI rho delta gamma fc l r SUB))
+  -- ### Maths
+  synth env (OpBin fc ADD l r)
+    = pure (_ ** !(checkBinOpI env fc l r ADD))
 
-  check rho delta gamma (Div fc l r)
-    = pure (_ ** !(checkBinOpI rho delta gamma fc l r DIV))
+  synth env (OpBin fc SUB l r)
+    = pure (_ ** !(checkBinOpI env fc l r SUB))
 
-  check rho delta gamma (Mul fc l r)
-    = pure (_ ** !(checkBinOpI rho delta gamma fc l r MUL))
+  synth env (OpBin fc MUL l r)
+    = pure (_ ** !(checkBinOpI env fc l r MUL))
 
-  check rho delta gamma (Add fc l r)
-    = pure (_ ** !(checkBinOpI rho delta gamma fc l r ADD))
+  synth env (OpBin fc DIV l r)
+    = pure (_ ** !(checkBinOpI env fc l r DIV))
 
-  check rho delta gamma (Ord fc l)
-    = do T tyTm l <- ascript fc rho delta gamma (TyChar) l
-         pure (_ ** Builtin (CharOp Ord) [l])
+  -- ### Strings & Chars
+  synth env (OpBin fc STRCONS h t)
+    = do T tyH h <- check fc env TyChar h
+         T tyT t <- check fc env TyStr  t
+         pure (_ ** Builtin (StrOp Cons) [h,t])
 
-  check rho delta gamma (Chr fc l)
-    = do T tyTm l <- ascript fc rho delta gamma (TyInt) l
+  synth env (OpUn fc SIZE o)
+    = do T tyTm t <- check fc env TyStr o
+         pure (_ ** Builtin (StrOp Length) [t])
+
+  synth env (OpUn fc ORD o)
+    = do T tyTm t <- check fc env TyChar o
+         pure (_ ** Builtin (CharOp Ord) [t])
+
+  synth env (OpUn fc CHR o)
+    = do T tyTm l <- check fc env TyInt o
          pure (_ ** Builtin (CharOp Chr) [l])
 
-  check rho delta gamma (Str fc l)
-    = do T tyTm l <- ascript fc rho delta gamma (TyChar) l
+  synth env (OpUn fc STRO o)
+    = do T tyTm l <- check fc env TyChar o
          pure (_ ** Builtin (CharOp Singleton) [l])
 
-  check rho delta gamma (ToString fc l)
-    = do (ty ** l) <- check rho delta gamma l
+  synth env (OpUn fc TOSTR l)
+    = do (ty ** l) <- synth env l
 
          maybe (throwAt fc Uncomparable)
                (\prf => pure (_ ** Builtin (ToString prf) [l]))
                (cmpTy ty)
 
-  check rho delta gamma (Slice fc l k j)
-    = do T tyTm l <- ascript fc rho delta gamma (TyInt) l
-         T tyTm k <- ascript fc rho delta gamma (TyInt) k
-         T tyTm j <- ascript fc rho delta gamma (TyStr) j
-         pure (_ ** Builtin (StrOp Slice) [l, k, j])
+  -- ### Memory
+  synth env (OpBin fc MUT ptr val)
+    = do (tyV ** val) <- synth env val
 
-  check rho delta gamma (Size fc l)
-    = do T tyTm l <- ascript fc rho delta gamma (TyStr)  l
-         pure (_ ** Builtin (StrOp Length) [l])
+         (REF t ** ptr) <- synth env ptr
+           | (ty ** _) => mismatchAt fc (REF tyV) (ty)
 
-  check rho delta gamma (Cons fc l r)
-    = do T tyTm l <- ascript fc rho delta gamma (TyChar) l
-         T tyTm r <- ascript fc rho delta gamma (TyStr)  r
-         pure (_ ** Builtin (StrOp Cons) [l, r])
+         Refl <- compare fc tyV t
+
+         pure (_ ** Builtin Mutate [ptr, val])
+
+  synth env (OpUn fc FETCH ptr)
+    = do (REF t ** tm) <- synth env ptr
+           | (ty ** tm) => throwAt fc (RefExpected ty)
+
+         pure (_ ** Builtin Fetch [tm])
+
+  -- ### Files
+  synth env (OpUn fc (OPEN k m) o)
+    = do T _ tm <- check fc env TyStr o
+
+         pure (_ ** Builtin (Open k m) [tm])
+
+  synth env (OpBin fc WRITE h s)
+    = do (HANDLE k ** h) <- synth env h
+           | (ty ** _) =>  throwAt fc (HandleExpected ty)
+
+         T _ s <- check fc env TyStr s
+
+         pure (_ ** Builtin WriteLn [h, s])
 
 
-  check rho delta gamma (Cond fc c t f)
-    = do T _ c <- ascript (getFC c) rho delta gamma TyBool c
+  synth env (OpUn fc READ o)
+    = do (HANDLE k ** h) <- synth env o
+           | (ty ** _) =>  throwAt fc (HandleExpected ty)
 
-         (tyT ** tt) <- check rho delta gamma t
+         pure (_ ** Builtin ReadLn [h])
 
-         (tyF ** ff) <- check rho delta gamma f
+  synth env (OpUn fc CLOSE o)
+    = do (HANDLE k ** h) <- synth env o
+           | (ty ** _) => throwAt fc (HandleExpected ty)
+
+         pure (_ ** Builtin Close [h])
+
+  -- ### Side Effects
+  synth env (OpUn fc PRINT s)
+    = do T _ s <- check fc env TyStr s
+         pure (_ ** Builtin Print [s])
+
+  -- ## Arrays
+  synth env (ArrayEmpty fc)
+    = unknown fc
+
+  synth env (ArrayCons fc head (ArrayEmpty _))
+    = do (tyH ** head) <- synth env head
+         -- Could do a check but we don't need to.
+         pure (_ ** ArrayCons head ArrayEmpty)
+
+  synth env (ArrayCons fc head tail)
+    = do (tyH ** head) <- synth env head
+         (ARRAY ty' n ** tail) <- synth env tail
+           | (ty ** _) => throwAt fc (ArrayExpected ty)
+
+         Refl <- compare fc tyH ty'
+
+         pure (_ ** ArrayCons head tail)
+
+  synth env (Index fc idx tm)
+    = do T tyTm idx <- check fc env TyInt idx
+
+         (ARRAY ty m ** tm) <- synth env tm
+           | (ty ** _) => throwAt fc (ArrayExpected ty)
+
+         pure (_ ** Index idx tm)
+
+  synth env (Slice fc st ed tm)
+    = do T tyTm st <- check fc env (TyInt) st
+         T tyTm ed <- check fc env (TyInt) ed
+         T tyTm tm <- check fc env (TyStr) tm
+         pure (_ ** Builtin (StrOp Slice) [st, ed, tm])
+
+
+  -- ## Pairs
+  synth env (MkPair fc fst snd)
+    = do (tyA ** tmA) <- synth env fst
+         (tyB ** tmB) <- synth env snd
+
+         pure (_ ** Pair tmA tmB)
+
+  synth env (Split fc c f s scope)
+    = do (PAIR tyF tyS ** c) <- synth env c
+           | (ty ** _) => throwAt fc (PairExpected ty)
+         (_ ** scope) <- synth (Gamma.extend
+                               (Gamma.extend env f tyF)
+                                                 s tyS)
+                               scope
+
+         pure (_ ** Split c scope)
+
+  -- ## Unions
+  synth env (Match fc cond l scopeL r scopeR)
+    = do (UNION tyL tyR ** c) <- synth env cond
+           | (ty ** _) => throwAt fc (UnionExpected ty)
+
+         -- left
+         (tyL' ** scopeL) <- synth (Gamma.extend env l tyL) scopeL
+
+         -- right
+         (tyR' ** scopeR) <- synth (Gamma.extend env r tyR) scopeR
+
+         Refl <- compare fc tyL' tyR'
+
+         pure (_ ** Match c scopeL scopeR)
+
+  synth env (Left fc tm)
+    = unknown fc
+  synth env (Right fc tm)
+    = unknown fc
+
+  -- ## Ascriptions
+  synth env (The fc ty tm)
+    = do (_ ** T ty tm) <- check fc env ty tm
+         pure (_ ** tm)
+
+  -- ## Control Flows
+  synth env (Cond fc c t f)
+    = do T _ c <- check fc env TyBool c
+
+         (tyT ** tt) <- synth env t
+
+         (tyF ** ff) <- synth env f
 
          Refl <- compare fc tyT tyF
 
          pure (_ ** Cond c tt ff)
 
-  check rho delta gamma (Index fc n arr)
-    = do (ARRAY ty m ** tm) <- check rho delta gamma arr
-           | (ty ** _) => throwAt fc (ArrayExpected ty)
+  synth env (Seq fc this that)
+    = do T _ this <- check fc env TyUnit this
+         (ty ** that) <- synth env that
 
-         if n < 0
-           then throwAt fc NatExpected
-           else do idx <- embedAt
-                            fc
-                            (BoundsError (cast n) m)
-                            (natToFin (cast n) m)
+         pure (_ ** Seq this that)
 
-                   pure (_ ** Index idx tm)
+  synth env (Loop fc scope cond)
+    = do (ty ** scope) <- synth env scope
+         T _ cond <- check fc env TyBool cond
 
-  check rho delta gamma (Pair fc a b)
-    = do (tyA ** tmA) <- check rho delta gamma a
-         (tyB ** tmB) <- check rho delta gamma b
+         pure (_ ** Loop scope cond)
 
-         pure (_ ** Pair tmA tmB)
-
-  check rho delta gamma (Fetch fc p)
-    = do (REF t ** tm) <- check rho delta gamma p
-           | (ty ** tm) => throwAt fc (RefExpected ty)
-
-         pure (_ ** Builtin Fetch [tm])
-
-  check rho delta gamma (Open fc k m w)
-    = do (STR ** tm) <- check rho delta gamma w
-           | (ty ** _) => mismatchAt fc STR ty
-
-         pure (_ ** Builtin (Open k m) [tm])
-
-  check rho delta gamma (Read fc h)
-    = do (HANDLE k ** h) <- check rho delta gamma h
-           | (ty ** _) =>  throwAt fc (HandleExpected ty)
-
-         pure (_ ** Builtin ReadLn [h])
-
-  check rho delta gamma (Write fc h s)
-    = do (HANDLE k ** h) <- check rho delta gamma h
-           | (ty ** _) =>  throwAt fc (HandleExpected ty)
-
-         (STR ** s) <- check rho delta gamma s
-           | (ty ** _) => mismatchAt fc STR ty
-
-         pure (_ ** Builtin WriteLn [h, s])
-
-  check rho delta gamma (Close fc h)
-    = do (HANDLE k ** h) <- check rho delta gamma h
-           | (ty ** _) => throwAt fc (HandleExpected ty)
-
-         pure (_ ** Builtin Close [h])
-
-  check {rs} {ds} {gs} rho delta gamma (Call fc f as)
-    = do (FUNC tys ty ** f) <- check rho delta gamma f
+  synth env (Call fc fun prf argz)
+    = do (FUNC argTys _ ** fun) <- synth env fun
            | (ty ** _) => throwAt fc (FunctionExpected ty)
+         args' <- args fc argTys argz
 
-         as <- checkArgs tys as
+         pure (_ ** Call fun args')
 
-         pure (_ ** Call f as)
+    where size : Vect.Quantifiers.All.All Expr as
+              -> Nat
+          size Nil = Z
+          size (x::xs) = S (size xs)
 
+          args : {as   : Vect n EXPR}
+              -> (fc   : FileContext)
+              -> (tys  : List Ty.Base)
+              -> (args : All Expr as)
+                      -> Ola (DList Ty.Base
+                                    (Expr rs ds gs)
+                                    tys)
+          args _ [] []
+            = pure Nil
 
+          args fc [] (elem :: rest)
 
-    where
-      checkArgs : {as   : List Expr}
-               -> (tys  : List Ty.Base)
-               -> (args : DList Expr Expr as)
-                       -> Ola (DList Ty.Base
-                                     (Expr rs ds gs)
-                                     tys)
-      checkArgs [] []
-        = pure Nil
-      checkArgs [] (elem :: rest)
+            = throwAt fc (RedundantArgs (size (elem :: rest)))
 
-        = throwAt fc (RedundantArgs (size (elem :: rest)))
+          args fc (x :: xs) []
+            = throwAt fc (ArgsExpected (x::xs))
 
-      checkArgs (x :: xs) []
-        = throwAt fc (ArgsExpected (x::xs))
+          args fc (x :: xs) (tm' :: tms)
+            = do (ty ** tm) <- synth env tm'
 
-      checkArgs (x :: xs) (tm' :: tms)
-        = do (ty ** tm) <- check rho delta gamma tm'
+                 let Val (getFC q) = getFC tm'
+                 Refl <- compare (getFC q) x ty
 
-             Refl <- embedAt
-                       (getFC tm')
-                       (Mismatch x ty)
-                       (decEq x ty)
+                 rest <- args fc xs tms
 
-             rest <- checkArgs xs tms
-
-             pure (tm :: rest)
-
-  check rho delta gamma (ArrayCons fc x (Null fc'))
-    = do (ty ** tm) <- check rho delta gamma x
-
-         pure (_ ** ArrayCons tm ArrayEmpty)
-
-
-  check rho delta gamma (ArrayCons fc h rest)
-    = do (ty ** head) <- check rho delta gamma h
-
-         (ARRAY ty' n ** tail) <- check rho delta gamma rest
-           | (ty ** _) => throwAt fc (ArrayExpected ty)
-
-         Refl <- embedAt
-                   fc
-                   (ArrayAppend ty (ARRAY ty' n))
-                   (decEq       ty        ty')
-         pure (_ ** ArrayCons head tail)
-
-  -- [ NOTE ]
-  --
-  -- There is not enough information to type sums (or empty arrays) in
-  -- their introduction forms.  We will type them at binder locations,
-  -- ascriptions, and as arguments.
-  check rho delta gamma (Left fc p)
-    = unknown fc
-
-  check rho delta gamma (Right fc p)
-    = unknown fc
-
-  check rho delta gamma (Null fc)
-    = unknown fc
-
-  -- [ NOTE ]
-  --
-  -- Here we check ascriptions and especially the unknowns.
-  check rho delta gamma (The fc ty expr)
-    = do (_ ** T tm e) <- ascript fc rho delta gamma ty expr
-         pure (_ ** e)
-
+                 pure (tm :: rest)
 
   namespace View
     export
-    ascript : {e     : Expr}
-           -> {rs    : List Ty.Role}
-           -> {ds,gs : List Ty.Base}
-           -> (fc    : FileContext)
-           -> (rho   : Context Ty.Role rs)
-           -> (delta : Context Ty.Base ds)
-           -> (gamma : Context Ty.Base gs)
-           -> (ty    : View.Ty t)
-           -> (syn   : Expr e)
-                    -> Ola (DPair Base (The rs ds gs))
-    ascript fc rho delta gamma ty syn
-       = do (ty ** tm) <- typeCheck delta ty
-            res <- ascript fc rho delta gamma tm syn
-            pure (ty ** res)
-
-  export
-  ascript : {t     : Base}
-         -> {e     : Expr}
+    check : {e     : EXPR}
          -> {rs    : List Ty.Role}
          -> {ds,gs : List Ty.Base}
          -> (fc    : FileContext)
-         -> (rho   : Context Ty.Role rs)
-         -> (delta : Context Ty.Base ds)
-         -> (gamma : Context Ty.Base gs)
-         -> (ty    : Ty ds t)
+         -> (env   : Env rs ds gs)
+         -> (ty    : Ty t)
          -> (syn   : Expr e)
-                  -> Ola (The rs ds gs t)
+                  -> Ola (DPair Base (The rs ds gs))
+    check fc env ty syn
+       = do (ty ** tm) <- synth (delta env) ty
+            res <- check fc env tm syn
+            pure (ty ** res)
 
-  ascript {t = (ARRAY type 0)} fc rho delta gamma (TyArray tmType 0) (Null fc')
+  export
+  check : {t     : Base}
+       -> {e     : EXPR}
+       -> {rs    : List Ty.Role}
+       -> {ds,gs : List Ty.Base}
+       -> (fc    : FileContext)
+       -> (env   : Env rs ds gs)
+       -> (ty    : Ty ds t)
+       -> (syn   : Expr e)
+                -> Ola (The rs ds gs t)
+
+  check {t = (ARRAY type 0)} fc env (TyArray tmType 0) (ArrayEmpty fc')
     = pure (T (TyArray tmType 0) ArrayEmpty)
 
-  ascript {t = (ARRAY type (S k))} fc rho delta gamma (TyArray tmType (S k)) (Null fc')
+  check {t = (ARRAY type (S k))} fc env (TyArray tmType (S k)) (ArrayEmpty fc')
     = mismatchAt fc (ARRAY type (S k)) (ARRAY type Z)
 
-  ascript {t = (UNION a b)} fc rho delta gamma (TyUnion tmA tmB) (Left  fc' l)
-    = do (tyL' ** l') <- check rho delta gamma l
+  check {t = (UNION a b)} fc env (TyUnion tmA tmB) (Left  fc' l)
+    = do (tyL' ** l') <- synth env l
          Refl <- compare fc a tyL'
          pure (T (TyUnion tmA tmB) (Left l'))
 
-  ascript {t = (UNION a b)} fc rho delta gamma (TyUnion tmA tmB) (Right fc' r)
-    = do (tyR' ** r') <- check rho delta gamma r
+  check {t = (UNION a b)} fc env (TyUnion tmA tmB) (Right fc' r)
+    = do (tyR' ** r') <- synth env r
          Refl <- compare fc b tyR'
          pure (T (TyUnion tmA tmB) (Right r'))
 
 
-  ascript {t = t} fc rho delta gamma ty expr
-    = do (ty' ** e) <- check rho delta gamma expr
+  check {t = t} fc env ty expr
+    = do (ty' ** e) <- synth env expr
          Refl <- compare fc t ty'
          pure (T ty e)
 
-export
-ascriptReflect : {e     : Expr}
-              -> {rs    : List Ty.Role}
-              -> {ds,gs : List Ty.Base}
-              -> (rho   : Context Ty.Role rs)
-              -> (delta : Context Ty.Base ds)
-              -> (gamma : Context Ty.Base gs)
-              -> (syn   : Expr e)
-                       -> Ola (DPair Base (The rs ds gs))
-ascriptReflect rho delta gamma syn
-  = do (ty ** expr) <- check rho delta gamma syn
-       tm <- typeReflect delta ty
-       pure (_ ** T tm expr)
-
-
-export
-exprCheck : {e     : Expr}
-         -> {rs    : List Ty.Role}
-         -> {ds,gs : List Ty.Base}
-         -> (rho   : Context Ty.Role rs)
-         -> (delta : Context Ty.Base ds)
-         -> (gamma : Context Ty.Base gs)
-         -> (syn   : Expr e)
-                 -> Ola (DPair Ty.Base (Expr rs ds gs))
-
-exprCheck
-  = check
+  namespace Reflect
+    export
+    synthReflect : {e     : EXPR}
+                -> {rs    : List Ty.Role}
+                -> {ds,gs : List Ty.Base}
+                -> (env   : Env rs ds gs)
+                -> (syn   : Expr e)
+                         -> Ola (DPair Base (The rs ds gs))
+    synthReflect env syn
+      = do (ty ** expr) <- Exprs.synth env syn
+           tm <- reflect (delta env) ty
+           pure (_ ** T tm expr)
 
 namespace Raw
   export
-  exprCheck : {rs    : List Ty.Role}
-           -> {ds,gs : List Ty.Base}
-           -> (rho   : Context Ty.Role rs)
-           -> (delta : Context Ty.Base ds)
-           -> (gamma : Context Ty.Base gs)
-           -> (syn   : Expr)
-                   -> Ola (DPair Ty.Base (Expr rs ds gs))
-  exprCheck r d g e
-    = check r d g (view e)
+  synth : {rs    : List Ty.Role}
+       -> {ds,gs : List Ty.Base}
+       -> (env   : Env rs ds gs)
+       -> (syn   : EXPR)
+                -> Ola (DPair Ty.Base (Expr rs ds gs))
+  synth env e
+    = synth env (toExpr e)
 
 -- [ EOF ]
