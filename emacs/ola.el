@@ -76,15 +76,30 @@
 (setq ola-syntax-table
   (let ((synTable (make-syntax-table)))
 
-  ;; comments
-  (modify-syntax-entry ?\{  "(}1nb" synTable)
-  (modify-syntax-entry ?\}  "){4nb" synTable)
-  (modify-syntax-entry ?-  "_ 123" synTable)
+  (modify-syntax-entry ?\( "()" synTable)
+  (modify-syntax-entry ?\) ")(" synTable)
+  (modify-syntax-entry ?\[ "(]" synTable)
+  (modify-syntax-entry ?\] ")[" synTable)
+
+    ;; comments
+  (modify-syntax-entry ?\-  ". 123" synTable)
+  (modify-syntax-entry ?\n  ">"    synTable)
+
+  (modify-syntax-entry ?\{  "(} 1nb" synTable)
+  (modify-syntax-entry ?\}  "){ 4nb" synTable)
 
   (mapc (lambda (x)
-            (modify-syntax-entry x "_" synTable))
+            (modify-syntax-entry x "." synTable))
           ;; Some of these are actually OK by default.
             "?=:")
+
+  ;; Whitespace is whitespace
+  (modify-syntax-entry ?\  " " synTable)
+  (modify-syntax-entry ?\t " " synTable)
+
+  ;; ;; Strings
+  (modify-syntax-entry ?\" "\"" synTable)
+  (modify-syntax-entry ?\\ "/"  synTable)
 
   synTable))
 
@@ -111,8 +126,8 @@
   (setq font-lock-defaults ola-font-lock-defaults
         comment-start           "-- "
         comment-end             ""
-;        comment-start-skip      "[-{]-[ \t]*"
-;        comment-end-skip        "[ \t]*\\(-}\\|\\s>\\)"
+        comment-start-skip      "[-{]-[ \t]*"
+        comment-end-skip        "[ \t]*\\(-}\\|\\s>\\)"
         comment-column          60
         comment-padding         0
         comment-multi-line      nil
