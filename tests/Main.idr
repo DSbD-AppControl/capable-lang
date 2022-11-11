@@ -11,36 +11,30 @@ import Test.Golden
 
 %default total
 
-tests : TestPool
-tests
-  = MkTestPool "Some Tests"
-        []
-        Nothing
-        [ "000-todo"
-        , "001-basics"
-        , "002-roles"
-        ]
+mkPool : (dirName, poolName : String)
+                           -> IO TestPool
+mkPool d p
+  = testsInDir d (const True)
+               p [] Nothing
+
+
+misc : IO TestPool
+misc
+  = mkPool "misc" "Miscellaneous"
 
 files : IO TestPool
 files
-  = testsInDir "files"
-               (const True)
-               "File Handling"
-               []
-               Nothing
+  = mkPool "files" "File Handling"
 
 examples : IO TestPool
 examples
-  = testsInDir "examples"
-               (const True)
-               "Working examples"
-               []
-               Nothing
+  = mkPool "examples"
+           "Working examples"
 
 covering
 main : IO ()
 main
-  = runner [ tests
+  = runner [ !misc
            , !files
            , !examples
            ]
