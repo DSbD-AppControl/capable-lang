@@ -217,4 +217,14 @@ mutual
       same1 whom (Bs1 x) | (No msg no)
         = No () (\case (R _ (S1 (Proj y) prf)) => no (R _ y))
 
+namespace Closed
+  export
+  project : {rs : List Role}
+         -> {0 global : Global Nil rs}
+         -> (whom : Role rs MkRole)
+         -> (type : Global Nil ts rs global)
+                 -> DecInfo () -- TODO
+                            (Result Nil rs whom global)
+  project
+    = Projection.project
 -- [ EOF ]

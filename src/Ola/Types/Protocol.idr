@@ -204,31 +204,6 @@ namespace Local
 Show (IsVar ks R) where
   show (V pos prf) = "(RecVar \{show pos})"
 
-mutual
-  toStringBranch : Local.Branch ks rs -> String
-  toStringBranch (B str x y)
-    = "\{str}(\{show x}) => \{toString y}"
-
-  choices : Local.Branches1 ks rs -> String
-  choices bs = assert_total $ unwords $ intersperse "|" $ map toStringBranch (forget bs)
-
-  export
-  toString : Local ks rs -> String
-  toString End
-    = "End"
-  toString (Call x)
-    = "(Call \{show x})"
-
-  toString (Rec x)
-    = "(Rec \{toString x})"
-
-  toString (Choice BRANCH whom cs)
-    = "(Branch \{show whom} \{choices cs})"
-
-  toString (Choice SELECT whom cs)
-    = "(Select \{show whom} \{choices cs})"
-
-
 namespace Projection
   mutual
     namespace Branch

@@ -14,6 +14,12 @@ protocol handshake
   . end
   }}}}}}
 
+protocol forever
+  = rec(x). Alice ==> Bob   { syn(Int)
+          . Bob   ==> Alice { fin(Int).end
+                            | restart(Unit).call(x)
+          }}
+
 main()
 {
   print("My First Program")
