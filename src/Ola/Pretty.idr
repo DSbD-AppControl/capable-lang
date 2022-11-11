@@ -74,6 +74,7 @@ mutual
     = let v    = showAcc acc in
       let cont = pretty (S acc) (extend kctxt v R) rctxt x
       in group
+      $  align
       $  vsep [ group (pretty "rec" <+> parens (pretty v) <+> pretty ".")
               , indent 2 cont]
 
