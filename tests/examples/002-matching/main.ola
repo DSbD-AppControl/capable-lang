@@ -22,6 +22,6 @@ func extract(x : <String|Int>) -> String
 main()
 {
   local foo : <String|Int> = left("Ola")
-  in { printLn(extract(foo))
-     }
+; printLn(extract(foo))
+
 }

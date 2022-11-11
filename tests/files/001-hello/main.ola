@@ -9,22 +9,20 @@ main()
 {
   printLn("My First Program with files")
 ; local mfh = fopen("file.txt", #(r))
-  in { match mfh
-       { when left(e) { printLn("Error opening") }
+; match mfh
+  { when left(e) { printLn("Error opening") }
 
-         when right(fh)
-         { local resm = read(fh)
-           in { match resm
-                { when left(err) { printLn("Error reading line.") }
+    when right(fh)
+    { local resm = read(fh)
+    ; match resm
+      { when left(err) { printLn("Error reading line.") }
 
-                  when right(str)
-                  { printLn("A line from the file:")
-                  ; printLn(str)
-                  ; close(fh)
-                  }
-                }
-              }
-         }
-       }
+        when right(str)
+        { printLn("A line from the file:")
+        ; printLn(str)
+        ; close(fh)
+        }
+      }
     }
+  }
 }

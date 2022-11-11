@@ -42,19 +42,17 @@ namespace Ola
 
   public export
   Keywords : List String
-  Keywords = [ "func", "main", "type", "local", "var", "role", "session", "protocol"
+  Keywords = [ "func", "main", "type", "role", "session", "protocol"
 
-             , "read", "close"
-             , "fopen", "popen", "print", "loop", "until"
-             , "index"
-             , "match", "when", "split", "as"
+             , "local", "var", "let"
+
+             , "loop", "until"
+
+             , "match", "when"
+
+             , "if", "else"
 
              , "set", "to"
-             , "write"
-
-             , "call"
-             , "if", "else", "in"
-
              -- CTors
              , "true", "false"
              , "unit", "pair", "left", "right"
@@ -70,6 +68,12 @@ namespace Ola
              , "ord", "chr", "string", "toString"
 
              , "the"
+             , "print"
+
+             , "read", "close", "write"
+
+             , "fopen", "popen"
+             , "index"
 
              -- Types
              , "Int", "Bool", "String", "Char"
@@ -77,8 +81,9 @@ namespace Ola
              , "FILE"
              , "PROC"
 
-             , "Role"
+             -- Session
              , "rec", "end"
+             , "call"
              ]
 
 

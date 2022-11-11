@@ -8,9 +8,9 @@ func printLn(str:String) -> Unit
 main()
 {
   var foo : String = "Hello World"
-  in { printLn("Example 3")
-     ; printLn(!foo)
-     ; set foo to if true
+; printLn("Example 3")
+; printLn(!foo)
+; set foo to if true
                   {
                     "Goodbye World"
                   } else
@@ -18,6 +18,6 @@ main()
                     "Should not be printed"
                   }
 
-     ; printLn(!foo)
-     }
+; printLn(!foo)
+
 }

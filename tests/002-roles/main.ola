@@ -20,8 +20,8 @@ func greeting() -> foo
 
 main()
 {
-  printLn("My First Program");
+  printLn("My First Program")
 
-  local s = greeting()
-  in { printLn(s) }
+; local s = greeting()
+; printLn(s)
 }

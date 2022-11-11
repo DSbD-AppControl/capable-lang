@@ -27,10 +27,11 @@ func foobar(c : Bool, this : Int) -> Int
               this
             } else
             {
-              local f = "1" in {1}
+              local f = "1"
+            ; 1
             }
-  in
-  {x}
+;
+  x
 }
 
 
@@ -42,18 +43,20 @@ func barfoo() -> Unit
 
 func fb() -> Unit
 {
-  local x = pair("a","stre") in {
-  split x as (a,b) in {
-  print(a);
-  print(b)
-  }
-}}
+  local x = pair("a","stre")
+;
+  let (a,b) = x
+;
+  print(a)
+; print(b)
+
+}
 
 
 func bf() -> Unit
 {
-  local x : <String|Int> = left("String") in {
-  match x
+  local x : <String|Int> = left("String")
+; match x
   {
     when left(y)
     {
@@ -63,14 +66,14 @@ func bf() -> Unit
     {
        print("aaa")
     }
-  }}
+  }
 }
 
 
 main()
 {
-  local b = pair(1,2) in {
+  local b = pair(1,2)
 --  local a = index(b,1);
 --  local c = cond(b,1,2);
-  unit}
+; unit
 }

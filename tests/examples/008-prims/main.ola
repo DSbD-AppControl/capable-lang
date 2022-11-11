@@ -16,11 +16,11 @@ main()
 {
   printLn("My First Program")
 ; local str1 = greeting()
-  in { if eq(str1,3)
-       {
-         printLn(toString(str1))
-       } else {
-         printLn("no")
-       }
-     }
+; if eq(str1,3)
+  {
+   printLn(toString(str1))
+  } else
+  {
+    printLn("no")
+  }
 }

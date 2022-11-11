@@ -17,6 +17,6 @@ main()
   printLn("My First Program");
 
   local str = greeting()
-  in { printLn(str)
-     }
+; printLn(str)
+
 }

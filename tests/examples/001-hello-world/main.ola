@@ -12,8 +12,7 @@ main()
 
 ; local str1 = greeting()
 
-  in { print(str1)
-     ; print(toString('\n'))
-     }
+; print(str1)
+; print(toString('\n'))
 
 }

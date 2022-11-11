@@ -20,6 +20,17 @@ import Debug.Trace
 %default partial -- @TODO Make exprs parsing total.
 
 
+buildSeq : EXPR -> List EXPR -> EXPR
+buildSeq e xs with (snocList xs)
+  buildSeq e [] | Empty
+    = e
+  buildSeq e (ys ++ [x]) | (Snoc x ys rec)
+    = foldr fold x (e::ys)
+
+    where fold : EXPR -> EXPR -> EXPR
+          fold e acc
+            = (bin SEQ (merge (getFC e) (getFC acc)) e acc)
+
 export
 var : Rule EXPR
 var = do r <- Ola.ref
@@ -308,50 +319,43 @@ mutual
          t <- optional (symbol ":" *> type)
          symbol "="
          ex <- expr
-         keyword "in"
+         symbol ";"
          e <- Toolkit.location
-         scope <- (block)
+         scope <- seq
          maybe        (pure (bin (LET   sto (get v)) (newFC s e)    ex scope))
                (\ty => pure (tri (LETTY sto (get v)) (newFC s e) ty ex scope))
                t
   split : Rule EXPR
   split
     = do s <- Toolkit.location
-         keyword "split"
+         keyword "let"
          commit
-         c <- expr
-         keyword "as"
          symbol "("
          l <- Ola.ref
          symbol ","
          r <- Ola.ref
          symbol ")"
+         symbol "="
+         c <- expr
          e <- Toolkit.location
-         keyword "in"
+         symbol ";"
          e <- Toolkit.location
-         scope <- block
+         scope <- seq
          pure (bin (SPLIT (get l) (get r)) (newFC s e) c scope)
 
+  seq : Rule EXPR
+  seq
+    = map (\xs => buildSeq (head xs) (tail xs))
+          $ sepBy1 (symbol ";") expr
   export
   block : Rule EXPR
   block
-    = do s <- Toolkit.location
-         symbol "{"
-         xs <- sepBy1 (symbol ";") expr
+    = do symbol "{"
+         xs <- seq
          symbol "}"
-         e <- Toolkit.location
-         pure (build (head xs) (tail xs))
 
-    where fold : EXPR -> EXPR -> EXPR
-          fold e acc
-            = (bin SEQ (merge (getFC e) (getFC acc)) e acc)
+         pure xs
 
-          build : EXPR -> List EXPR -> EXPR
-          build e xs with (snocList xs)
-            build e [] | Empty
-              = e
-            build e (ys ++ [x]) | (Snoc x ys rec)
-              = foldr fold x (e::ys)
 
   expr' : Rule EXPR
   expr'
