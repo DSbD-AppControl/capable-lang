@@ -1,0 +1,14 @@
+Running Test
+# Finished Parsing
+Type Checking Error
+main.ola:4:2-0:
+Type Mismatch:
+  Given:
+    INT
+  Expected:
+    STR
+
+
+Parsing Error
+main2.ola:12:0-1:
+Expected Symbol '}'

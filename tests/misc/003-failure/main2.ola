@@ -1,0 +1,15 @@
+func greeting() -> Unit
+{
+  local s = "String";
+  local t = "1"
+
+; unit
+}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+; (1,"String")
+
+}
