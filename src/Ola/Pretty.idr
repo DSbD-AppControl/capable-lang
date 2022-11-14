@@ -82,8 +82,8 @@ mutual
     = group
     $ parens
     $ hsep
-    [ pretty "Branch" <+> parens (pretty $ reflect rctxt whom)
-    , pretty "=>"
+    [ pretty "offers to"
+    , pretty (reflect rctxt whom)
     , hang 2 (branches acc kctxt rctxt cs) ]
 
 
@@ -91,8 +91,8 @@ mutual
     = group
     $ parens
     $ hsep
-    [ pretty "Select" <+> parens (pretty $ reflect rctxt whom)
-    , pretty "=>"
+    [ pretty "selects from"
+    , pretty (reflect rctxt whom)
     , hang 2 (branches acc kctxt rctxt cs) ]
 
 export

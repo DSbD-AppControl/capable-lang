@@ -1,0 +1,10 @@
+Running Test
+Ola> # Finished Parsing
+# Finished Type Checking
+Ola> (offers to Service [ login(UNIT).(selects from Auth [pword(STR).End])
+                     | cancel(UNIT).(selects from Auth [quit(UNIT).End])])
+Ola> (selects from Client [ login(UNIT).(offers to Auth [auth(BOOL).End])
+                       | cancel(UNIT).End])
+Ola> Error projecting on: Auth.
+Not yet implemented
+Ola> Exiting the REPL

@@ -1,0 +1,22 @@
+role Pinger
+role Ponger
+
+protocol handshake
+  = Pinger ==> Ponger { ping(Int)
+  . Ponger ==> Pinger { pong(Int)
+  . end
+  }}
+
+
+protocol handshakeRec
+  = rec(X)
+  . Pinger ==> Ponger { ping(Int)
+  . Ponger ==> Pinger { pong(Int).end | pongEnd(Int).call(X)
+  }}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

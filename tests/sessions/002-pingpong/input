@@ -1,0 +1,6 @@
+:load main.ola
+:project handshake Pinger
+:project handshake Ponger
+:project handshakeRec Pinger
+:project handshakeRec Ponger
+:q

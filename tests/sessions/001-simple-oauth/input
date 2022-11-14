@@ -1,0 +1,5 @@
+:load main.ola
+:project oauthSimple Client
+:project oauthSimple Service
+:project oauthSimple Auth
+:q

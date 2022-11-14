@@ -11,32 +11,19 @@ import Test.Golden
 
 %default total
 
-mkPool : (dirName, poolName : String)
-                           -> IO TestPool
-mkPool d p
-  = testsInDir d (const True)
-               p [] Nothing
-
-
-misc : IO TestPool
-misc
-  = mkPool "misc" "Miscellaneous"
-
-files : IO TestPool
-files
-  = mkPool "files" "File Handling"
-
-examples : IO TestPool
-examples
-  = mkPool "examples"
-           "Working examples"
-
 covering
 main : IO ()
 main
-  = runner [ !misc
-           , !files
-           , !examples
+  = runner [ !(mkPool "misc"     "Miscellaneous")
+           , !(mkPool "files"    "File Handling")
+           , !(mkPool "examples" "Working Examples")
+           , !(mkPool "sessions" "Session Types")
            ]
+
+  where mkPool : (dirName, poolName : String)
+                           -> IO TestPool
+        mkPool d p
+          = testsInDir d (const True)
+                       p [] Nothing
 
 -- [ EOF ]

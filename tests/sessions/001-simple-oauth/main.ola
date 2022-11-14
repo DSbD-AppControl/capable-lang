@@ -1,0 +1,20 @@
+role Service
+role Client
+role Auth
+
+protocol oauthSimple
+  = Service ==> Client
+    { login(Unit)
+      .Client ==> Auth    { pword(String)
+      .Auth   ==> Service { auth(Bool)
+      .end}}
+    | cancel(Unit)
+      . Client ==> Auth { quit(Unit).end}
+    }
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

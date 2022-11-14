@@ -1,8 +1,8 @@
+||| Base types.
 |||
-|||
-||| Module    : Ola.Types.Base
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
+|||
 |||
 module Ola.Types.Base
 
@@ -10,7 +10,8 @@ import Control.Function
 
 import Decidable.Equality
 
-import Toolkit.Decidable.Do
+import public Data.Vect
+import        Toolkit.Decidable.Do
 
 %default total
 
