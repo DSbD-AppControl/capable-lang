@@ -8,6 +8,7 @@ module Ola.Check.Types
 
 import Toolkit.Data.Location
 import Toolkit.Data.DList
+import Toolkit.Data.DVect
 
 import Data.Singleton
 
@@ -23,13 +24,13 @@ import Ola.Terms.Vars
 import Ola.Terms.Types
 
 %default total
-
+%hide type
 
 mutual
 
   synthArgs : {types : List Ty.Base}
            -> (ctxt  : Context Ty.Base types)
-           -> (args  : Args as)
+           -> (args  : Types.Args as)
                     -> Ola (DPair (List Ty.Base)
                                   (DList Ty.Base (Ty types)))
   synthArgs ctxt []
@@ -39,6 +40,35 @@ mutual
     = do (a  ** ty)  <- synth ctxt ty
          (as ** tys) <- synthArgs ctxt rest
          pure (_ ** ty :: tys)
+
+  synthArgs' : {types : List Ty.Base}
+           -> (ctxt  : Context Ty.Base types)
+           -> (args  : Types.Args as)
+                    -> Ola (DPair Nat
+                                  (\n => DPair (Vect n Ty.Base)
+                                  (DVect Ty.Base (Ty types) n)))
+  synthArgs' ctxt []
+    = pure (_ ** _ ** Nil)
+
+  synthArgs' ctxt (ty :: rest)
+    = do (a  ** ty)  <- synth ctxt ty
+         (_ ** as ** tys) <- synthArgs' ctxt rest
+         pure (_ ** _ ** ty :: tys)
+
+  synthFields : {types : List Ty.Base}
+             -> (ctxt  : Context Ty.Base types)
+             -> (args  : Named.Args as)
+                      -> Ola (DPair (List  (String, Ty.Base))
+                                    (DList (String, Ty.Base)
+                                           (Ty types . Builtin.snd)
+                                           ))
+  synthFields ctxt []
+    = pure (_ ** Nil)
+
+  synthFields ctxt (Add fc s ty rest)
+    = do (a ** ty) <- synth ctxt ty
+         (as ** tys) <- synthFields ctxt rest
+         pure ((s,a)::as ** (ty::tys))
 
   export
   synth : {types : List Ty.Base}
@@ -71,17 +101,16 @@ mutual
                     (throwAt fc NatExpected)
                     (pure (_ ** TyArray tm (cast n)))
 
-  synth ctxt (TyPair fc f s)
-    = do (tyF ** tmF) <- synth ctxt f
-         (tyS ** tmS) <- synth ctxt s
+  synth ctxt (TyTuple fc prf (a::b::fs))
+    = do (_ ** _ ** (a :: b :: args)) <- synthArgs' ctxt (a::b::fs)
+               | _ => throwAt fc Unknown
+         pure (_ ** TyTuple (a::b::args))
 
-         pure (_ ** TyPair tmF tmS)
+  synth ctxt (TyUnion fc prf (Add fc' s x fs))
+    = do (_ ** (a::tmF)) <- synthFields ctxt (Add fc' s x fs)
+               | _ => throwAt fc Unknown
 
-  synth ctxt (TyUnion fc l r)
-    = do (tyF ** tmF) <- synth ctxt l
-         (tyS ** tmS) <- synth ctxt r
-
-         pure (_ ** TyUnion tmF tmS)
+         pure (_ ** TyUnion (a::tmF))
 
   synth ctxt (TyRef fc ty)
     = do (ty ** tm) <- synth ctxt ty
@@ -107,6 +136,34 @@ namespace Raw
 -- ## Reflect
 
 mutual
+  reflectFields : {types : List Ty.Base}
+               -> (delta : Context Ty.Base types)
+               -> (ts    : List1 (String, Ty.Base))
+                        -> Ola (DList (String, Base)
+                                      (Ty types . Builtin.snd)
+                                      (forget ts))
+  reflectFields delta ((x, y) ::: [])
+    = do x' <- reflect delta y
+         pure (x'::Nil)
+
+  reflectFields delta ((x, y) ::: (z :: xs))
+    = do y' <- reflect delta y
+         rest <- assert_total $ reflectFields delta (z:::xs)
+
+         pure $ (::) (y') rest
+
+
+  reflectArgs' : {types : List Ty.Base}
+             -> (delta : Context Ty.Base types)
+             -> (ts    : Vect n Ty.Base)
+                      -> Ola (DVect Ty.Base (Ty types) n ts)
+  reflectArgs' delta []
+    = pure Nil
+  reflectArgs' delta (x :: xs)
+    = pure $ (::) !(reflect delta x)
+                  !(reflectArgs' delta xs)
+
+
   reflectArgs : {types : List Ty.Base}
              -> (delta : Context Ty.Base types)
              -> (ts    : List Ty.Base)
@@ -134,13 +191,13 @@ mutual
     = pure TyBool
   reflect delta (ARRAY x k)
     = pure (TyArray !(reflect delta x) k)
-  reflect delta (PAIR x y)
-    = pure (TyPair !(reflect delta x)
-                   !(reflect delta y))
 
-  reflect delta (UNION x y)
-    = pure (TyUnion !(reflect delta x)
-                    !(reflect delta y))
+  reflect delta (TUPLE xs)
+    = pure (TyTuple !(reflectArgs' delta xs))
+
+
+  reflect delta (UNION (f:::fs))
+    = pure (TyUnion !(reflectFields delta (f:::fs)))
 
   reflect delta UNIT
     = pure TyUnit

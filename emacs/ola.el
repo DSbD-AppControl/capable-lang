@@ -18,8 +18,6 @@
                        "role"
                        "session"
                        "protocol"
-                       "set"
-                       "to"
                        "when"
                        "if"
                        "else"
@@ -45,6 +43,7 @@
                         "the"
                         "left" "right" "pair"
                         "print"
+                        "set" "get" "mut"
                         ))
 
 (defvar ola-constants '("true" "false" "unit"))

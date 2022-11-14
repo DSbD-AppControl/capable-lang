@@ -66,6 +66,13 @@ replace : (idx : Elem x xs)
 replace Here new (elem :: rest) = new :: rest
 replace (There y) new (elem :: rest) = elem :: replace y new rest
 
+public export
+append : DList type pred xs
+      -> DList type pred ys
+      -> DList type pred (xs ++ ys)
+append [] y = y
+append (elem :: rest) y = elem :: append rest y
+
 ||| Function to show a `DList`.
 |||
 ||| Due to limitations in idris wrt to class instances on dependent
@@ -105,5 +112,14 @@ namespace Alt
             -> DList iTy eTy is
   updateWith (ex :: rest) Here f = f ex :: rest
   updateWith (ex :: rest) (There later) f = ex :: updateWith rest later f
+
+namespace KV
+
+  public export
+  lookup : (idx : Elem (k,x) xs)
+        -> (ps  : DList (kt,type) (pred . Builtin.snd) xs)
+               -> pred x
+  lookup Here (elem :: rest) = elem
+  lookup (There y) (elem :: rest) = lookup y rest
 
 -- --------------------------------------------------------------------- [ EOF ]

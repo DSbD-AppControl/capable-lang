@@ -10,10 +10,10 @@ type fb = PROC
 type g = [3;Bool]
 type ga = [3;[5;Bool]]
 
-type h = <Bool|Int>
-type i = (Bool+Int)
+type h = <left:Bool|goo:Int>
+type i = (Bool,Int)
 
-type k = <[3;Bool]|[5;String]>
+type k = <this:[3;Bool]|that:[5;String]>
 
 func foo() -> Int
 {
@@ -43,19 +43,17 @@ func barfoo() -> Unit
 
 func fb() -> Unit
 {
-  local x = pair("a","stre")
+  local x = tuple("a","stre")
 ;
-  let (a,b) = x
-;
-  print(a)
-; print(b)
+  print(get[0](x))
+; print(get[1](x))
 
 }
 
 
 func bf() -> Unit
 {
-  local x : <String|Int> = left("String")
+  local x : <left:String|right:Int> = tag[left]("String")
 ; match x
   {
     when left(y)
@@ -72,7 +70,7 @@ func bf() -> Unit
 
 main()
 {
-  local b = pair(1,2)
+  local b = tuple(1,2)
 --  local a = index(b,1);
 --  local c = cond(b,1,2);
 ; unit

@@ -189,26 +189,29 @@ mutual
   pair : Rule EXPR
   pair
     = do s <- Toolkit.location
-         keyword "pair"
+         keyword "tuple"
          commit
          symbol "("
          l <- expr
          symbol ","
-         r <- expr
+         r <- sepBy1 (symbol ",") expr
          symbol ")"
          e <- Toolkit.location
-         pure (bin PAIR (newFC s e) l r)
+         pure (Branch TUPLE (newFC s e) (DVect.fromList $ l :: head r :: tail r))
 
   union : Rule EXPR
   union
     = do s <- Toolkit.location
-         k <- (keyword "left" *> pure LEFT <|> keyword "right" *> pure RIGHT)
+         keyword "tag"
          commit
+         symbol "["
+         t <- ref
+         symbol "]"
          symbol "("
          l <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (un k (newFC s e) l)
+         pure (un (TAG (get t)) (newFC s e) l)
 
   call : Rule EXPR
   call
@@ -238,6 +241,36 @@ mutual
          e <- Toolkit.location
          pure (bin IDX (newFC s e) t k)
 
+  get : Rule EXPR
+  get
+    = do s <- Toolkit.location
+         keyword "get"
+         commit
+         symbol "["
+         i <- int
+         symbol "]"
+         symbol "("
+         k <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (un (GET i) (newFC s e) k)
+
+  set : Rule EXPR
+  set
+    = do s <- Toolkit.location
+         keyword "set"
+         commit
+         symbol "["
+         i <- int
+         symbol "]"
+         symbol "("
+         k <- expr
+         symbol ","
+         l <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (bin (SET i) (newFC s e) k l)
+
   slice : Rule EXPR
   slice
     = do s <- Toolkit.location
@@ -256,11 +289,13 @@ mutual
   mutate :  Rule EXPR
   mutate
     = do s <- Toolkit.location
-         keyword "set"
+         keyword "mut"
          commit
-         l <- expr
-         keyword "to"
+         symbol "("
+         l <- var
+         symbol ","
          r <- expr
+         symbol ")"
          e <- Toolkit.location
          pure (bin (BBIN MUT) (newFC s e) l r)
 
@@ -294,21 +329,23 @@ mutual
          commit
          c <- expr
          symbol "{"
-         keyword "when"
-         keyword "left"
-         symbol "("
-         l <- Ola.ref
-         symbol ")"
-         lb <- block
-         keyword "when"
-         keyword "right"
-         symbol "("
-         r <- Ola.ref
-         symbol ")"
-         rb <- block
+         cs <- some case'
          symbol "}"
          e <- Toolkit.location
-         pure (tri (MATCH (get l) (get r)) (newFC s e) c lb rb)
+
+         pure (Branch MATCH (newFC s e) (c :: head cs:: DVect.fromList (tail cs)))
+
+    where case' : Rule CASE
+          case'
+            = do s <- Toolkit.location
+                 keyword "when"
+                 tag <- Ola.ref
+                 symbol "("
+                 n <- Ola.ref
+                 symbol ")"
+                 scope <- block
+                 e <- Toolkit.location
+                 pure (un (CASE (get tag) (get n)) (newFC s e) scope)
 
   let_ : String -> Stored ->  Rule EXPR
   let_ l sto
@@ -325,23 +362,24 @@ mutual
          maybe        (pure (bin (LET   sto (get v)) (newFC s e)    ex scope))
                (\ty => pure (tri (LETTY sto (get v)) (newFC s e) ty ex scope))
                t
-  split : Rule EXPR
-  split
-    = do s <- Toolkit.location
-         keyword "let"
-         commit
-         symbol "("
-         l <- Ola.ref
-         symbol ","
-         r <- Ola.ref
-         symbol ")"
-         symbol "="
-         c <- expr
-         e <- Toolkit.location
-         symbol ";"
-         e <- Toolkit.location
-         scope <- seq
-         pure (bin (SPLIT (get l) (get r)) (newFC s e) c scope)
+
+--  split : Rule EXPR
+--  split
+--    = do s <- Toolkit.location
+--         keyword "let"
+--         commit
+--         symbol "("
+--         l <- Ola.ref
+--         symbol ","
+--         r <- Ola.ref
+--         symbol ")"
+--         symbol "="
+--         c <- expr
+--         e <- Toolkit.location
+--         symbol ";"
+--         e <- Toolkit.location
+--         scope <- seq
+--         pure (bin (SPLIT (get l) (get r)) (newFC s e) c scope)
 
   seq : Rule EXPR
   seq
@@ -366,7 +404,8 @@ mutual
       <|> let_ "var"   HEAP
       <|> unary
       <|> binary
-      <|> split
+      <|> get
+      <|> set
       <|> match
       <|> loop
       <|> cond
@@ -390,7 +429,6 @@ mutual
       <|> (trace "\{show !Toolkit.location} mutate"    mutate)
       <|> (trace "\{show !Toolkit.location} un"        unary  )
       <|> (trace "\{show !Toolkit.location} bi"        binary )
-      <|> (trace "\{show !Toolkit.location} split"     split)
       <|> (trace "\{show !Toolkit.location} match"     match)
       <|> (trace "\{show !Toolkit.location} loop"      loop   )
       <|> (trace "\{show !Toolkit.location} if"        cond   )

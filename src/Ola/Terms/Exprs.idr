@@ -7,6 +7,7 @@
 module Ola.Terms.Exprs
 
 import Data.List.Elem
+import Data.List1.Elem
 
 import public Data.Fin
 
@@ -15,6 +16,7 @@ import Data.Vect
 import System.File
 
 import public Toolkit.Data.DList
+import public Toolkit.Data.DVect
 
 import Ola.Terms.Types
 import Ola.Terms.Builtins
@@ -22,120 +24,140 @@ import Ola.Terms.Vars
 
 %default total
 
+%hide type
 
-public export
-data Expr : (roles : List Ty.Role)
-         -> (types : List Ty.Base)
-         -> (stack : List Ty.Base)
+mutual
+  public export
+  data Case : (roles : List Ty.Role)
+           -> (types : List Ty.Base)
+           -> (stack : List Ty.Base)
+           -> (ret  : Ty.Base)
+           -> (spec : (String, Ty.Base))
+                   -> Type
+    where
+      C : (s : String)
+       -> Expr roles types (p::stack) return
+       -> Case roles types     stack return (s,p)
 
-         -> (type  :      Ty.Base)
-                  -> Type
-  where
-    Var : TyVar stack t -> Expr roles types stack t
+  public export
+  data Expr : (roles : List Ty.Role)
+           -> (types : List Ty.Base)
+           -> (stack : List Ty.Base)
 
-
-    ||| Bind things to the stack!
-    Let : {type : Ty.Base}
-       -> (ty   : Ty         types                 type)
-       -> (expr : Expr roles types          stack  type)
-       -> (rest : Expr roles types (type :: stack) return)
-               -> Expr roles types          stack  return
-
-    |||
-    Seq : (this : Expr roles types stack UNIT)
-       -> (that : Expr roles types stack typeB)
-               -> Expr roles types stack typeB
-
-    -- # Builtins
-
-    ||| Builtin Operations
-    |||
-    ||| Covers:
-    |||   1. Builtin constants
-    |||   2. Operations on contant things.
-    |||   3. Memory & Process APIs
-    Builtin : {inputs : List Base}
-           -> (desc : Builtin                             inputs return)
-           -> (args : DList Base (Expr roles types stack) inputs)
-                   -> Expr             roles types stack         return
+           -> (type  :      Ty.Base)
+                    -> Type
+    where
+      Var : TyVar stack t -> Expr roles types stack t
 
 
-    -- # Data Structures
+      ||| Bind things to the stack!
+      Let : {type : Ty.Base}
+         -> (ty   : Ty         types                 type)
+         -> (expr : Expr roles types          stack  type)
+         -> (rest : Expr roles types (type :: stack) return)
+                 -> Expr roles types          stack  return
 
-    -- ## Boolean Eliminator
-    Cond : Expr roles types stack BOOL
-        -> Expr roles types stack a
-        -> Expr roles types stack a
-        -> Expr roles types stack a
+      |||
+      Seq : (this : Expr roles types stack UNIT)
+         -> (that : Expr roles types stack typeB)
+                 -> Expr roles types stack typeB
+
+      -- # Builtins
+
+      ||| Builtin Operations
+      |||
+      ||| Covers:
+      |||   1. Builtin constants
+      |||   2. Operations on contant things.
+      |||   3. Memory & Process APIs
+      Builtin : {inputs : List Base}
+             -> (desc : Builtin                             inputs return)
+             -> (args : DList Base (Expr roles types stack) inputs)
+                     -> Expr             roles types stack         return
 
 
-    -- ## Arrays
+      -- # Data Structures
 
-    -- ### Constructors
-    ArrayEmpty : Expr roles types stack (ARRAY type Z)
+      -- ## Boolean Eliminator
+      Cond : Expr roles types stack BOOL
+          -> Expr roles types stack a
+          -> Expr roles types stack a
+          -> Expr roles types stack a
 
-    ArrayCons : Expr roles types stack        type
-             -> Expr roles types stack (ARRAY type    n)
-             -> Expr roles types stack (ARRAY type (S n))
 
-    -- ### Eliminators
-    Index : {n : Nat}
-         -> (idx   : Expr roles types stack INT)
-         -> (array : Expr roles types stack (ARRAY type n))
-                  -> Expr roles types stack        type
+      -- ## Arrays
 
-    -- ## Products
+      -- ### Constructors
+      ArrayEmpty : Expr roles types stack (ARRAY type Z)
 
-    -- ### Constructors
-    Pair : {a,b : Ty.Base}
-        -> Expr roles types stack       a
-        -> Expr roles types stack         b
-        -> Expr roles types stack (PAIR a b)
+      ArrayCons : Expr roles types stack        type
+               -> Expr roles types stack (ARRAY type    n)
+               -> Expr roles types stack (ARRAY type (S n))
 
-    -- ### Eliminators
+      -- ### Eliminators
+      Index : {n : Nat}
+           -> (idx   : Expr roles types stack INT)
+           -> (array : Expr roles types stack (ARRAY type n))
+                    -> Expr roles types stack        type
 
-    Split : {a,b : Ty.Base}
-         -> (expr : Expr roles types        stack  (PAIR a b))
-         -> (body : Expr roles types (b::a::stack) return)
-                 -> Expr roles types        stack  return
+      -- ## Products
 
-    -- ## Sums
+      -- ### Constructors
+      Tuple : (fields : DVect Base (Expr roles types stack) (S (S n)) as)
+                     -> Expr roles types stack (TUPLE as)
 
-    -- ### Constructors
+      Set : {as : Vect (S (S n)) Base}
+         -> (tuple : Expr roles types stack (TUPLE as))
+         -> (idx   : Fin (S (S n)))
+         -> (value : Expr roles types stack (index idx as))
+                  -> Expr roles types stack (TUPLE as)
 
-    Left : Expr roles types stack        a
-        -> Expr roles types stack (UNION a b)
+      -- ### Eliminators
 
-    Right : Expr roles types stack          b
-         -> Expr roles types stack (UNION a b)
+      Get : {as    : Vect (S (S n)) Base}
+         -> (tuple : Expr roles types stack (TUPLE as))
+         -> (idx   : Fin (S (S n)))
+                  -> Expr roels types stack (index idx as)
 
-    -- ### Eliminators
+      -- ## Sums
 
-    Match : {a,b : Ty.Base}
-         -> (expr  : Expr roles types     stack   (UNION a b))
-         -> (left  : Expr roles types (a::stack) return)
-         -> (right : Expr roles types (b::stack) return)
-                  -> Expr roles types     stack  return
+      -- ### Constructors
+      Tag : {a : _}
+         -> (s : String)
+         -> (value : Expr roles types stack a)
+         -> (prf   : Elem (s,a) (x::xs))
+                  -> Expr roles types stack (UNION (x:::xs))
 
-    -- ## Function Application
+      -- ### Eliminators
 
-    Call : {as : List Ty.Base}
-        -> {b : Ty.Base}
-        -> Expr roles types stack (FUNC as b)
-        -> DList Ty.Base (Expr roles types stack) as
-        -> Expr roles types stack         b
+      Match : {return : Base}
+           -> {a  : (String, Base)}
+           -> {as : List (String, Base)}
+           -> (expr  : Expr roles types stack (UNION (a:::as)))
+           -> (cases : DList (String,Base)
+                             (Case roles types stack return)
+                             (a::as))
+                    -> Expr roles types stack  return
 
-    -- ## Type Ascriptions
-    The : (ty   : Ty   types       type)
-       -> (expr : Expr roles types stack type)
-               -> Expr roles types stack type
+      -- ## Function Application
 
-    -- ## Loops
-    ||| A general do-until loop construct.
-    |||
-    Loop : (body : Expr roles types stack return)
-        -> (expr : Expr roles types stack BOOL)
-                -> Expr roles types stack return
+      Call : {as : List Ty.Base}
+          -> {b : Ty.Base}
+          -> Expr roles types stack (FUNC as b)
+          -> DList Ty.Base (Expr roles types stack) as
+          -> Expr roles types stack         b
+
+      -- ## Type Ascriptions
+      The : (ty   : Ty   types       type)
+         -> (expr : Expr roles types stack type)
+                 -> Expr roles types stack type
+
+      -- ## Loops
+      ||| A general do-until loop construct.
+      |||
+      Loop : (body : Expr roles types stack return)
+          -> (expr : Expr roles types stack BOOL)
+                  -> Expr roles types stack return
 
 
 -- [ EOF ]

@@ -32,22 +32,6 @@ baseType' =   givesWithLoc "Char"   (null CHAR)
 
 mutual
 
-  bi : (k : BIN Shape TYPE TYPE TYPE)
-    -> (lb,rb,sep : String)
-    -> IsSymbol lb
-    => IsSymbol rb
-    => IsSymbol sep
-    => Rule TYPE
-  bi k lb rb sep
-    = do s <- Toolkit.location
-         symbol lb
-         l <- type
-         symbol sep
-         r <- type
-         symbol rb
-         e <- Toolkit.location
-         pure (bin k (newFC s e) l r)
-
   array : Rule TYPE
   array
     = do s <- Toolkit.location
@@ -66,10 +50,41 @@ mutual
          e <- Toolkit.location
          pure (null (HANDLE k) (newFC s e))
 
+  tuple : Rule TYPE
+  tuple
+    = do s <- Toolkit.location
+         symbol "("
+         f <- type
+         symbol ","
+         commit
+         fs <- sepBy1 (symbol ",") type
+         symbol ")"
+         e <- Toolkit.location
+         pure (Branch PROD (newFC s e) (fromList $ f::head fs::tail fs))
+
+  union : Rule TYPE
+  union
+    = do s <- Toolkit.location
+         symbol "<"
+         commit
+         fs <- sepBy1 (symbol "|") field
+         symbol ">"
+         e <- Toolkit.location
+         pure (Branch UNION (newFC s e) (fromList $ head fs :: tail fs))
+
+    where field : Rule FIELD
+          field
+            = do s <- Toolkit.location
+                 l <- ref
+                 symbol ":"
+                 t <- type
+                 e <- Toolkit.location
+                 pure (Branch (FIELD (get l)) (newFC s e)[t])
+
   datatype : Rule TYPE
   datatype
-      =  bi PROD  "(" ")" "+"
-     <|> bi UNION "<" ">" "|"
+      =  tuple
+     <|> union
 
   ref : Rule TYPE
   ref
@@ -85,11 +100,12 @@ mutual
   type : Rule TYPE
 
   type
-      =   handle
+      =assert_total -- I know...
+      $ (   handle
       <|> array
       <|> datatype
       <|> baseType'
       <|> ref
-      <|> varType
+      <|> varType)
 
 -- [ EOF ]

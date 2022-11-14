@@ -19,11 +19,13 @@ import Data.Maybe
 import Data.Vect
 import Data.String
 import Data.List.Elem
+import Data.List1.Elem
 import Data.List.Quantifiers
 
 import System.File
 
 import Toolkit.Data.DList
+import Toolkit.Data.DVect
 
 import Ola.Core
 import Ola.Terms
@@ -31,6 +33,7 @@ import Ola.Env
 import Ola.Values
 
 %default total
+%hide type
 
 -- # Rug Adaptations
 
@@ -99,6 +102,19 @@ namespace Results
             -> (prf   : Subset  old new )
                      -> Results old types
 
+  namespace ArgsV
+
+    public export
+    data Results : (store : List Ty.Base)
+                -> (types : Vect n Ty.Base)
+                         -> Type
+      where
+        Args : {new   : List Ty.Base}
+            -> (store : Heap  new)
+            -> (args  : DVect Ty.Base (Value new) n types)
+            -> (prf   : Subset  old new )
+                     -> Results old types
+
 ||| An API to support expressions that interact with the heap.
 namespace Heap
 
@@ -145,8 +161,6 @@ debase FileNotFound = 2
 debase PermissionDenied = 3
 debase FileExists = 4
 
-
-
 -- # Executing stuff
 
 mutual
@@ -170,6 +184,25 @@ mutual
                       ((weaken ps v)::vs)
                       (trans p ps))
 
+  namespace ArgsV
+    export
+    eval : {as    : Vect n Ty.Base}
+        -> {store : List Ty.Base}
+        -> (env   : Env        stack store)
+        -> (heap  : Heap             store)
+        -> (args  : DVect Ty.Base (Expr rs tys stack) n as)
+                 -> Ola (Results store as)
+    eval env heap []
+      = pure (Args heap
+                   Nil
+                   (noChange _))
+
+    eval env heap (x :: xs)
+      = do Value h v  p  <- eval env heap x
+           Args  h vs ps <- eval (weaken p env) h xs
+           pure (Args h
+                      ((weaken ps v)::vs)
+                      (trans p ps))
   namespace Builtins
     ||| Executing builtins
     export
@@ -266,8 +299,8 @@ mutual
 
     -- ## Process
     eval heap (Open what m) [(S fname)]
-      = either (\err => return heap (Left  (I (debase err))))
-               (\fh  => return heap (Right (H what fh)))
+      = either (\err => return heap (left  (HANDLE what) (I (debase err))))
+               (\fh  => return heap (right (HANDLE what) (H what fh)))
                (!(getHandle what))
 
 
@@ -277,13 +310,13 @@ mutual
             getHandle PROCESS = embed (popen    fname m)
 
     eval heap ReadLn [H k fh]
-      = either (\err => return heap (Left  (I (debase err))))
-               (\str => return heap (Right (S str)))
+      = either (\err => return heap (left  STR (I (debase err))))
+               (\str => return heap (right STR (S str)))
                (!(embed $ fGetLine fh))
 
     eval heap WriteLn [H k fh, (S str)]
-      = either (\err => return heap (Left  (I (debase err))))
-               (\str => return heap (Right U))
+      = either (\err => return heap (left  UNIT (I (debase err))))
+               (\str => return heap (right UNIT U))
                (!(embed $ fPutStrLn fh str))
 
     eval heap Close [H k fh]
@@ -378,39 +411,44 @@ mutual
     -- ### Data Structures
 
     -- #### Products
-    eval env heap (Pair x y)
-      = do Value h'  l p1 <- eval            env  heap x
-           Value h'' r p2 <- eval (weaken p1 env) h'   y
-           pure (Value h''
-                       (Pair (weaken p2 l)
-                             r)
-                       (trans p1 p2))
+    eval env heap (Tuple as)
+      = do Args heap as prf <- ArgsV.eval env heap as
+           pure (Value heap (Tuple as) prf)
 
-    eval env heap (Split expr rest)
-      = do Value h (Pair a b) p <- eval env heap expr
-           r <- eval (b::a::weaken p env) h rest
-           return p r
+    eval env heap (Set as idx v)
+      = do Value heap (Tuple vs) prf  <- eval env heap as
+           Value heap v'         prf' <- eval (weaken prf env) heap v
+           pure (Value heap ((Tuple (update (weaken prf' vs) idx v'))) (trans prf prf'))
+
+    eval env heap (Get as idx)
+      = do Value heap (Tuple vs) prf <- eval env heap as
+           let vs' = index vs idx
+           pure $ Value heap vs'
+                             prf
 
     -- ### Sums
-    eval env heap (Left x)
-      = do Value h' x p1 <- eval env heap x
-           pure (Value h' (Left x) p1)
-
-    eval env heap (Right x)
-      = do Value h' x p1 <- eval env heap x
-           pure (Value h' (Right x) p1)
+    eval env heap (Tag s val pos)
+      = do Value heap v prf <- eval env heap val
+           pure (Value heap (Tag s pos v) prf)
 
     -- ### Matching
-    eval env heap (Match expr left right)
-      = do Value h v p <- eval env heap expr
-           case v of
-             Left l
-               => do l <- eval (l::weaken p env) h left
-                     return p l
+    eval env heap (Match expr cases)
+      = do Value heap (Tag s pos v) prf <- eval env heap expr
+           let kase = lookup pos cases
+           Value heap v prf' <- eval (v::weaken prf env) heap kase
+           pure (Value heap v (trans prf prf'))
 
-             Right r
-               => do r <- eval (r::weaken p env) h right
-                     return p r
+      where
+        lookup : {s : String}
+              -> {ret : Base}
+              -> (idx : Elem (s,x) xs)
+              -> (ps  : DList (String,Base)
+                              (Case roles types stack ret)
+                              xs)
+                     -> Expr roles types (x::stack) ret
+        lookup Here (C s elem :: rest) = elem
+        lookup (There y) (elem :: rest) = lookup y rest
+
 
     -- ### Function Calls
 
@@ -462,112 +500,51 @@ mutual
       = eval (extend args env) heap body
 
 
-namespace Progs
+||| Run a programme.
+public export
+run : {type : Ty.Base}
+    -> {store : List Ty.Base}
+    -> (envR  : Env roles)
+    -> (envT  : Env types)
+    -> (env   : Env        stack store)
+    -> (heap  : Heap             store)
+    -> (expr  : Prog roles types stack   type)
+             -> Ola (Expr.Result store type)
 
-  mutual
-    ||| We need to extract the type-level type.
-    |||
-    ||| Although we could 'depend' on the 'implicit' type-level type,
-    ||| calculating this might be a better way.  I am not sure, and
-    ||| can be changed....
-    public export
-    resolve : (env : Env types)
-           -> (ty  : Ty types type)
-                  -> Singleton type
-    resolve env TyChar
-      = Val CHAR
-    resolve env TyStr
-      = Val STR
-    resolve env TyInt
-      = Val INT
-    resolve env TyBool
-      = Val BOOL
-    resolve env (TyArray tmType nat)
-      = let Val i = (resolve env tmType)
-        in Val (ARRAY i nat)
+run er et env heap (DefSesh s scope)
+  = run er et env heap scope
 
-    resolve env (TyPair tmA tmB)
-      = let Val a = resolve env tmA
-        in let Val b = resolve env tmB
-        in Val (PAIR a b)
-
-    resolve env (TyUnion tmA tmB)
-      = let Val a = resolve env tmA
-        in let Val b = resolve env tmB
-        in Val (UNION a b)
-
-    resolve env TyUnit
-      = Val UNIT
-
-    resolve env (TyRef tmType)
-      = let Val a = (resolve env tmType)
-        in Val (REF a)
-
-    resolve env (TyHandle kind)
-      = Val (HANDLE kind)
-
-    resolve env (TyFunc tmA tmB)
-      = let Val args = resolves env tmA
-        in let Val ret = resolve env tmB
-        in Val (FUNC args ret)
-
-    resolve env (TyVar x)
-      = (read x env)
-
-    resolves : (env : Env types)
-            -> (ty  : DList Ty.Base (Ty types) tys)
-                   -> Singleton tys
-    resolves env [] = Val []
-    resolves env (x :: xs)
-      = let Val x  = resolve  env x in
-        let Val xs = resolves env xs
-        in Val (x::xs)
-
-  ||| Run a programme.
-  public export
-  run : {type : Ty.Base}
-      -> {store : List Ty.Base}
-      -> (envR  : Env roles)
-      -> (envT  : Env types)
-      -> (env   : Env        stack store)
-      -> (heap  : Heap             store)
-      -> (expr  : Prog roles types stack   type)
-               -> Ola (Expr.Result store type)
-
-  run er et env heap (DefSesh s scope)
-    = run er et env heap scope
-
-  run er et env heap (DefRole rest)
-    = do run (Val MkRole::er)
-             et
-             env
-             heap
-             rest
+run er et env heap (DefRole rest)
+  = do run (Val MkRole::er)
+           et
+           env
+           heap
+           rest
 
 
 
-  -- Typedefs need resolving.
-  run er et env heap (DefType tyRef rest)
-    = do let ty = resolve et tyRef
-         run er
-             (ty::et)
-             env
-             heap
-             rest
+-- Typedefs need resolving.
+run er et env heap (DefType tyRef rest)
+  = do -- let ty = resolve et tyRef
+       run er
+           (Val _::et)
+           env
+           heap
+           rest
 
 
-  -- Functions store their environment at time of definition.
-  run er et env heap (DefFunc sig func rest)
-    = run er
-          et
-          (Clos func env :: env)
-          heap
-          rest
+-- Functions store their environment at time of definition.
+run er et env heap (DefFunc sig func rest)
+  = run er
+        et
+        (Clos func env :: env)
+        heap
+        rest
 
 
-  -- The main sh-bang
-  run _ _ env heap (Main x)
-    = eval env heap x Nil
+-- The main sh-bang
+run _ _ env heap (Main x)
+  = eval env heap x Nil
 
 ||| Only run closed programmes.
 export

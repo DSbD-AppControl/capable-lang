@@ -8,11 +8,13 @@ module Ola.Terms.Types
 import public Data.List.Elem
 
 import public Toolkit.Data.DList
+import public Toolkit.Data.DVect
 
 import public Ola.Types
 import        Ola.Terms.Vars
 
 %default total
+%hide type
 
 ||| A Type as a Term.
 |||
@@ -38,13 +40,15 @@ data Ty : (context : List Ty.Base)
            -> (nat    : Nat)
                      -> Ty ctxt (ARRAY type nat)
 
-    TyPair : (tmA : Ty ctxt a)
-          -> (tmB : Ty ctxt b)
-                 -> Ty ctxt (PAIR a b)
+    TyTuple : (fields : DVect
+                         Ty.Base
+                         (Ty ctxt)
+                         (S (S n))
+                         ts)
+                     -> Ty ctxt (TUPLE ts)
 
-    TyUnion :(tmA : Ty ctxt a)
-          -> (tmB : Ty ctxt b)
-                 -> Ty ctxt (UNION a b)
+    TyUnion : (fields : DList (String, Base) (Ty ctxt . Builtin.snd) (t::ts))
+                    -> Ty ctxt (UNION (t:::ts))
 
     TyUnit : Ty ctxt UNIT
 

@@ -16,9 +16,23 @@ import Ola.Types
 import Ola.Raw.AST
 
 %default total
-
+%hide type
 
 mutual
+
+  namespace Named
+    public export
+    data Args : (rs : Vect n Raw.AST.FIELD)
+                   -> Type
+      where
+
+        Nil : Args Nil
+
+        Add : (fc   : FileContext)
+            -> (s    : String)
+            -> (ty   : Ty   r)
+            -> (rest : Named.Args rs)
+                    -> Named.Args (Branch (FIELD s) fc [r] :: rs)
 
   public export
   data Args : (rs : Vect n (Raw.AST.TYPE))
@@ -28,8 +42,8 @@ mutual
       Nil : Args Nil
 
       (::) : (ty   : Ty   r)
-          -> (rest : Args rs)
-                   -> Args (r :: rs)
+          -> (rest : Types.Args rs)
+                  -> Types.Args (r :: rs)
 
   public export
   data Ty : Raw.AST.TYPE -> Type
@@ -50,15 +64,17 @@ mutual
              -> (ty : Ty t)
                    -> Ty (Branch (ARRAY n) fc [t])
 
-      TyPair : (fc : FileContext)
-            -> (l  : Ty lr)
-            -> (r  : Ty rr)
-                  -> Ty (Branch PROD fc [lr,rr])
+      TyTuple : {0     fields' : Vect (S (S n)) Raw.AST.TYPE}
+             -> (fc  : FileContext)
+             -> (prf : AsVect fields fields')
+             -> (fs  : Args fields')
+                   -> Ty (Branch PROD fc fields)
 
-      TyUnion : (fc : FileContext)
-             -> (l  : Ty                lr)
-             -> (r  : Ty                   rr)
-                   -> Ty (Branch UNION fc [lr, rr])
+      TyUnion : {0  fields' : Vect (S n) Raw.AST.FIELD}
+             -> (fc  : FileContext)
+             -> (prf : AsVect fields fields')
+             -> (fs  : Args fields')
+                   -> Ty (Branch UNION fc fields)
 
       TyRef : (fc : FileContext)
            -> (ty : Ty           type)
@@ -78,6 +94,15 @@ mutual
 
 
 mutual
+
+
+  toFields : (rs : Vect n Raw.AST.FIELD)
+                -> Args rs
+  toFields []
+    = []
+  toFields (Branch (FIELD s) fc [x]::xs)
+    = Add fc s (toType x) (toFields xs)
+
   toTypeArgs : (rs : Vect n Raw.AST.TYPE)
                 -> Args rs
   toTypeArgs []
@@ -97,8 +122,16 @@ mutual
   toType (Branch (VARTY str) annot Nil) = TyVar (MkRef annot str) R
   toType (Branch REF annot [t]) = TyRef annot (toType t)
   toType (Branch (ARRAY i) annot [t]) = TyArray annot i (toType t)
-  toType (Branch PROD annot [a,b]) = TyPair annot (toType a) (toType b)
-  toType (Branch UNION annot [a,b]) = TyUnion annot (toType a) (toType b)
+  toType (Branch PROD fc fs)
+    = let (vs ** prf) = asVect fs
+      in TyTuple fc prf
+                    (assert_total $ toTypeArgs vs)
+
+  toType (Branch UNION fc fs)
+    = let (vs ** prf) = asVect fs
+      in TyUnion fc
+                 prf
+                 (assert_total $ toFields vs)
 
   toType (Branch ARROW fc nodes)
     = let (vs ** prf) = asVect nodes

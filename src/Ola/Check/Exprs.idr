@@ -13,6 +13,7 @@ module Ola.Check.Exprs
 
 import Toolkit.Data.Location
 import Toolkit.Data.DVect
+import Toolkit.Data.Vect.Extra
 
 import Ola.Types
 import Ola.Core
@@ -31,6 +32,19 @@ import        Ola.Terms.Exprs
 
 %default total
 
+
+isElem : (fc,fc' : FileContext)
+      -> (s : String)
+                -> (xs : List (String, Base))
+                -> Ola $ DPair Base (\x => Elem (s,x) xs)
+isElem fc fc' s []
+  = throwAt fc (NotBound (MkRef fc' s))
+
+isElem fc fc' s ((s',x) :: xs) with (decEq s s')
+  isElem fc fc' s ((s,x) :: xs) | (Yes Refl) = pure (x ** Here)
+  isElem fc fc' s ((s',x) :: xs) | (No contra)
+    = do (x' ** prf) <- isElem fc fc' s xs
+         pure (x' ** There prf)
 
 mutual
   checkBinOpB : {a,b   : EXPR}
@@ -285,40 +299,94 @@ mutual
 
 
   -- ## Pairs
-  synth env (MkPair fc fst snd)
-    = do (tyA ** tmA) <- synth env fst
-         (tyB ** tmB) <- synth env snd
+  synth env (MkTuple fc prf ts)
+    = do (_ ** (tyA::tyB::tys) ** (a::b::tms)) <- args ts
+           | _ => throwAt fc Unknown
+         pure (_ ** Tuple (a::b::tms))
 
-         pure (_ ** Pair tmA tmB)
+    where args : {as' : _} -> All Expr as'
+              -> Ola (DPair Nat
+                            (\n => DPair (Vect n Base)
+                                         (DVect Base (Expr rs ds gs) n)))
+          args [] = pure (_ ** _ ** Nil)
 
-  synth env (Split fc c f s scope)
-    = do (PAIR tyF tyS ** c) <- synth env c
-           | (ty ** _) => throwAt fc (PairExpected ty)
-         (_ ** scope) <- synth (Gamma.extend
-                               (Gamma.extend env f tyF)
-                                                 s tyS)
-                               scope
+          args (l :: y)
+            = do (ty ** tm) <- synth env l
+                 (n ** tys ** tms) <- args y
+                 pure (S n ** ty::tys ** tm::tms)
 
-         pure (_ ** Split c scope)
+  synth env (Get fc loc tup)
+    = do if loc < 0
+          then throwAt fc (NatExpected)
+          else do (TUPLE ts ** tm) <- synth env tup
+                    | (ty ** _) => throwAt fc (PairExpected ty)
+                  maybe (throwAt fc (OOB (cast loc) (length ts)))
+                        (\idx => pure (_ ** Get tm idx))
+                        (finFromVect (cast loc) ts)
+
+  synth env (Set fc loc tup v)
+    = do if loc < 0
+           then throwAt fc (NatExpected)
+           else do (TUPLE ts ** tm) <- synth env tup
+                      | (ty ** _) => throwAt fc (PairExpected ty)
+
+                   maybe (throwAt fc (OOB (cast loc) (length ts)))
+                         (\idx => do (tyV ** tmV) <- synth env v
+                                     Refl <- compare fc (index idx ts) tyV
+                                     pure (_ ** Set tm idx tmV))
+                         (finFromVect (cast loc) ts)
+
 
   -- ## Unions
-  synth env (Match fc cond l scopeL r scopeR)
-    = do (UNION tyL tyR ** c) <- synth env cond
+  synth env (Match fc cond prf (C fcC s sc c::cs))
+    = do (UNION ((s',cTy) ::: tys) ** cond) <- synth env cond
            | (ty ** _) => throwAt fc (UnionExpected ty)
 
-         -- left
-         (tyL' ** scopeL) <- synth (Gamma.extend env l tyL) scopeL
+         (rTy ** cTm) <- case' fcC s' s sc cTy c
 
-         -- right
-         (tyR' ** scopeR) <- synth (Gamma.extend env r tyR) scopeR
+         cTms <- cases fc rTy tys cs
 
-         Refl <- compare fc tyL' tyR'
+         pure (_ ** Match cond (cTm :: cTms))
 
-         pure (_ ** Match c scopeL scopeR)
+    where case' : {sco : _}
+               -> (fc  : FileContext)
+               -> (s'  : String)
+               -> (s   : String)
+               -> (sc  : String)
+               -> (cTy : Base)
+               -> (giv : Expr sco)
+                      -> Ola (DPair Base (\ret => Case rs ds gs ret (s',cTy)))
+          case' fc s' str sc cTy giv
+            = do Refl <- embedAt fc (WrongLabel s' str) (decEq s' str)
+                 (rTy ** cTm) <- synth (Gamma.extend env sc cTy) giv
+                 pure (rTy ** C s' cTm)
 
-  synth env (Left fc tm)
-    = unknown fc
-  synth env (Right fc tm)
+          cases : (fc : FileContext)
+               -> (ret : Base)
+               -> (exp : List (String, Base))
+               -> All Case as'
+               -> Ola (DList (String,Base)
+                             (Case rs ds gs ret)
+                             exp)
+          cases _ ret Nil Nil
+            = pure Nil
+
+          cases fc ret Nil cs
+            = throwAt fc (RedundantCases (flattern cs))
+
+          cases fc ret es Nil
+            = throwAt fc (CasesMissing es)
+
+          cases fc ret ((se,te)::exp) (C fcC sg sc c::cs)
+
+            = do (rTy' ** c') <- case' fcC se sg sc te c
+                 Refl <- compare fcC ret rTy'
+
+                 rest <- cases fc ret exp cs
+                 pure (c'::rest)
+
+
+  synth env (Tag fc _ _)
     = unknown fc
 
   -- ## Ascriptions
@@ -421,15 +489,14 @@ mutual
   check {t = (ARRAY type (S k))} fc env (TyArray tmType (S k)) (ArrayEmpty fc')
     = mismatchAt fc (ARRAY type (S k)) (ARRAY type Z)
 
-  check {t = (UNION a b)} fc env (TyUnion tmA tmB) (Left  fc' l)
-    = do (tyL' ** l') <- synth env l
-         Refl <- compare fc a tyL'
-         pure (T (TyUnion tmA tmB) (Left l'))
+  check {t = (UNION (a:::as))} fc env (TyUnion (f::fs)) (Tag fc' s l)
+    = do (ty ** loc) <- isElem fc fc' s (a::as)
+         (ty' ** tm) <- synth env l
 
-  check {t = (UNION a b)} fc env (TyUnion tmA tmB) (Right fc' r)
-    = do (tyR' ** r') <- synth env r
-         Refl <- compare fc b tyR'
-         pure (T (TyUnion tmA tmB) (Right r'))
+         Refl <- compare fc' ty ty'
+         pure (T (TyUnion (f::fs)) (Tag s tm loc))
+
+
 
 
   check {t = t} fc env ty expr

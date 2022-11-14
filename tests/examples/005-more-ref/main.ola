@@ -13,7 +13,7 @@ func factory(b : Bool) -> &String
 ; printLn(!msg)
 ; if b
   {
-    set msg to "New Message"
+    mut(msg,"New Message")
   ; msg
   } else
   {
@@ -23,7 +23,7 @@ func factory(b : Bool) -> &String
 
 func bump(p : &String) -> Unit
 {
-  set p to "Bump!"
+  mut(p,"Bump!")
 }
 
 main()

@@ -4,6 +4,7 @@ import public Decidable.Equality
 import public Toolkit.Decidable.Equality.Indexed
 import public Toolkit.DeBruijn.Renaming
 import public Toolkit.Data.List.AtIndex
+import Text.PrettyPrint.Prettyprinter
 
 %default total
 
@@ -19,6 +20,15 @@ irrelevantAtIndex (There p) (There q) = cong There (irrelevantAtIndex p q)
 export
 Uninhabited (IsVar [] x) where
   uninhabited (V n prf) = void (uninhabited prf)
+
+export
+Pretty (IsVar ctxt type) where
+  pretty (V n _) = pretty n
+
+export
+Show (IsVar ctxt type) where
+  show = (show . annotate () . pretty)
+
 
 export
 DecEq (IsVar ctxt type) where

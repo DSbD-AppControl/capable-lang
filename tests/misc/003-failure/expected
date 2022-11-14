@@ -4,9 +4,9 @@ Type Checking Error
 main.ola:4:2-0:
 Type Mismatch:
   Given:
-    INT
+    Int
   Expected:
-    STR
+    String
 
 
 Parsing Error

@@ -2,8 +2,22 @@ module Toolkit.Data.Vect.Extra
 
 import public Decidable.Equality
 import        Data.Vect
+import Data.Fin
 
 %default total
+
+namespace I
+
+  export
+  finFromVect : (n : Nat)
+             -> (vs : Vect a ty)
+                   -> Maybe (Fin a)
+  finFromVect 0 [] = Nothing
+  finFromVect (S k) [] = Nothing
+  finFromVect 0 (x :: xs) = Just FZ
+  finFromVect (S k) (x :: xs) with (finFromVect k xs)
+    finFromVect (S k) (x :: xs) | Nothing = Nothing
+    finFromVect (S k) (x :: xs) | (Just y) = Just (FS y)
 
 namespace Equality
    public export
@@ -25,26 +39,6 @@ namespace Decidable
       decEq Refl ys ys | (Yes Refl) = Yes Refl
       decEq Refl xs ys | (No contra) = No contra
 
-  namespace DiffLength
-
-    public export
-    vectorsDiffLength : DecEq type
-                      => (contra : (n = m) -> Void)
-                      -> {xs : Vect n type}
-                      -> {ys : Vect m type}
-                      -> (xs = ys) -> Void
-    vectorsDiffLength contra Refl = contra Refl
-
-    public export
-    decEq : DecEq type
-         => {n,m : Nat}
-         -> (xs : Vect n type)
-         -> (ys : Vect m type)
-         -> Dec (xs = ys)
-    decEq xs ys {n} {m} with (decEq n m)
-      decEq xs ys {n = m} {m = m} | (Yes Refl) = decEq Refl xs ys
-      decEq xs ys {n = n} {m = m} | (No contra) = No (vectorsDiffLength contra)
-
 namespace Shape
 
   public export
@@ -65,6 +59,37 @@ namespace Shape
   shape [] (y :: ys) = RH
   shape (x :: xs) [] = LH
   shape (x :: xs) (y :: ys) = Both
+
+namespace Decidable
+  namespace DiffLength
+
+    Uninhabited (Vect.(::) x xs = Vect.Nil) where
+      uninhabited Refl impossible
+
+    Uninhabited (Vect.Nil = Vect.(::) x xs) where
+      uninhabited Refl impossible
+
+    public export
+    decEq : DecEq type
+         => (xs : Vect n type)
+         -> (ys : Vect m type)
+               -> Dec (xs = ys)
+    decEq xs ys with (shape xs ys)
+      decEq [] [] | Empty = Yes Refl
+      decEq (x :: xs) [] | LH
+        = No absurd
+      decEq [] (y :: ys) | RH
+        = No absurd
+
+      decEq (x :: xs) (y :: ys) | Both with (decEq x y)
+        decEq (x :: xs) (x :: ys) | Both | (Yes Refl) with (DiffLength.decEq xs ys)
+          decEq (x :: xs) (x :: xs) | Both | (Yes Refl) | (Yes Refl)
+            = Yes Refl
+          decEq (x :: xs) (x :: ys) | Both | (Yes Refl) | (No contra)
+            = No (\Refl => contra Refl)
+
+        decEq (x :: xs) (y :: ys) | Both | (No contra)
+          = No (\Refl => contra Refl)
 
 namespace ReplaceAt
 

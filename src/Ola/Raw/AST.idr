@@ -12,6 +12,7 @@ import public Toolkit.AST
 import Ola.Types
 
 %default total
+%hide type
 
 namespace Kind
   public export
@@ -19,6 +20,8 @@ namespace Kind
             | PROT
             | BRANCH
             | TYPE
+            | FIELD
+            | CASE
             | EXPR
             | FUNC
             | ARG
@@ -148,7 +151,10 @@ namespace Shape
     REF    : UN Shape TYPE TYPE
     ARRAY  : Int -> UN Shape TYPE TYPE
 
-    PROD,UNION : BIN Shape TYPE TYPE TYPE
+    PROD  : Shape TYPE (S (S n)) (replicate (S (S n)) TYPE)
+
+    FIELD : String -> UN Shape FIELD TYPE
+    UNION : Shape TYPE (S n)  (replicate (S n)  FIELD)
 
     ARROW : Shape TYPE (S n) (replicate (S n) TYPE)
 
@@ -179,13 +185,15 @@ namespace Shape
     SLICE : TRI Shape EXPR EXPR EXPR EXPR
 
     -- #### Products
-    PAIR : BIN Shape EXPR EXPR EXPR
-    SPLIT : String -> String -> BIN Shape EXPR EXPR EXPR
+    TUPLE : Shape EXPR  (S (S n)) (replicate (S (S n)) EXPR)
+    GET : Int -> UN Shape EXPR EXPR
+    SET : Int -> BIN Shape EXPR EXPR EXPR
 
     -- #### Unions
-    LEFT  : UN Shape EXPR EXPR
-    RIGHT : UN Shape EXPR EXPR
-    MATCH : String -> String -> TRI Shape EXPR EXPR EXPR EXPR
+    TAG  : String -> UN Shape EXPR EXPR
+
+    CASE : String -> String -> UN Shape CASE EXPR
+    MATCH : Shape EXPR (S (S n)) (EXPR::replicate (S n) CASE)
 
     -- ### Ascriptions
     THE : BIN Shape EXPR TYPE EXPR
@@ -229,8 +237,16 @@ namespace FileContext
       ROLE = AST ROLE
 
       public export
+      FIELD : Type
+      FIELD = AST FIELD
+
+      public export
       TYPE : Type
       TYPE = AST TYPE
+
+      public export
+      CASE : Type
+      CASE = AST CASE
 
       public export
       EXPR : Type

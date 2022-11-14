@@ -16,6 +16,7 @@ import Toolkit.Text.Parser.Run
 
 import Text.Lexer
 import Ola.Types
+import Ola.Types.Base
 import Ola.Error
 import Ola.Lexer.Token
 
@@ -69,7 +70,22 @@ Show (Parsing.Error) where
 
 
 Show (Typing.Error) where
+  show (OOB e g)
+    = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."
 
+  show (RedundantCases str)
+    = unlines ["Redundant cases:"
+              , "  \{show str}"]
+  show (CasesMissing str)
+    = unlines ["Missing cases:"
+              , "  \{show str}"]
+
+  show (WrongLabel x y)
+    = unlines ["Label Mismatch during matching:"
+              , "  Given:"
+              , "    \{x}"
+              , "  Expected:"
+              , "    \{y}"]
   show Uncomparable
     = "Not a comparable type."
   show (NatExpected)

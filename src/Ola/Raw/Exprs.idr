@@ -22,130 +22,147 @@ import Ola.Raw.Types
 %default total
 
 
-public export
-data Expr : (s : Raw.AST.EXPR) -> Type
-  where
+mutual
+  public export
+  data Case : (s : Raw.AST.CASE) -> Type where
+    C : {sc   : EXPR} -> (fc : FileContext)
+     -> (t,s  : String)
+     -> (c  : Expr sc)
+           -> Case (Branch (CASE t s) fc [sc])
 
-    -- ## Bindings
-    Var : (ref : Ref)
-       -> (prf : AsRef s fc ref)
-              -> Expr (Branch (VAR s) fc Nil)
 
-    LetTy : (fc : FileContext)
-         -> (s   : String)
-         -> (st    : Stored)
-         -> (ty    : Ty t)
-         -> (val   : Expr v)
-         -> (scope : Expr body)
-                  -> Expr (Branch (LETTY st s) fc [t,v,body])
+  public export
+  data Expr : (s : Raw.AST.EXPR) -> Type
+    where
 
-    Let   : (fc : FileContext)
-         -> (s   : String)
-         -> (st    : Stored)
-         -> (val   : Expr v)
-         -> (scope : Expr body)
-                  -> Expr (Branch (LET st s) fc [v,body])
+      -- ## Bindings
+      Var : (ref : Ref)
+         -> (prf : AsRef s fc ref)
+                -> Expr (Branch (VAR s) fc Nil)
 
-    -- ## Builtin
-    Const : (fc : FileContext)
-         -> (p  : PrimVal)
-         -> (v  : InterpPVal p)
-               -> Expr (Branch (CONST p v) fc [])
+      LetTy : (fc : FileContext)
+           -> (s   : String)
+           -> (st    : Stored)
+           -> (ty    : Ty t)
+           -> (val   : Expr v)
+           -> (scope : Expr body)
+                    -> Expr (Branch (LETTY st s) fc [t,v,body])
 
-    OpBin : (fc : FileContext)
-         -> (k  : BuiltinBinOps)
-         -> (l  : Expr a)
-         -> (r  : Expr b)
-               -> Expr (Branch (BBIN k) fc [a,b])
+      Let   : (fc : FileContext)
+           -> (s   : String)
+           -> (st    : Stored)
+           -> (val   : Expr v)
+           -> (scope : Expr body)
+                    -> Expr (Branch (LET st s) fc [v,body])
 
-    OpUn : (fc : FileContext)
-        -> (k  : BuiltinUnOps)
-        -> (o  : Expr a)
-              -> Expr (Branch (BUN k) fc [a])
+      -- ## Builtin
+      Const : (fc : FileContext)
+           -> (p  : PrimVal)
+           -> (v  : InterpPVal p)
+                 -> Expr (Branch (CONST p v) fc [])
 
-    -- ## Data
+      OpBin : (fc : FileContext)
+           -> (k  : BuiltinBinOps)
+           -> (l  : Expr a)
+           -> (r  : Expr b)
+                 -> Expr (Branch (BBIN k) fc [a,b])
 
-    -- ### Arrays
-    ArrayEmpty : (fc : FileContext)
-              -> Expr (Branch NIL fc Nil)
+      OpUn : (fc : FileContext)
+          -> (k  : BuiltinUnOps)
+          -> (o  : Expr a)
+                -> Expr (Branch (BUN k) fc [a])
 
-    ArrayCons : (fc : FileContext)
-             -> (head : Expr h)
-             -> (tail : Expr t)
-                     -> Expr (Branch CONS fc [h,t])
+      -- ## Data
 
-    Index : (fc  : FileContext)
-         -> (idx : Expr i)
-         -> (tm  : Expr t)
-                -> Expr (Branch IDX fc [i,t])
+      -- ### Arrays
+      ArrayEmpty : (fc : FileContext)
+                -> Expr (Branch NIL fc Nil)
 
-    Slice : (fc : FileContext)
-         -> (st : Expr s)
-         -> (ed : Expr e)
+      ArrayCons : (fc : FileContext)
+               -> (head : Expr h)
+               -> (tail : Expr t)
+                       -> Expr (Branch CONS fc [h,t])
+
+      Index : (fc  : FileContext)
+           -> (idx : Expr i)
+           -> (tm  : Expr t)
+                  -> Expr (Branch IDX fc [i,t])
+
+      Slice : (fc : FileContext)
+           -> (st : Expr s)
+           -> (ed : Expr e)
+           -> (tm : Expr t)
+                 -> Expr (Branch SLICE fc [s,e,t])
+
+      -- ### Products
+      MkTuple : {as' : Vect (S (S n)) Raw.AST.EXPR}
+             -> (fc  : FileContext)
+             -> (prf : AsVect as as')
+             -> (ars : All Expr as')
+                   -> Expr (Branch TUPLE fc as)
+
+      Get : (fc : FileContext)
+         -> (loc : Int)
+         -> (tup : Expr e)
+                -> Expr (Branch (GET loc) fc [e])
+
+      Set : (fc : FileContext)
+         -> (loc : Int)
+         -> (tup : Expr e)
+         -> (v   : Expr ev)
+                -> Expr (Branch (SET loc) fc [e,ev])
+      -- ### Unions
+
+      Match : {cases'     : Vect (S n) Raw.AST.CASE}
+           -> (fc     : FileContext)
+           -> (cond   : Expr c)
+           -> (prf    : AsVect cs cases')
+           -> (cases  : All Case cases')
+                     -> Expr (Branch (MATCH) fc (c::cs))
+
+      Tag : (fc : FileContext)
+         -> (s : String)
          -> (tm : Expr t)
-               -> Expr (Branch SLICE fc [s,e,t])
+                -> Expr (Branch (TAG s) fc [t])
 
-    -- ### Products
-    MkPair : (fc  : FileContext)
-          -> (fst : Expr f)
-          -> (snd : Expr s)
-                 -> Expr (Branch PAIR fc [f,s])
 
-    Split : (fc : FileContext)
-         -> (cond : Expr c)
-         -> (f,s : String)
-         -> (scope : Expr b)
-                  -> Expr (Branch (SPLIT f s) fc [c, b])
+      -- ### Ascriptions
+      The : (fc : FileContext)
+         -> (ty : Ty   t)
+         -> (tm : Expr e)
+               -> Expr (Branch THE fc [t,e])
 
-    -- ### Unions
+      -- ### Control Flow
+      Cond : (fc : FileContext)
+          -> (c  : Expr cond)
+          -> (t  : Expr tt)
+          -> (f  : Expr ff)
+                -> Expr (Branch COND fc [cond, tt, ff])
 
-    Match : (fc     : FileContext)
-         -> (cond   : Expr c)
-         -> (l      : String)
-         -> (scopeL : Expr gol)
-         -> (r      : String)
-         -> (scopeR : Expr gor)
-                  -> Expr (Branch (MATCH l r) fc [c, gol, gor])
+      Seq : (fc : FileContext)
+         -> (this : Expr a)
+         -> (that : Expr b)
+                 -> Expr (Branch SEQ fc [a,b])
 
-    Left : (fc : FileContext)
-        -> (tm : Expr t)
-              -> Expr (Branch LEFT fc [t])
+      Loop : (fc    : FileContext)
+          -> (scope : Expr a)
+          -> (cond  : Expr b)
+                   -> Expr (Branch LOOP fc [a,b])
 
-    Right : (fc : FileContext)
-         -> (tm : Expr t)
-               -> Expr (Branch RIGHT fc [t])
-
-    -- ### Ascriptions
-    The : (fc : FileContext)
-       -> (ty : Ty   t)
-       -> (tm : Expr e)
-             -> Expr (Branch THE fc [t,e])
-
-    -- ### Control Flow
-    Cond : (fc : FileContext)
-        -> (c  : Expr cond)
-        -> (t  : Expr tt)
-        -> (f  : Expr ff)
-              -> Expr (Branch COND fc [cond, tt, ff])
-
-    Seq : (fc : FileContext)
-       -> (this : Expr a)
-       -> (that : Expr b)
-               -> Expr (Branch SEQ fc [a,b])
-
-    Loop : (fc    : FileContext)
-        -> (scope : Expr a)
-        -> (cond  : Expr b)
-                 -> Expr (Branch LOOP fc [a,b])
-
-    Call : {as   : Vect n Raw.AST.EXPR}
-        -> (fc   : FileContext)
-        -> (fun  : Expr f)
-        -> (prf  : AsVect args as)
-        -> (argz : All Expr as)
-                -> Expr (Branch CALL fc (f::args))
+      Call : {as   : Vect n Raw.AST.EXPR}
+          -> (fc   : FileContext)
+          -> (fun  : Expr f)
+          -> (prf  : AsVect args as)
+          -> (argz : All Expr as)
+                  -> Expr (Branch CALL fc (f::args))
 
 mutual
+
+  toCases : (ss : Vect n Raw.AST.CASE) -> All Case ss
+  toCases [] = []
+  toCases ((Branch (CASE str str1) annot [c]) :: xs)
+    = C annot str str1 (toExpr c) :: toCases xs
+
   args : (az : Vect n EXPR)
                     -> All Expr az
   args [] = []
@@ -189,20 +206,20 @@ mutual
   toExpr (Branch SLICE fc [s,e,a])
     = Slice fc (toExpr s) (toExpr e) (toExpr a)
 
-  toExpr (Branch PAIR fc [f,s])
-    = MkPair fc (toExpr f) (toExpr s)
+  toExpr (Branch TUPLE fc (f::s::fs))
+    = let (as ** prf) = asVect (f::s::fs)
+      in MkTuple fc prf (assert_total $ args as)
 
-  toExpr (Branch (SPLIT str str1) fc [c,s])
-    = Split fc (toExpr c) str str1 (toExpr s)
+  toExpr (Branch (GET i) fc [f]) = Get fc i (toExpr f)
+  toExpr (Branch (SET i) fc [f,e]) = Set fc i (toExpr f) (toExpr e)
 
-  toExpr (Branch LEFT fc [l])
-    = Left fc (toExpr l)
+  toExpr (Branch (TAG s) fc [l])
+    = Tag fc s (toExpr l)
 
-  toExpr (Branch RIGHT fc [r])
-    = Right fc (toExpr r)
 
-  toExpr (Branch (MATCH str str1) fc [c, l,r])
-    = Match fc (toExpr c) str (toExpr l) str1 (toExpr r)
+  toExpr (Branch MATCH fc (c::cs))
+    = let (as ** prf) = asVect cs
+      in Match fc (toExpr c) prf (assert_total $ toCases as)
 
   toExpr (Branch THE fc [ty,tm])
     = The fc (toType ty)
@@ -231,4 +248,8 @@ export
 getFC : {e : EXPR} -> Expr e -> Singleton (getFC e)
 getFC x = Val (getFC e)
 
+export
+flattern : All Case cs -> List String
+flattern [] = []
+flattern ((C fc t s c) :: y) = t :: flattern y
 -- [ EOF ]

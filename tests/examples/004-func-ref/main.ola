@@ -5,11 +5,12 @@ func printLn(str:String) -> Unit
 
 }
 
-func foo(a : <String|Int>) -> &String
+func foo(a : <left:String|right:Int>) -> &String
 {
   var x : String = "Hello World"
 ; printLn(!x)
-; set x to match a
+
+; local s = match a
           {
             when left(s)
             {
@@ -20,15 +21,18 @@ func foo(a : <String|Int>) -> &String
               "Given an int"
             }
           }
+
+; mut(x,s)
+
 ; x
 }
 
 main()
 {
 
-  local bar : <String|Int> = left("AA")
+  local bar : <left:String|right:Int> = tag[left]("AA")
 ; printLn(!foo(bar))
-; local bar : <String|Int> = right(1)
+; local bar : <left:String|right:Int> = tag[right](1)
 ; printLn(!foo(bar))
 
 }

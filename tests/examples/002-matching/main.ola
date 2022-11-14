@@ -4,15 +4,15 @@ func printLn(str:String) -> Unit
 ; print(toString('\n'))
 
 }
-func extract(x : <String|Int>) -> String
+func extract(x : <urgh:String|oops:Int>) -> String
 {
   match x
   {
-    when left(s)
+    when urgh(s)
     {
       s
     }
-    when right(i)
+    when oops(i)
     {
       "Hello!"
     }
@@ -21,7 +21,7 @@ func extract(x : <String|Int>) -> String
 
 main()
 {
-  local foo : <String|Int> = left("Ola")
+  local foo : <urgh:String|oops:Int> = tag[urgh]("Ola")
 ; printLn(extract(foo))
 
 }

@@ -21,7 +21,7 @@ namespace Ola
   public export
   Symbols : List String
   Symbols = [ -- special composite symbols
-              "->", "==>"
+              "->", "==>", ":="
 
               -- Deliminators
             , "[", "]", "<", ">", "{", "}" , "(", ")"
@@ -52,12 +52,13 @@ namespace Ola
 
              , "if", "else"
 
-             , "set", "to"
+             , "set", "mut"
              -- CTors
              , "true", "false"
-             , "unit", "pair", "left", "right"
+             , "unit", "tuple", "tag"
 
              -- Operations
+             , "get", "set"
              , "and", "not", "or"
              , "lt", "lte", "eq", "gt", "gte"
 

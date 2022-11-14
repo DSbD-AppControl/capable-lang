@@ -7,10 +7,10 @@ type foo = String
 protocol handshake
   = Alice   ==> Bob     { syn(Int)
   . Bob     ==> Charlie { syn(Int)
-  . Charlie ==> Bob     { synack((Int + Int))
-  . Bob     ==> Alice   { synack((Int + (Int + Int)))
-  . Alice   ==> Bob     { fin((Int + (Int + Int)))
-  . Bob     ==> Charlie { fin((Int + (Int + Int)))
+  . Charlie ==> Bob     { synack((Int,Int))
+  . Bob     ==> Alice   { synack((Int,Int,Int))
+  . Alice   ==> Bob     { fin((Int,Int,Int))
+  . Bob     ==> Charlie { fin((Int,Int,Int))
   . end
   }}}}}}
 

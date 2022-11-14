@@ -19,6 +19,7 @@ import        Ola.Terms.Roles
 import        Ola.Terms.Types
 
 %default total
+%hide type
 
 namespace Global
 

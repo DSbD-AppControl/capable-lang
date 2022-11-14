@@ -57,9 +57,6 @@ mapToVect : (forall x . e x -> b)
 mapToVect _ Nil = Nil
 mapToVect f (x::xs) = f x :: mapToVect f xs
 
-toList : Vect q a -> List a
-toList Nil = Nil
-toList (x::xs) = x :: DVect.toList xs
 
 export
 fromVect : {x : _} -> Vect n (e x)
@@ -74,6 +71,12 @@ fromList : {x : _} -> (xs : List (e x))
 fromList [] = []
 fromList (y :: xs) = y :: fromList xs
 
+export
+toList : (xs : DVect a e n ts)
+            -> List (DPair a e)
+toList [] = []
+toList (ex :: rest)
+  = (_ ** ex) :: toList rest
 
 ||| Function to show a `DList`.
 |||
@@ -89,8 +92,12 @@ showDVect : (showFunc : forall a . elemTy a -> String)
          -> String
 showDVect f xs = "[" ++ unwords asList ++ "]"
   where
+    toList : Vect q a -> List a
+    toList Nil = Nil
+    toList (x::xs) = x :: toList xs
+
     asList : List String
-    asList = DVect.toList $ intersperse "," (mapToVect f xs)
+    asList = toList $ intersperse "," (mapToVect f xs)
 
 namespace Alternative
   public export
@@ -107,5 +114,23 @@ namespace Alternative
         -> DVect iTy eTy l is
   update (ex :: rest) Here new = new :: rest
   update (ex :: rest) (There later) new = ex :: update rest later new
+
+public export
+update : {things : Vect n kind}
+      -> (vs  : DVect kind type n things)
+      -> (idx : Fin n)
+      -> (new : type (index idx things))
+             -> DVect kind type n things
+update (ex :: rest) FZ new = new :: rest
+update (ex :: rest) (FS x) new = ex :: update rest x new
+
+public export
+index : (vs  : DVect kind type n things)
+     -> (idx : Fin n)
+            -> type (index idx things)
+index (ex :: rest) FZ
+  = ex
+index (ex :: rest) (FS x)
+  = index rest x
 
 -- --------------------------------------------------------------------- [ EOF ]

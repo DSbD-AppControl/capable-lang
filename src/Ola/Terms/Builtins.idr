@@ -18,6 +18,7 @@ import public Toolkit.Data.DList
 import Ola.Terms.Types
 
 %default total
+%hide type
 
 public export
 data CharOpKind : (inputs  : Base)
@@ -61,8 +62,8 @@ cmpTy INT  = Just CI
 cmpTy BOOL = Just CB
 
 cmpTy (ARRAY x k) = Nothing
-cmpTy (PAIR x y)  = Nothing
-cmpTy (UNION x y) = Nothing
+cmpTy (TUPLE _)  = Nothing
+cmpTy (UNION _) = Nothing
 cmpTy UNIT        = Nothing
 cmpTy (REF x)     = Nothing
 cmpTy (HANDLE x)  = Nothing
@@ -117,13 +118,13 @@ data Builtin : (inputs : List Base)
     Open : (what : HandleKind)
         -> (m    : Mode)
                 -> Builtin [STR]
-                           (UNION INT (HANDLE what))
+                           (UNION (("left",INT) ::: [("right",HANDLE what)]))
 
     ReadLn : Builtin [HANDLE k]
-                     (UNION INT STR)
+                     (UNION (("left", INT) ::: [("right",STR)]))
 
     WriteLn : Builtin [HANDLE k, STR]
-                      (UNION INT UNIT)
+                      (UNION (("left", INT) ::: [("right", UNIT)]))
 
     Close : Builtin [HANDLE k]
                     UNIT

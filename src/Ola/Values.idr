@@ -16,21 +16,25 @@ module Ola.Values
 import Decidable.Equality
 
 import Data.List.Elem
-
-import Toolkit.Data.DList
-import Toolkit.Data.List.AtIndex
-import Toolkit.DeBruijn.Renaming
-
+import Data.List1.Elem
 import Data.Vect
 import public Data.Singleton
 
 import public System.File
 
+import Text.PrettyPrint.Prettyprinter
+
+import Toolkit.Data.DList
+import Toolkit.Data.List.AtIndex
+import Toolkit.DeBruijn.Renaming
+
+import Ola.Bootstrap
 import Ola.Types
 
 import Ola.Terms
 
 %default total
+%hide type
 
 -- Helper functions for working on lists, required for working with the heap.
 
@@ -151,33 +155,59 @@ data Value : (store : List Ty.Base)
              -> Value store (ARRAY type    n)
              -> Value store (ARRAY type (S n))
 
-    Pair : Value store a
-        -> Value store b
-        -> Value store (PAIR a b)
+    Tuple : {ts : _} -> DVect Ty.Base (Value store) (S (S n)) ts
+         -> Value store (TUPLE ts)
 
-    Left : Value store a
-        -> Value store (UNION a b)
+    Tag : {a : _}
+       -> (s : String)
+       -> (prf : Elem (s,a) (x::xs))
+       -> Value store a
+       -> Value store (UNION (x:::xs))
 
-    Right : Value store b
-         -> Value store (UNION a b)
+export
+Pretty (Value store type) where
+  pretty (Address x)
+    = group
+    $ parens
+    $ hsep [pretty "Addr", pretty x]
 
-Show (IsVar x type) where
-  show (V pos prf) = show pos
+  pretty U = pretty "U"
+
+  pretty (C c)
+    = pretty c
+  pretty (S str)
+    = pretty str
+
+  pretty (I i) = pretty i
+  pretty (B x) = pretty x
+  pretty (Clos scope env) = parens $ pretty "Closure..."
+  pretty (H k x)
+    = group
+    $ parens
+    $ hsep [pretty "Handle", pretty (show k)]
+
+  pretty ArrayEmpty
+    = pretty "{}"
+
+  pretty (ArrayCons x y)
+    = group
+    $ parens
+    $ hsep [pretty x, pretty "::", pretty y]
+
+  pretty (Tuple x)
+    = tupled
+    $ Base.toList
+    $ assert_total
+    $ mapToVect (pretty)
+                x
+
+  pretty (Tag s prf x)
+    = group
+    $ hcat [pretty s, parens (pretty x)]
+
 export
 Show (Value x type) where
-  show (Address x) = "(Addr \{show x})"
-  show U = "U"
-  show (C c) = show c
-  show (S str) = show str
-  show (I k) = show k
-  show (B x) = show x
-  show (Clos scope env) = "Closure"
-  show (H k x) = "(Handle \{show k}})"
-  show ArrayEmpty = "{}"
-  show (ArrayCons x y) = "(\{show x} :: \{show y})"
-  show (Pair x y) = "(\{show x}, \{show y})"
-  show (Left x) = "(Left \{show x}})"
-  show (Right x) = "(Right \{show x}})"
+  show = (show . annotate () . pretty)
 
 public export
 size : Value store (ARRAY type n)
@@ -221,9 +251,20 @@ mutual
   weaken prf (ArrayCons x xs)
     = ArrayCons (weaken prf x) (weaken prf xs)
 
-  weaken prf (Pair x y) = Pair (weaken prf x) (weaken prf y)
-  weaken prf (Left x) = Left (weaken prf x)
-  weaken prf (Right x) = Right (weaken prf x)
+  weaken prf (Tuple xs)
+    = Tuple (weaken prf xs)
+  weaken prf (Tag s p x)
+    = Tag s p (weaken prf x)
+
+  namespace DVect
+    public export
+    weaken : Subset xs ys
+          -> DVect Ty.Base (Value xs) n stack
+          -> DVect Ty.Base (Value ys) n stack
+    weaken prf [] = []
+    weaken prf (ex :: rest)
+      =  weaken prf ex
+      :: weaken prf rest
 
   namespace Env
     public export
@@ -240,6 +281,20 @@ Val : Ty.Base -> List Ty.Base -> Type
 Val type types = Value types type
 
 
+public export
+FileEither : Base -> Base
+FileEither rt
+  = UNION
+  $ ("left", INT) ::: [("right", rt)]
 
+export
+left : (rty : Base)
+    -> (Value xs INT) -> Value xs (FileEither rty)
+left _ = Tag "left" Here
+
+export
+right : (rty : Base)
+    -> (Value xs rty) -> Value xs (FileEither rty)
+right _ = Tag "right" (There Here)
 
 -- [ EOF ]

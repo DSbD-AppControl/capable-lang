@@ -32,6 +32,7 @@ import Ola.Terms
 import Ola.Values
 
 %default total
+%hide type
 
 ||| The stack is a list of values.
 public export

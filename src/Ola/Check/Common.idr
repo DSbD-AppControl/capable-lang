@@ -24,6 +24,9 @@ import Ola.Types
 import Ola.Terms.Types
 import Ola.Terms.Exprs
 
+%default total
+%hide type
+
 throw : Typing.Error -> Ola a
 throw = (throw . TyCheck . E)
 

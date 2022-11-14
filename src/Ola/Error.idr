@@ -16,6 +16,7 @@ import Ola.Types
 import Ola.Lexer.Token
 
 %default total
+%hide type
 
 namespace Generic -- @TODO Pull out to Toolkit?
 
@@ -46,6 +47,10 @@ namespace Parsing
 namespace Typing
   public export
   data Error : Type where
+    OOB : Nat -> Nat -> Typing.Error
+    RedundantCases : List String -> Typing.Error
+    CasesMissing : List (String,Base) -> Typing.Error
+    WrongLabel : (x,y : String) -> Typing.Error
     Uncomparable : Typing.Error
     NatExpected : Typing.Error
     PairExpected : Ty.Base -> Typing.Error

@@ -10,14 +10,14 @@ main()
   var foo : String = "Hello World"
 ; printLn("Example 3")
 ; printLn(!foo)
-; set foo to if true
+; local s = if true
                   {
                     "Goodbye World"
                   } else
                   {
                     "Should not be printed"
                   }
-
+; mut(foo,s)
 ; printLn(!foo)
 
 }

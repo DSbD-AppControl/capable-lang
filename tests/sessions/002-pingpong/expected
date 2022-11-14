@@ -1,14 +1,14 @@
 Running Test
 Ola> # Finished Parsing
 # Finished Type Checking
-Ola> (selects from Ponger [ping(INT).(offers to Ponger [pong(INT).End])])
-Ola> (offers to Pinger [ping(INT).(selects from Pinger [pong(INT).End])])
+Ola> (selects from Ponger [ping(Int).(offers to Ponger [pong(Int).End])])
+Ola> (offers to Pinger [ping(Int).(selects from Pinger [pong(Int).End])])
 Ola> rec(a).
-  (selects from Ponger [ ping(INT)
-                         .(offers to Ponger [ pong(INT).End
-                                              | pongEnd(INT).(Call a)])])
+  (selects from Ponger [ ping(Int)
+                         .(offers to Ponger [ pong(Int).End
+                                              | pongEnd(Int).(Call a)])])
 Ola> rec(a).
-  (offers to Pinger [ ping(INT)
-                      .(selects from Pinger [ pong(INT).End
-                                              | pongEnd(INT).(Call a)])])
+  (offers to Pinger [ ping(Int)
+                      .(selects from Pinger [ pong(Int).End
+                                              | pongEnd(Int).(Call a)])])
 Ola> Exiting the REPL
