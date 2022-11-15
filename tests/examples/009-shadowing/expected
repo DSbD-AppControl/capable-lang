@@ -23,3 +23,15 @@ main3.ola:1:0-0:
 Already bound:
 	"printLn"
 
+# Finished Parsing
+Type Checking Error
+main4.ola:0:26-39:
+Already bound:
+	"this"
+
+# Finished Parsing
+Type Checking Error
+main5.ola:3:47-66:
+Already bound:
+	"this"
+

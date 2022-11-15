@@ -1,0 +1,5 @@
+type foo = < this : Int | this : String>
+main()
+{
+  unit
+}

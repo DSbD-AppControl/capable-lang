@@ -1,0 +1,10 @@
+role A
+role B
+
+protocol oneshot = A ==> B { this(Int) . end | this(String) . end }
+
+
+main()
+{
+  unit
+}

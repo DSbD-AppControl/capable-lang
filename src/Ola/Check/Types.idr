@@ -107,10 +107,19 @@ mutual
          pure (_ ** TyTuple (a::b::args))
 
   synth ctxt (TyUnion fc prf (Add fc' s x fs))
-    = do (_ ** (a::tmF)) <- synthFields ctxt (Add fc' s x fs)
+    = do checkLabels Nil (Add fc' s x fs)
+
+         (_ ** (a::tmF)) <- synthFields ctxt (Add fc' s x fs)
                | _ => throwAt fc Unknown
 
          pure (_ ** TyUnion (a::tmF))
+
+    where checkLabels : List String -> Named.Args awes -> Ola ()
+          checkLabels _ Nil = pure ()
+          checkLabels ss (Add fc s _ fs)
+            = case isElem s ss of
+                No _ => checkLabels (s::ss) fs
+                Yes _ => throwAt fc (AlreadyBound (MkRef fc s))
 
   synth ctxt (TyRef fc ty)
     = do (ty ** tm) <- synth ctxt ty

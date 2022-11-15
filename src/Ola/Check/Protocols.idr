@@ -55,15 +55,19 @@ mutual
           -> (types : Context Ty.Base ts)
           -> (roles : Context Ty.Role rs)
           -> (bs1   : All Branch bs)
+          -> (ls    : List String)
                    -> Ola (DPair (Global.Branches ks    rs)
                                  (Branches        ks ts rs))
-  branches kinds types roles []
+  branches kinds types roles [] _
     = pure (_ ** Nil)
-  branches kinds types roles (x :: y)
-    = do (tyB  ** b)  <- branch   kinds types roles x
-         (tyBS ** bs) <- branches kinds types roles y
+  branches kinds types roles (x :: y) ss
+    = do let (B fc label ty c) = x
+         case isElem label ss of
+           Yes _ => throwAt fc (AlreadyBound (MkRef fc label))
+           No _ => do (tyB  ** b)  <- branch   kinds types roles x
+                      (tyBS ** bs) <- branches kinds types roles y (label::ss)
 
-         pure (_ ** b::bs)
+                      pure (_ ** b::bs)
 
 
   synth : {ts : List Base}
@@ -96,7 +100,9 @@ mutual
          (MkRole ** rtm) <- synth roles r
 
          (tyB  ** tmB)  <- branch kinds types roles x
-         (tyBs ** tmBs) <- branches kinds types roles xs
+
+         let (B fc label ty c) = x
+         (tyBs ** tmBs) <- branches kinds types roles xs [label]
 
          case Index.decEq stm rtm of
            Yes (Same Refl Refl)
