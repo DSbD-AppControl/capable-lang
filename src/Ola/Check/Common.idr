@@ -122,6 +122,17 @@ lookup ctxt s
        let (r ** loc ** prfN) = deBruijn prf
        pure (r ** V loc prfN)
 
+export
+exists : {type, types : _}
+      -> (fc : FileContext)
+      -> (ctxt : Context type types)
+      -> String
+              -> Ola ()
+exists fc ctxt s
+  = case Lookup.lookup s ctxt of
+      No _ _ => pure ()
+      Yes _ => throwAt fc (AlreadyBound (MkRef fc s))
+
 
 namespace Env
   public export

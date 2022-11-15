@@ -53,7 +53,8 @@ check env state (Main fc m)
        pure (Main m, state)
 
 check env state (Def fc TYPE n val scope)
-  = do (ty ** tm) <- synth (delta env) val
+  = do exists fc (delta env) n
+       (ty ** tm) <- synth (delta env) val
 
        let env   = { delta $= \c => extend c n ty} env
        let state = { types $= insert n (T tm)} state
@@ -63,7 +64,9 @@ check env state (Def fc TYPE n val scope)
        pure (DefType tm scope, state)
 
 check env state (Def fc FUNC n val scope)
-  = do (FUNC as r ** tm) <- synth env val
+  = do exists fc (gamma env) n
+
+       (FUNC as r ** tm) <- synth env val
          | (ty ** _) => throwAt fc (FunctionExpected ty)
 
        let env   = Gamma.extend env n (FUNC as r)
@@ -77,7 +80,8 @@ check env state (Def fc FUNC n val scope)
 
 check env state (Def fc ROLE n val scope)
 
-  = do let env = extend env n
+  = do exists fc (rho env) n
+       let env = extend env n
 
        (MkRole ** role) <- synth (rho env) val
 
@@ -89,7 +93,11 @@ check env state (Def fc ROLE n val scope)
 
 
 check env state (Def fc PROT n val scope)
-  = do (g ** tm) <- synth (delta env) (rho env) val
+  = do maybe (pure ())
+             (\_ => throwAt fc (AlreadyBound (MkRef fc n )))
+             (!(getProtocol state n))
+
+       (g ** tm) <- synth (delta env) (rho env) val
 
        let state = {protocols $= insert n (P (rho env) tm)} state
 

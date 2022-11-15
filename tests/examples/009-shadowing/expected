@@ -1,0 +1,25 @@
+Running Test
+# Finished Parsing
+Type Checking Error
+main.ola:2:0-0:
+Already bound:
+	"foo"
+
+# Finished Parsing
+Type Checking Error
+main1.ola:1:0-0:
+Already bound:
+	"A"
+
+# Finished Parsing
+Type Checking Error
+main2.ola:5:0-0:
+Already bound:
+	"oneshot"
+
+# Finished Parsing
+Type Checking Error
+main3.ola:1:0-0:
+Already bound:
+	"printLn"
+

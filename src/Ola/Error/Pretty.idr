@@ -119,7 +119,11 @@ Show (Typing.Error) where
   show (ArrayExpected ty)
     = "Array expected but was given:\n\t\{show ty}"
   show (NotBound ref)
-    = "Not a bound identifier:\n\t\{show ref}"
+    = "Not a bound identifier:\n\t\{show (get ref)}"
+
+  show (AlreadyBound ref)
+    = "Already bound:\n\t\{show (get ref)}"
+
   show (Mismatch given expected)
     = unlines ["Type Mismatch:"
               , "  Given:"

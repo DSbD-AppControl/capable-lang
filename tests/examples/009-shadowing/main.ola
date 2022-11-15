@@ -1,0 +1,9 @@
+type foo = Int
+
+type foo = String
+
+
+main()
+{
+  unit
+}

@@ -63,6 +63,7 @@ namespace Typing
     Unknown : Typing.Error
     RefExpected : Ty.Base -> Typing.Error
     NotBound : Ref -> Typing.Error
+    AlreadyBound : Ref -> Typing.Error
     ArrayExpected : Ty.Base -> Error
 
     MismatchRole : Ref -> Ref -> Typing.Error
