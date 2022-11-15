@@ -141,7 +141,7 @@ namespace Shape
     CALLP : String -> NULL Shape PROT
     RECP  : String -> UN Shape PROT PROT
     BRANCHP : String -> BIN Shape BRANCH TYPE PROT
-    CHOICE : Shape PROT (S (S (S n))) (ROLE::ROLE::replicate (S n) BRANCH)
+    CHOICE : Shape PROT (S (S (S (S n)))) (ROLE::ROLE::TYPE::replicate (S n) BRANCH)
 
     -- ## Types
     CHAR, STR, INT, BOOL, UNIT : NULL Shape TYPE

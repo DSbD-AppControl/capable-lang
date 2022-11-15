@@ -12,6 +12,8 @@
 ||| be used as it requires all elements to have the same type.
 module Toolkit.Data.DList
 
+import Decidable.Equality
+
 import        Data.String
 import public Data.List
 import public Data.List.Elem
@@ -121,5 +123,34 @@ namespace KV
                -> pred x
   lookup Here (elem :: rest) = elem
   lookup (There y) (elem :: rest) = lookup y rest
+
+public export
+data Shape : (as : DList kind type ks)
+          -> (bs : DList kind type ls)
+                -> Type
+  where
+    Empty : Shape Nil Nil
+    LH    : Shape (x::xs) Nil
+    RH    : Shape Nil (x::xs)
+    Same  : Shape (x::xs) (y::ys)
+
+export
+shape : (as : DList kind type ks)
+     -> (bs : DList kind type ls)
+           -> Shape as bs
+shape [] [] = Empty
+shape [] (elem :: rest) = RH
+shape (elem :: rest) [] = LH
+shape (elem :: rest) (x :: y) = Same
+
+public export
+isLeftHeavy : DList.(::) x_0 xs_0 = DList.Nil -> Void
+isLeftHeavy Refl impossible
+
+public export
+isRightHeavy : DList.Nil = DList.(::) x_0 xs_0 -> Void
+isRightHeavy Refl impossible
+
+
 
 -- --------------------------------------------------------------------- [ EOF ]

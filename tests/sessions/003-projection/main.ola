@@ -1,0 +1,33 @@
+role Alice
+role Bob
+role Charlie
+
+type foo = String
+
+type syn = < syn : Int>
+
+type synack1 = < synack : (Int,Int)>
+type synack2 = < synack : (Int,Int,Int)>
+type fin     = < fin : (Int,Int,Int) >
+protocol handshake
+  = Alice   ==> Bob     [syn]     { syn(Int)
+  . Bob     ==> Charlie [syn]     { syn(Int)
+  . Charlie ==> Bob     [synack1] { synack((Int,Int))
+  . Bob     ==> Alice   [synack2] { synack((Int,Int,Int))
+  . Alice   ==> Bob     [fin]     { fin((Int,Int,Int))
+  . Bob     ==> Charlie [fin]     { fin((Int,Int,Int))
+  . end
+  }}}}}}
+
+protocol forever
+  = rec(x). Alice ==> Bob   [syn]                           { syn(Int)
+          . Bob   ==> Alice [< fin : Int | restart : Unit>] { fin(Int).end
+                                                            | restart(Unit).call(x)
+          }}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

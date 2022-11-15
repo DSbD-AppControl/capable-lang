@@ -61,9 +61,10 @@ mutual
       Choice : (fc : FileContext)
             -> (s  : Role sr)
             -> (r  : Role rr)
+            -> (t  : Ty tt)
             -> (prf : AsVect bs vs)
             -> (branches : Branches1 vs)
-                        -> Protocol (Branch CHOICE fc (sr::rr::bs))
+                        -> Protocol (Branch CHOICE fc (sr::rr::tt::bs))
 
 mutual
   toBranch : (b : Raw.AST.BRANCH)
@@ -91,11 +92,12 @@ mutual
   toProtocol (Branch (RECP str) fc [c])
     = Rec fc (MkRef fc str) R (toProtocol c)
 
-  toProtocol (Branch CHOICE fc (s::r::nodes))
+  toProtocol (Branch CHOICE fc (s::r::t::nodes))
     = let ((v::vs) ** prf) = asVect nodes
       in Choice fc
                 (toRole s)
                 (toRole r)
+                (toType t)
                 prf
                 (B1 $ assert_total
                     $ toBranches (v::vs))

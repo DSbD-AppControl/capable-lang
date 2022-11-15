@@ -17,9 +17,12 @@ import public Data.List1
 import public Data.List1.Quantifiers
 
 import public Toolkit.Data.DList
+import public Toolkit.Data.DList.All
 
 
 import public Ola.Types
+import public Ola.Types.Protocol
+import public Ola.Types.Protocol.Projection
 import public Ola.Types.Role
 import        Ola.Terms.Vars
 import        Ola.Terms.Roles
@@ -28,50 +31,43 @@ import        Ola.Terms.Protocols
 
 %default total
 
-public export
-data Result : (ks : List Kind)
-           -> (rs : List Role)
-           -> (whom : Role rs MkRole)
-           -> (global : Global ks rs)
-                     -> Type
-  where
-    R :  (local : Local ks rs)
-      -> (proj  : Protocol.Project ks rs whom global local)
-               -> Result ks rs whom global
+namespace Protocl
+
+  public export
+  data Result : (ks : List Kind)
+             -> (rs : List Role)
+             -> (whom : Role rs MkRole)
+             -> (global : Global ks rs)
+                       -> Type
+    where
+      R :  (local : Local ks rs)
+        -> (proj  : Protocol.Project ks rs whom global local)
+                 -> Result ks rs whom global
+
+
 namespace Branch
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
              -> (whom   : Role rs MkRole)
-             -> (global : Global.Branch ks rs)
+             -> (global : Branch Global ks rs (s,t))
                        -> Type
     where
-      R : (l : Local.Branch ks rs)
-       -> (proj : Branch.Project ks rs whom g l) -> Result ks rs whom g
+      R : (l    : Branch Local ks rs (s,t))
+       -> (proj : Branch.Project ks rs whom g l)
+               -> Result ks rs whom g
 
 namespace Branches
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
              -> (whom   : Role rs MkRole)
-             -> (global : Global.Branches ks rs)
+             -> (global : Global.Branches ks rs ls)
                        -> Type
     where
-      R : (local : Local.Branches ks rs)
-       -> (proj  : List.Project ks rs whom global local)
+      R : (local : Local.Branches ks rs ls)
+       -> (proj  : Branches.Project ks rs whom global local)
                 -> Result ks rs whom global
-
-namespace Branches1
-  public export
-  data Result1 : (ks : List Kind)
-              -> (rs : List Role)
-              -> (whom   : Role rs MkRole)
-              -> (global : Global.Branches1 ks rs)
-                       -> Type
-    where
-      R1 : (local : Local.Branches1 ks rs)
-        -> (proj  : List1.Project ks rs whom global local)
-                 -> Result1 ks rs whom global
 
 
   namespace Same
@@ -79,21 +75,22 @@ namespace Branches1
     data Result : (ks : List Kind)
                -> (rs : List Role)
                -> (whom   : Role rs MkRole)
-               -> (global : Global.Branches1 ks rs)
+               -> (global : Global.Branches ks rs ls)
                          -> Type
       where
-        R : (l : _) -> (proj : Same1 ks rs whom gs l) -> Result ks rs whom gs
+        R : (l    : _)
+         -> (proj : Same ks rs whom (g::gs) l)
+                 -> Result ks rs whom (g::gs)
 
 mutual
 
   export
-  project : {rs : List Role} -> {ks : _}
+  project : {rs,ks : _}
          -> {0 global : Global ks rs}
          -> (whom : Role rs MkRole)
          -> (type : Global ks ts rs global)
                  -> DecInfo () -- TODO
                             (Result ks rs whom global)
-
   project whom End
     = Yes (R _ End)
 
@@ -108,114 +105,109 @@ mutual
       = No () -- TODO
            (\(R (Rec a) (Rec this)) => no (R a this))
 
-  project whom (Choice s r noSR cs) with (involved whom s r noSR)
-    -- [ NOTE ] Sending
-    project s (Choice s r noSR cs) | (Sends Refl) with (Branches1.project s cs)
-      project s (Choice s r noSR cs) | (Sends Refl) | (Yes (R1 l proj))
-        = Yes (R _ (Select (Same Refl Refl) proj))
-      project s (Choice s r noSR cs) | (Sends Refl) | (No msg no)
-        = No () -- TODO
-             (\case (R _ (Select prf bs))       => no (R1 _ bs)
-                    (R _ (Offer prf bs))        => no (R1 _ bs)
-                    (R _ (Merge prfS prfR prf)) => prfS (Same Refl Refl)
-             )
+  project whom (Choice s r noSR t bs) with (involved whom s r noSR)
+
+    -- [ NOTE ] Sender
+    project whom (Choice s r noSR t (b::bs)) | (Sends prfS) with (Branches.project s (b::bs))
+      project s (Choice s r noSR t (b::bs)) | (Sends Refl) | (Yes (R (elem :: rest) (x :: y)))
+        = Yes (R _ (Select (Same Refl Refl) (x :: y)))
+      project s (Choice s r noSR t (b::bs)) | (Sends Refl) | (No msg no)
+        = No () (\case (R _ (Select prf x)) => no (R _ x)
+                       (R _ (Offer prf x)) => no (R _ x)
+                       (R _ (Merge f prfR prf))  => f (Same Refl Refl))
 
     -- [ NOTE ] Receiving
-    project r (Choice s r noSR cs) | (Recvs Refl) with (Branches1.project r cs)
-      project r (Choice s r noSR cs) | (Recvs Refl) | (Yes (R1 l proj))
-        = Yes (R _ (Offer (Same Refl Refl) proj))
-      project r (Choice s r noSR cs) | (Recvs Refl) | (No msg no)
-        = No () -- TODO
-             (\case (R _ (Select prf bs)) => no (R1 _ bs)
-                    (R _ (Offer prf bs)) => no (R1 _ bs)
-                    (R _ (Merge prfS prfR prf)) => prfR (Same Refl Refl)
-             )
+    project r (Choice s r noSR t (b :: bs)) | (Recvs Refl) with (Branches.project r (b::bs))
+      project r (Choice s r noSR t (b :: bs)) | (Recvs Refl) | (Yes (R (elem :: rest) (x :: y)))
+        = Yes (R _ (Offer (Same Refl Refl) (x::y)))
+
+
+      project r (Choice s r noSR t (b :: bs)) | (Recvs Refl) | (No msg no)
+        = No ()
+             (\case (R _ (Select prf x)) => no (R _ x)
+                    (R _ (Offer prf x)) => no (R _ x)
+                    (R _ (Merge prfS prfR prf)) => prfR (Same Refl Refl))
 
 
     -- [ NOTE ] Not involved
-    project whom (Choice s r noSR cs) | (Skips sNot rNot) with (same1 whom cs)
-      project whom (Choice s r noSR (Bs1 bs)) | (Skips sNot rNot) | (Yes (R (B l t c) (S1 projs prf)))
-        = Yes (R _ (Merge sNot rNot (S1 projs prf)))
-      project whom (Choice s r noSR cs) | (Skips sNot rNot) | (No msg no)
+    project whom (Choice s r noSR t (b :: bs)) | (Skips prfSNot prfRNot) with (same whom (b::bs))
+      project whom (Choice s r noSR t (b :: bs)) | (Skips prfSNot prfRNot) | (Yes (R (B l t' c) (S projs prf)))
+        = Yes (R _ (Merge prfSNot prfRNot (S projs prf)))
+
+      project whom (Choice s r noSR t (b :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
         = No ()
-             (\case (R _ (Select prf bs)) => sNot prf
-                    (R _ (Offer prf bs)) => rNot prf
-                    (R _ (Merge prfS prfR (S1 projs prfs))) => no (R _ (S1 projs prfs))
-             )
+             (\case (R _ (Select prf x)) => prfSNot prf
+                    (R _ (Offer prf x)) => prfRNot prf
+                    (R _ (Merge prfS prfR (S projs prf))) => no (R _ (S projs prf)))
 
   namespace Branch
     export
-    project : {rs : _} -> {ks : _}
+    project : {s, rs : _}
+           -> {ks : _}
            -> (whom : Role rs MkRole)
-           -> {0 g  : Global.Branch ks rs}
-           -> (type : Branch ks ts rs g)
+           -> {0 g  : Branch Global ks    rs (s,t)}
+           -> (type : Global.Branch ks ts rs g)
                    -> DecInfo ()
                               (Branch.Result ks rs whom g)
-    project whom (B label type choice) with (project whom choice)
-      project whom (B label type choice) | (Yes (R local proj))
-        = Yes (R _ (B label _ proj))
-      project whom (B label type choice) | (No msg no)
-        = No () (\case (R (B label t l) (B label t x)) => no (R l x))
+    project whom (B s type choice) with (project whom choice)
+      project whom (B s type choice) | (Yes (R local proj))
+        = Yes (R (B s t local) (B s t proj))
+
+      project whom (B s type choice) | (No msg no)
+        = No ()
+             (\case (R (B s t l) (B s t y)) => no (R l y))
 
   namespace Branches
     export
-    project : {rs : _} -> {ks : _}
-           -> (whom   : Role rs MkRole)
-           -> {0  bs : Global.Branches ks rs}
+    project : {lts : _}
+           -> {rs : _}
+           -> {ks : _}
+           -> (  whom : Role rs MkRole)
+           -> {0 bs   : Global.Branches ks rs lts}
            -> (type   : Branches ks ts rs bs)
                      -> DecInfo () -- TODO
                                 (Branches.Result ks rs whom bs)
-
     project whom []
-      = Yes (R _ [])
-    project whom (b :: x) with (project whom b)
-      project whom (b :: x) | (Yes (R lb proj)) with (Branches.project whom x)
-        project whom (b :: x) | (Yes (R lb proj)) | (Yes (R l y))
-          = Yes (R _ (proj :: y))
-        project whom (b :: x) | (Yes (R lb proj)) | (No msg no)
-          = No () -- TODO
-               (\case (R _ (y :: z)) => no (R _ z))
+      = Yes (R [] [])
 
-      project whom (b :: x) | (No msg no)
-        = No () -- TODO
-             (\case (R _ ((B _ _ y) :: z)) => no (R _ (B _ _ y)))
+    project whom (x :: xs) with (project whom x)
+      project whom (x :: xs) | (Yes (R l p)) with (project whom xs)
+        project whom (x :: xs) | (Yes (R l p)) | (Yes (R ls ps))
+          = Yes (R (l :: ls) (p :: ps))
+        project whom (x :: xs) | (Yes (R l p)) | (No msg no)
+          = No ()
+               (\case (R (y :: ys) (z :: zs)) => no (R ys zs))
 
-  namespace Branches1
-    export
-    project : {rs : _} -> {ks : _}
-           -> (whom   : Role rs MkRole)
-           -> { 0 bs : Global.Branches1 ks rs}
-           -> (type   : Branches1 ks ts rs bs)
-                     -> DecInfo () -- TODO
-                                (Branches1.Result1 ks rs whom bs)
-
-    project whom (Bs1 x) with (Branches.project whom x)
-      project whom (Bs1 x) | (Yes (R _ (y :: z)))
-        = Yes (R1 _ (Proj (y :: z)))
-      project whom (Bs1 x) | (No msg no)
-        = No () -- TODO
-             (\case (R1 _ (Proj y)) => no (R _ y))
+      project whom (x :: xs) | (No msg no)
+        = No () (\case (R (y :: ys) (z :: zs)) => no (R y z))
 
   namespace Same
 
     export
-    same1 : {rs   : _} -> {ks : _}
-         -> {0 bs : Global.Branches1 ks rs}
-         -> (whom : Role rs MkRole)
-         -> (gs   : Branches1 ks ts rs bs)
-                 -> DecInfo ()
-                           (Same.Result ks rs whom bs)
-    same1 whom (Bs1 x) with (Branches.project whom x)
-      same1 whom (Bs1 x) | (Yes (R (yt :: yts) (y :: ys))) with (branchesEq yt yts)
-        same1 whom (Bs1 x) | (Yes (R (yt :: yts) (y :: ys))) | (Yes prfWhy)
-          = Yes (R _ (S1 (Proj (y :: ys)) prfWhy))
-        same1 whom (Bs1 x) | (Yes (R (yt :: yts) (y :: ys))) | (No msg no)
-          = No () $ \case (R l (S1 (Proj (p :: ps)) prf)) =>
-                           no $ rewrite sym (funProject p y) in
-                                rewrite sym (funProject ps ys) in
-                                prf
-      same1 whom (Bs1 x) | (No msg no)
-        = No () (\case (R _ (S1 (Proj y) prf)) => no (R _ y))
+    same : {l,s : _}
+        -> {ls,rs : _}
+        -> {ks : _}
+        -> {0 b    : Branch Global   ks rs (l,s)}
+        -> {0 bs   : Global.Branches ks rs ls}
+        -> (  whom : Role rs MkRole)
+        -> (  gs   : Branches ks ts rs (b::bs))
+                  -> DecInfo ()
+                             (Same.Result ks rs whom (b::bs))
+    same whom gs with (Branches.project whom gs)
+      same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) with (branchesEq l' ls')
+        same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) | (Yes prf)
+
+          = Yes (R _ (S (b' :: bs') prf))
+
+        same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) | (No msg no)
+          = No ()
+               (\case (R l (S (p :: ps) prf)) =>
+                        no $ rewrite sym (funProject p  b') in
+                             rewrite sym (funProject ps bs') in prf)
+
+      same whom gs | (No msg no)
+        = No ()
+             (\case (R x (S projs prf)) => no (R _ projs))
 
 namespace Closed
   export
@@ -227,4 +219,6 @@ namespace Closed
                             (Result Nil rs whom global)
   project
     = Projection.project
+
+
 -- [ EOF ]

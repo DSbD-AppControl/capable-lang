@@ -69,11 +69,14 @@ mutual
          a <- role
          symbol "==>"
          b <- role
+         symbol "["
+         t <- type
+         symbol "]"
          symbol "{"
          bs <- sepBy1 (symbol "|") branch
          symbol "}"
          e <- Toolkit.location
-         pure (Branch CHOICE (newFC s e) $ a::b::head bs:: fromList (tail bs))
+         pure (Branch CHOICE (newFC s e) $ a::b::t::head bs:: fromList (tail bs))
 
   export
   protocol : Rule PROT

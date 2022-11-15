@@ -68,6 +68,56 @@ namespace Ty
           -> (ret  : Base)
                   -> Base
 
+public export
+data IsUnion : Base -> Type
+  where
+    U : IsUnion (UNION fs)
+
+Uninhabited (IsUnion CHAR) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion STR) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion INT) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion BOOL) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion UNIT) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion (HANDLE u)) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion (REF u)) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion (ARRAY x u)) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion (TUPLE u)) where
+  uninhabited U impossible
+
+Uninhabited (IsUnion (FUNC u us)) where
+  uninhabited U impossible
+
+export
+isUnion : (base : Base) -> Dec (IsUnion base)
+isUnion (UNION fields) = Yes U
+
+isUnion CHAR            = No absurd
+isUnion STR             = No absurd
+isUnion INT             = No absurd
+isUnion BOOL            = No absurd
+isUnion UNIT            = No absurd
+isUnion (HANDLE x)      = No absurd
+isUnion (REF x)         = No absurd
+isUnion (ARRAY x k)     = No absurd
+isUnion (TUPLE fields)  = No absurd
+isUnion (FUNC args ret) = No absurd
+
 namespace Diag
   data Diag : (a,b : Base)
                   -> Type
@@ -174,9 +224,9 @@ toList (x::xs) = x :: Base.toList xs
 ||| Variant of `encloseSep` with braces and comma as separator.
 export
 variant : List (Doc ann) -> Doc ann
-variant = group . encloseSep (flatAlt (pretty "< ") (pretty ">"))
+variant = group . encloseSep (flatAlt (pretty "< ") (pretty "<"))
                              (flatAlt (pretty " >") (pretty ">"))
-                             (pretty "| ")
+                             (pretty " | ")
 
 type : Base -> Doc ann
 type CHAR
@@ -221,7 +271,7 @@ type (TUPLE xs)
 type (UNION xs)
   = variant
   $ assert_total
-  $ map (\(k,v) => group $ parens (hsep [pretty k, comma, type v]))
+  $ map (\(k,v) => group $ (hsep [pretty k, colon, type v]))
   $ forget xs
 
 type (FUNC xs x)

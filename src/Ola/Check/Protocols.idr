@@ -39,14 +39,22 @@ mutual
         -> (kinds : Context Protocol.Kind    ks)
         -> (types : Context Ty.Base ts)
         -> (roles : Context Ty.Role rs)
+        -> (es    : String)
+        -> (eb    : Base)
         -> (bs1   : Branch b)
-                 -> Ola (DPair (Global.Branch ks    rs)
+                 -> Ola (DPair (Branch Global ks    rs (es,eb))
                                (Branch        ks ts rs))
-  branch kinds types roles (B fc label type cont)
-    = do (t ** type) <- synth types type
+  branch kinds types roles es et (B fc label type cont)
+    = do Refl <- embedAt fc (WrongLabel es label) (decEq es label)
+
+         (t ** type) <- synth types type
+
+         Refl <- compare fc et t
+
+         -- Here we would extend for dependent sessions...
          (g ** cont) <- synth kinds types roles cont
 
-         pure (_ ** B label type cont)
+         pure (_ ** B es type cont)
 
   branches : {ts    : List Base}
           -> {rs    : List Ty.Role}
@@ -54,20 +62,30 @@ mutual
           -> (kinds : Context Protocol.Kind    ks)
           -> (types : Context Ty.Base ts)
           -> (roles : Context Ty.Role rs)
+          -> (fc    : FileContext)
+          -> (ls    : List (String,Base))
           -> (bs1   : All Branch bs)
-          -> (ls    : List String)
-                   -> Ola (DPair (Global.Branches ks    rs)
+                   -> Ola (DPair (Global.Branches ks    rs ls)
                                  (Branches        ks ts rs))
-  branches kinds types roles [] _
+  branches kinds types roles _ Nil Nil
     = pure (_ ** Nil)
-  branches kinds types roles (x :: y) ss
-    = do let (B fc label ty c) = x
-         case isElem label ss of
-           Yes _ => throwAt fc (AlreadyBound (MkRef fc label))
-           No _ => do (tyB  ** b)  <- branch   kinds types roles x
-                      (tyBS ** bs) <- branches kinds types roles y (label::ss)
 
-                      pure (_ ** b::bs)
+  branches kinds types roles fc Nil cs
+    = throwAt fc (RedundantCases (flattern cs))
+
+    where flattern : All Branch wq -> List String
+          flattern Nil = Nil
+          flattern (B fc l s c :: rest)
+            = l :: flattern rest
+
+  branches kinds types roles fc es Nil
+    = throwAt fc (CasesMissing es)
+
+  branches kinds types roles fc ((l,s) :: ls) (b::bs)
+    = do (tyB  ** b)  <- branch   kinds types roles    l s b
+         (tyBS ** bs) <- branches kinds types roles fc ls  bs
+
+         pure (_ ** b::bs)
 
 
   synth : {ts : List Base}
@@ -77,8 +95,8 @@ mutual
        -> (types : Context Ty.Base ts)
        -> (roles : Context Ty.Role rs)
        -> (syn   : Protocol g)
-                -> Ola (DPair (Ty.Global ks    rs)
-                              (Global    ks ts rs))
+                -> Ola (DPair (Global ks    rs)
+                              (Global ks ts rs))
   synth kinds types roles (End fc)
     = pure (_ ** End)
 
@@ -95,14 +113,16 @@ mutual
 
          pure (_ ** Rec scope)
 
-  synth kinds types roles (Choice fc s r prf (B1 (x::xs)))
+  synth kinds types roles (Choice fc s r t prf (B1 (x::xs)))
     = do (MkRole ** stm) <- synth roles s
          (MkRole ** rtm) <- synth roles r
 
-         (tyB  ** tmB)  <- branch kinds types roles x
+         (UNION ((es,et):::fs) ** tmM) <- synth types t
+           | (ty ** _) => throwAt fc (UnionExpected ty)
 
-         let (B fc label ty c) = x
-         (tyBs ** tmBs) <- branches kinds types roles xs [label]
+         (tyB ** tmB) <- branch kinds types roles es et x
+
+         (tyBs ** tmBs) <- branches kinds types roles fc fs xs
 
          case Index.decEq stm rtm of
            Yes (Same Refl Refl)
@@ -110,7 +130,7 @@ mutual
                    let R r' = r
                    throwAt fc (MismatchRole (MkRef emptyFC s') (MkRef emptyFC r'))
            No prf
-             => pure (_ ** Choice stm rtm prf (Bs1 (tmB::tmBs)))
+             => pure (_ ** Choice stm rtm prf tmM (tmB::tmBs))
 
 namespace View
   export
@@ -119,8 +139,8 @@ namespace View
        -> (types : Context Ty.Base ts)
        -> (roles : Context Ty.Role rs)
        -> (syn   : Protocol g)
-                -> Ola (DPair (Ty.Global Nil    rs)
-                              (Global    Nil ts rs))
+                -> Ola (DPair (Global Nil    rs)
+                              (Global Nil ts rs))
   synth types roles p
     = synth Nil types roles p
 
@@ -132,8 +152,8 @@ namespace Raw
        -> (types : Context Ty.Base ts)
        -> (roles : Context Ty.Role rs)
        -> (sesh  : PROT)
-                -> Ola (DPair (Ty.Global Nil    rs)
-                                 (Global Nil ts rs))
+                -> Ola (DPair (Global Nil    rs)
+                              (Global Nil ts rs))
   synth types roles p
     = synth Nil types roles (toProtocol p)
 

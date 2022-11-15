@@ -1,0 +1,29 @@
+role Alice
+role Bob
+
+type foo = String
+
+type ping = < ping : String >
+type pong = < pong : String >
+
+type pongR = < pong : String
+             | quit : String
+             >
+
+
+protocol pingpong = Alice ==> Bob   [ping] { ping(String)
+                  . Bob   ==> Alice [pong] { pong(String)
+                  . end }}
+
+protocol pingpongR = rec(x)
+                   . Alice ==> Bob   [ping] { ping(String)
+                   . Bob   ==> Alice [pongR] { pong(String) . call(x)
+                                             | quit(String) . end
+                                             }}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

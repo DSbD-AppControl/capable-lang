@@ -1,17 +1,21 @@
 role Pinger
 role Ponger
 
+type ping = < ping : Int >
+type pong = < pong : Int >
+
 protocol handshake
-  = Pinger ==> Ponger { ping(Int)
-  . Ponger ==> Pinger { pong(Int)
+  = Pinger ==> Ponger [ping] { ping(Int)
+  . Ponger ==> Pinger [pong] { pong(Int)
   . end
   }}
 
+type pongR = < pong : Int | pongEnd : Int >
 
 protocol handshakeRec
   = rec(X)
-  . Pinger ==> Ponger { ping(Int)
-  . Ponger ==> Pinger { pong(Int).end | pongEnd(Int).call(X)
+  . Pinger ==> Ponger [ping]  { ping(Int)
+  . Ponger ==> Pinger [pongR] { pong(Int).end | pongEnd(Int).call(X)
   }}
 
 main()

@@ -34,7 +34,7 @@ mutual
   branch : (acc : Nat)
         -> (kctxt : Context Kind ks)
         -> (rctxt : Context Ty.Role rs)
-        -> Local.Branch ks rs
+        -> Branch Local ks rs l
         -> Doc ()
   branch acc kctxt rctxt (B label type c)
     = group
@@ -51,10 +51,10 @@ mutual
   branches : (acc : Nat)
           -> (kctxt : Context Kind ks)
           -> (rctxt : Context Ty.Role rs)
-          -> Local.Branches1 ks rs
+          -> Local.Branches ks rs ls
           -> Doc ()
   branches acc kctxt rctxt xs
-    =  let prettyXS = map (branch acc kctxt rctxt) (forget xs)
+    =  let prettyXS = mapToList (branch acc kctxt rctxt) xs
     in assert_total
     $ choices prettyXS
 
@@ -78,21 +78,23 @@ mutual
       $  vsep [ group (pretty "rec" <+> parens (pretty v) <+> pretty ".")
               , indent 2 cont]
 
-  pretty acc kctxt rctxt (Choice BRANCH whom cs)
+  pretty acc kctxt rctxt (Choice BRANCH whom (Val (UNION (f:::fs))) cs)
     = group
     $ parens
     $ hsep
     [ pretty "offers to"
     , pretty (reflect rctxt whom)
+    , pretty (show (UNION (f:::fs)))
     , hang 2 (branches acc kctxt rctxt cs) ]
 
 
-  pretty acc kctxt rctxt (Choice SELECT whom cs)
+  pretty acc kctxt rctxt (Choice SELECT whom (Val (UNION (f:::fs))) cs)
     = group
     $ parens
     $ hsep
     [ pretty "selects from"
     , pretty (reflect rctxt whom)
+    , pretty (show (UNION (f:::fs)))
     , hang 2 (branches acc kctxt rctxt cs) ]
 
 export

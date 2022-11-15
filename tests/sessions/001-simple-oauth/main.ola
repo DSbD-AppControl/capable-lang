@@ -2,14 +2,24 @@ role Service
 role Client
 role Auth
 
+type logon = < login  : Unit
+             | cancel : Unit
+             >
+
+type quit = < quit : Unit >
+
+type pword = < pword : String >
+
+type auth = < auth : Bool>
+
 protocol oauthSimple
-  = Service ==> Client
+  = Service ==> Client [logon]
     { login(Unit)
-      .Client ==> Auth    { pword(String)
-      .Auth   ==> Service { auth(Bool)
+      .Client ==> Auth    [pword] { pword(String)
+      .Auth   ==> Service [auth]  { auth(Bool)
       .end}}
     | cancel(Unit)
-      . Client ==> Auth { quit(Unit).end}
+      . Client ==> Auth [quit] { quit(Unit).end}
     }
 
 main()
