@@ -102,6 +102,18 @@ namespace Results
             -> (prf   : Subset  old new )
                      -> Results old types
 
+  namespace Fields
+
+    public export
+    data Results : (store : List Ty.Base)
+                -> (types : List (String,Ty.Base))
+                         -> Type
+      where
+        Fields : {new   : List Ty.Base}
+              -> (store : Heap  new)
+              -> (args  : DList (String,Ty.Base) (Field new) types)
+              -> (prf   : Subset  old new )
+                       -> Results old types
   namespace ArgsV
 
     public export
@@ -164,6 +176,26 @@ debase FileExists = 4
 -- # Executing stuff
 
 mutual
+
+  namespace Fields
+    export
+    eval : {store : List Ty.Base}
+        -> {as    : List (String,Base)}
+        -> (env   : Env        stack store)
+        -> (heap  : Heap             store)
+        -> (args  : DList (String, Ty.Base) (Field rs tys stack) as)
+                 -> Ola (Fields.Results store as)
+    eval env heap []
+      = pure (Fields heap
+                     Nil
+                     (noChange _))
+
+    eval env heap ((F s x) :: xs)
+      = do Value  h v  p  <- eval env heap x
+           Fields h vs ps <- eval (weaken p env) h xs
+           pure (Fields h
+                      (F s (weaken ps v)::vs)
+                      (trans p ps))
 
   namespace Args
     export
@@ -423,6 +455,26 @@ mutual
     eval env heap (Get as idx)
       = do Value heap (Tuple vs) prf <- eval env heap as
            let vs' = index vs idx
+           pure $ Value heap vs'
+                             prf
+
+    -- ### Records
+    eval env heap (Record fs)
+      = do Fields heap fs prf <- eval env heap fs
+           pure (Value heap (Record fs) prf)
+
+    eval env heap (SetR as idx v)
+      = do Value heap (Record vs) prf  <- eval env heap as
+           Value heap v'         prf' <- eval (weaken prf env) heap v
+           pure (Value heap
+                       ((Record (replace idx
+                                         (F _ v')
+                                         (weaken prf' vs) )))
+                       (trans prf prf'))
+
+    eval env heap (GetR as idx)
+      = do Value heap (Record vs) prf <- eval env heap as
+           let (F _ vs') = lookup idx vs
            pure $ Value heap vs'
                              prf
 

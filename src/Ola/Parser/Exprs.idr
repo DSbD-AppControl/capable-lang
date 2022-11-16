@@ -199,12 +199,42 @@ mutual
          e <- Toolkit.location
          pure (Branch TUPLE (newFC s e) (DVect.fromList $ l :: head r :: tail r))
 
+  recor : Rule EXPR
+  recor
+    = do s <- Toolkit.location
+         keyword "struct"
+         symbol "["
+         commit
+         ty <- type
+         symbol "]"
+         s' <- Toolkit.location
+         symbol "{"
+         fs <- sepBy1 (symbol ",") field
+         symbol "}"
+         e <- Toolkit.location
+         pure ( bin THE
+                    (newFC s e)
+                    ty
+                    (Branch RECORD (newFC s' e) (DVect.fromList (head fs :: tail fs))))
+
+
+    where field : Rule FIELDV
+          field
+            = do s <- Toolkit.location
+                 l <- ref
+                 symbol "="
+                 commit
+                 v <- expr
+                 e <- Toolkit.location
+                 pure (un (KV (get l)) (newFC s e) v)
+
   union : Rule EXPR
   union
     = do s <- Toolkit.location
          keyword "tag"
          commit
          symbol "["
+         commit
          t <- ref
          symbol "]"
          symbol "("
@@ -241,11 +271,23 @@ mutual
          e <- Toolkit.location
          pure (bin IDX (newFC s e) t k)
 
-  get : Rule EXPR
-  get
+  getS : Rule EXPR
+  getS
     = do s <- Toolkit.location
          keyword "get"
-         commit
+         symbol "["
+         i <- ref
+         symbol "]"
+         symbol "("
+         k <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (un (GETR (get i)) (newFC s e) k)
+
+  getI : Rule EXPR
+  getI
+    = do s <- Toolkit.location
+         keyword "get"
          symbol "["
          i <- int
          symbol "]"
@@ -255,11 +297,13 @@ mutual
          e <- Toolkit.location
          pure (un (GET i) (newFC s e) k)
 
-  set : Rule EXPR
-  set
+  get : Rule EXPR
+  get = getI <|> getS
+
+  setI : Rule EXPR
+  setI
     = do s <- Toolkit.location
          keyword "set"
-         commit
          symbol "["
          i <- int
          symbol "]"
@@ -270,6 +314,24 @@ mutual
          symbol ")"
          e <- Toolkit.location
          pure (bin (SET i) (newFC s e) k l)
+
+  setS : Rule EXPR
+  setS
+    = do s <- Toolkit.location
+         keyword "set"
+         symbol "["
+         i <- ref
+         symbol "]"
+         symbol "("
+         k <- expr
+         symbol ","
+         l <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (bin (SETR (get i)) (newFC s e) k l)
+
+  set : Rule EXPR
+  set = setI <|> setS
 
   slice : Rule EXPR
   slice
@@ -353,7 +415,7 @@ mutual
          keyword l
          commit
          v <- Ola.ref
-         t <- optional (symbol ":" *> type)
+         t <- optional (symbol ":" *> commit *> type)
          symbol "="
          ex <- expr
          symbol ";"
@@ -412,6 +474,7 @@ mutual
       <|> array
       <|> annot
       <|> pair
+      <|> recor
       <|> union
       <|> openE
       <|> slice

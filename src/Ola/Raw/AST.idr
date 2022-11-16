@@ -21,6 +21,7 @@ namespace Kind
             | BRANCH
             | TYPE
             | FIELD
+            | FIELDV
             | CASE
             | EXPR
             | FUNC
@@ -130,6 +131,14 @@ namespace Expr
     show ROLE = "ROLE"
     show PROT = "PROT"
 
+  public export
+  data DKind = STRUCT | UNION
+
+  export
+  Show DKind where
+    show STRUCT = "STRUCT"
+    show UNION  = "UNION"
+
 namespace Shape
   public export
   data Shape : SHAPE Kind.Kind where
@@ -154,7 +163,7 @@ namespace Shape
     PROD  : Shape TYPE (S (S n)) (replicate (S (S n)) TYPE)
 
     FIELD : String -> UN Shape FIELD TYPE
-    UNION : Shape TYPE (S n)  (replicate (S n)  FIELD)
+    DTYPE : DKind -> Shape TYPE (S n)  (replicate (S n)  FIELD)
 
     ARROW : Shape TYPE (S n) (replicate (S n) TYPE)
 
@@ -189,6 +198,13 @@ namespace Shape
     GET : Int -> UN Shape EXPR EXPR
     SET : Int -> BIN Shape EXPR EXPR EXPR
 
+    -- #### Records
+    KV : String -> UN Shape FIELDV EXPR
+    RECORD : Shape EXPR (S n) (replicate (S n) FIELDV)
+
+    GETR : String -> UN Shape EXPR EXPR
+    SETR : String -> BIN Shape EXPR EXPR EXPR
+
     -- #### Unions
     TAG  : String -> UN Shape EXPR EXPR
 
@@ -215,6 +231,58 @@ namespace Shape
 
     MAIN : UN Shape PROG FUNC
     DEF : String -> DefKind k -> BIN Shape PROG k PROG
+
+  export
+  Show (Shape k n ks) where
+    show (ROLE str)      = "(ROLE \{show str})"
+    show STOP            = "STOP"
+    show (CALLP str)     = "(CALLP \{show str})"
+    show (RECP str)      = "(RECP \{show str})"
+    show (BRANCHP str)   = "(BRANCHP \{show str})"
+    show CHOICE          = "CHOICE"
+    show CHAR            = "CHAR"
+    show STR             = "STR"
+    show INT             = "INT"
+    show BOOL            = "BOOL"
+    show UNIT            = "UNIT"
+    show (HANDLE x)      = "(HANDLE \{show x})"
+    show (VARTY str)     = "(VARTY \{show str})"
+    show REF             = "REF"
+    show (ARRAY i)       = "(ARRAY \{show i})"
+    show PROD            = "PROD"
+    show (FIELD str)     = "(FIELD \{show str})"
+    show (DTYPE x)       = "(DTYPE \{show x})"
+    show ARROW           = "ARROW"
+    show (VAR str)       = "(VAR \{show str})"
+    show (LETTY x str)   = "(LETTY \{show x} \{show str})"
+    show (LET x str)     = "(LET \{show x} \{show str})"
+    show (CONST p v)     = "(CONST \{show p})"
+    show (BBIN x)        = "(BBIN \{show x})"
+    show (BUN x)         = "(BUN \{show x})"
+    show NIL             = "NIL"
+    show CONS            = "CONS"
+    show IDX             = "IDX"
+    show SLICE           = "SLICE"
+    show TUPLE           = "TUPLE"
+    show (GET i)         = "(GET \{show i})"
+    show (SET i)         = "(SET \{show i})"
+    show (KV str)        = "(KV \{show str})"
+    show RECORD          = "RECORD"
+    show (GETR str)      = "(GETR \{show str})"
+    show (SETR str)      = "(SETR \{show str})"
+    show (TAG str)       = "(TAG \{show str})"
+    show (CASE str str1) = "(CASE \{show str} \{show str1})"
+    show MATCH           = "MATCH"
+    show THE             = "THE"
+    show COND            = "COND"
+    show SEQ             = "SEQ"
+    show LOOP            = "LOOP"
+    show CALL            = "CALL"
+    show (ARG str)       = "(ARG \{show str})"
+    show ARGS            = "ARGS"
+    show FUN             = "FUN"
+    show MAIN            = "MAIN"
+    show (DEF str x)     = "(DEF \{show str} \{show x})"
 
 namespace FileContext
   public export
@@ -243,6 +311,10 @@ namespace FileContext
       public export
       TYPE : Type
       TYPE = AST TYPE
+
+      public export
+      FIELDV : Type
+      FIELDV = AST FIELDV
 
       public export
       CASE : Type

@@ -21,6 +21,7 @@ import Ola.Raw.Types
 
 %default total
 
+%hide fields
 
 mutual
   public export
@@ -30,6 +31,16 @@ mutual
      -> (c  : Expr sc)
            -> Case (Branch (CASE t s) fc [sc])
 
+  public export
+  data Field : (rs : Raw.AST.FIELDV)
+                   -> Type
+    where
+      F : {r   : Raw.AST.EXPR}
+       -> (fc  : FileContext)
+       -> (s   : String)
+       -> (e   : Expr   r)
+
+              -> Field (Branch (KV s) fc [r])
 
   public export
   data Expr : (s : Raw.AST.EXPR) -> Type
@@ -111,6 +122,26 @@ mutual
          -> (tup : Expr e)
          -> (v   : Expr ev)
                 -> Expr (Branch (SET loc) fc [e,ev])
+
+      -- ### Structs
+
+      Record : {0  fields' : Vect (S n) Raw.AST.FIELDV}
+            -> (fc  : FileContext)
+            -> (prf : AsVect fields fields')
+            -> (fs  : All Field fields' )
+                  -> Expr (Branch RECORD fc fields)
+
+      GetR : (fc : FileContext)
+         -> (loc : String)
+         -> (tup : Expr e)
+                -> Expr (Branch (GETR loc) fc [e])
+
+      SetR : (fc : FileContext)
+         -> (loc : String)
+         -> (tup : Expr e)
+         -> (v   : Expr ev)
+                -> Expr (Branch (SETR loc) fc [e,ev])
+
       -- ### Unions
 
       Match : {cases'     : Vect (S n) Raw.AST.CASE}
@@ -163,6 +194,11 @@ mutual
   toCases ((Branch (CASE str str1) annot [c]) :: xs)
     = C annot str str1 (toExpr c) :: toCases xs
 
+  toFields : (ss : Vect n Raw.AST.FIELDV) -> All Field ss
+  toFields [] = []
+  toFields ((Branch (KV str) annot [c]) :: xs)
+    = F annot str (toExpr c) :: toFields xs
+
   args : (az : Vect n EXPR)
                     -> All Expr az
   args [] = []
@@ -212,6 +248,14 @@ mutual
 
   toExpr (Branch (GET i) fc [f]) = Get fc i (toExpr f)
   toExpr (Branch (SET i) fc [f,e]) = Set fc i (toExpr f) (toExpr e)
+
+  toExpr (Branch RECORD fc fs)
+    = let (as ** prf) = asVect fs
+      in Record fc prf (assert_total toFields as)
+
+  toExpr (Branch (GETR i) fc [f]) = GetR fc i (toExpr f)
+  toExpr (Branch (SETR i) fc [f,e]) = SetR fc i (toExpr f) (toExpr e)
+
 
   toExpr (Branch (TAG s) fc [l])
     = Tag fc s (toExpr l)

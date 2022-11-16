@@ -1,22 +1,22 @@
 Running Test
 Ola> # Finished Parsing
 # Finished Type Checking
-Ola> (selects from Ponger <ping : Int> [ ping(Int)
-                                    .(offers to Ponger <pong : Int> [ pong(Int)
-                                                                      .End])])
-Ola> (offers to Pinger <ping : Int> [ ping(Int)
-                                 .(selects from Pinger <pong : Int> [ pong(Int)
-                                                                      .End])])
+Ola> (selects from Ponger union {ping : Int} [ ping(Int)
+                                          .(offers to Ponger union {pong : Int} [ pong(Int)
+                                                                                  .End])])
+Ola> (offers to Pinger union {ping : Int} [ ping(Int)
+                                       .(selects from Pinger union {pong : Int} [ pong(Int)
+                                                                                  .End])])
 Ola> rec(a).
-  (selects from Ponger <ping : Int> [ ping(Int)
-                                      .(offers to Ponger <pong : Int | pongEnd : Int> [ pong(Int)
-                                                                                        .End
-                                                                                        | pongEnd(Int)
-                                                                                          .(Call a)])])
+  (selects from Ponger union {ping : Int} [ ping(Int)
+                                            .(offers to Ponger union {pong : Int; pongEnd : Int} [ pong(Int)
+                                                                                                   .End
+                                                                                                   | pongEnd(Int)
+                                                                                                     .(Call a)])])
 Ola> rec(a).
-  (offers to Pinger <ping : Int> [ ping(Int)
-                                   .(selects from Pinger <pong : Int | pongEnd : Int> [ pong(Int)
-                                                                                        .End
-                                                                                        | pongEnd(Int)
-                                                                                          .(Call a)])])
+  (offers to Pinger union {ping : Int} [ ping(Int)
+                                         .(selects from Pinger union {pong : Int; pongEnd : Int} [ pong(Int)
+                                                                                                   .End
+                                                                                                   | pongEnd(Int)
+                                                                                                     .(Call a)])])
 Ola> Exiting the REPL

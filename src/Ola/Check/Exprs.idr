@@ -30,6 +30,7 @@ import public Ola.Terms.Builtins
 import        Ola.Terms.Types
 import        Ola.Terms.Exprs
 
+import Debug.Trace
 %default total
 
 
@@ -336,6 +337,54 @@ mutual
                                      pure (_ ** Set tm idx tmV))
                          (finFromVect (cast loc) ts)
 
+  -- ## Records
+  synth env (Record fc prf (f::fs))
+    = do (_ ** f) <- field f
+
+         (_ ** fs) <- fields fs
+
+         pure (_ ** Record (f :: fs))
+
+    where field : (giv : Field sco)
+                      -> Ola (DPair (String,Base) (Field rs ds gs))
+          field (F fc s e)
+            = do (t ** tm) <- synth env e
+                 pure (_ ** F s tm)
+
+          fields : All Field as'
+                -> Ola (DPair (List (String, Base))
+                              (DList (String,Base)
+                                     (Field rs ds gs)))
+          fields Nil
+            = pure (_ ** Nil)
+
+          fields (f::fs)
+            = do (_ ** f) <- field f
+
+                 (_ ** fs) <- fields fs
+                 pure (_ ** f::fs)
+
+  synth env (GetR fc loc tup)
+    = do (RECORD (t:::ts) ** tm) <- synth env tup
+            | (ty ** _) => throwAt fc (RecordExpected ty)
+
+         (ty ** loc) <- isElem fc fc loc (t::ts)
+
+         pure (_ ** GetR tm loc)
+
+
+  synth env (SetR fc loc tup v)
+    = do (RECORD (t:::ts) ** tm) <- synth env tup
+           | (ty ** _) => throwAt fc (RecordExpected ty)
+
+         (ty ** loc) <- isElem fc fc loc (t::ts)
+
+         (tyV ** tmV) <- synth env v
+
+         Refl <- compare fc ty tyV
+
+         pure (_ ** SetR tm loc tmV)
+
 
   -- ## Unions
   synth env (Match fc cond prf (C fcC s sc c::cs))
@@ -483,21 +532,18 @@ mutual
        -> (syn   : Expr e)
                 -> Ola (The rs ds gs t)
 
-  check {t = (ARRAY type 0)} fc env (TyArray tmType 0) (ArrayEmpty fc')
-    = pure (T (TyArray tmType 0) ArrayEmpty)
+  check {t = (ARRAY type 0)} fc env tyTm (ArrayEmpty fc')
+    = pure (T tyTm ArrayEmpty)
 
-  check {t = (ARRAY type (S k))} fc env (TyArray tmType (S k)) (ArrayEmpty fc')
+  check {t = (ARRAY type (S k))} fc env tyTm (ArrayEmpty fc')
     = mismatchAt fc (ARRAY type (S k)) (ARRAY type Z)
 
-  check {t = (UNION (a:::as))} fc env (TyUnion (f::fs)) (Tag fc' s l)
+  check {t = (UNION (a:::as))} fc env tyTm (Tag fc' s l)
     = do (ty ** loc) <- isElem fc fc' s (a::as)
          (ty' ** tm) <- synth env l
 
          Refl <- compare fc' ty ty'
-         pure (T (TyUnion (f::fs)) (Tag s tm loc))
-
-
-
+         pure (T tyTm (Tag s tm loc))
 
   check {t = t} fc env ty expr
     = do (ty' ** e) <- synth env expr

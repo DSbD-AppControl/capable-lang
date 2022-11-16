@@ -7,7 +7,6 @@
 module Ola.Terms.Exprs
 
 import Data.List.Elem
-import Data.List1.Elem
 
 import public Data.Fin
 
@@ -26,6 +25,12 @@ import Ola.Terms.Vars
 
 %hide type
 
+public export
+index : (types : List (k,v)) -> List.Elem.Elem (s,t) types -> v
+index ((s, t) :: xs) Here = t
+index (y :: xs) (There x) = snd y
+
+
 mutual
   public export
   data Case : (roles : List Ty.Role)
@@ -38,6 +43,17 @@ mutual
       C : (s : String)
        -> Expr roles types (p::stack) return
        -> Case roles types     stack return (s,p)
+
+  public export
+  data Field : (roles : List Ty.Role)
+            -> (types : List Ty.Base)
+            -> (stack : List Ty.Base)
+            -> (spec : (String, Ty.Base))
+                   -> Type
+    where
+      F : (s : String)
+       -> Expr roles types stack p
+       -> Field roles types stack (s, p)
 
   public export
   data Expr : (roles : List Ty.Role)
@@ -117,8 +133,25 @@ mutual
       Get : {as    : Vect (S (S n)) Base}
          -> (tuple : Expr roles types stack (TUPLE as))
          -> (idx   : Fin (S (S n)))
-                  -> Expr roels types stack (index idx as)
+                  -> Expr roles types stack (index idx as)
 
+      -- ## Records
+
+      Record : (fields : DList (String,Base) (Field roles types stack) (a::as))
+                      -> Expr roles types stack (RECORD (a:::as))
+
+      SetR : {s,t,a,as : _}
+          -> (re    : Expr roles types stack (RECORD (a:::as)))
+          -> (idx   : Elem (s,t) (a::as))
+          -> (value : Expr roles types stack t)
+                   -> Expr roles types stack (RECORD (a:::as))
+
+      -- ### Eliminators
+
+      GetR : {s,t,a,as : _}
+         -> (rec : Expr roles types stack (RECORD (a:::as)))
+         -> (idx : Elem (s,t) (a::as))
+                -> Expr roles types stack t
       -- ## Sums
 
       -- ### Constructors

@@ -4,7 +4,7 @@ func printLn(str:String) -> Unit
 ; print(toString('\n'))
 
 }
-func extract(x : <urgh:String|oops:Int>) -> String
+func extract(x : union { urgh:String; oops:Int} ) -> String
 {
   match x
   {
@@ -21,7 +21,7 @@ func extract(x : <urgh:String|oops:Int>) -> String
 
 main()
 {
-  local foo : <urgh:String|oops:Int> = tag[urgh]("Ola")
+  local foo : union { urgh:String ; oops:Int } = tag[urgh]("Ola")
 ; printLn(extract(foo))
 
 }

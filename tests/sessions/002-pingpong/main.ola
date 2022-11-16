@@ -1,8 +1,8 @@
 role Pinger
 role Ponger
 
-type ping = < ping : Int >
-type pong = < pong : Int >
+type ping = union { ping : Int }
+type pong = union { pong : Int }
 
 protocol handshake
   = Pinger ==> Ponger [ping] { ping(Int)
@@ -10,7 +10,7 @@ protocol handshake
   . end
   }}
 
-type pongR = < pong : Int | pongEnd : Int >
+type pongR = union { pong : Int ; pongEnd : Int }
 
 protocol handshakeRec
   = rec(X)

@@ -58,6 +58,7 @@ namespace Typing
     ArgsExpected : List Ty.Base -> Typing.Error
     RedundantArgs : Nat -> Typing.Error
     FunctionExpected : Ty.Base -> Typing.Error
+    RecordExpected : Ty.Base -> Typing.Error
     UnionExpected : Ty.Base -> Typing.Error
     HandleExpected : Ty.Base -> Typing.Error
     Unknown : Typing.Error

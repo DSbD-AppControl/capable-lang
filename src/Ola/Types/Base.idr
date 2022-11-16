@@ -60,6 +60,10 @@ namespace Ty
       ARRAY : Base -> Nat -> Base
 
       TUPLE : (fields : Vect (S (S n)) Base) -> Base
+
+      RECORD : (fields : (List1 (String, Base)))
+                       -> Base
+
       UNION : (fields : (List1 (String, Base)))
                        -> Base
 
@@ -100,6 +104,10 @@ Uninhabited (IsUnion (ARRAY x u)) where
 Uninhabited (IsUnion (TUPLE u)) where
   uninhabited U impossible
 
+Uninhabited (IsUnion (RECORD u)) where
+  uninhabited U impossible
+
+
 Uninhabited (IsUnion (FUNC u us)) where
   uninhabited U impossible
 
@@ -115,6 +123,7 @@ isUnion UNIT            = No absurd
 isUnion (HANDLE x)      = No absurd
 isUnion (REF x)         = No absurd
 isUnion (ARRAY x k)     = No absurd
+isUnion (RECORD k)      = No absurd
 isUnion (TUPLE fields)  = No absurd
 isUnion (FUNC args ret) = No absurd
 
@@ -142,6 +151,10 @@ namespace Diag
            -> (ys : Vect (S (S m)) Base)
                  -> Diag (TUPLE xs) (TUPLE ys)
 
+      RECORD : (xs : List1 (String, Base))
+            -> (ys : List1 (String, Base))
+                  -> Diag (RECORD xs) (RECORD ys)
+
       UNION : (xs : List1 (String, Base))
            -> (ys : List1 (String, Base))
                  -> Diag (UNION xs) (UNION ys)
@@ -160,6 +173,7 @@ namespace Diag
   diag (ARRAY x k)  (ARRAY y l) = Just (ARRAY x y k l)
   diag (TUPLE xs)   (TUPLE ys)  = Just (TUPLE xs ys)
   diag (UNION xs)   (UNION ys)  = Just (UNION xs ys)
+  diag (RECORD xs)  (RECORD ys) = Just (RECORD xs ys)
   diag (FUNC xs x)  (FUNC ys y) = Just (FUNC xs ys x y)
 
   diag _ _ = Nothing
@@ -176,6 +190,7 @@ namespace Diag
   diagNot (ARRAY _ _) = absurd
   diagNot (TUPLE _)   = absurd
   diagNot (UNION _ )  = absurd
+  diagNot (RECORD _ ) = absurd
   diagNot (FUNC _ _)  = absurd
 
   public export
@@ -208,6 +223,9 @@ namespace Diag
         = decDo $ do Refl <- assert_total $ decEq xs ys `otherwise` (\Refl => Refl)
                      pure Refl
 
+      _ | (Just (RECORD xs ys))
+        = decDo $ do Refl <- assert_total $ decEq xs ys `otherwise` (\Refl => Refl)
+                     pure Refl
 
       _ | (Just (FUNC xs ys x y))
         = decDo $ do Refl <- assert_total $ decEq xs ys `otherwise` (\Refl => Refl)
@@ -223,10 +241,10 @@ toList (x::xs) = x :: Base.toList xs
 
 ||| Variant of `encloseSep` with braces and comma as separator.
 export
-variant : List (Doc ann) -> Doc ann
-variant = group . encloseSep (flatAlt (pretty "< ") (pretty "<"))
-                             (flatAlt (pretty " >") (pretty ">"))
-                             (pretty " | ")
+fields : List (Doc ann) -> Doc ann
+fields = group . encloseSep (flatAlt (pretty "{ ") (pretty "{"))
+                            (flatAlt (pretty " }") (pretty "}"))
+                            (pretty "; ")
 
 type : Base -> Doc ann
 type CHAR
@@ -269,10 +287,24 @@ type (TUPLE xs)
   $ Base.toList xs
 
 type (UNION xs)
-  = variant
+  = group
+  $ hsep
+  [ pretty "union"
+  , fields
   $ assert_total
   $ map (\(k,v) => group $ (hsep [pretty k, colon, type v]))
   $ forget xs
+  ]
+
+type (RECORD xs)
+  = group
+  $ hsep
+  [ pretty "struct"
+  , fields
+  $ assert_total
+  $ map (\(k,v) => group $ (hsep [pretty k, colon, type v]))
+  $ forget xs
+  ]
 
 type (FUNC xs x)
   = group

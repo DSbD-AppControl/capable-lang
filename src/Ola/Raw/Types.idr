@@ -17,6 +17,7 @@ import Ola.Raw.AST
 
 %default total
 %hide type
+%hide fields
 
 mutual
 
@@ -70,11 +71,12 @@ mutual
              -> (fs  : Args fields')
                    -> Ty (Branch PROD fc fields)
 
-      TyUnion : {0  fields' : Vect (S n) Raw.AST.FIELD}
-             -> (fc  : FileContext)
-             -> (prf : AsVect fields fields')
-             -> (fs  : Args fields')
-                   -> Ty (Branch UNION fc fields)
+      TyData : {0  fields' : Vect (S n) Raw.AST.FIELD}
+            -> (fc  : FileContext)
+            -> (k   : DKind)
+            -> (prf : AsVect fields fields')
+            -> (fs  : Args fields')
+                  -> Ty (Branch (DTYPE k) fc fields)
 
       TyRef : (fc : FileContext)
            -> (ty : Ty           type)
@@ -127,11 +129,12 @@ mutual
       in TyTuple fc prf
                     (assert_total $ toTypeArgs vs)
 
-  toType (Branch UNION fc fs)
+  toType (Branch (DTYPE k) fc fs)
     = let (vs ** prf) = asVect fs
-      in TyUnion fc
-                 prf
-                 (assert_total $ toFields vs)
+      in TyData fc
+                k
+                prf
+                (assert_total $ toFields vs)
 
   toType (Branch ARROW fc nodes)
     = let (vs ** prf) = asVect nodes

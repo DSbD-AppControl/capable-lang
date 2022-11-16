@@ -3,12 +3,13 @@ role Bob
 
 type foo = String
 
-type ping = < ping : String >
-type pong = < pong : String >
+type ping = union { ping : String }
+type pong = union { pong : String }
 
-type pongR = < pong : String
-             | quit : String
-             >
+type pongR = union { pong : String
+                   ; quit : String
+                   }
+
 
 
 protocol pingpong = Alice ==> Bob   [ping] { ping(String)

@@ -18,6 +18,7 @@ import Decidable.Equality
 import Data.List.Elem
 import Data.List1.Elem
 import Data.Vect
+
 import public Data.Singleton
 
 import public System.File
@@ -25,6 +26,7 @@ import public System.File
 import Text.PrettyPrint.Prettyprinter
 
 import Toolkit.Data.DList
+import Toolkit.Data.DVect
 import Toolkit.Data.List.AtIndex
 import Toolkit.DeBruijn.Renaming
 
@@ -128,41 +130,52 @@ namespace Prefix
     = Extend x (trans rest z)
 
 
-||| Values are resolved expressions, closures, and addresses.
-public export
-data Value : (store : List Ty.Base)
-          -> (type  : Ty.Base)
-                   -> Type
-  where
-    Address : IsVar store type -> Value store (REF type)
+mutual
+  public export
+  data Field : List Base -> (String, Base) -> Type
+    where
+      F : (s : String) -> (v : Value store t) -> Field store (s,t)
 
-    U :           Value store UNIT
+  ||| Values are resolved expressions, closures, and addresses.
+  public export
+  data Value : (store : List Ty.Base)
+            -> (type  : Ty.Base)
+                     -> Type
+    where
+      Address : IsVar store type -> Value store (REF type)
 
-    C : Char   -> Value store CHAR
-    S : String -> Value store STR
-    I : Int    -> Value store INT
-    B : Bool   -> Value store BOOL
+      U :           Value store UNIT
 
-    Clos : (scope : Func roles types ctxt  (FUNC a b))
-        -> (env   : DList Ty.Base (Value store) ctxt)
-                 -> Value store (FUNC a b)
+      C : Char   -> Value store CHAR
+      S : String -> Value store STR
+      I : Int    -> Value store INT
+      B : Bool   -> Value store BOOL
 
-    H : (k : HandleKind) -> File -> Value store (HANDLE k)
+      Clos : (scope : Func roles types ctxt  (FUNC a b))
+          -> (env   : DList Ty.Base (Value store) ctxt)
+                   -> Value store (FUNC a b)
 
-    ArrayEmpty : Value store (ARRAY type Z)
+      H : (k : HandleKind) -> File -> Value store (HANDLE k)
 
-    ArrayCons : Value store        type
-             -> Value store (ARRAY type    n)
-             -> Value store (ARRAY type (S n))
+      ArrayEmpty : Value store (ARRAY type Z)
 
-    Tuple : {ts : _} -> DVect Ty.Base (Value store) (S (S n)) ts
-         -> Value store (TUPLE ts)
+      ArrayCons : Value store        type
+               -> Value store (ARRAY type    n)
+               -> Value store (ARRAY type (S n))
 
-    Tag : {a : _}
-       -> (s : String)
-       -> (prf : Elem (s,a) (x::xs))
-       -> Value store a
-       -> Value store (UNION (x:::xs))
+      Tuple : {ts : _} -> DVect Ty.Base (Value store) (S (S n)) ts
+           -> Value store (TUPLE ts)
+
+      Record : {t,ts : _} -> DList (String, Ty.Base)
+                     (Field store)
+                     (t::ts)
+            -> Value store (RECORD (t:::ts))
+
+      Tag : {a : _}
+         -> (s : String)
+         -> (prf : Elem (s,a) (x::xs))
+         -> Value store a
+         -> Value store (UNION (x:::xs))
 
 export
 Pretty (Value store type) where
@@ -201,6 +214,28 @@ Pretty (Value store type) where
     $ mapToVect (pretty)
                 x
 
+  pretty (Record xs)
+    = fields
+    $ assert_total
+    $ fieldsp xs
+    where field : {s,t : _} -> Field store (s,t) -> Doc ann
+          field (F s t)
+            = group
+            $ hsep
+            [ pretty s
+            , equals
+            , pretty t
+            ]
+
+          fieldsp : {ts : _}
+                 -> DList (String, Base)
+                          (Field store)
+                          ts
+                -> List (Doc ann)
+
+          fieldsp Nil = Nil
+          fieldsp (F s t::xs) = field (F s t) :: fieldsp xs
+
   pretty (Tag s prf x)
     = group
     $ hcat [pretty s, parens (pretty x)]
@@ -214,6 +249,7 @@ size : Value store (ARRAY type n)
     -> (Singleton n)
 size ArrayEmpty = (Val Z)
 size (ArrayCons x y) = let Val y' = (size y) in Val (S y')
+
 
 ||| Best way to do it.
 public export
@@ -251,10 +287,31 @@ mutual
   weaken prf (ArrayCons x xs)
     = ArrayCons (weaken prf x) (weaken prf xs)
 
+  weaken prf (Record xs)
+    = Record (weaken prf xs)
+
   weaken prf (Tuple xs)
     = Tuple (weaken prf xs)
   weaken prf (Tag s p x)
     = Tag s p (weaken prf x)
+
+  namespace Field
+    public export
+    weaken : Subset xs ys -> Field xs f
+                         -> Field ys f
+    weaken prf (F s t)
+      = F s
+      $ weaken prf t
+
+  namespace DList
+    public export
+    weaken : Subset xs ys
+          -> DList (String,Ty.Base) (Field xs) stack
+          -> DList (String,Ty.Base) (Field ys) stack
+    weaken prf [] = []
+    weaken prf (ex :: rest)
+      =  weaken prf ex
+      :: weaken prf rest
 
   namespace DVect
     public export

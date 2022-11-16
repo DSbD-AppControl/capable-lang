@@ -4,11 +4,12 @@ role Charlie
 
 type foo = String
 
-type syn = < syn : Int>
+type syn = union { syn : Int }
 
-type synack1 = < synack : (Int,Int)>
-type synack2 = < synack : (Int,Int,Int)>
-type fin     = < fin : (Int,Int,Int) >
+type synack1 = union { synack : (Int,Int)     }
+type synack2 = union { synack : (Int,Int,Int) }
+type fin     = union { fin    : (Int,Int,Int) }
+
 protocol handshake
   = Alice   ==> Bob     [syn]     { syn(Int)
   . Bob     ==> Charlie [syn]     { syn(Int)
@@ -20,9 +21,9 @@ protocol handshake
   }}}}}}
 
 protocol forever
-  = rec(x). Alice ==> Bob   [syn]                           { syn(Int)
-          . Bob   ==> Alice [< fin : Int | restart : Unit>] { fin(Int).end
-                                                            | restart(Unit).call(x)
+  = rec(x). Alice ==> Bob   [syn]                                   { syn(Int)
+          . Bob   ==> Alice [ union {fin : Int ; restart : Unit } ] { fin(Int).end
+                                                                    | restart(Unit).call(x)
           }}
 
 main()

@@ -78,7 +78,7 @@ mutual
 
   synth ctxt (TyVar x prf)
     = do (ty ** idx) <- lookup ctxt x
-         pure (_ ** TyVar idx)
+         pure (ty ** TyVar idx)
 
   synth ctxt (TyChar fc)
     = pure (_ ** TyChar)
@@ -106,13 +106,15 @@ mutual
                | _ => throwAt fc Unknown
          pure (_ ** TyTuple (a::b::args))
 
-  synth ctxt (TyUnion fc prf (Add fc' s x fs))
+  synth ctxt (TyData fc k prf (Add fc' s x fs))
     = do checkLabels Nil (Add fc' s x fs)
 
          (_ ** (a::tmF)) <- synthFields ctxt (Add fc' s x fs)
                | _ => throwAt fc Unknown
 
-         pure (_ ** TyUnion (a::tmF))
+         case k of
+           UNION => pure (_ ** TyUnion (a::tmF))
+           STRUCT => pure (_ ** TyRecord (a::tmF))
 
     where checkLabels : List String -> Named.Args awes -> Ola ()
           checkLabels _ Nil = pure ()
@@ -207,6 +209,9 @@ mutual
 
   reflect delta (UNION (f:::fs))
     = pure (TyUnion !(reflectFields delta (f:::fs)))
+
+  reflect delta (RECORD (f:::fs))
+    = pure (TyRecord !(reflectFields delta (f:::fs)))
 
   reflect delta UNIT
     = pure TyUnit

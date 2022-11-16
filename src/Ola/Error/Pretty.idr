@@ -110,6 +110,9 @@ Show (Typing.Error) where
   show (HandleExpected ty)
     = "A Handle was expected but was given:\n\t\{show ty}"
 
+  show (RecordExpected ty)
+    = "A record was expected but was given:\n\t\{show ty}"
+
   show (UnionExpected ty)
     = "A tagged union was expected but was given:\n\t\{show ty}"
 

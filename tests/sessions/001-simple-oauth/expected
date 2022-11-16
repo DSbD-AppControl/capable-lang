@@ -1,16 +1,16 @@
 Running Test
 Ola> # Finished Parsing
 # Finished Type Checking
-Ola> (offers to Service <login : Unit | cancel : Unit> [ login(Unit)
-                                                    .(selects from Auth <pword : String> [ pword(String)
-                                                                                           .End])
-                                                    | cancel(Unit)
-                                                      .(selects from Auth <quit : Unit> [ quit(Unit)
-                                                                                          .End])])
-Ola> (selects from Client <login : Unit | cancel : Unit> [ login(Unit)
-                                                      .(offers to Auth <auth : Bool> [ auth(Bool)
-                                                                                       .End])
-                                                      | cancel(Unit).End])
+Ola> (offers to Service union {login : Unit; cancel : Unit} [ login(Unit)
+                                                         .(selects from Auth union {pword : String} [ pword(String)
+                                                                                                      .End])
+                                                         | cancel(Unit)
+                                                           .(selects from Auth union {quit : Unit} [ quit(Unit)
+                                                                                                     .End])])
+Ola> (selects from Client union {login : Unit; cancel : Unit} [ login(Unit)
+                                                           .(offers to Auth union {auth : Bool} [ auth(Bool)
+                                                                                                  .End])
+                                                           | cancel(Unit).End])
 Ola> Error projecting on: Auth.
 Not yet implemented
 Ola> Exiting the REPL

@@ -37,6 +37,9 @@ pipeline opts
               exitSuccess
 
        ast <- fromFile fname
+       when (showAST opts)
+         $ printLn ast
+
        putStrLn "# Finished Parsing"
 
        (tm,_) <- check ast

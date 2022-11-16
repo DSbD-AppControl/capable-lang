@@ -1,7 +1,7 @@
 role A
 role B
 
-type msg = <this:Int>
+type msg = union { this:Int }
 
 protocol oneshot = A ==> B [msg] { this(Int) . end }
 

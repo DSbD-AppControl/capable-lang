@@ -42,7 +42,8 @@ namespace Ola
 
   public export
   Keywords : List String
-  Keywords = [ "func", "main", "type", "role", "session", "protocol"
+  Keywords = [ -- Keywords
+               "func", "main", "type", "role", "session", "protocol"
 
              , "local", "var", "let"
 
@@ -52,13 +53,14 @@ namespace Ola
 
              , "if", "else"
 
-             , "set", "mut"
+             , "union", "struct"
+
              -- CTors
              , "true", "false"
              , "unit", "tuple", "tag"
 
              -- Operations
-             , "get", "set"
+             , "get", "set", "mut"
              , "and", "not", "or"
              , "lt", "lte", "eq", "gt", "gte"
 

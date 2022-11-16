@@ -15,6 +15,7 @@ import        Ola.Terms.Vars
 
 %default total
 %hide type
+%hide fields
 
 ||| A Type as a Term.
 |||
@@ -49,6 +50,9 @@ data Ty : (context : List Ty.Base)
 
     TyUnion : (fields : DList (String, Base) (Ty ctxt . Builtin.snd) (t::ts))
                     -> Ty ctxt (UNION (t:::ts))
+
+    TyRecord : (fields : DList (String, Base) (Ty ctxt . Builtin.snd) (t::ts))
+                      -> Ty ctxt (RECORD (t:::ts))
 
     TyUnit : Ty ctxt UNIT
 

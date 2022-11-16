@@ -1,4 +1,4 @@
-type foo = < this : Int | this : String>
+type foo = union { this : Int ; this : String }
 main()
 {
   unit

@@ -23,7 +23,9 @@
                        "else"
                        "call"
                        "rec"
-                       "end"))
+                       "end"
+                       "struct"
+                       "union"))
 
 (defvar ola-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role"))
 

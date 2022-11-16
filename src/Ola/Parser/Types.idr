@@ -18,6 +18,7 @@ import Ola.Parser.API
 
 %default total
 
+
 varType : Rule TYPE
 varType
   = do r <- Ola.ref
@@ -62,15 +63,16 @@ mutual
          e <- Toolkit.location
          pure (Branch PROD (newFC s e) (fromList $ f::head fs::tail fs))
 
-  union : Rule TYPE
-  union
+  datatype' : Rule TYPE
+  datatype'
     = do s <- Toolkit.location
-         symbol "<"
+         k <- (gives "union" UNION <|> gives "struct" STRUCT)
          commit
-         fs <- sepBy1 (symbol "|") field
-         symbol ">"
+         symbol "{"
+         fs <- sepBy1 (symbol ";") field
+         symbol "}"
          e <- Toolkit.location
-         pure (Branch UNION (newFC s e) (fromList $ head fs :: tail fs))
+         pure (Branch (DTYPE k) (newFC s e) (fromList $ head fs :: tail fs))
 
     where field : Rule FIELD
           field
@@ -83,8 +85,8 @@ mutual
 
   datatype : Rule TYPE
   datatype
-      =  tuple
-     <|> union
+      =  datatype'
+     <|> tuple
 
   ref : Rule TYPE
   ref

@@ -64,6 +64,7 @@ cmpTy BOOL = Just CB
 cmpTy (ARRAY x k) = Nothing
 cmpTy (TUPLE _)  = Nothing
 cmpTy (UNION _) = Nothing
+cmpTy (RECORD _) = Nothing
 cmpTy UNIT        = Nothing
 cmpTy (REF x)     = Nothing
 cmpTy (HANDLE x)  = Nothing
