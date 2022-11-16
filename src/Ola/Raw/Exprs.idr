@@ -125,7 +125,7 @@ mutual
 
       -- ### Structs
 
-      Record : {0  fields' : Vect (S n) Raw.AST.FIELDV}
+      Record : {fields' : Vect (S n) Raw.AST.FIELDV}
             -> (fc  : FileContext)
             -> (prf : AsVect fields fields')
             -> (fs  : All Field fields' )

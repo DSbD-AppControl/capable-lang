@@ -78,6 +78,69 @@ projSet fc atype str rtype
                      (Var (MkRef fc "rec") R)
                      (Var (MkRef fc "val") R))))
 
+data PArgs : Vect n FIELD -> Type where
+  PA : {fs : Vect n FIELD}
+    -> {as : _}
+    -> {vs : Vect n ARG}
+    -> (prf : AsVect as vs)
+    -> (val : All Arg vs)
+           -> PArgs fs
+
+projArgs : {f : _}
+        -> {fields : Vect n FIELD}
+        -> Named.Args (f::fields)
+        -> PArgs (f::fields)
+
+projArgs (Add fc s ty Nil)
+  = PA (Next Empty)
+       ((A fc s ty ) :: All.Nil)
+
+projArgs (Add fc s ty (Add fc' s' ty' rest))
+  = let (PA prf tms) = projArgs (Add fc' s' ty' rest)
+    in PA (Next prf)
+          (A fc s ty :: tms)
+
+data PRefs : Vect n FIELD -> Type where
+  PR : {fs : Vect n FIELD}
+    -> {as : _}
+    -> {vs : Vect n FIELDV}
+    -> (prf : AsVect as vs)
+    -> (val : All Field vs)
+           -> PRefs fs
+
+projRefs : {f : _}
+        -> {fields : Vect n FIELD}
+        -> Named.Args (f :: fields)
+        -> PRefs (f::fields)
+
+projRefs (Add fc s ty Nil)
+  = PR (Next Empty)
+       ((F fc s (Var (MkRef fc s) R) ):: All.Nil)
+
+projRefs (Add fc s _ (Add fc' s' ty' rest))
+  = let PR prf tms = projRefs (Add fc' s' ty' rest)
+    in  PR (Next prf)
+           (F fc s (Var (MkRef fc s) R) :: tms)
+
+projCtor : {t, f,fields' : _}
+        -> FileContext
+        -> String
+        -> Ty t
+        -> Named.Args (f::fields')
+        -> (DPair FUNC (\f => (FileContext, String, Fun f)))
+projCtor fc n rtype argso
+   = let PA pa args = projArgs argso in
+     let PR pr refs = projRefs argso
+     in (_ ** ( fc
+              , n
+              , Func {fc' = fc}
+                   fc
+                   pa
+                   args
+                   rtype
+                   (Record fc pr (refs))
+               ))
+
 projs : {t, fields' : _}
      -> (f : {t,t' : _}
           -> FileContext
@@ -98,11 +161,18 @@ foldFun : (DPair FUNC (\f => (FileContext, String, Fun f)))
 foldFun (f' ** (fc,label,fn)) (p' ** scope)
   = (_ ** Def fc FUNC label fn scope)
 
-generateProjections : {t,fields,p : _ } -> Ty t -> Named.Args fields -> Prog p -> DPair PROG Prog
-generateProjections rtype fs scope
+generateProjections : {t,f,fields,p : _ }
+                   -> FileContext
+                   -> String
+                   -> Ty t
+                   -> Named.Args (f::fields)
+                   -> Prog p
+                   -> DPair PROG Prog
+generateProjections fc n rtype fs scope
   = let gs = projs projGet rtype fs in
-    let ss = projs projSet rtype fs
-    in foldr foldFun (_ ** scope) (gs ++ ss)
+    let ss = projs projSet rtype fs in
+    let ctor = projCtor fc n rtype fs
+    in foldr foldFun (_ ** scope) (ctor :: gs ++ ss)
 
 -- # We do the same for unions
 projTag : {t,t' : _}
@@ -162,11 +232,11 @@ check env state (Def fc TYPE n val@(TyData fc' UNION _ args) scope)
 
        pure (DefType tm scope, state)
 
-check env state (Def fc TYPE n val@(TyData fc' STRUCT _ args) scope)
+check env state (Def fc TYPE n val@(TyData fc' STRUCT _ (Add a b c d)) scope)
   = do exists fc (delta env) n
        (ty ** tm) <- synth (delta env) val
 
-       let (p ** scope) = generateProjections val args scope
+       let (p ** scope) = generateProjections fc n val (Add a b c d) scope
 
        let env   = { delta $= \c => extend c n ty} env
        let state = { types $= insert n (T tm)} state

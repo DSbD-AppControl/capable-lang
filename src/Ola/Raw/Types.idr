@@ -29,7 +29,8 @@ mutual
 
         Nil : Args Nil
 
-        Add : (fc   : FileContext)
+        Add : {r , rs : _}
+           -> (fc   : FileContext)
             -> (s    : String)
             -> (ty   : Ty   r)
             -> (rest : Named.Args rs)

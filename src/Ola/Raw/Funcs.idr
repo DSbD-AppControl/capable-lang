@@ -20,7 +20,8 @@ import Ola.Raw.Exprs
 public export
 data Arg : (s : Raw.AST.ARG) -> Type
   where
-    A : (fc   : FileContext)
+    A : {t : _}
+     -> (fc   : FileContext)
      -> (n    : String)
      -> (type : Ty t)
              -> Arg (Branch (ARG n) fc [t])
