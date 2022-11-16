@@ -41,7 +41,8 @@ data Prog : (p : PROG) -> Type
         -> (m  : Fun f)
               -> Prog (Branch MAIN fc [f])
 
-    Def : (fc    : FileContext)
+    Def : {rest : _}
+       -> (fc    : FileContext)
        -> (what  : DefKind k)
        -> (s     : String)
        -> (val   : CalcDef what p)

@@ -10,12 +10,12 @@ protocol handshake
   . end
   }}
 
-type pongR = union { pong : Int ; pongEnd : Int }
+type pongR = union { stop : Int ; cont : Int }
 
 protocol handshakeRec
   = rec(X)
   . Pinger ==> Ponger [ping]  { ping(Int)
-  . Ponger ==> Pinger [pongR] { pong(Int).end | pongEnd(Int).call(X)
+  . Ponger ==> Pinger [pongR] { stop(Int).end | cont(Int).call(X)
   }}
 
 main()

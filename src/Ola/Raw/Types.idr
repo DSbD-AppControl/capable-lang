@@ -71,7 +71,7 @@ mutual
              -> (fs  : Args fields')
                    -> Ty (Branch PROD fc fields)
 
-      TyData : {0  fields' : Vect (S n) Raw.AST.FIELD}
+      TyData : {  fields' : Vect (S n) Raw.AST.FIELD}
             -> (fc  : FileContext)
             -> (k   : DKind)
             -> (prf : AsVect fields fields')
@@ -142,5 +142,6 @@ mutual
                 prf
                 (toTypeArgs (init vs))
                 (assert_total $ toType (last vs))
+
 
 -- [ EOF ]

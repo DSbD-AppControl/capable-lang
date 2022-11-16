@@ -6,6 +6,9 @@
 |||
 module Ola.Check.Progs
 
+import Data.List.Views
+import Data.String
+
 import Toolkit.Data.Location
 
 import Ola.Types
@@ -37,6 +40,93 @@ import Ola.Terms.Progs
 import Ola.REPL.State
 
 %default total
+%hide fields
+
+-- # First we elaboration some functions for projecting records
+projGet : {t,t' : _}
+       -> FileContext
+       -> Ty t
+       -> String
+       -> Ty t'
+       -> (DPair FUNC (\f => (FileContext, String, Fun f)))
+projGet fc atype str rtype
+  = (_ ** ( fc
+          , "get_" ++ str
+          , Func {fc' = fc}
+               fc
+               (Next Empty)
+               [A fc "label" atype]
+               rtype
+               (GetR fc str (Var (MkRef fc "label") R))))
+
+projSet : {t,t' : _}
+       -> FileContext
+       -> Ty t
+       -> String
+       -> Ty t'
+       -> (DPair FUNC (\f => (FileContext, String, Fun f)))
+projSet fc atype str rtype
+  = (_ ** ( fc
+          , "set_" ++ str
+          , Func {fc' = fc}
+               fc
+               (Next (Next Empty))
+               [A fc "rec" atype, A fc "val" rtype ]
+               atype
+               (SetR fc
+                     str
+                     (Var (MkRef fc "rec") R)
+                     (Var (MkRef fc "val") R))))
+
+projs : {t, fields' : _}
+     -> (f : {t,t' : _}
+          -> FileContext
+          -> Ty t
+          -> String
+          -> Ty t'
+          -> (DPair FUNC (\f => (FileContext, String, Fun f))))
+     -> Ty t
+     -> Named.Args fields'
+     -> List (DPair FUNC (\f => (FileContext, String, Fun f)))
+projs f atype Nil = Nil
+projs f atype (Add fc' s t xs)
+  = f fc' atype s t :: projs f atype xs
+
+foldFun : (DPair FUNC (\f => (FileContext, String, Fun f)))
+        -> DPair PROG Prog
+        -> DPair PROG Prog
+foldFun (f' ** (fc,label,fn)) (p' ** scope)
+  = (_ ** Def fc FUNC label fn scope)
+
+generateProjections : {t,fields,p : _ } -> Ty t -> Named.Args fields -> Prog p -> DPair PROG Prog
+generateProjections rtype fs scope
+  = let gs = projs projGet rtype fs in
+    let ss = projs projSet rtype fs
+    in foldr foldFun (_ ** scope) (gs ++ ss)
+
+-- # We do the same for unions
+projTag : {t,t' : _}
+       -> FileContext
+       -> Ty t
+       -> String
+       -> Ty t'
+       -> (DPair FUNC (\f => (FileContext, String, Fun f)))
+projTag fc atype str rtype
+  = (_ ** ( fc
+          , str
+          , Func {fc' = fc}
+               fc
+               (Next Empty)
+               [A fc "value" rtype]
+               atype
+               (The fc atype (Tag fc str (Var (MkRef fc "value") R)))
+
+               ))
+
+generateTags : {t,fields,p : _ } -> Ty t -> Named.Args fields -> Prog p -> DPair PROG Prog
+generateTags rtype fs scope
+  = let gs = projs projTag rtype fs
+    in foldr foldFun (_ ** scope) gs
 
 check : {p     : PROG}
      -> {rs    : List Ty.Role}
@@ -52,7 +142,40 @@ check env state (Main fc m)
 
        pure (Main m, state)
 
-check env state (Def fc TYPE n val scope)
+-- [ NOTE ]
+--
+-- The following should be cleaner, but we have reached the limit of
+-- Idris2 inference abilities to reconstruct the raw ast from the
+-- projections.
+--
+-- Well maybe gallais can get it working, but I cannot...
+check env state (Def fc TYPE n val@(TyData fc' UNION _ args) scope)
+  = do exists fc (delta env) n
+       (ty ** tm) <- synth (delta env) val
+
+       let (p ** scope) = generateTags val args scope
+
+       let env   = { delta $= \c => extend c n ty} env
+       let state = { types $= insert n (T tm)} state
+
+       (scope, state) <- assert_total $ check env state scope
+
+       pure (DefType tm scope, state)
+
+check env state (Def fc TYPE n val@(TyData fc' STRUCT _ args) scope)
+  = do exists fc (delta env) n
+       (ty ** tm) <- synth (delta env) val
+
+       let (p ** scope) = generateProjections val args scope
+
+       let env   = { delta $= \c => extend c n ty} env
+       let state = { types $= insert n (T tm)} state
+
+       (scope, state) <- assert_total $ check env state scope
+
+       pure (DefType tm scope, state)
+
+check env state (Def fc TYPE n val {rest} scope)
   = do exists fc (delta env) n
        (ty ** tm) <- synth (delta env) val
 

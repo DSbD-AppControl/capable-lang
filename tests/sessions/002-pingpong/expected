@@ -9,14 +9,14 @@ Ola> (offers to Pinger union {ping : Int} [ ping(Int)
                                                                                   .End])])
 Ola> rec(a).
   (selects from Ponger union {ping : Int} [ ping(Int)
-                                            .(offers to Ponger union {pong : Int; pongEnd : Int} [ pong(Int)
-                                                                                                   .End
-                                                                                                   | pongEnd(Int)
-                                                                                                     .(Call a)])])
+                                            .(offers to Ponger union {stop : Int; cont : Int} [ stop(Int)
+                                                                                                .End
+                                                                                                | cont(Int)
+                                                                                                  .(Call a)])])
 Ola> rec(a).
   (offers to Pinger union {ping : Int} [ ping(Int)
-                                         .(selects from Pinger union {pong : Int; pongEnd : Int} [ pong(Int)
-                                                                                                   .End
-                                                                                                   | pongEnd(Int)
-                                                                                                     .(Call a)])])
+                                         .(selects from Pinger union {stop : Int; cont : Int} [ stop(Int)
+                                                                                                .End
+                                                                                                | cont(Int)
+                                                                                                  .(Call a)])])
 Ola> Exiting the REPL

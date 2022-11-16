@@ -6,15 +6,15 @@ type foo = String
 
 type syn = union { syn : Int }
 
-type synack1 = union { synack : (Int,Int)     }
-type synack2 = union { synack : (Int,Int,Int) }
-type fin     = union { fin    : (Int,Int,Int) }
+type synack1 = union { synack  : (Int,Int)     }
+type synack2 = union { synack2 : (Int,Int,Int) }
+type fin     = union { fin     : (Int,Int,Int) }
 
 protocol handshake
   = Alice   ==> Bob     [syn]     { syn(Int)
   . Bob     ==> Charlie [syn]     { syn(Int)
   . Charlie ==> Bob     [synack1] { synack((Int,Int))
-  . Bob     ==> Alice   [synack2] { synack((Int,Int,Int))
+  . Bob     ==> Alice   [synack2] { synack2((Int,Int,Int))
   . Alice   ==> Bob     [fin]     { fin((Int,Int,Int))
   . Bob     ==> Charlie [fin]     { fin((Int,Int,Int))
   . end

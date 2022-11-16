@@ -4,7 +4,10 @@ func printLn(str:String) -> Unit
 ; print(toString('\n'))
 
 }
-func extract(x : union { urgh:String; oops:Int} ) -> String
+
+type uo = union { urgh:String; oops:Int}
+
+func extract(x : uo ) -> String
 {
   match x
   {
@@ -24,4 +27,6 @@ main()
   local foo : union { urgh:String ; oops:Int } = tag[urgh]("Ola")
 ; printLn(extract(foo))
 
+; local foo : union { urgh:String ; oops:Int } = urgh("Ola") -- works because of binding on L8
+; printLn(extract(foo))
 }

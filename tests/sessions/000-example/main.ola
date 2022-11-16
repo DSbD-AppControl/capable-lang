@@ -6,8 +6,8 @@ type foo = String
 type ping = union { ping : String }
 type pong = union { pong : String }
 
-type pongR = union { pong : String
-                   ; quit : String
+type pongR = union { pongR : String
+                   ; quit  : String
                    }
 
 
@@ -18,7 +18,7 @@ protocol pingpong = Alice ==> Bob   [ping] { ping(String)
 
 protocol pingpongR = rec(x)
                    . Alice ==> Bob   [ping] { ping(String)
-                   . Bob   ==> Alice [pongR] { pong(String) . call(x)
+                   . Bob   ==> Alice [pongR] { pongR(String) . call(x)
                                              | quit(String) . end
                                              }}
 

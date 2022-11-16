@@ -32,7 +32,8 @@ toArg (Branch (ARG str) fc [t])
 public export
 data Fun : (f : Raw.AST.FUNC) -> Type
   where
-    Func : {  az   : Vect n Raw.AST.ARG}
+    Func : {r : _}
+        -> {  az   : Vect n Raw.AST.ARG}
         -> (  fc   : FileContext)
         -> (  prf  : AsVect as az)
         -> (  args : All Arg az)
