@@ -1,0 +1,9 @@
+echo "Running Test"
+
+$1 main.ola
+
+# Local Variables:
+# mode: sh
+# End:
+
+# -- [ EOF ]

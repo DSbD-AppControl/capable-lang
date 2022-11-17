@@ -105,6 +105,9 @@ mutual
        -> (env   : Env rs ds gs)
        -> (syn   : Expr e)
                 -> Ola (DPair Ty.Base (Expr rs ds gs))
+
+  synth env (Hole ref prf) = unknown (span ref)
+
   synth env (Var ref prf)
     = do (ty ** idx) <- lookup (gamma env) ref
          pure (_ ** Var idx)
@@ -544,6 +547,12 @@ mutual
 
          Refl <- compare fc' ty ty'
          pure (T tyTm (Tag s tm loc))
+
+  check {t = t} fc env ty (Hole (MkRef fc' s) R)
+    = showHoleExit (gamma env) s t
+         -- pure (T ty (Hole fc ref))
+         -- @TODO add infrastructure to collect all the holes, and then report.
+         -- @TODO need to distinguish between global and local contexts.
 
   check {t = t} fc env ty expr
     = do (ty' ** e) <- synth env expr

@@ -9,6 +9,10 @@ import public Decidable.Equality
 import public Data.Singleton
 import public Data.Fin
 
+import Text.PrettyPrint.Prettyprinter
+
+import Data.SortedMap
+
 import public Toolkit.Decidable.Informative
 import public Toolkit.Data.Location
 
@@ -136,6 +140,9 @@ exists fc ctxt s
 
 namespace Env
   public export
+  data HoleContext = H (Context Ty.Base ms)
+
+  public export
   record Env (rs : List Ty.Role)
              (ds,gs : List Ty.Base)
     where
@@ -143,19 +150,27 @@ namespace Env
       rho   : Context Ty.Role rs
       delta : Context Ty.Base ds
       gamma : Context Ty.Base gs
-
+      mu    : SortedMap String HoleContext
 
   export
   empty : Env Nil Nil Nil
-  empty = E Nil Nil Nil
+  empty = E Nil Nil Nil empty
+
+  namespace Mu
+    export
+    extend : (env : Env rs ds gs)
+          -> (s   : String)
+                 -> Env rs ds gs
+    extend env s
+      = { mu $= insert s (H (gamma env))} env
 
   namespace Rho
     export
     extend : (env : Env rs ds gs)
           -> (s   : String)
                  -> Env (MkRole::rs) ds gs
-    extend (E rho delta gamma) s
-      = E (I s MkRole :: rho) delta gamma
+    extend env s
+      = { rho $= (::) (I s MkRole)} env
 
   namespace Gamma
     export
@@ -163,7 +178,40 @@ namespace Env
           -> (s   : String)
           -> (ty  : Base)
                  -> Env rs ds (ty::gs)
-    extend (E rho delta gamma) s ty
-      = E rho delta (I s ty :: gamma)
+    extend env s ty
+      = { gamma $= (::) (I s ty) } env
+
+
+prettyCtxt : Context Ty.Base gs -> List (Doc ann) -> List (Doc ann)
+prettyCtxt [] acc = acc
+prettyCtxt ((I name x) :: rest) acc
+  = prettyCtxt rest (acc ++ [(hsep [pretty name, colon, pretty x])])
+
+prettyHole : Context Ty.Base gs
+          -> String
+          -> Base
+          -> Doc ann
+prettyHole x str y
+  = vcat
+  $ prettyCtxt x Nil
+  ++ [ pretty "---"
+     , group
+     $ hsep
+     [ pretty str
+     , colon
+     , pretty y]
+     ]
+
+export
+showHoleExit : Context Ty.Base gs
+            -> String
+            -> Base
+            -> Ola e
+showHoleExit g n t
+  = do putStrLn "Showing first available hole."
+       putStrLn "Need to collect them..."
+       let pc = prettyHole g n t
+       putStrLn $ (show . annotate ()) pc
+       exitSuccess
 
 -- [ EOF ]

@@ -36,6 +36,11 @@ var : Rule EXPR
 var = do r <- Ola.ref
          pure (null (VAR (get r)) (span r))
 
+hole : Rule EXPR
+hole
+  = do symbol "?"
+       r <- Ola.ref
+       pure (null (HOLE (get r)) (span r))
 
 constants : Rule EXPR
 constants
@@ -461,6 +466,7 @@ mutual
   expr'
       =   call
       <|> var
+      <|> hole
       <|> constants
       <|> let_ "local" STACK
       <|> let_ "var"   HEAP

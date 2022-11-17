@@ -15,7 +15,7 @@ import Ola.Check
 
 import Ola.Terms
 import Ola.Exec
-import Ola.REPL.State
+import Ola.State
 
 import Ola.Options
 

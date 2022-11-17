@@ -25,11 +25,12 @@
                        "rec"
                        "end"
                        "struct"
-                       "union"))
+                       "union"
+                       "tuple"))
 
 (defvar ola-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role"))
 
-(defvar ola-operators '("!" "+" "|" "&" "."))
+(defvar ola-operators '("?" "!" "+" "|" "&" "."))
 
 (defvar ola-symbols   '(":" "->" "==>" "="
                         "[" "]"
@@ -43,7 +44,6 @@
                         "size" "strCons" "slice"
                         "ord" "chr" "string" "toString"
                         "the"
-                        "left" "right" "pair"
                         "print"
                         "set" "get" "mut"
                         ))

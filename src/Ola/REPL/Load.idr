@@ -16,7 +16,7 @@ import Ola.Check.Progs
 
 import Ola.Terms
 
-import Ola.REPL.State
+import Ola.State
 
 %default total
 

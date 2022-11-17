@@ -1,5 +1,6 @@
-module Ola.REPL.State
+module Ola.State
 
+import Data.List
 import public Data.SortedMap
 import public Data.SortedSet
 
@@ -13,6 +14,7 @@ import Ola.Core
 import Ola.Terms
 
 %default total
+%hide type
 
 public export
 data Protocol : Type where
@@ -27,6 +29,9 @@ data Func = F (Func rs ts s type)
 
 
 public export
+data Hole = H (Env rs ts gs)
+
+public export
 data Ty = T (Ty ts type)
 
 public export
@@ -37,12 +42,21 @@ record State where
   roles     : SortedMap String Role
   types     : SortedMap String State.Ty
   funcs     : SortedMap String Func
+  holes     : SortedMap String State.Hole
   prog      : Maybe Program
 
 export
 defaultState : State
-defaultState = S Nothing empty empty empty empty Nothing
+defaultState = S Nothing empty empty empty empty empty Nothing
 
+export
+isHoley : State -> Ola Bool
+isHoley = (pure . isNil . SortedMap.toList . holes)
+
+export
+getHole : State -> String -> Ola (Maybe Hole)
+getHole st key
+  = pure $ lookup key (holes st)
 
 export
 getProtocol : State -> String -> Ola (Maybe Protocol)

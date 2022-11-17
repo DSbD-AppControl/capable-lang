@@ -1,0 +1,13 @@
+Running Test
+# Finished Parsing
+Showing first available hole.
+Need to collect them...
+right : (Int-> union {left : String; right : Int})
+left : (String-> union {left : String; right : Int})
+set_y : (struct {x : Int; y : Int}-> Int-> struct {x : Int; y : Int})
+set_x : (struct {x : Int; y : Int}-> Int-> struct {x : Int; y : Int})
+get_y : (struct {x : Int; y : Int}-> Int)
+get_x : (struct {x : Int; y : Int}-> Int)
+point : (Int-> Int-> struct {x : Int; y : Int})
+---
+a : Int

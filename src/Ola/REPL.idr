@@ -25,7 +25,7 @@ import Ola.Exec
 
 import Ola.REPL.Commands
 import Ola.REPL.Load
-import Ola.REPL.State
+import Ola.State
 
 import Ola.Pretty
 

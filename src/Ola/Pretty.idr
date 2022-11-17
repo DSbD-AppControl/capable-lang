@@ -12,6 +12,7 @@ import Ola.Check.Common
 
 import Ola.Terms
 import Ola.Terms.Protocols.Projection
+import Ola.State
 
 %default total
 

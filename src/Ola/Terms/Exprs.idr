@@ -63,6 +63,7 @@ mutual
            -> (type  :      Ty.Base)
                     -> Type
     where
+      Hole : String -> Expr roles types stack t
       Var : TyVar stack t -> Expr roles types stack t
 
 

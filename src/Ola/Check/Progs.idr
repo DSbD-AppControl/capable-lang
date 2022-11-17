@@ -37,7 +37,7 @@ import Ola.Terms.Exprs
 import Ola.Terms.Funcs
 import Ola.Terms.Progs
 
-import Ola.REPL.State
+import Ola.State
 
 %default total
 %hide fields

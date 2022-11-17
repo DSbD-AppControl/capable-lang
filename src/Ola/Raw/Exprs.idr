@@ -47,6 +47,10 @@ mutual
     where
 
       -- ## Bindings
+      Hole : (ref : Ref)
+          -> (prf : AsRef s fc ref)
+                 -> Expr (Branch (HOLE s) fc Nil)
+
       Var : (ref : Ref)
          -> (prf : AsRef s fc ref)
                 -> Expr (Branch (VAR s) fc Nil)
@@ -207,6 +211,9 @@ mutual
 
   export
   toExpr : (e : Raw.AST.EXPR) -> Expr e
+  toExpr (Branch (HOLE str) fc Nil)
+    = Hole (MkRef fc str) R
+
   toExpr (Branch (VAR str) fc Nil)
     = Var (MkRef fc str) R
 

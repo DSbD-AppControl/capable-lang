@@ -170,6 +170,7 @@ namespace Shape
     -- ## Expressions
 
     -- ### Bindings
+    HOLE : String -> NULL Shape EXPR
     VAR : String -> NULL Shape EXPR
     LETTY : Stored -> String -> TRI Shape EXPR TYPE EXPR EXPR
     LET   : Stored -> String -> BIN Shape EXPR      EXPR EXPR
@@ -253,6 +254,7 @@ namespace Shape
     show (FIELD str)     = "(FIELD \{show str})"
     show (DTYPE x)       = "(DTYPE \{show x})"
     show ARROW           = "ARROW"
+    show (HOLE str)      = "(HOLE \{show str}}"
     show (VAR str)       = "(VAR \{show str})"
     show (LETTY x str)   = "(LETTY \{show x} \{show str})"
     show (LET x str)     = "(LET \{show x} \{show str})"

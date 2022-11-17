@@ -1,0 +1,12 @@
+type point = struct { x : Int; y : Int }
+
+type either = union { left : String; right : Int}
+
+
+main()
+{
+
+   local x = add(1,?a)
+;  unit
+
+}

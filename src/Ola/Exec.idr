@@ -391,6 +391,9 @@ mutual
         -> (heap  : Heap                   store)
         -> (expr  : Expr roles types stack       type)
                  -> Ola (Expr.Result store type)
+    -- ### Holes
+    eval env heap (Hole s)
+      = panic "Encountered a hole: \{show s}"
     -- ### Variables
     eval env heap (Var x)
       = return heap
