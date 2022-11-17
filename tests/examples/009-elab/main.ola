@@ -30,7 +30,7 @@ func after() -> Unit
 ; local p = set_x(p,3)
 ; printLn(toString(get_x(p)))
 
-; local x : either = left("a")
+; local x = left("a")
 ; unit
 }
 
