@@ -1,10 +1,10 @@
 echo "Running Test"
 
-$1 main.ola
-$1 main1.ola
-$1 main2.ola
-$1 main3.ola
-$1 main4.ola
+$1 main.capable
+$1 main1.capable
+$1 main2.capable
+$1 main3.capable
+$1 main4.capable
 
 # Local Variables:
 # mode: sh

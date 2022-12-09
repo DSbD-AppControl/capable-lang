@@ -2,12 +2,9 @@
 #
 # Makefile for the project.
 #
-# Copyright : (c) Jan de Muijnck-Hughes
-# License   : see LICENSE
-#
 # -- [ EOH ]
 
-PROJECT=ola
+PROJECT=capable
 IDRIS2=idris2
 
 TARGETDIR = ${CURDIR}/build/exec
@@ -15,41 +12,41 @@ TARGET = ${TARGETDIR}/${PROJECT}
 
 # [ Core Project Definition ]
 
-.PHONY: ola ola-test-build ola-test-run ola-test-run-re ola-test-update \
-       # ola-bench
+.PHONY: capable capable-test-build capable-test-run capable-test-run-re capable-test-update \
+       # capable-bench
 
-ola:
+capable:
 	$(IDRIS2) --build ${PROJECT}.ipkg
 
 # To be activated once frontend is completed.
 
-ola-test-build:
+capable-test-build:
 	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
 
-ola-test-run: ola-test-build
+capable-test-run: capable-test-build
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 UPDATE='' \
 			 ONLY=$(ONLY)
 
-ola-test-run-re: ola-test-build
+capable-test-run-re: capable-test-build
 	${MAKE} -C tests test-re \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 ONLY=$(ONLY)
 
-ola-test-update: ola-test-build
+capable-test-update: capable-test-build
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 THREADS=1 \
 			 ONLY=$(ONLY)
 
-ola-bench: ola ola-test-build
+capable-bench: capable capable-test-build
 	${ECHO} "Todo"
 
-#	$(HYPERFINE) --warmup 10 '${MAKE} ola-test-run'
+#	$(HYPERFINE) --warmup 10 '${MAKE} capable-test-run'
 
 
 # [ Housekeeping ]

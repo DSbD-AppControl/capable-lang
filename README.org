@@ -2,25 +2,25 @@
 
 We are interested in how CHERI-Style Capabilities inter-play with session-types in imperative languages such as Rust/C.
 
-Ola (not that Ola but something else) is a barebones imperative language with ML-style references written in Idris2 as a intrinsically-scoped/typed EDSL.
-Ola is our experimental language to see how the type-system should work.
+Capable is a barebones imperative language with ML-style references written in Idris2 as a intrinsically-scoped/typed EDSL.
+Capable is our experimental language to see how the type-system should work.
 
 This repository should be seen as the reference implementation.
 When realising on CHERIBSD (or another platform with access to capabilities through MUSL), we can use different languages.
 
-* What is Ola:
+* What is Capable:
 
-Ola:
+Well... it is capable of
 
-1. is an imperative language with n-ary functions and expression-oriented function bodies
-1. support for ML style references
-1. supports type synonyms
-1. supports Ints, Strings, Chars, Bool, and various primitive operations
-1. supports file & process IO
-1. supports tuples, structures, and tagged unions
-1. has bi-directional type-checking
-1. has typed holes
-1. has support for MPSTs (runtime needs developing)
+1. being an imperative language with n-ary functions and expression-oriented function bodies
+1. supporting for ML style references
+1. supporting type synonyms
+1. supporting Ints, Strings, Chars, Bool, and various primitive operations
+1. supporting file & process IO
+1. supporting tuples, structures, and tagged unions
+1. bi-directional type-checking
+1. simple typed holes
+1. supporting Multi-Party Session Types (although the runtime needs developing)
 
 * Note
 

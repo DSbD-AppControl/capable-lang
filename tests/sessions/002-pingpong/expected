@@ -1,22 +1,22 @@
 Running Test
-Ola> # Finished Parsing
+Capable> # Finished Parsing
 # Finished Type Checking
-Ola> (selects from Ponger union {ping : Int} [ ping(Int)
+Capable> (selects from Ponger union {ping : Int} [ ping(Int)
                                           .(offers to Ponger union {pong : Int} [ pong(Int)
                                                                                   .End])])
-Ola> (offers to Pinger union {ping : Int} [ ping(Int)
+Capable> (offers to Pinger union {ping : Int} [ ping(Int)
                                        .(selects from Pinger union {pong : Int} [ pong(Int)
                                                                                   .End])])
-Ola> rec(a).
+Capable> rec(a).
   (selects from Ponger union {ping : Int} [ ping(Int)
                                             .(offers to Ponger union {stop : Int; cont : Int} [ stop(Int)
                                                                                                 .End
                                                                                                 | cont(Int)
                                                                                                   .(Call a)])])
-Ola> rec(a).
+Capable> rec(a).
   (offers to Pinger union {ping : Int} [ ping(Int)
                                          .(selects from Pinger union {stop : Int; cont : Int} [ stop(Int)
                                                                                                 .End
                                                                                                 | cont(Int)
                                                                                                   .(Call a)])])
-Ola> Exiting the REPL
+Capable> Exiting the REPL

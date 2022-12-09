@@ -1,31 +1,31 @@
 Running Test
 # Finished Parsing
 Type Checking Error
-main.ola:2:0-0:
+main.capable:2:0-0:
 Already bound:
 	"foo"
 
 # Finished Parsing
 Type Checking Error
-main1.ola:1:0-0:
+main1.capable:1:0-0:
 Already bound:
 	"A"
 
 # Finished Parsing
 Type Checking Error
-main2.ola:7:0-0:
+main2.capable:7:0-0:
 Already bound:
 	"oneshot"
 
 # Finished Parsing
 Type Checking Error
-main3.ola:1:0-0:
+main3.capable:1:0-0:
 Already bound:
 	"printLn"
 
 # Finished Parsing
 Type Checking Error
-main4.ola:0:32-46:
+main4.capable:0:32-46:
 Already bound:
 	"this"
 

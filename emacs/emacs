@@ -1,13 +1,13 @@
 ;; this should be inserted in your .emacs
 ;; be careful to replace PATH/TO/ with the path...
 
-(use-package ola
-  :load-path "PATH/TO/DIR" ;; for ola.el
+(use-package capable
+  :load-path "PATH/TO/DIR" ;; for capable.el
   :mode
-  ("\\.ola\\'" . ola-mode)
+  ("\\.capable\\'" . capable-mode)
   :config
-  (setq ola-command "PATH/TO/EXEC" ;; for ola
-        ola-options ""
+  (setq capable-command "PATH/TO/EXEC" ;; for capable
+        capable-options ""
         )
   )
 ;; EOF

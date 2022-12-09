@@ -1,14 +1,14 @@
 module Main
 
 import System
-import Ola.Core
+import Capable.Core
 
-import Ola.Pipeline
-import Ola.REPL
-import Ola.Options
+import Capable.Pipeline
+import Capable.REPL
+import Capable.Options
 
 
-mainRug : Ola ()
+mainRug : Capable ()
 mainRug
   = do opts <- getOpts
 
@@ -21,6 +21,6 @@ mainRug
 
 main : IO ()
 main
-  = do Ola.run mainRug
+  = do Capable.run mainRug
 
 -- [ EOF ]

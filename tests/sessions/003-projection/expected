@@ -1,19 +1,19 @@
 Running Test
-Ola> # Finished Parsing
+Capable> # Finished Parsing
 # Finished Type Checking
-Ola> (selects from Bob union {syn : Int} [ syn(Int)
+Capable> (selects from Bob union {syn : Int} [ syn(Int)
                                       .(offers to Bob union {synack2 : (Int, Int, Int)} [ synack2((Int, Int, Int))
                                                                                           .(selects from Bob union {fin : (Int, Int, Int)} [ fin((Int, Int, Int))
                                                                                                                                              .End])])])
-Ola> (offers to Alice union {syn : Int} [ syn(Int)
+Capable> (offers to Alice union {syn : Int} [ syn(Int)
                                      .(selects from Charlie union {syn : Int} [ syn(Int)
                                                                                 .(offers to Charlie union {synack : (Int, Int)} [ synack((Int, Int))
                                                                                                                                   .(selects from Alice union {synack2 : (Int, Int, Int)} [ synack2((Int, Int, Int))
                                                                                                                                                                                            .(offers to Alice union {fin : (Int, Int, Int)} [ fin((Int, Int, Int))
                                                                                                                                                                                                                                              .(selects from Charlie union {fin : (Int, Int, Int)} [ fin((Int, Int, Int))
                                                                                                                                                                                                                                                                                                     .End])])])])])])
-Ola> (offers to Bob union {syn : Int} [ syn(Int)
+Capable> (offers to Bob union {syn : Int} [ syn(Int)
                                    .(selects from Bob union {synack : (Int, Int)} [ synack((Int, Int))
                                                                                     .(offers to Bob union {fin : (Int, Int, Int)} [ fin((Int, Int, Int))
                                                                                                                                     .End])])])
-Ola> Exiting the REPL
+Capable> Exiting the REPL

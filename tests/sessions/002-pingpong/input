@@ -1,4 +1,4 @@
-:load main.ola
+:load main.capable
 :project handshake Pinger
 :project handshake Ponger
 :project handshakeRec Pinger

@@ -1,7 +1,7 @@
 echo "Running Test"
 
-$1 main.ola
-$1 main2.ola
+$1 main.capable
+$1 main2.capable
 
 
 # Local Variables:

@@ -1,4 +1,4 @@
-:load main.ola
+:load main.capable
 :project handshake Alice
 :project handshake Bob
 :project handshake Charlie
