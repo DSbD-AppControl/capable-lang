@@ -8,7 +8,7 @@
 
 ;; define several class of keywords
 
-(defvar ola-keywords '("func"
+(defvar capable-keywords '("func"
                        "main"
                        "match"
                        "local"
@@ -28,17 +28,17 @@
                        "union"
                        "tuple"))
 
-(defvar ola-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role"))
+(defvar capable-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role"))
 
-(defvar ola-operators '("?" "!" "+" "|" "&" "."))
+(defvar capable-operators '("?" "!" "+" "|" "&" "."))
 
-(defvar ola-symbols   '(":" "->" "==>" "="
+(defvar capable-symbols   '(":" "->" "==>" "="
                         "[" "]"
                         "<" ">"
                         "{" "}"
                         "(" ")"))
 
-(defvar ola-functions '("and" "not" "or"
+(defvar capable-functions '("and" "not" "or"
                         "lt" "lte" "eq" "gt" "gte"
                         "add" "sub" "mul" "div"
                         "size" "strCons" "slice"
@@ -48,31 +48,31 @@
                         "set" "get" "mut"
                         ))
 
-(defvar ola-constants '("true" "false" "unit"))
+(defvar capable-constants '("true" "false" "unit"))
 
 
-(defvar ola-font-lock-defaults
+(defvar capable-font-lock-defaults
   `((
-    ( ,(regexp-opt ola-keywords  'words) . font-lock-keyword-face)
-    ( ,(regexp-opt ola-types     'words) . font-lock-type-face)
-    ( ,(regexp-opt ola-operators 'words) . font-lock-builtin-face)
-    ( ,(regexp-opt ola-symbols   'words) . font-lock-builtin-face)
-    ( ,(regexp-opt ola-functions 'words) . font-lock-function-name-face)
-    ( ,(regexp-opt ola-constants 'words) . font-lock-constant-face)
+    ( ,(regexp-opt capable-keywords  'words) . font-lock-keyword-face)
+    ( ,(regexp-opt capable-types     'words) . font-lock-type-face)
+    ( ,(regexp-opt capable-operators 'words) . font-lock-builtin-face)
+    ( ,(regexp-opt capable-symbols   'words) . font-lock-builtin-face)
+    ( ,(regexp-opt capable-functions 'words) . font-lock-function-name-face)
+    ( ,(regexp-opt capable-constants 'words) . font-lock-constant-face)
 )))
 
 ;;; Clear memory
-(setq ola-keywords  nil
-      ola-types     nil
-      ola-operators nil
-      ola-symbols   nil
-      ola-functions nil
-      ola-constants nil
+(setq capable-keywords  nil
+      capable-types     nil
+      capable-operators nil
+      capable-symbols   nil
+      capable-functions nil
+      capable-constants nil
       )
 
 ;; syntax table
-(defvar ola-syntax-table nil "Syntax table for `ola-mode'.")
-(setq ola-syntax-table
+(defvar capable-syntax-table nil "Syntax table for `capable-mode'.")
+(setq capable-syntax-table
   (let ((synTable (make-syntax-table)))
 
   (modify-syntax-entry ?\( "()" synTable)
@@ -102,17 +102,17 @@
 
   synTable))
 
-(defvar ola-mode-hook nil "Hook for ola-mode.")
+(defvar capable-mode-hook nil "Hook for capable-mode.")
 
 ;; define the mode
-(define-derived-mode ola-mode fundamental-mode
-  "Ola mode"
+(define-derived-mode capable-mode fundamental-mode
+  "Capable mode"
 
   ;; handling comments
-  :syntax-table ola-syntax-table
+  :syntax-table capable-syntax-table
 
   ;; syntax highlighting
-  (make-local-variable 'ola-font-lock-defaults)
+  (make-local-variable 'capable-font-lock-defaults)
   (make-local-variable 'comment-start)
   (make-local-variable 'comment-end)
   (make-local-variable 'comment-start-skip)
@@ -122,7 +122,7 @@
   (make-local-variable 'comment-multi-line)
   ;;(make-local-variable 'comment-indent-function)
 
-  (setq font-lock-defaults ola-font-lock-defaults
+  (setq font-lock-defaults capable-font-lock-defaults
         comment-start           "-- "
         comment-end             ""
         comment-start-skip      "[-{]-[ \t]*"
@@ -133,24 +133,24 @@
         ;;comment-indent-function 'java-comment-indent
         ;;indent-tabs-mode        t
         )
-  (run-hooks 'ola-mode-hook)
+  (run-hooks 'capable-mode-hook)
 )
 
 ;; Customisation options
 
-(defgroup ola nil
+(defgroup capable nil
   "A language."
   :group 'languages)
 
-;;(defcustom ola-command "ola"
-;;  "The path to the Ola command to run."
+;;(defcustom capable-command "capable"
+;;  "The path to the Capable command to run."
 ;;  :type 'string
-;;  :group 'ola)
+;;  :group 'capable)
 
-(defcustom ola-options nil
-  "Command line options to pass to ola."
+(defcustom capable-options nil
+  "Command line options to pass to capable."
   :type 'string
-  :group 'ola)
+  :group 'capable)
 
-(provide 'ola)
-;;; ola.el ends here
+(provide 'capable)
+;;; capable.el ends here
