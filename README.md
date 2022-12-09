@@ -1,4 +1,6 @@
-#+TITLE: README
+# README
+
+[![Ubuntu](https://github.com/DSbD-AppControl/capable-lang/actions/workflows/ci-ubuntu.yml/badge.svg?branch=main)](https://github.com/DSbD-AppControl/capable-lang/actions/workflows/ci-ubu
 
 We are interested in how CHERI-Style Capabilities inter-play with session-types in imperative languages such as Rust/C.
 
@@ -8,7 +10,7 @@ Capable is our experimental language to see how the type-system should work.
 This repository should be seen as the reference implementation.
 When realising on CHERIBSD (or another platform with access to capabilities through MUSL), we can use different languages.
 
-* What is Capable:
+## What is Capable:
 
 Well... it is capable of
 
@@ -22,13 +24,13 @@ Well... it is capable of
 1. simple typed holes
 1. supporting Multi-Party Session Types (although the runtime needs developing)
 
-* Note
+## Note
 
 This is a constant work in progress.
 
 The code is not polished.
 
-* Contributions
+## Contributions
 
 What we contribute now:
 
@@ -52,16 +54,14 @@ What we will contribute:
 + ...
 
 
-* Some behind the scenes
+## Some behind the scenes
 
 Evaluation is through definitional interpretation based on work.
 
-#+begin_quote
-Casper Bach Poulsen, Arjen Rouvoet, Andrew Tolmach, Robbert Krebbers, and Eelco Visser. 2017. Intrinsically-typed definitional interpreters for imperative languages. Proc. ACM Program. Lang. 2, POPL, Article 16 (January 2018), 34 pages. https://doi.org/10.1145/3158104
-#+end_quote
+> Casper Bach Poulsen, Arjen Rouvoet, Andrew Tolmach, Robbert Krebbers, and Eelco Visser. 2017. Intrinsically-typed definitional interpreters for imperative languages. Proc. ACM Program. Lang. 2, POPL, Article 16 (January 2018), 34 pages. https://doi.org/10.1145/3158104
 
 Session Types is through _Less is More_, based on:
 
-#+begin_quote
-Alceste Scalas and Nobuko Yoshida. 2019. Less is more: multiparty session types revisited. Proc. ACM Program. Lang. 3, POPL, Article 30 (January 2019), 29 pages. https://doi.org/10.1145/3290343
-#+end_quote
+> Alceste Scalas and Nobuko Yoshida. 2019. Less is more: multiparty session types revisited. Proc. ACM Program. Lang. 3, POPL, Article 30 (January 2019), 29 pages. https://doi.org/10.1145/3290343
+
+<!-- EOF -->
