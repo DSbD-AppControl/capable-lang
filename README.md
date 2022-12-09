@@ -1,6 +1,6 @@
 # README
 
-[![Ubuntu](https://github.com/DSbD-AppControl/capable-lang/actions/workflows/ci-ubuntu.yml/badge.svg?branch=main)](https://github.com/DSbD-AppControl/capable-lang/actions/workflows/ci-ubu
+[![Ubuntu](https://github.com/DSbD-AppControl/capable-lang/actions/workflows/ci-ubuntu.yml/badge.svg)](https://github.com/DSbD-AppControl/capable-lang/actions/workflows/ci-ubuntu.yml)
 
 We are interested in how CHERI-Style Capabilities inter-play with session-types in imperative languages such as Rust/C.
 
