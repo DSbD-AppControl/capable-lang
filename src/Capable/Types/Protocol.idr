@@ -64,11 +64,11 @@ namespace Global
 
     Choice : (s : IsVar rs MkRole)
           -> (r : IsVar rs MkRole)
-          -> (type   : Singleton (UNION (field:::fields)))
+          -> (type   : Singleton (UNION (field:::fs)))
           -> (prfR   : Not (Equals Role (IsVar rs) s r))
           -> (opties : DList (String,Base)
                              (Branch Global ks rs)
-                             (field::fields))
+                             (field::fs))
                     -> Global vs rs
 
 namespace Local
@@ -90,16 +90,29 @@ namespace Local
 
   public export
   data Local : List Kind -> List Role -> Type where
+    Crash : Local ks rs
     End : Local ks rs
     Call : {vs : _} -> IsVar vs R -> Local vs rs
     Rec : Local (R::vs) rs -> Local vs rs
     Choice : (kind : ChoiceTy)
           -> (whom : IsVar rs MkRole)
-          -> (type : Singleton (UNION (field:::fields)))
+          -> (type : Singleton (UNION (field:::fs)))
           -> (choices : DList (String,Base)
                               (Branch Local ks rs)
-                              (field::fields))
+                              (field::fs))
                      -> Local ks rs
+
+  Uninhabited (Local.Crash = Local.End) where
+    uninhabited Refl impossible
+
+  Uninhabited (Local.Crash = (Local.Call x)) where
+    uninhabited Refl impossible
+
+  Uninhabited (Local.Crash = (Local.Rec x)) where
+    uninhabited Refl impossible
+
+  Uninhabited (Local.Crash = (Local.Choice a b c d)) where
+    uninhabited Refl impossible
 
   Uninhabited (Local.End = (Local.Call x)) where
     uninhabited Refl impossible
@@ -154,6 +167,20 @@ namespace Local
 
     public export
     decEq : (a,b : Local ks rs) -> Dec (Equal a b)
+    decEq Crash Crash
+      = Yes Refl
+    decEq Crash End
+      = No absurd
+    decEq Crash (Call x)
+      = No absurd
+    decEq Crash (Rec x)
+      = No absurd
+    decEq Crash (Choice kind whom t choices)
+      = No absurd
+
+
+    decEq End Crash
+      = No (negEqSym absurd)
     decEq End End
       = Yes Refl
     decEq End (Call x)
@@ -162,6 +189,9 @@ namespace Local
       = No absurd
     decEq End (Choice kind whom t choices)
       = No absurd
+
+    decEq (Call x) Crash
+      = No (negEqSym absurd)
 
     decEq (Call x) End
       = No (negEqSym absurd)
@@ -176,6 +206,8 @@ namespace Local
     decEq (Call x) (Choice kind whom t choices)
       = No absurd
 
+    decEq (Rec x) Crash
+      = No (negEqSym absurd)
     decEq (Rec x) End
       = No (negEqSym absurd)
     decEq (Rec x) (Call y)
@@ -189,6 +221,8 @@ namespace Local
 
     decEq (Rec x) (Choice kind whom t choices) = No absurd
 
+    decEq (Choice kind whom t choices) Crash
+      = No (negEqSym absurd)
     decEq (Choice kind whom t choices) End
       = No (negEqSym absurd)
     decEq (Choice kind whom t choices) (Call x)
