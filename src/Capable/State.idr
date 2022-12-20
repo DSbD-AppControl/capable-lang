@@ -29,7 +29,7 @@ data Func = F (Func rs ts s type)
 
 
 public export
-data Hole = H (Env rs ts gs)
+data Hole = H (Env rs ts gs ls)
 
 public export
 data Ty = T (Ty ts type)

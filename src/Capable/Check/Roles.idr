@@ -1,7 +1,6 @@
 |||
-|||
 ||| Module    : Roles.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Check.Roles

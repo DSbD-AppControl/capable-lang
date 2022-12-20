@@ -151,8 +151,8 @@ mutual
       I : Int    -> Value store INT
       B : Bool   -> Value store BOOL
 
-      Clos : (scope : Func roles types ctxt  (FUNC a b))
-          -> (env   : DList Ty.Base (Value store) ctxt)
+      Clos : (scope : Func roles types ctxt (FUNC a b))
+          -> (env_g : DList Ty.Base (Value store) ctxt)
                    -> Value store (FUNC a b)
 
       H : (k : HandleKind) -> File -> Value store (HANDLE k)

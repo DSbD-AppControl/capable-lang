@@ -9,6 +9,7 @@
 ||| their introduction forms.  We will type them at binder locations,
 ||| ascriptions, as arguments, and for empty arrays also /in situ/ in
 ||| a cons cell.
+|||
 module Capable.Check.Exprs
 
 import Toolkit.Data.Location
@@ -31,6 +32,7 @@ import        Capable.Terms.Types
 import        Capable.Terms.Exprs
 
 import Debug.Trace
+
 %default total
 
 
@@ -48,30 +50,30 @@ isElem fc fc' s ((s',x) :: xs) with (decEq s s')
          pure (x' ** There prf)
 
 mutual
-  checkBinOpB : {a,b   : EXPR}
-             -> {rs    : List Ty.Role}
-             -> {ds,gs : List Ty.Base}
-             -> (env   : Env rs ds gs)
-             -> (fc    : FileContext)
-             -> (synA  : Expr a)
-             -> (synb  : Expr b)
-             -> (k     : BinOpBoolKind)
-                      -> Capable (Expr rs ds gs BOOL)
+  checkBinOpB : {a,b      : EXPR}
+             -> {rs       : List Ty.Role}
+             -> {ds,gs,ls : List Ty.Base}
+             -> (env      : Env rs ds gs ls)
+             -> (fc       : FileContext)
+             -> (synA     : Expr a)
+             -> (synb     : Expr b)
+             -> (k        : BinOpBoolKind)
+                         -> Capable (Expr rs ds gs ls BOOL)
   checkBinOpB env fc l r k
     = do T tyTm l <- check fc env TyBool l
          T tyTm r <- check fc env TyBool r
 
          pure (Builtin (BinOpBool k) [l, r])
 
-  checkBinOpI : {a,b   : EXPR}
-             -> {rs    : List Ty.Role}
-             -> {ds,gs : List Ty.Base}
-             -> (env   : Env rs ds gs)
-             -> (fc    : FileContext)
-             -> (synA  : Expr a)
-             -> (synb  : Expr b)
-             -> (k     : BinOpIntKind)
-                      -> Capable (Expr rs ds gs INT)
+  checkBinOpI : {a,b      : EXPR}
+             -> {rs       : List Ty.Role}
+             -> {ds,gs,ls : List Ty.Base}
+             -> (env      : Env rs ds gs ls)
+             -> (fc       : FileContext)
+             -> (synA     : Expr a)
+             -> (synb     : Expr b)
+             -> (k        : BinOpIntKind)
+                         -> Capable (Expr rs ds gs ls INT)
   checkBinOpI env fc l r k
     = do T tyTm l <- check fc env TyInt l
          T tyTm r <- check fc env TyInt r
@@ -79,15 +81,15 @@ mutual
          pure (Builtin (BinOpInt k) [l, r])
 
 
-  checkCmp : {a,b   : EXPR}
-          -> {rs    : List Ty.Role}
-          -> {ds,gs : List Ty.Base}
-          -> (env   : Env rs ds gs)
-          -> (fc    : FileContext)
-          -> (synA  : Expr a)
-          -> (synb  : Expr b)
-          -> (k     : BinOpCmpKind)
-                   -> Capable (Expr rs ds gs BOOL)
+  checkCmp : {a,b      : EXPR}
+          -> {rs       : List Ty.Role}
+          -> {ds,gs,ls : List Ty.Base}
+          -> (env      : Env rs ds gs ls)
+          -> (fc       : FileContext)
+          -> (synA     : Expr a)
+          -> (synb     : Expr b)
+          -> (k        : BinOpCmpKind)
+                      -> Capable (Expr rs ds gs ls BOOL)
   checkCmp env fc l r k
     = do (tyL ** l) <- synth env l
          (tyR ** r) <- synth env r
@@ -99,29 +101,31 @@ mutual
                (cmpTy tyL)
 
   export
-  synth : {e     : EXPR}
-       -> {rs    : List Ty.Role}
-       -> {ds,gs : List Ty.Base}
-       -> (env   : Env rs ds gs)
-       -> (syn   : Expr e)
-                -> Capable (DPair Ty.Base (Expr rs ds gs))
+  synth : {e        : EXPR}
+       -> {rs       : List Ty.Role}
+       -> {ds,gs,ls : List Ty.Base}
+       -> (env      : Env rs ds gs ls)
+       -> (syn      : Expr e)
+                   -> Capable (DPair Ty.Base (Expr rs ds gs ls))
 
   synth env (Hole ref prf) = unknown (span ref)
 
   synth env (Var ref prf)
-    = do (ty ** idx) <- lookup (gamma env) ref
-         pure (_ ** Var idx)
+    = case !(lookup env ref) of
+        (_ ** IsLocal  idx) => pure (_ ** VarL idx)
+        (_ ** IsGlobal idx) => pure (_ ** VarG idx)
+
 
   synth env (LetTy fc ref st ty val scope)
     = do (tyVal ** T tyTmVal val) <- check fc env ty val
 
          case st of
            HEAP
-             => do (tyS ** scope) <- synth (extend env ref (REF tyVal)) scope
+             => do (tyS ** scope) <- synth (Lambda.extend env ref (REF tyVal)) scope
 
                    pure (_ ** Let (TyRef tyTmVal) (Builtin Alloc [val]) scope)
            STACK
-             => do (tyS ** scope) <- synth (extend env ref tyVal) scope
+             => do (tyS ** scope) <- synth (Lambda.extend env ref tyVal) scope
 
                    pure (_ ** Let tyTmVal val scope)
 
@@ -131,11 +135,11 @@ mutual
 
          case st of
            HEAP
-             => do (tyS ** scope) <- synth (extend env ref (REF tyVal)) scope
+             => do (tyS ** scope) <- synth (Lambda.extend env ref (REF tyVal)) scope
 
                    pure (_ ** Let (TyRef tyTmVal) (Builtin Alloc [val]) scope)
            STACK
-             => do (tyS ** scope) <- synth (extend env ref tyVal) scope
+             => do (tyS ** scope) <- synth (Lambda.extend env ref tyVal) scope
 
                    pure (_ ** Let tyTmVal val scope)
 
@@ -311,7 +315,7 @@ mutual
     where args : {as' : _} -> All Expr as'
               -> Capable (DPair Nat
                             (\n => DPair (Vect n Base)
-                                         (DVect Base (Expr rs ds gs) n)))
+                                         (DVect Base (Expr rs ds gs ls) n)))
           args [] = pure (_ ** _ ** Nil)
 
           args (l :: y)
@@ -349,7 +353,7 @@ mutual
          pure (_ ** Record (f :: fs))
 
     where field : (giv : Field sco)
-                      -> Capable (DPair (String,Base) (Field rs ds gs))
+                      -> Capable (DPair (String,Base) (Field rs ds gs ls))
           field (F fc s e)
             = do (t ** tm) <- synth env e
                  pure (_ ** F s tm)
@@ -357,7 +361,7 @@ mutual
           fields : All Field as'
                 -> Capable (DPair (List (String, Base))
                               (DList (String,Base)
-                                     (Field rs ds gs)))
+                                     (Field rs ds gs ls)))
           fields Nil
             = pure (_ ** Nil)
 
@@ -407,10 +411,10 @@ mutual
                -> (sc  : String)
                -> (cTy : Base)
                -> (giv : Expr sco)
-                      -> Capable (DPair Base (\ret => Case rs ds gs ret (s',cTy)))
+                      -> Capable (DPair Base (\ret => Case rs ds gs ls ret (s',cTy)))
           case' fc s' str sc cTy giv
             = do Refl <- embedAt fc (WrongLabel s' str) (decEq s' str)
-                 (rTy ** cTm) <- synth (Gamma.extend env sc cTy) giv
+                 (rTy ** cTm) <- synth (Lambda.extend env sc cTy) giv
                  pure (rTy ** C s' cTm)
 
           cases : (fc : FileContext)
@@ -418,7 +422,7 @@ mutual
                -> (exp : List (String, Base))
                -> All Case as'
                -> Capable (DList (String,Base)
-                             (Case rs ds gs ret)
+                             (Case rs ds gs ls ret)
                              exp)
           cases _ ret Nil Nil
             = pure Nil
@@ -487,7 +491,7 @@ mutual
               -> (tys  : List Ty.Base)
               -> (args : All Expr as)
                       -> Capable (DList Ty.Base
-                                    (Expr rs ds gs)
+                                    (Expr rs ds gs ls)
                                     tys)
           args _ [] []
             = pure Nil
@@ -511,29 +515,29 @@ mutual
 
   namespace View
     export
-    check : {e     : EXPR}
-         -> {rs    : List Ty.Role}
-         -> {ds,gs : List Ty.Base}
-         -> (fc    : FileContext)
-         -> (env   : Env rs ds gs)
-         -> (ty    : Ty t)
-         -> (syn   : Expr e)
-                  -> Capable (DPair Base (The rs ds gs))
+    check : {e        : EXPR}
+         -> {rs       : List Ty.Role}
+         -> {ds,gs,ls : List Ty.Base}
+         -> (fc       : FileContext)
+         -> (env      : Env rs ds gs ls)
+         -> (ty       : Ty t)
+         -> (syn      : Expr e)
+                     -> Capable (DPair Base (The rs ds gs ls))
     check fc env ty syn
        = do (ty ** tm) <- synth (delta env) ty
             res <- check fc env tm syn
             pure (ty ** res)
 
   export
-  check : {t     : Base}
-       -> {e     : EXPR}
-       -> {rs    : List Ty.Role}
-       -> {ds,gs : List Ty.Base}
-       -> (fc    : FileContext)
-       -> (env   : Env rs ds gs)
-       -> (ty    : Ty ds t)
-       -> (syn   : Expr e)
-                -> Capable (The rs ds gs t)
+  check : {t        : Base}
+       -> {e        : EXPR}
+       -> {rs       : List Ty.Role}
+       -> {ds,gs,ls : List Ty.Base}
+       -> (fc       : FileContext)
+       -> (env      : Env rs ds gs ls)
+       -> (ty       : Ty ds t)
+       -> (syn      : Expr e)
+                   -> Capable (The rs ds gs ls t)
 
   check {t = (ARRAY type 0)} fc env tyTm (ArrayEmpty fc')
     = pure (T tyTm ArrayEmpty)
@@ -549,10 +553,9 @@ mutual
          pure (T tyTm (Tag s tm loc))
 
   check {t = t} fc env ty (Hole (MkRef fc' s) R)
-    = showHoleExit (gamma env) s t
+    = showHoleExit (lambda env) s t
          -- pure (T ty (Hole fc ref))
          -- @TODO add infrastructure to collect all the holes, and then report.
-         -- @TODO need to distinguish between global and local contexts.
 
   check {t = t} fc env ty expr
     = do (ty' ** e) <- synth env expr
@@ -561,12 +564,12 @@ mutual
 
   namespace Reflect
     export
-    synthReflect : {e     : EXPR}
-                -> {rs    : List Ty.Role}
-                -> {ds,gs : List Ty.Base}
-                -> (env   : Env rs ds gs)
-                -> (syn   : Expr e)
-                         -> Capable (DPair Base (The rs ds gs))
+    synthReflect : {e        : EXPR}
+                -> {rs       : List Ty.Role}
+                -> {ds,gs,ls : List Ty.Base}
+                -> (env      : Env rs ds gs ls)
+                -> (syn      : Expr e)
+                            -> Capable (DPair Base (The rs ds gs ls))
     synthReflect env syn
       = do (ty ** expr) <- Exprs.synth env syn
            tm <- reflect (delta env) ty
@@ -574,11 +577,11 @@ mutual
 
 namespace Raw
   export
-  synth : {rs    : List Ty.Role}
-       -> {ds,gs : List Ty.Base}
-       -> (env   : Env rs ds gs)
-       -> (syn   : EXPR)
-                -> Capable (DPair Ty.Base (Expr rs ds gs))
+  synth : {rs       : List Ty.Role}
+       -> {ds,gs,ls : List Ty.Base}
+       -> (env      : Env rs ds gs ls)
+       -> (syn      : EXPR)
+                   -> Capable (DPair Ty.Base (Expr rs ds gs ls))
   synth env e
     = synth env (toExpr e)
 

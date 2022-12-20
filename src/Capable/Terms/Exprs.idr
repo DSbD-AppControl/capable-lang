@@ -1,7 +1,6 @@
-||| Expressions to work with values.
+||| Expressions for expressing in function bodies.
 |||
-||| Module    : Exprs.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Terms.Exprs
@@ -33,51 +32,55 @@ index (y :: xs) (There x) = snd y
 
 mutual
   public export
-  data Case : (roles : List Ty.Role)
-           -> (types : List Ty.Base)
-           -> (stack : List Ty.Base)
-           -> (ret  : Ty.Base)
-           -> (spec : (String, Ty.Base))
-                   -> Type
+  data Case : (roles   : List Ty.Role)
+           -> (types   : List Ty.Base)
+           -> (stack_g : List Ty.Base)
+           -> (stack_l : List Ty.Base)
+           -> (ret     : Ty.Base)
+           -> (spec    : (String, Ty.Base))
+                      -> Type
     where
-      C : (s : String)
-       -> Expr roles types (p::stack) return
-       -> Case roles types     stack return (s,p)
+      C : (s    : String)
+       -> (body : Expr roles types g (p::stack) return)
+               -> Case roles types g     stack  return (s,p)
 
   public export
-  data Field : (roles : List Ty.Role)
-            -> (types : List Ty.Base)
-            -> (stack : List Ty.Base)
-            -> (spec : (String, Ty.Base))
-                   -> Type
+  data Field : (roles   : List Ty.Role)
+            -> (types   : List Ty.Base)
+            -> (stack_g : List Ty.Base)
+            -> (stack_l : List Ty.Base)
+            -> (spec    : (String, Ty.Base))
+                       -> Type
     where
       F : (s : String)
-       -> Expr roles types stack p
-       -> Field roles types stack (s, p)
+       -> (v : Expr  roles types stack_g stack_l p)
+            -> Field roles types stack_g stack_l (s, p)
 
   public export
-  data Expr : (roles : List Ty.Role)
-           -> (types : List Ty.Base)
-           -> (stack : List Ty.Base)
-
-           -> (type  :      Ty.Base)
-                    -> Type
+  data Expr : (roles   : List Ty.Role)
+           -> (types   : List Ty.Base)
+           -> (stack_g : List Ty.Base)
+           -> (stack_l : List Ty.Base)
+           -> (type    :      Ty.Base)
+                      -> Type
     where
-      Hole : String -> Expr roles types stack t
-      Var : TyVar stack t -> Expr roles types stack t
+      Hole : String -> Expr roles types stack_g stack_g t
+
+      VarG : TyVar stack_g t -> Expr roles types stack_g stack_l t
+      VarL : TyVar stack_l t -> Expr roles types stack_g stack_l t
 
 
-      ||| Bind things to the stack!
+      ||| Bind things to the *local* stack!
       Let : {type : Ty.Base}
-         -> (ty   : Ty         types                 type)
-         -> (expr : Expr roles types          stack  type)
-         -> (rest : Expr roles types (type :: stack) return)
-                 -> Expr roles types          stack  return
+         -> (ty   : Ty         types                           type)
+         -> (expr : Expr roles types stack_g          stack_l  type)
+         -> (rest : Expr roles types stack_g (type :: stack_l) return)
+                 -> Expr roles types stack_g          stack_l  return
 
       |||
-      Seq : (this : Expr roles types stack UNIT)
-         -> (that : Expr roles types stack typeB)
-                 -> Expr roles types stack typeB
+      Seq : (this : Expr roles types stack_g stack_l UNIT)
+         -> (that : Expr roles types stack_g stack_l typeB)
+                 -> Expr roles types stack_g stack_l typeB
 
       -- # Builtins
 
@@ -88,110 +91,119 @@ mutual
       |||   2. Operations on contant things.
       |||   3. Memory & Process APIs
       Builtin : {inputs : List Base}
-             -> (desc : Builtin                             inputs return)
-             -> (args : DList Base (Expr roles types stack) inputs)
-                     -> Expr             roles types stack         return
+             -> (desc   : Builtin                                       inputs return)
+             -> (args   : DList Base (Expr roles types stack_g stack_l) inputs)
+                       -> Expr             roles types stack_g stack_l         return
 
 
       -- # Data Structures
 
       -- ## Boolean Eliminator
-      Cond : Expr roles types stack BOOL
-          -> Expr roles types stack a
-          -> Expr roles types stack a
-          -> Expr roles types stack a
+      Cond : Expr roles types stack_g stack_l BOOL
+          -> Expr roles types stack_g stack_l a
+          -> Expr roles types stack_g stack_l a
+          -> Expr roles types stack_g stack_l a
 
 
       -- ## Arrays
 
       -- ### Constructors
-      ArrayEmpty : Expr roles types stack (ARRAY type Z)
+      ArrayEmpty : Expr roles types stack_g stack_l (ARRAY type Z)
 
-      ArrayCons : Expr roles types stack        type
-               -> Expr roles types stack (ARRAY type    n)
-               -> Expr roles types stack (ARRAY type (S n))
+      ArrayCons : Expr roles types stack_g stack_l        type
+               -> Expr roles types stack_g stack_l (ARRAY type    n)
+               -> Expr roles types stack_g stack_l (ARRAY type (S n))
 
       -- ### Eliminators
       Index : {n : Nat}
-           -> (idx   : Expr roles types stack INT)
-           -> (array : Expr roles types stack (ARRAY type n))
-                    -> Expr roles types stack        type
+           -> (idx   : Expr roles types stack_g stack_l INT)
+           -> (array : Expr roles types stack_g stack_l (ARRAY type n))
+                    -> Expr roles types stack_g stack_l        type
 
       -- ## Products
 
       -- ### Constructors
-      Tuple : (fields : DVect Base (Expr roles types stack) (S (S n)) as)
-                     -> Expr roles types stack (TUPLE as)
+      Tuple : (fields : DVect Base (Expr roles types stack_g stack_l) (S (S n)) as)
+                     -> Expr roles types stack_g stack_l (TUPLE as)
 
-      Set : {as : Vect (S (S n)) Base}
-         -> (tuple : Expr roles types stack (TUPLE as))
+      Set : {as    : Vect (S (S n)) Base}
+         -> (tuple : Expr roles types stack_g stack_l (TUPLE as))
          -> (idx   : Fin (S (S n)))
-         -> (value : Expr roles types stack (index idx as))
-                  -> Expr roles types stack (TUPLE as)
+         -> (value : Expr roles types stack_g stack_l (index idx as))
+                  -> Expr roles types stack_g stack_l (TUPLE as)
 
       -- ### Eliminators
 
       Get : {as    : Vect (S (S n)) Base}
-         -> (tuple : Expr roles types stack (TUPLE as))
+         -> (tuple : Expr roles types stack_g stack_l (TUPLE as))
          -> (idx   : Fin (S (S n)))
-                  -> Expr roles types stack (index idx as)
+                  -> Expr roles types stack_g stack_l (index idx as)
 
       -- ## Records
 
-      Record : (fields : DList (String,Base) (Field roles types stack) (a::as))
-                      -> Expr roles types stack (RECORD (a:::as))
+      Record : (fields : DList (String,Base) (Field roles types stack_g stack_l) (a::as))
+                      -> Expr roles types stack_g stack_l (RECORD (a:::as))
 
       SetR : {s,t,a,as : _}
-          -> (re    : Expr roles types stack (RECORD (a:::as)))
+          -> (re    : Expr roles types stack_g stack_l (RECORD (a:::as)))
           -> (idx   : Elem (s,t) (a::as))
-          -> (value : Expr roles types stack t)
-                   -> Expr roles types stack (RECORD (a:::as))
+          -> (value : Expr roles types stack_g stack_l t)
+                   -> Expr roles types stack_g stack_l (RECORD (a:::as))
 
       -- ### Eliminators
 
       GetR : {s,t,a,as : _}
-         -> (rec : Expr roles types stack (RECORD (a:::as)))
+         -> (rec : Expr roles types stack_g stack_l (RECORD (a:::as)))
          -> (idx : Elem (s,t) (a::as))
-                -> Expr roles types stack t
+                -> Expr roles types stack_g stack_l t
       -- ## Sums
 
       -- ### Constructors
       Tag : {a : _}
          -> (s : String)
-         -> (value : Expr roles types stack a)
+         -> (value : Expr roles types stack_g stack_l a)
          -> (prf   : Elem (s,a) (x::xs))
-                  -> Expr roles types stack (UNION (x:::xs))
+                  -> Expr roles types stack_g stack_l (UNION (x:::xs))
 
       -- ### Eliminators
 
       Match : {return : Base}
-           -> {a  : (String, Base)}
-           -> {as : List (String, Base)}
-           -> (expr  : Expr roles types stack (UNION (a:::as)))
-           -> (cases : DList (String,Base)
-                             (Case roles types stack return)
-                             (a::as))
-                    -> Expr roles types stack  return
+           -> {a      : (String, Base)}
+           -> {as     : List (String, Base)}
+           -> (expr   : Expr roles types stack_g stack_l (UNION (a:::as)))
+           -> (cases  : DList (String,Base)
+                              (Case roles types stack_g stack_l return)
+                              (a::as))
+                     -> Expr roles types stack_g stack_l  return
 
       -- ## Function Application
 
       Call : {as : List Ty.Base}
-          -> {b : Ty.Base}
-          -> Expr roles types stack (FUNC as b)
-          -> DList Ty.Base (Expr roles types stack) as
-          -> Expr roles types stack         b
+          -> {b  : Ty.Base}
+          -> (f  : Expr roles types stack_g stack_l (FUNC as b))
+          -> (a  : DList Ty.Base (Expr roles types stack_g stack_l) as)
+                -> Expr roles types stack_g stack_l         b
 
       -- ## Type Ascriptions
-      The : (ty   : Ty   types       type)
-         -> (expr : Expr roles types stack type)
-                 -> Expr roles types stack type
+      The : (ty   : Ty         types                 type)
+         -> (expr : Expr roles types stack_g stack_l type)
+                 -> Expr roles types stack_g stack_l type
 
       -- ## Loops
       ||| A general do-until loop construct.
       |||
-      Loop : (body : Expr roles types stack return)
-          -> (expr : Expr roles types stack BOOL)
-                  -> Expr roles types stack return
+      Loop : (body : Expr roles types stack_g stack_l return)
+          -> (expr : Expr roles types stack_g stack_l BOOL)
+                  -> Expr roles types stack_g stack_l return
 
+      -- ## Typed Sessions
+      {-
+      NewSession
+      Crash
+      End
+      Call
+      Rec
+      Choice (Select and Offer)
 
+      -}
 -- [ EOF ]

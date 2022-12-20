@@ -6,7 +6,8 @@ type either = union { left : String; right : Int}
 main()
 {
 
-   local x = add(1,?a)
+   local y = 42
+;  local x = add(1,?a)
 ;  unit
 
 }

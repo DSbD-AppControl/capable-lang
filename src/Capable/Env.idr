@@ -1,7 +1,6 @@
 ||| Various execution environments.
 |||
-||| Module    : Env.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 ||| The design of the heap is based of of:
@@ -34,20 +33,74 @@ import Capable.Values
 %default total
 %hide type
 
-||| The stack is a list of values.
-public export
-Env : (stack : List Ty.Base)
-   -> (store : List Ty.Base)
-            -> Type
-Env stack store = DList Ty.Base (Value store) stack
-
+||| Generic function to extend a stack by a given set of typed values
 export
-extend : DList Ty.Base (Value store) types
-      -> Env stack store
-      -> Env (types ++ stack) store
+extend : DList Ty.Base (Value store)  types
+      -> DList Ty.Base (Value store)           stack
+      -> DList Ty.Base (Value store) (types ++ stack)
 extend [] y = y
 extend (elem :: rest) y = elem :: extend rest y
 
+||| The stack.
+|||
+||| We divide into a local and global stack.
+public export
+data Env : (stack_g : List Ty.Base)
+        -> (stack_l : List Ty.Base)
+        -> (store   : List Ty.Base)
+                   -> Type
+  where
+    MkEnv : (env_g : DList Ty.Base (Value store) stack_g)
+         -> (env_l : DList Ty.Base (Value store) stack_l)
+                  -> Env stack_g stack_l store
+
+export
+empty : Env Nil Nil Nil
+empty = MkEnv Nil Nil
+
+
+||| Extend the global stack with a value.
+export
+extend_g : {type : _}
+        -> (val : Value store type)
+        -> (env : Env        g  l store)
+               -> Env (type::g) l store
+extend_g val (MkEnv env_g env_l)
+  = MkEnv (val :: env_g) env_l
+
+||| Extend the local stack with a value.
+export
+extend_l : {type : _}
+        -> (val : Value store type)
+        -> (env : Env g        l  store)
+               -> Env g (type::l) store
+extend_l val (MkEnv env_g env_l)
+  = MkEnv env_g (val :: env_l)
+
+||| Lookup variable in the local context
+export
+lookup_l : (loc : IsVar l type)
+        -> (env : Env g l store)
+               -> Value store type
+lookup_l loc (MkEnv env_g env_l)
+  = read loc env_l
+
+||| Lookup variable in the local context
+export
+lookup_g : (loc : IsVar g type)
+        -> (env : Env g l store)
+               -> Value store type
+lookup_g loc (MkEnv env_g env_l)
+  = read loc env_g
+
+||| Weaken...
+export
+weaken : Subset old new
+      -> Env.Env g l old
+      -> Env.Env g l new
+weaken prf (MkEnv env_g env_l)
+  = MkEnv (Env.weaken prf env_g)
+          (Env.weaken prf env_l)
 
 namespace Ty
   ||| We need one for types-as-terms too.

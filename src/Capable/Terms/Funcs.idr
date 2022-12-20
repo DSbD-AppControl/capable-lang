@@ -1,7 +1,8 @@
-||| Functions/methods/procedures...
+||| Non recursive function bodies.
 |||
-||| Module    : Funcs.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| @TODO make recursive with a recursive type...
+|||
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Terms.Funcs
@@ -25,7 +26,7 @@ data Func : (roles : List Ty.Role)
     ||| A non-recusive. function.
     Fun : {args   : List Ty.Base}
        -> {return : Ty.Base}
-       -> (body   : Expr roles types (args ++ stack) return)
-                 -> Func roles types stack (FUNC args return)
+       -> (body   : Expr roles types stack       args return)
+                 -> Func roles types stack (FUNC args  return)
 
 -- [ EOF ]

@@ -64,6 +64,9 @@ mutual
         -> (rctxt : Context Ty.Role rs)
         -> (ltype : Local ks rs)
                  -> Doc ()
+  pretty _ _ _ Crash
+    = pretty "Crash"
+
   pretty _ _ _ End
     = pretty "End"
 

@@ -20,11 +20,11 @@ func foo() -> Int
   1
 }
 
-func foobar(c : Bool, this : Int) -> Int
+func foobar(c : Bool, eek : Int) -> Int
 {
   local x = if c
             {
-              this
+              eek
             } else
             {
               local f = "1"

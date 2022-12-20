@@ -49,6 +49,7 @@ error = (throw . Outside)
 todo : Capable a -- i know...
 todo = throw NotYetImplemented
 
+
 -- # Results
 namespace Results
 
@@ -173,7 +174,7 @@ debase FileNotFound = 2
 debase PermissionDenied = 3
 debase FileExists = 4
 
--- # Executing stuff
+-- # Executing stuff, finally...
 
 mutual
 
@@ -181,9 +182,9 @@ mutual
     export
     eval : {store : List Ty.Base}
         -> {as    : List (String,Base)}
-        -> (env   : Env        stack store)
-        -> (heap  : Heap             store)
-        -> (args  : DList (String, Ty.Base) (Field rs tys stack) as)
+        -> (env   : Env stack_g stack_l store)
+        -> (heap  : Heap store)
+        -> (args  : DList (String, Ty.Base) (Field rs tys stack_g stack_l) as)
                  -> Capable (Fields.Results store as)
     eval env heap []
       = pure (Fields heap
@@ -200,9 +201,9 @@ mutual
   namespace Args
     export
     eval : {as,store : List Ty.Base}
-        -> (env   : Env        stack store)
-        -> (heap  : Heap             store)
-        -> (args  : DList Ty.Base (Expr rs tys stack) as)
+        -> (env   : Env stack_g stack_l store)
+        -> (heap  : Heap store)
+        -> (args  : DList Ty.Base (Expr rs tys stack_g stack_l) as)
                  -> Capable (Args.Results store as)
     eval env heap []
       = pure (Args heap
@@ -220,9 +221,9 @@ mutual
     export
     eval : {as    : Vect n Ty.Base}
         -> {store : List Ty.Base}
-        -> (env   : Env        stack store)
-        -> (heap  : Heap             store)
-        -> (args  : DVect Ty.Base (Expr rs tys stack) n as)
+        -> (env   : Env stack_g stack_l store)
+        -> (heap  : Heap store)
+        -> (args  : DVect Ty.Base (Expr rs tys stack_g stack_l) n as)
                  -> Capable (Results store as)
     eval env heap []
       = pure (Args heap
@@ -238,12 +239,12 @@ mutual
   namespace Builtins
     ||| Executing builtins
     export
-    eval : {0  inputs : List Base}
+    eval : {0 inputs : List Base}
         -> {  store  : List Base}
-        -> (  heap : Heap store)
-        -> (  desc : Builtin   inputs       ret)
-        -> (  args : Env       inputs store)
-                  -> Capable (Expr.Result store ret)
+        -> (  heap   : Heap store)
+        -> (  desc   : Builtin inputs ret)
+        -> (  args   : DList Ty.Base (Value store) inputs)
+                    -> Capable (Expr.Result store ret)
 
     -- ## Constants
     eval heap U     [] = return heap U
@@ -369,10 +370,10 @@ mutual
   namespace Exprs
     %inline
     when : {type : Ty.Base}
-        -> (env  : Env stack store)
+        -> (env  : Env stack_g stack_l store)
         -> (cond : Expr.Result store BOOL)
-        -> (tt   : Expr roles types stack type)
-        -> (ff   : Expr roles types stack type)
+        -> (tt   : Expr roles types stack_g stack_l type)
+        -> (ff   : Expr roles types stack_g stack_l type)
                 -> Capable (Expr.Result store type)
 
     when env (Value h (B False) prf) _ ff
@@ -387,22 +388,27 @@ mutual
     public export
     eval : {type  : Ty.Base}
         -> {store : List Ty.Base}
-        -> (env   : Env              stack store)
-        -> (heap  : Heap                   store)
-        -> (expr  : Expr roles types stack       type)
+        -> (env   : Env stack_g stack_l store)
+        -> (heap  : Heap store)
+        -> (expr  : Expr roles types stack_g stack_l type)
                  -> Capable (Expr.Result store type)
     -- ### Holes
     eval env heap (Hole s)
       = panic "Encountered a hole: \{show s}"
+
     -- ### Variables
-    eval env heap (Var x)
+    eval env heap (VarG x)
       = return heap
-               (read x env)
+               (lookup_g x env)
+
+    eval env heap (VarL x)
+      = return heap
+               (lookup_l x env)
 
     -- ### Bindings
     eval env heap (Let _ expr rest)
       = do Value h v p <- eval env heap expr
-           res <- eval (v::weaken p env) h rest
+           res <- eval (extend_l v $ weaken p env) h rest
            return p res
 
     -- ## Sequences
@@ -490,7 +496,7 @@ mutual
     eval env heap (Match expr cases)
       = do Value heap (Tag s pos v) prf <- eval env heap expr
            let kase = lookup pos cases
-           Value heap v prf' <- eval (v::weaken prf env) heap kase
+           Value heap v prf' <- eval (extend_l v (weaken prf env)) heap kase
            pure (Value heap v (trans prf prf'))
 
       where
@@ -498,9 +504,9 @@ mutual
               -> {ret : Base}
               -> (idx : Elem (s,x) xs)
               -> (ps  : DList (String,Base)
-                              (Case roles types stack ret)
+                              (Case roles types stack_g stack_l ret)
                               xs)
-                     -> Expr roles types (x::stack) ret
+                     -> Expr roles types stack_g (x::stack_l) ret
         lookup Here (C s elem :: rest) = elem
         lookup (There y) (elem :: rest) = lookup y rest
 
@@ -546,13 +552,13 @@ mutual
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
         -> {ret : Ty.Base}
-        -> (env   : Env              stack store)
-        -> (heap  : Heap                   store)
-        -> (func  : Func roles types stack          (FUNC as ret))
+        -> (env   : DList Ty.Base (Value store) stack_g)
+        -> (heap  : Heap store)
+        -> (func  : Func roles types stack_g (FUNC as ret))
         -> (vals  : DList Ty.Base (Value store) as)
                  -> Capable (Expr.Result store ret)
-    eval env heap (Fun body) args
-      = eval (extend args env) heap body
+    eval env_g heap (Fun body) args
+      = eval (MkEnv env_g args) heap body
 
 
 ||| Run a programme.
@@ -561,9 +567,9 @@ run : {type : Ty.Base}
     -> {store : List Ty.Base}
     -> (envR  : Env roles)
     -> (envT  : Env types)
-    -> (env   : Env        stack store)
-    -> (heap  : Heap             store)
-    -> (expr  : Prog roles types stack   type)
+    -> (env   : DList Ty.Base (Value store) stack)
+    -> (heap  : Heap store)
+    -> (expr  : Prog roles types stack type)
              -> Capable (Expr.Result store type)
 
 run er et env heap (DefSesh s scope)
@@ -592,7 +598,7 @@ run er et env heap (DefType tyRef rest)
 run er et env heap (DefFunc sig func rest)
   = run er
         et
-        (Clos func env :: env)
+        (extend [Clos func env] env)
         heap
         rest
 

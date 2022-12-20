@@ -104,14 +104,14 @@ compare fc a b
                (decEq    a b)
 
 public export
-data The : (rs    : List Ty.Role)
-        -> (ds,gs : List Ty.Base)
-        -> (type  : Base)
-                 -> Type
+data The : (rs       : List Ty.Role)
+        -> (ds,gs,ls : List Ty.Base)
+        -> (type     : Base)
+                    -> Type
   where
-    T : (ty   : Ty      ds    type )
-     -> (e    : Expr rs ds gs type)
-             -> The  rs ds gs type
+    T : (ty   : Ty      ds       type )
+     -> (e    : Expr rs ds gs ls type)
+             -> The  rs ds gs ls type
 
 export
 lookup : {type, types : _}
@@ -144,50 +144,79 @@ namespace Env
 
   public export
   record Env (rs : List Ty.Role)
-             (ds,gs : List Ty.Base)
+             (ds,gs,ls : List Ty.Base)
     where
       constructor E
-      rho   : Context Ty.Role rs
-      delta : Context Ty.Base ds
-      gamma : Context Ty.Base gs
-      mu    : SortedMap String HoleContext
+      rho    : Context Ty.Role rs
+      delta  : Context Ty.Base ds
+      gamma  : Context Ty.Base gs
+      lambda : Context Ty.Base ls
+      mu     : SortedMap String HoleContext
 
   export
-  empty : Env Nil Nil Nil
-  empty = E Nil Nil Nil empty
+  empty : Env Nil Nil Nil Nil
+  empty = E Nil Nil Nil Nil empty
 
   namespace Mu
     export
-    extend : (env : Env rs ds gs)
+    extend : (env : Env rs ds gs ls)
           -> (s   : String)
-                 -> Env rs ds gs
+                 -> Env rs ds gs ls
     extend env s
       = { mu $= insert s (H (gamma env))} env
 
   namespace Rho
     export
-    extend : (env : Env rs ds gs)
+    extend : (env : Env rs ds gs ls)
           -> (s   : String)
-                 -> Env (MkRole::rs) ds gs
+                 -> Env (MkRole::rs) ds gs ls
     extend env s
       = { rho $= (::) (I s MkRole)} env
 
   namespace Gamma
     export
-    extend : (env : Env rs ds gs)
+    extend : (env : Env rs ds gs ls)
           -> (s   : String)
           -> (ty  : Base)
-                 -> Env rs ds (ty::gs)
+                 -> Env rs ds (ty::gs) ls
     extend env s ty
       = { gamma $= (::) (I s ty) } env
 
+  namespace Lambda
+    export
+    extend : (env : Env rs ds gs ls)
+          -> (s   : String)
+          -> (ty  : Base)
+                 -> Env rs ds gs (ty::ls)
+    extend env s ty
+      = { lambda $= (::) (I s ty) } env
 
-prettyCtxt : Context Ty.Base gs -> List (Doc ann) -> List (Doc ann)
+
+  public export
+  data EnvLookup : (gs,ls : List Ty.Base) -> Ty.Base -> Type
+    where
+      IsLocal  : IsVar ls type -> EnvLookup gs ls type
+      IsGlobal : IsVar gs type -> EnvLookup gs ls type
+
+  export
+  lookup : {gs,ls : _}
+        -> (ctxt  : Env rs ds gs ls)
+        -> (s     : Ref)
+                 -> Capable (DPair Ty.Base (EnvLookup gs ls))
+  lookup env ref
+    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
+                   pure (_ ** IsGlobal idx))
+
+               (\err => do (ty ** idx) <- Common.lookup (lambda env) ref
+                           pure (_ ** IsLocal idx))
+
+
+prettyCtxt : Context Ty.Base ls -> List (Doc ann) -> List (Doc ann)
 prettyCtxt [] acc = acc
 prettyCtxt ((I name x) :: rest) acc
   = prettyCtxt rest (acc ++ [(hsep [pretty name, colon, pretty x])])
 
-prettyHole : Context Ty.Base gs
+prettyHole : Context Ty.Base ls
           -> String
           -> Base
           -> Doc ann
@@ -203,7 +232,7 @@ prettyHole x str y
      ]
 
 export
-showHoleExit : Context Ty.Base gs
+showHoleExit : Context Ty.Base ls
             -> String
             -> Base
             -> Capable e

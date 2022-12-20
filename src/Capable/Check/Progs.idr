@@ -1,7 +1,6 @@
 ||| Type-checker for Programs.
 |||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Check.Progs
@@ -201,7 +200,7 @@ generateTags rtype fs scope
 check : {p     : PROG}
      -> {rs    : List Ty.Role}
      -> {ds,gs : List Ty.Base}
-     -> (env   : Env rs ds gs)
+     -> (env   : Env rs ds gs Nil)
      -> (state : State)
      -> (prog  : Prog p)
               -> Capable (Prog rs ds gs UNIT, State)

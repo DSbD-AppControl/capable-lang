@@ -1,7 +1,7 @@
 ||| Type-checker for bidirectional typed Syntax for types.
 |||
 ||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Check.Types

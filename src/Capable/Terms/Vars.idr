@@ -1,15 +1,11 @@
 ||| Nameless representation.
 |||
-||| Module    : Vars.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
-|||
 |||
 ||| We can make this more erasable but that is for later.
 |||
 module Capable.Terms.Vars
-
--- @TODO Make Vars efficiently erasable.
 
 import public Toolkit.DeBruijn.Renaming
 

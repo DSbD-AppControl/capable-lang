@@ -1,7 +1,6 @@
 ||| Type-checker for funcs.
 |||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Check.Funcs
@@ -61,26 +60,25 @@ args delta (A fc ref ty :: y)
 
 expand : {as' : All Arg as''}
       -> (is    : Instrs ds as' as)
-      -> (gamma : Context Ty.Base gs)
-               -> Context Ty.Base (as ++ gs)
-expand Empty gamma
-  = gamma
-expand (Arg ref ty tm rest) gamma
-  = extend (expand rest gamma) ref ty
+               -> Context Ty.Base as
+expand Empty
+  = Nil
+expand (Arg ref ty tm rest)
+  = extend (expand rest) ref ty
 
 
 export
 synth : {f     : FUNC}
      -> {rs    : List Ty.Role}
      -> {ds,gs : List Ty.Base}
-     -> (rho   : Env rs ds gs)
+     -> (rho   : Env rs ds gs Nil)
      -> (func  : Fun f)
               -> Capable (DPair Ty.Base (Func rs ds gs))
 synth env (Func fc prf as ret scope)
   = do (tyAS  ** as)  <- args  (delta env) as
        (tyRet ** ret) <- synth (delta env) ret
 
-       (tyScope ** scope) <- synth ({gamma $= expand as} env) scope
+       (tyScope ** scope) <- synth ({lambda := expand as} env) scope
 
        Refl <- compare fc tyRet tyScope
        pure (FUNC tyAS tyRet ** Fun scope)
@@ -90,7 +88,7 @@ namespace Raw
   export
   synth : {rs    : List Ty.Role}
        -> {ds,gs : List Ty.Base}
-       -> (env   : Env rs ds gs)
+       -> (env   : Env rs ds gs Nil)
        -> (syn   : FUNC)
               -> Capable (DPair Ty.Base (Func rs ds gs))
   synth env f

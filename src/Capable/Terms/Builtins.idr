@@ -1,6 +1,11 @@
-||| Builtins
+||| Builtin Operations
 |||
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Covers:
+|||   1. Builtin constants
+|||   2. Operations on contant things.
+|||   3. Memory & Process APIs
+|||
+||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Terms.Builtins
