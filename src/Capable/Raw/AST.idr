@@ -174,6 +174,7 @@ namespace Shape
     VAR : String -> NULL Shape EXPR
     LETTY : Stored -> String -> TRI Shape EXPR TYPE EXPR EXPR
     LET   : Stored -> String -> BIN Shape EXPR      EXPR EXPR
+    SPLIT : List String -> BIN Shape EXPR EXPR EXPR
 
     -- ### Builtins...
 
@@ -258,6 +259,7 @@ namespace Shape
     show (VAR str)       = "(VAR \{show str})"
     show (LETTY x str)   = "(LETTY \{show x} \{show str})"
     show (LET x str)     = "(LET \{show x} \{show str})"
+    show (SPLIT x)       = "(SPLIT \{show x})"
     show (CONST p v)     = "(CONST \{show p})"
     show (BBIN x)        = "(BBIN \{show x})"
     show (BUN x)         = "(BUN \{show x})"

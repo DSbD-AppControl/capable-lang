@@ -1,0 +1,17 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
+main()
+{
+
+  local foo = tuple(1,2);
+  local tuple(a,b) = foo;
+
+  printLn(toString(a));
+  printLn(toString(b))
+
+}

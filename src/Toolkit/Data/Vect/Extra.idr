@@ -1,10 +1,16 @@
 module Toolkit.Data.Vect.Extra
 
 import public Decidable.Equality
+import public Toolkit.Decidable.Informative
 import        Data.Vect
 import Data.Fin
 
 %default total
+
+public export
+toList : Vect q a -> List a
+toList Nil = Nil
+toList (x::xs) = x :: Extra.toList xs
 
 namespace I
 
@@ -59,6 +65,54 @@ namespace Shape
   shape [] (y :: ys) = RH
   shape (x :: xs) [] = LH
   shape (x :: xs) (y :: ys) = Both
+
+namespace SameLength
+
+  public export
+  data SameLength : (xs : Vect n a)
+                 -> (ys : Vect m b)
+                       -> Type
+    where
+      Empty : SameLength Nil Nil
+      Cons : SameLength xs ys
+          -> SameLength (x::xs) (y::ys)
+
+  public export
+  data SameLengthNot : (xs : Vect n a)
+                    -> (ys : Vect m b)
+                          -> Type
+
+    where
+      LH : SameLengthNot (x::xs) ys
+      RH : SameLengthNot     xs (y::ys)
+      L : SameLengthNot xs ys -> SameLengthNot (x::xs) (y::ys)
+
+  Uninhabited (SameLength Nil (x::xs)) where
+    uninhabited Empty impossible
+    uninhabited (Cons y) impossible
+
+  Uninhabited (SameLength (x::xs) Nil) where
+    uninhabited Empty impossible
+    uninhabited (Cons y) impossible
+
+  export
+  sameLength : (xs : Vect n a)
+            -> (ys : Vect m b)
+                  -> DecInfo (SameLengthNot xs ys)
+                             (SameLength    xs ys)
+  sameLength [] []
+    = Yes Empty
+
+  sameLength [] (x :: xs)
+    = No RH absurd
+
+  sameLength (x :: xs) []
+    = No LH absurd
+  sameLength (x :: xs) (y :: ys) with (sameLength xs ys)
+    sameLength (x :: xs) (y :: ys) | (Yes prfWhy)
+      = Yes (Cons prfWhy)
+    sameLength (x :: xs) (y :: ys) | (No msgWhyNot prfWhyNot)
+      = No (L msgWhyNot) (\case (Cons z) => prfWhyNot z)
 
 namespace Decidable
   namespace DiffLength

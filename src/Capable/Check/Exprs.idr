@@ -143,6 +143,31 @@ mutual
 
                    pure (_ ** Let tyTmVal val scope)
 
+  synth env (Split fc ss val scope)
+    = do (TUPLE (f::s::ts) ** v) <- synth env val
+           | (tyV ** _) => throwAt fc (PairExpected tyV)
+
+         envExt <- zip env ss (f::s::ts)
+
+         (_ ** rest) <- synth envExt scope
+
+         pure (_ ** Split v rest)
+
+
+    where zip : (env : Env rs ds gs ls)
+             -> (xs : List String)
+             -> (ys : Vect m Base)
+                   -> Capable (Env rs ds gs (Extra.toList ys ++ ls))
+          zip env [] [] = pure env
+          zip env [] (x :: xs)
+            = throwAt fc (PatternsMissing (Extra.toList $ x::xs))
+
+          zip env (x :: xs) []
+            = throwAt fc (RedundantPatterns (x::xs))
+
+          zip env (x :: xs) (y :: ys)
+            = do rest <- zip env xs ys
+                 pure (Lambda.extend rest x y)
 
   -- ## Builtins
 

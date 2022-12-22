@@ -191,7 +191,6 @@ namespace Env
     extend env s ty
       = { lambda $= (::) (I s ty) } env
 
-
   public export
   data EnvLookup : (gs,ls : List Ty.Base) -> Ty.Base -> Type
     where

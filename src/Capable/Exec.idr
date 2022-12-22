@@ -24,6 +24,7 @@ import Data.List.Quantifiers
 
 import System.File
 
+import Toolkit.Data.Vect.Extra
 import Toolkit.Data.DList
 import Toolkit.Data.DVect
 
@@ -410,6 +411,11 @@ mutual
       = do Value h v p <- eval env heap expr
            res <- eval (extend_l v $ weaken p env) h rest
            return p res
+
+    eval env heap (Split t rest)
+      = do Value h (Tuple vs) prf <- eval env heap t
+           res <- eval (extend_ls vs $ weaken prf env) h rest
+           return prf res
 
     -- ## Sequences
     eval env heap (Seq this that)

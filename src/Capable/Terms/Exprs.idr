@@ -11,10 +11,12 @@ import public Data.Fin
 
 import Data.Vect
 
+
 import System.File
 
 import public Toolkit.Data.DList
 import public Toolkit.Data.DVect
+import public Toolkit.Data.Vect.Extra
 
 import Capable.Terms.Types
 import Capable.Terms.Builtins
@@ -76,6 +78,12 @@ mutual
          -> (expr : Expr roles types stack_g          stack_l  type)
          -> (rest : Expr roles types stack_g (type :: stack_l) return)
                  -> Expr roles types stack_g          stack_l  return
+
+      ||| Split tuples by 'pattern matching'
+      Split : {ss : _}
+           -> (expr : Expr roles types stack_g                     stack_l  (TUPLE ss))
+           -> (rest : Expr roles types stack_g (Extra.toList ss ++ stack_l) return)
+                   -> Expr roles types stack_g                     stack_l  return
 
       |||
       Seq : (this : Expr roles types stack_g stack_l UNIT)
@@ -198,12 +206,36 @@ mutual
 
       -- ## Typed Sessions
       {-
-      NewSession
-      Crash
-      End
-      Call
-      Rec
+      ||| Create a new session from the given global protocol projected as the given role.
+      NewSession : (g_term     : Global Nil types roles g)
+                -> (principle  : Role roles MkRole)
+                -> (projection : Project Nil roles principle g l)
+                -> (scope      : Expr roles types stack_g (stack_l) a)
+                -- @TODO sort out what local types are...
+                              -> Expr roles types stack_g stack_l a
+
+      Crash : Expr roles types stack_g stack_l (L Crash)
+           -> Expr roles types stack_g stack_l a
+
+      End : Expr roles types stack_g stack_l (L End)
+         -> Expr roles types stack_g stack_l a
+
+      Rec : Expr roles types stack_g (L (Rec k) :: stack_l) (L k)
+         -> Expr roles types stack_g               stack_l) (L (Rec k))
+
+      Call : Expr roles types stack_g stack_l (Call X)
+          -> Expr roles types stack_g stack_l a
+
+      Send : Expr roles types stack_g stack_l ...
+          -> (scope : Expr roles types stack_g stack_l )
+          -> Expr roles types stack_g stack_l (L (Select ...))
+
+      Offer : Expr roles types stack_g stack_l ...
+          -> (cases : ...)
+                   -> Expr roles types stack_g stack_l (L (Offer ...))
+      {-
       Choice (Select and Offer)
 
+      -}
       -}
 -- [ EOF ]

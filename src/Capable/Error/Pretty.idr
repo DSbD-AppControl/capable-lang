@@ -71,6 +71,13 @@ Show (Typing.Error) where
   show (OOB e g)
     = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."
 
+  show (RedundantPatterns str)
+    = unlines ["Redundant patterns:"
+              , "  \{show str}"]
+  show (PatternsMissing str)
+    = unlines ["Missing patterns:"
+              , "  \{show str}"]
+
   show (RedundantCases str)
     = unlines ["Redundant cases:"
               , "  \{show str}"]

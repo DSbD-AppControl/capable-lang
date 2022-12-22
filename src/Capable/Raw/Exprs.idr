@@ -70,6 +70,12 @@ mutual
            -> (scope : Expr body)
                     -> Expr (Branch (LET st s) fc [v,body])
 
+      Split : (fc    : FileContext)
+           -> (ss    : List String)
+           -> (val   : Expr v)
+           -> (scope : Expr body)
+                    -> Expr (Branch (SPLIT ss) fc [v,body])
+
       -- ## Builtin
       Const : (fc : FileContext)
            -> (p  : PrimVal)
@@ -227,6 +233,9 @@ mutual
 
   toExpr (Branch (LET x str) fc [v,s])
     = Let fc str x (toExpr v) (toExpr s)
+
+  toExpr (Branch (SPLIT ss) fc [v,s])
+    = Split fc ss (toExpr v) (toExpr s)
 
   toExpr (Branch (CONST p v) fc Nil)
     = Const fc p v

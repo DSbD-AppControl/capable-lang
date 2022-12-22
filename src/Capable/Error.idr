@@ -48,6 +48,9 @@ namespace Typing
   public export
   data Error : Type where
     OOB : Nat -> Nat -> Typing.Error
+    PatternsMissing : List Base -> Typing.Error
+    RedundantPatterns : List String -> Typing.Error
+
     RedundantCases : List String -> Typing.Error
     CasesMissing : List (String,Base) -> Typing.Error
     WrongLabel : (x,y : String) -> Typing.Error

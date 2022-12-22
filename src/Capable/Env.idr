@@ -21,8 +21,11 @@ import Data.List.Quantifiers
 import public Data.Singleton
 import public Toolkit.Data.List.AtIndex
 import Toolkit.Data.DList
+import Toolkit.Data.Vect.Extra
+
 import public Toolkit.DeBruijn.Renaming
 import public Toolkit.DeBruijn.Environment
+
 import Capable.Types
 
 import Capable.Terms
@@ -76,6 +79,13 @@ extend_l : {type : _}
                -> Env g (type::l) store
 extend_l val (MkEnv env_g env_l)
   = MkEnv env_g (val :: env_l)
+
+export
+extend_ls : (val : DVect Ty.Base (Value store) n ts)
+         -> (env : Env g                     l  store)
+                -> Env g (Extra.toList ts ++ l) store
+extend_ls Nil     env = env
+extend_ls (x::xs) env = extend_l x (extend_ls xs env)
 
 ||| Lookup variable in the local context
 export

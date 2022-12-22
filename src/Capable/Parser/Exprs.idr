@@ -430,23 +430,26 @@ mutual
                (\ty => pure (tri (LETTY sto (get v)) (newFC s e) ty ex scope))
                t
 
---  split : Rule EXPR
---  split
---    = do s <- Toolkit.location
---         keyword "let"
---         commit
---         symbol "("
---         l <- Capable.ref
---         symbol ","
---         r <- Capable.ref
---         symbol ")"
---         symbol "="
---         c <- expr
---         e <- Toolkit.location
---         symbol ";"
---         e <- Toolkit.location
---         scope <- seq
---         pure (bin (SPLIT (get l) (get r)) (newFC s e) c scope)
+  split : Rule EXPR
+  split
+    = do s <- Toolkit.location
+         keyword "local"
+         keyword "tuple"
+         symbol "("
+         commit
+         l <- Capable.ref
+         symbol ","
+         rs <- sepBy1 (symbol ",") Capable.ref
+         symbol ")"
+         symbol "="
+         c <- expr
+         symbol ";"
+         e <- Toolkit.location
+         scope <- seq
+         pure (bin (SPLIT (map get (l :: head rs :: tail rs)))
+                   (newFC s e)
+                   c
+                   scope)
 
   seq : Rule EXPR
   seq
@@ -468,6 +471,7 @@ mutual
       <|> var
       <|> hole
       <|> constants
+      <|> split
       <|> let_ "local" STACK
       <|> let_ "var"   HEAP
       <|> unary
@@ -495,6 +499,7 @@ mutual
       <|> (trace "\{show !Toolkit.location} constants" constants)
       <|> (trace "\{show !Toolkit.location} local"     $ let_ "local" STACK)
       <|> (trace "\{show !Toolkit.location} new"       $ let_ "var"   HEAP)
+      <|> (trace "\{show !Toolkit.location} split"     split)
       <|> (trace "\{show !Toolkit.location} mutate"    mutate)
       <|> (trace "\{show !Toolkit.location} un"        unary  )
       <|> (trace "\{show !Toolkit.location} bi"        binary )
