@@ -6,19 +6,26 @@
 
 PROJECT=capable
 IDRIS2=idris2
+KATLA=katla
 
-TARGETDIR = ${CURDIR}/build/exec
-TARGET = ${TARGETDIR}/${PROJECT}
+BUILDDIR  = ${CURDIR}/build
+TARGETDIR = ${BUILDDIR}/exec
+TARGET    = ${TARGETDIR}/${PROJECT}
 
 # [ Core Project Definition ]
 
-.PHONY: capable capable-test-build capable-test-run capable-test-run-re capable-test-update \
-       # capable-bench
+.PHONY: capable capable-doc capable-srcs
+.PHONY: capable-test-build capable-test-run capable-test-run-re capable-test-update
+#.PHONY: capable-bench
 
 capable:
 	$(IDRIS2) --build ${PROJECT}.ipkg
 
-# To be activated once frontend is completed.
+capable-doc:
+	$(IDRIS2) --mkdoc ${PROJECT}.ipkg
+
+capable-srcs:
+	bash annotate.sh
 
 capable-test-build:
 	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
@@ -48,8 +55,31 @@ capable-bench: capable capable-test-build
 
 #	$(HYPERFINE) --warmup 10 '${MAKE} capable-test-run'
 
+# [ Artefact ]
+
+.PHONY: artefact
+
+capable-vm:
+	${MAKE} -C artefact artefact
+
+artefact: archive capable capable-doc capable-srcs capable-vm
+	mkdir -p artefact-staging
+	cp capable.tar.gz artefact-staging/capable.tar.gz
+	tar -zcvf artefact-staging/capable_doc.tar.gz ${BUILDDIR}/docs/
+	tar -zcvf artefact-staging/capable_html.tar.gz ${BUILDDIR}/html/
+	cp artefact/output/capable.box artefact-staging/
+	cp artefact/README.md artefact-staging/
 
 # [ Housekeeping ]
+
+.PHONY: archive
+
+archive:
+	git archive \
+	  --prefix=capable/ \
+	  --format=tar.gz \
+	  HEAD \
+	  > capable.tar.gz
 
 .PHONY: clobber clean
 
@@ -61,5 +91,7 @@ clobber: clean
 	$(IDRIS2) --clean ${PROJECT}.ipkg
 	${MAKE} -C tests clobber
 	${RM} -rf build/
+	${RM} -rf artefact-staging/
+	${RM} capable.tar.gz
 
 # -- [ EOF ]

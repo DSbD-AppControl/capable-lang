@@ -64,4 +64,26 @@ Session Types is through _Less is More_, based on:
 
 > Alceste Scalas and Nobuko Yoshida. 2019. Less is more: multiparty session types revisited. Proc. ACM Program. Lang. 3, POPL, Article 30 (January 2019), 29 pages. https://doi.org/10.1145/3290343
 
+
+## Artefact
+
+We also include scripts to generate a reproducible artefact.
+
+Please consult the following project to generate the base virtual box image required, and how we approach the building of the artefact.
+
+https://github.com/jfdm/packer-idris
+
+Once you have generated the image you can generate the artefact as follows:
+
+```bash
+SOURCE_VM="<location of the base ovf>" make artefact
+```
+
+This will generate in `artefact` the following files:
+
+1. `capable.box` :: A Virtual Box virtual machine that contains Capable's source code & test suite;
+2. `capable.tar.gz` :: A copy of Capable's source code, and generated IdrisDoc;
+3. `capable_doc.tar.gz` :: A copy of the IdrisDoc for the coding project;
+4. `capable_html.tar.gz` :: A copy of the katla generated html showing semantically highlighted code;
+
 <!-- EOF -->
