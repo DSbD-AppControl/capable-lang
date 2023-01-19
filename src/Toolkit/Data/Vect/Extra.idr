@@ -114,6 +114,7 @@ namespace SameLength
     sameLength (x :: xs) (y :: ys) | (No msgWhyNot prfWhyNot)
       = No (L msgWhyNot) (\case (Cons z) => prfWhyNot z)
 
+
 namespace Decidable
   namespace DiffLength
 
