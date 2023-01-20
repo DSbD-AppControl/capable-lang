@@ -71,6 +71,11 @@ namespace Global
                              (field::fs))
                     -> Global vs rs
 
+  namespace Ty
+    public export
+    data Session : Type where
+      S : Global Nil rs -> Session
+
 namespace Local
 
 

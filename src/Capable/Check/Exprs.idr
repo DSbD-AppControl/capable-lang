@@ -37,8 +37,8 @@ import Debug.Trace
 
 
 isElem : (fc,fc' : FileContext)
-      -> (s : String)
-                -> (xs : List (String, Base))
+      -> (s      : String)
+      -> (xs     : List (String, Base))
                 -> Capable $ DPair Base (\x => Elem (s,x) xs)
 isElem fc fc' s []
   = throwAt fc (NotBound (MkRef fc' s))
@@ -53,12 +53,13 @@ mutual
   checkBinOpB : {a,b      : EXPR}
              -> {rs       : List Ty.Role}
              -> {ds,gs,ls : List Ty.Base}
-             -> (env      : Env rs ds gs ls)
+             -> {ss       : List Ty.Session}
+             -> (env      : Env rs ds ss gs ls)
              -> (fc       : FileContext)
              -> (synA     : Expr a)
              -> (synb     : Expr b)
              -> (k        : BinOpBoolKind)
-                         -> Capable (Expr rs ds gs ls BOOL)
+                         -> Capable (Expr rs ds ss gs ls BOOL)
   checkBinOpB env fc l r k
     = do T tyTm l <- check fc env TyBool l
          T tyTm r <- check fc env TyBool r
@@ -68,12 +69,13 @@ mutual
   checkBinOpI : {a,b      : EXPR}
              -> {rs       : List Ty.Role}
              -> {ds,gs,ls : List Ty.Base}
-             -> (env      : Env rs ds gs ls)
+             -> {ss       : List Ty.Session}
+             -> (env      : Env rs ds ss gs ls)
              -> (fc       : FileContext)
              -> (synA     : Expr a)
              -> (synb     : Expr b)
              -> (k        : BinOpIntKind)
-                         -> Capable (Expr rs ds gs ls INT)
+                         -> Capable (Expr rs ds ss gs ls INT)
   checkBinOpI env fc l r k
     = do T tyTm l <- check fc env TyInt l
          T tyTm r <- check fc env TyInt r
@@ -84,12 +86,13 @@ mutual
   checkCmp : {a,b      : EXPR}
           -> {rs       : List Ty.Role}
           -> {ds,gs,ls : List Ty.Base}
-          -> (env      : Env rs ds gs ls)
+          -> {ss       : List Ty.Session}
+          -> (env      : Env rs ds ss gs ls)
           -> (fc       : FileContext)
           -> (synA     : Expr a)
           -> (synb     : Expr b)
           -> (k        : BinOpCmpKind)
-                      -> Capable (Expr rs ds gs ls BOOL)
+                      -> Capable (Expr rs ds ss gs ls BOOL)
   checkCmp env fc l r k
     = do (tyL ** l) <- synth env l
          (tyR ** r) <- synth env r
@@ -104,9 +107,10 @@ mutual
   synth : {e        : EXPR}
        -> {rs       : List Ty.Role}
        -> {ds,gs,ls : List Ty.Base}
-       -> (env      : Env rs ds gs ls)
+       -> {ss       : List Ty.Session}
+       -> (env      : Env rs ds ss gs ls)
        -> (syn      : Expr e)
-                   -> Capable (DPair Ty.Base (Expr rs ds gs ls))
+                   -> Capable (DPair Ty.Base (Expr rs ds ss gs ls))
 
   synth env (Hole ref prf) = unknown (span ref)
 
@@ -143,21 +147,21 @@ mutual
 
                    pure (_ ** Let tyTmVal val scope)
 
-  synth env (Split fc ss val scope)
+  synth env (Split fc this val scope)
     = do (TUPLE (f::s::ts) ** v) <- synth env val
            | (tyV ** _) => throwAt fc (PairExpected tyV)
 
-         envExt <- zip env ss (f::s::ts)
+         envExt <- zip env this (f::s::ts)
 
          (_ ** rest) <- synth envExt scope
 
          pure (_ ** Split v rest)
 
 
-    where zip : (env : Env rs ds gs ls)
+    where zip : (env : Env rs ds ss gs ls)
              -> (xs : List String)
              -> (ys : Vect m Base)
-                   -> Capable (Env rs ds gs (Extra.toList ys ++ ls))
+                   -> Capable (Env rs ds ss gs (Extra.toList ys ++ ls))
           zip env [] [] = pure env
           zip env [] (x :: xs)
             = throwAt fc (PatternsMissing (Extra.toList $ x::xs))
@@ -340,7 +344,7 @@ mutual
     where args : {as' : _} -> All Expr as'
               -> Capable (DPair Nat
                             (\n => DPair (Vect n Base)
-                                         (DVect Base (Expr rs ds gs ls) n)))
+                                         (DVect Base (Expr rs ds ss gs ls) n)))
           args [] = pure (_ ** _ ** Nil)
 
           args (l :: y)
@@ -378,7 +382,7 @@ mutual
          pure (_ ** Record (f :: fs))
 
     where field : (giv : Field sco)
-                      -> Capable (DPair (String,Base) (Field rs ds gs ls))
+                      -> Capable (DPair (String,Base) (Field rs ds ss gs ls))
           field (F fc s e)
             = do (t ** tm) <- synth env e
                  pure (_ ** F s tm)
@@ -386,7 +390,7 @@ mutual
           fields : All Field as'
                 -> Capable (DPair (List (String, Base))
                               (DList (String,Base)
-                                     (Field rs ds gs ls)))
+                                     (Field rs ds ss gs ls)))
           fields Nil
             = pure (_ ** Nil)
 
@@ -436,7 +440,7 @@ mutual
                -> (sc  : String)
                -> (cTy : Base)
                -> (giv : Expr sco)
-                      -> Capable (DPair Base (\ret => Case rs ds gs ls ret (s',cTy)))
+                      -> Capable (DPair Base (\ret => Case rs ds ss gs ls ret (s',cTy)))
           case' fc s' str sc cTy giv
             = do Refl <- embedAt fc (WrongLabel s' str) (decEq s' str)
                  (rTy ** cTm) <- synth (Lambda.extend env sc cTy) giv
@@ -447,7 +451,7 @@ mutual
                -> (exp : List (String, Base))
                -> All Case as'
                -> Capable (DList (String,Base)
-                             (Case rs ds gs ls ret)
+                             (Case rs ds ss gs ls ret)
                              exp)
           cases _ ret Nil Nil
             = pure Nil
@@ -516,7 +520,7 @@ mutual
               -> (tys  : List Ty.Base)
               -> (args : All Expr as)
                       -> Capable (DList Ty.Base
-                                    (Expr rs ds gs ls)
+                                    (Expr rs ds ss gs ls)
                                     tys)
           args _ [] []
             = pure Nil
@@ -543,11 +547,12 @@ mutual
     check : {e        : EXPR}
          -> {rs       : List Ty.Role}
          -> {ds,gs,ls : List Ty.Base}
+         -> {ss       : List Ty.Session}
          -> (fc       : FileContext)
-         -> (env      : Env rs ds gs ls)
+         -> (env      : Env rs ds ss gs ls)
          -> (ty       : Ty t)
          -> (syn      : Expr e)
-                     -> Capable (DPair Base (The rs ds gs ls))
+                     -> Capable (DPair Base (The rs ds ss gs ls))
     check fc env ty syn
        = do (ty ** tm) <- synth (delta env) ty
             res <- check fc env tm syn
@@ -558,11 +563,12 @@ mutual
        -> {e        : EXPR}
        -> {rs       : List Ty.Role}
        -> {ds,gs,ls : List Ty.Base}
+       -> {ss       : List Ty.Session}
        -> (fc       : FileContext)
-       -> (env      : Env rs ds gs ls)
+       -> (env      : Env rs ds ss gs ls)
        -> (ty       : Ty ds t)
        -> (syn      : Expr e)
-                   -> Capable (The rs ds gs ls t)
+                   -> Capable (The rs ds ss gs ls t)
 
   check {t = (ARRAY type 0)} fc env tyTm (ArrayEmpty fc')
     = pure (T tyTm ArrayEmpty)
@@ -592,9 +598,10 @@ mutual
     synthReflect : {e        : EXPR}
                 -> {rs       : List Ty.Role}
                 -> {ds,gs,ls : List Ty.Base}
-                -> (env      : Env rs ds gs ls)
+                -> {ss       : List Ty.Session}
+                -> (env      : Env rs ds ss gs ls)
                 -> (syn      : Expr e)
-                            -> Capable (DPair Base (The rs ds gs ls))
+                            -> Capable (DPair Base (The rs ds ss gs ls))
     synthReflect env syn
       = do (ty ** expr) <- Exprs.synth env syn
            tm <- reflect (delta env) ty
@@ -604,9 +611,10 @@ namespace Raw
   export
   synth : {rs       : List Ty.Role}
        -> {ds,gs,ls : List Ty.Base}
-       -> (env      : Env rs ds gs ls)
+       -> {ss       : List Ty.Session}
+       -> (env      : Env rs ds ss gs ls)
        -> (syn      : EXPR)
-                   -> Capable (DPair Ty.Base (Expr rs ds gs ls))
+                   -> Capable (DPair Ty.Base (Expr rs ds ss gs ls))
   synth env e
     = synth env (toExpr e)
 

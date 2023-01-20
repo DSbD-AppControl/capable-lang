@@ -200,10 +200,11 @@ generateTags rtype fs scope
 check : {p     : PROG}
      -> {rs    : List Ty.Role}
      -> {ds,gs : List Ty.Base}
-     -> (env   : Env rs ds gs Nil)
+     -> {ss    : List Ty.Session}
+     -> (env   : Env rs ds ss gs Nil)
      -> (state : State)
      -> (prog  : Prog p)
-              -> Capable (Prog rs ds gs UNIT, State)
+              -> Capable (Prog rs ds ss gs UNIT, State)
 check env state (Main fc m)
   = do (tyM ** m) <- synth env m
 
@@ -291,6 +292,7 @@ check env state (Def fc PROT n val scope)
 
        (g ** tm) <- synth (delta env) (rho env) val
 
+       let env   = { sigma $= \c => extend c n (S g)} env
        let state = {protocols $= insert n (P (rho env) tm)} state
 
        (scope, state) <- check env state scope

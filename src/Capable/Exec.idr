@@ -185,7 +185,7 @@ mutual
         -> {as    : List (String,Base)}
         -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
-        -> (args  : DList (String, Ty.Base) (Field rs tys stack_g stack_l) as)
+        -> (args  : DList (String, Ty.Base) (Field rs tys gs stack_g stack_l) as)
                  -> Capable (Fields.Results store as)
     eval env heap []
       = pure (Fields heap
@@ -204,7 +204,7 @@ mutual
     eval : {as,store : List Ty.Base}
         -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
-        -> (args  : DList Ty.Base (Expr rs tys stack_g stack_l) as)
+        -> (args  : DList Ty.Base (Expr rs tys gs stack_g stack_l) as)
                  -> Capable (Args.Results store as)
     eval env heap []
       = pure (Args heap
@@ -224,7 +224,7 @@ mutual
         -> {store : List Ty.Base}
         -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
-        -> (args  : DVect Ty.Base (Expr rs tys stack_g stack_l) n as)
+        -> (args  : DVect Ty.Base (Expr rs tys gs stack_g stack_l) n as)
                  -> Capable (Results store as)
     eval env heap []
       = pure (Args heap
@@ -373,8 +373,8 @@ mutual
     when : {type : Ty.Base}
         -> (env  : Env stack_g stack_l store)
         -> (cond : Expr.Result store BOOL)
-        -> (tt   : Expr roles types stack_g stack_l type)
-        -> (ff   : Expr roles types stack_g stack_l type)
+        -> (tt   : Expr roles types gs stack_g stack_l type)
+        -> (ff   : Expr roles types gs stack_g stack_l type)
                 -> Capable (Expr.Result store type)
 
     when env (Value h (B False) prf) _ ff
@@ -391,7 +391,7 @@ mutual
         -> {store : List Ty.Base}
         -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
-        -> (expr  : Expr roles types stack_g stack_l type)
+        -> (expr  : Expr roles types globals stack_g stack_l type)
                  -> Capable (Expr.Result store type)
     -- ### Holes
     eval env heap (Hole s)
@@ -510,9 +510,9 @@ mutual
               -> {ret : Base}
               -> (idx : Elem (s,x) xs)
               -> (ps  : DList (String,Base)
-                              (Case roles types stack_g stack_l ret)
+                              (Case roles types globals stack_g stack_l ret)
                               xs)
-                     -> Expr roles types stack_g (x::stack_l) ret
+                     -> Expr roles types globals stack_g (x::stack_l) ret
         lookup Here (C s elem :: rest) = elem
         lookup (There y) (elem :: rest) = lookup y rest
 
@@ -560,7 +560,7 @@ mutual
         -> {ret : Ty.Base}
         -> (env   : DList Ty.Base (Value store) stack_g)
         -> (heap  : Heap store)
-        -> (func  : Func roles types stack_g (FUNC as ret))
+        -> (func  : Func roles types globals stack_g (FUNC as ret))
         -> (vals  : DList Ty.Base (Value store) as)
                  -> Capable (Expr.Result store ret)
     eval env_g heap (Fun body) args
@@ -575,29 +575,28 @@ run : {type : Ty.Base}
     -> (envT  : Env types)
     -> (env   : DList Ty.Base (Value store) stack)
     -> (heap  : Heap store)
-    -> (expr  : Prog roles types stack type)
+    -> (expr  : Prog roles types globals stack type)
              -> Capable (Expr.Result store type)
 
 run er et env heap (DefSesh s scope)
   = run er et env heap scope
 
 run er et env heap (DefRole rest)
-  = do run (Val MkRole::er)
-           et
-           env
-           heap
-           rest
+  = run (Val MkRole::er)
+        et
+        env
+        heap
+        rest
 
 
 
 -- Typedefs need resolving.
 run er et env heap (DefType tyRef rest)
-  = do -- let ty = resolve et tyRef
-       run er
-           (Val _::et)
-           env
-           heap
-           rest
+  = run er
+        (Val _::et)
+        env
+        heap
+        rest
 
 
 -- Functions store their environment at time of definition.

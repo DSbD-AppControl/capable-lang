@@ -23,44 +23,45 @@ import Capable.Terms.Funcs
 ||| We index with various contexts that weare intrinsically well
 ||| scoped/typed.
 public export
-data Prog : (roles : List Ty.Role)
-         -> (types : List Ty.Base)
-         -> (stack : List Ty.Base)
-         -> (type  :      Ty.Base)
+data Prog : (roles   : List Ty.Role)
+         -> (types   : List Ty.Base)
+         -> (globals : List Ty.Session)
+         -> (stack   : List Ty.Base)
+         -> (type    :      Ty.Base)
                   -> Type
   where
-    DefSesh : (sesh : Global Nil types roles g)
-           -> (scope : Prog roles types stack UNIT)
-                    -> Prog roles types stack UNIT
+    DefSesh : (sesh  : Global Nil types roles g)
+           -> (scope : Prog roles types (S g::globals) stack UNIT)
+                    -> Prog roles types       globals  stack UNIT
 
-    DefRole : (rest : Prog (MkRole::roles) types stack UNIT)
-                   -> Prog          roles  types stack UNIT
+    DefRole : (rest : Prog (MkRole::roles) types globals stack UNIT)
+                   -> Prog          roles  types globals stack UNIT
 
     ||| A Type-Def.
     DefType : {type : Ty.Base}
            -> (tyRef : Ty types type)
-           -> (rest  : Prog roles (type::types) stack UNIT)
-                    -> Prog roles        types  stack UNIT
+           -> (rest  : Prog roles (type::types) globals stack UNIT)
+                    -> Prog roles        types  globals stack UNIT
 
     ||| A function definition.
     DefFunc : {args   : List Ty.Base}
            -> {return : Ty.Base}
            -> (sig    : Ty types (FUNC args return))
-           -> (func   : Func roles types                      stack   (FUNC args return))
-           -> (rest   : Prog roles types (FUNC args return :: stack)  UNIT)
-                     -> Prog roles types                      stack   UNIT
+           -> (func   : Func roles types globals                      stack   (FUNC args return))
+           -> (rest   : Prog roles types globals (FUNC args return :: stack)  UNIT)
+                     -> Prog roles types globals                      stack   UNIT
 
 
     ||| The top-level function.
     ||| @TODO change return to INT...
-    Main : Func roles types stack (FUNC Nil UNIT)
-        -> Prog roles types stack           UNIT
+    Main : Func roles types globals stack (FUNC Nil UNIT)
+        -> Prog roles types globals stack           UNIT
 
 
 ||| A Closed program.
 public export
 Program : Type
 Program
-  = Prog Nil Nil Nil UNIT
+  = Prog Nil Nil Nil Nil UNIT
 
 -- [ EOF ]

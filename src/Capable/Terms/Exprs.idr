@@ -36,6 +36,7 @@ mutual
   public export
   data Case : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
+           -> (globals : List Ty.Session)
            -> (stack_g : List Ty.Base)
            -> (stack_l : List Ty.Base)
            -> (ret     : Ty.Base)
@@ -43,52 +44,57 @@ mutual
                       -> Type
     where
       C : (s    : String)
-       -> (body : Expr roles types g (p::stack) return)
-               -> Case roles types g     stack  return (s,p)
+       -> (body : Expr roles types globals stack_g (p::stack_l) return)
+               -> Case roles types globals stack_g     stack_l  return (s,p)
 
   public export
   data Field : (roles   : List Ty.Role)
             -> (types   : List Ty.Base)
+            -> (globals : List Ty.Session)
             -> (stack_g : List Ty.Base)
             -> (stack_l : List Ty.Base)
             -> (spec    : (String, Ty.Base))
                        -> Type
     where
       F : (s : String)
-       -> (v : Expr  roles types stack_g stack_l p)
-            -> Field roles types stack_g stack_l (s, p)
+       -> (v : Expr  roles types globals stack_g stack_l p)
+            -> Field roles types globals stack_g stack_l (s, p)
 
   public export
   data Expr : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
+           -> (globals : List Ty.Session)
            -> (stack_g : List Ty.Base)
            -> (stack_l : List Ty.Base)
            -> (type    :      Ty.Base)
                       -> Type
     where
-      Hole : String -> Expr roles types stack_g stack_g t
+      Hole : String
+          -> Expr roles types globals stack_g stack_g t
 
-      VarG : TyVar stack_g t -> Expr roles types stack_g stack_l t
-      VarL : TyVar stack_l t -> Expr roles types stack_g stack_l t
+      VarG : TyVar stack_g t
+          -> Expr roles types globals stack_g stack_l t
 
+      VarL : TyVar stack_l t
+          -> Expr roles types globals stack_g stack_l t
 
       ||| Bind things to the *local* stack!
       Let : {type : Ty.Base}
-         -> (ty   : Ty         types                           type)
-         -> (expr : Expr roles types stack_g          stack_l  type)
-         -> (rest : Expr roles types stack_g (type :: stack_l) return)
-                 -> Expr roles types stack_g          stack_l  return
+         -> (ty   : Ty         types                                   type)
+         -> (expr : Expr roles types globals stack_g          stack_l  type)
+         -> (rest : Expr roles types globals stack_g (type :: stack_l) return)
+                 -> Expr roles types globals stack_g          stack_l  return
 
       ||| Split tuples by 'pattern matching'
       Split : {ss : _}
-           -> (expr : Expr roles types stack_g                     stack_l  (TUPLE ss))
-           -> (rest : Expr roles types stack_g (Extra.toList ss ++ stack_l) return)
-                   -> Expr roles types stack_g                     stack_l  return
+           -> (expr : Expr roles types globals stack_g                     stack_l  (TUPLE ss))
+           -> (rest : Expr roles types globals stack_g (Extra.toList ss ++ stack_l) return)
+                   -> Expr roles types globals stack_g                     stack_l  return
 
       |||
-      Seq : (this : Expr roles types stack_g stack_l UNIT)
-         -> (that : Expr roles types stack_g stack_l typeB)
-                 -> Expr roles types stack_g stack_l typeB
+      Seq : (this : Expr roles types globals stack_g stack_l UNIT)
+         -> (that : Expr roles types globals stack_g stack_l typeB)
+                 -> Expr roles types globals stack_g stack_l typeB
 
       -- # Builtins
 
@@ -99,110 +105,111 @@ mutual
       |||   2. Operations on contant things.
       |||   3. Memory & Process APIs
       Builtin : {inputs : List Base}
-             -> (desc   : Builtin                                       inputs return)
-             -> (args   : DList Base (Expr roles types stack_g stack_l) inputs)
-                       -> Expr             roles types stack_g stack_l         return
+             -> (desc   : Builtin                                         inputs return)
+             -> (args   : DList Base (Expr roles types globals stack_g stack_l) inputs)
+                       -> Expr             roles types globals stack_g stack_l         return
 
 
       -- # Data Structures
 
       -- ## Boolean Eliminator
-      Cond : Expr roles types stack_g stack_l BOOL
-          -> Expr roles types stack_g stack_l a
-          -> Expr roles types stack_g stack_l a
-          -> Expr roles types stack_g stack_l a
+      Cond : Expr roles types globals stack_g stack_l BOOL
+          -> Expr roles types globals stack_g stack_l a
+          -> Expr roles types globals stack_g stack_l a
+          -> Expr roles types globals stack_g stack_l a
 
 
       -- ## Arrays
 
       -- ### Constructors
-      ArrayEmpty : Expr roles types stack_g stack_l (ARRAY type Z)
+      ArrayEmpty : Expr roles types globals stack_g stack_l (ARRAY type Z)
 
-      ArrayCons : Expr roles types stack_g stack_l        type
-               -> Expr roles types stack_g stack_l (ARRAY type    n)
-               -> Expr roles types stack_g stack_l (ARRAY type (S n))
+      ArrayCons : Expr roles types globals stack_g stack_l        type
+               -> Expr roles types globals stack_g stack_l (ARRAY type    n)
+               -> Expr roles types globals stack_g stack_l (ARRAY type (S n))
 
       -- ### Eliminators
       Index : {n : Nat}
-           -> (idx   : Expr roles types stack_g stack_l INT)
-           -> (array : Expr roles types stack_g stack_l (ARRAY type n))
-                    -> Expr roles types stack_g stack_l        type
+           -> (idx   : Expr roles types globals stack_g stack_l INT)
+           -> (array : Expr roles types globals stack_g stack_l (ARRAY type n))
+                    -> Expr roles types globals stack_g stack_l        type
 
       -- ## Products
 
       -- ### Constructors
-      Tuple : (fields : DVect Base (Expr roles types stack_g stack_l) (S (S n)) as)
-                     -> Expr roles types stack_g stack_l (TUPLE as)
+      Tuple : (fields : DVect Base (Expr roles types globals stack_g stack_l) (S (S n)) as)
+                     -> Expr roles types globals stack_g stack_l (TUPLE as)
 
       Set : {as    : Vect (S (S n)) Base}
-         -> (tuple : Expr roles types stack_g stack_l (TUPLE as))
+         -> (tuple : Expr roles types globals stack_g stack_l (TUPLE as))
          -> (idx   : Fin (S (S n)))
-         -> (value : Expr roles types stack_g stack_l (index idx as))
-                  -> Expr roles types stack_g stack_l (TUPLE as)
+         -> (value : Expr roles types globals stack_g stack_l (index idx as))
+                  -> Expr roles types globals stack_g stack_l (TUPLE as)
 
       -- ### Eliminators
 
       Get : {as    : Vect (S (S n)) Base}
-         -> (tuple : Expr roles types stack_g stack_l (TUPLE as))
+         -> (tuple : Expr roles types globals stack_g stack_l (TUPLE as))
          -> (idx   : Fin (S (S n)))
-                  -> Expr roles types stack_g stack_l (index idx as)
+                  -> Expr roles types globals stack_g stack_l (index idx as)
 
       -- ## Records
 
-      Record : (fields : DList (String,Base) (Field roles types stack_g stack_l) (a::as))
-                      -> Expr roles types stack_g stack_l (RECORD (a:::as))
+      Record : (fields : DList (String,Base)
+                               (Field roles types globals stack_g stack_l) (a::as))
+                      -> Expr roles types globals stack_g stack_l (RECORD (a:::as))
 
       SetR : {s,t,a,as : _}
-          -> (re    : Expr roles types stack_g stack_l (RECORD (a:::as)))
+          -> (re    : Expr roles types globals stack_g stack_l (RECORD (a:::as)))
           -> (idx   : Elem (s,t) (a::as))
-          -> (value : Expr roles types stack_g stack_l t)
-                   -> Expr roles types stack_g stack_l (RECORD (a:::as))
+          -> (value : Expr roles types globals stack_g stack_l t)
+                   -> Expr roles types globals stack_g stack_l (RECORD (a:::as))
 
       -- ### Eliminators
 
       GetR : {s,t,a,as : _}
-         -> (rec : Expr roles types stack_g stack_l (RECORD (a:::as)))
+         -> (rec : Expr roles types globals stack_g stack_l (RECORD (a:::as)))
          -> (idx : Elem (s,t) (a::as))
-                -> Expr roles types stack_g stack_l t
+                -> Expr roles types globals stack_g stack_l t
       -- ## Sums
 
       -- ### Constructors
       Tag : {a : _}
          -> (s : String)
-         -> (value : Expr roles types stack_g stack_l a)
+         -> (value : Expr roles types globals stack_g stack_l a)
          -> (prf   : Elem (s,a) (x::xs))
-                  -> Expr roles types stack_g stack_l (UNION (x:::xs))
+                  -> Expr roles types globals stack_g stack_l (UNION (x:::xs))
 
       -- ### Eliminators
 
       Match : {return : Base}
            -> {a      : (String, Base)}
            -> {as     : List (String, Base)}
-           -> (expr   : Expr roles types stack_g stack_l (UNION (a:::as)))
+           -> (expr   : Expr roles types globals stack_g stack_l (UNION (a:::as)))
            -> (cases  : DList (String,Base)
-                              (Case roles types stack_g stack_l return)
+                              (Case roles types globals stack_g stack_l return)
                               (a::as))
-                     -> Expr roles types stack_g stack_l  return
+                     -> Expr roles types globals stack_g stack_l  return
 
       -- ## Function Application
 
       Call : {as : List Ty.Base}
           -> {b  : Ty.Base}
-          -> (f  : Expr roles types stack_g stack_l (FUNC as b))
-          -> (a  : DList Ty.Base (Expr roles types stack_g stack_l) as)
-                -> Expr roles types stack_g stack_l         b
+          -> (f  : Expr roles types globals stack_g stack_l (FUNC as b))
+          -> (a  : DList Ty.Base (Expr roles types ss stack_g stack_l) as)
+                -> Expr roles types globals stack_g stack_l         b
 
       -- ## Type Ascriptions
-      The : (ty   : Ty         types                 type)
-         -> (expr : Expr roles types stack_g stack_l type)
-                 -> Expr roles types stack_g stack_l type
+      The : (ty   : Ty         types                    type)
+         -> (expr : Expr roles types globals stack_g stack_l type)
+                 -> Expr roles types globals stack_g stack_l type
 
       -- ## Loops
       ||| A general do-until loop construct.
       |||
-      Loop : (body : Expr roles types stack_g stack_l return)
-          -> (expr : Expr roles types stack_g stack_l BOOL)
-                  -> Expr roles types stack_g stack_l return
+      Loop : (body : Expr roles types globals stack_g stack_l return)
+          -> (expr : Expr roles types globals stack_g stack_l BOOL)
+                  -> Expr roles types globals stack_g stack_l return
 
       -- ## Typed Sessions
       {-

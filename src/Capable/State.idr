@@ -25,11 +25,11 @@ data Protocol : Type where
    -> Protocol
 
 public export
-data Func = F (Func rs ts s type)
+data Func = F (Func rs ts ss s type)
 
 
 public export
-data Hole = H (Env rs ts gs ls)
+data Hole = H (Env rs ts ss gs ls)
 
 public export
 data Ty = T (Ty ts type)

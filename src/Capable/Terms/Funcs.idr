@@ -19,6 +19,7 @@ import Capable.Terms.Exprs
 public export
 data Func : (roles : List Ty.Role)
          -> (types : List Ty.Base)
+         -> (sesh  : List Ty.Session)
          -> (stack : List Ty.Base)
          -> (type  :      Ty.Base)
                   -> Type
@@ -26,7 +27,7 @@ data Func : (roles : List Ty.Role)
     ||| A non-recusive. function.
     Fun : {args   : List Ty.Base}
        -> {return : Ty.Base}
-       -> (body   : Expr roles types stack       args return)
-                 -> Func roles types stack (FUNC args  return)
+       -> (body   : Expr roles types ss stack       args return)
+                 -> Func roles types ss stack (FUNC args return)
 
 -- [ EOF ]
