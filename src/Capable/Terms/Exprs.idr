@@ -18,6 +18,8 @@ import public Toolkit.Data.DList
 import public Toolkit.Data.DVect
 import public Toolkit.Data.Vect.Extra
 
+import public Capable.Types.Protocol.Assignment
+
 import Capable.Terms.Types
 import Capable.Terms.Builtins
 import Capable.Terms.Vars
@@ -33,6 +35,52 @@ index (y :: xs) (There x) = snd y
 
 
 mutual
+
+  public export
+  data Assign : (roles   : List Ty.Role)
+             -> (types   : List Ty.Base)
+             -> (globals : List Ty.Session)
+             -> (stack_g : List Ty.Method)
+             -> (stack_l : List Ty.Base)
+             -> (whom    : IsVar roles MkRole)
+--             -> (what    : Ty.Base)
+-- @TODO make context dependent
+                        -> Type
+    where
+      A : (whom : IsVar roles MkRole)
+       -> (what : Expr roles types globals stack_g stack_l STR)
+               -> Assign roles types globals stack_g stack_l whom
+
+  public export
+  data Assignments : (roles   : List Ty.Role)
+                  -> (types   : List Ty.Base)
+                  -> (globals : List Ty.Session)
+                  -> (stack_g : List Ty.Method)
+                  -> (stack_l : List Ty.Base)
+                  -> (rs      : Roles roles ss)
+--   a          -> (what    : Ty.Base)
+-- @TODO make context dependent
+                        -> Type
+
+    where
+      End : Assignments roles types globals stack_g stack_l Nil
+      Add : Assign      roles types globals stack_g stack_l r
+         -> Assignments roles types globals stack_g stack_l rs
+         -> Assignments roles types globals stack_g stack_l (r :: rs)
+
+  public export
+  data Assigns : (roles   : List Ty.Role)
+              -> (types   : List Ty.Base)
+              -> (globals : List Ty.Session)
+              -> (stack_g : List Ty.Method)
+              -> (stack_l : List Ty.Base)
+              -> (rs      : Local ks roles)
+                         -> Type
+    where
+      AS : (prf : HasRoles roles l rs)
+        -> (as  : Assignments roles tyeps globals stack_g stack_l rs)
+               -> Assigns roles tyeps globals stack_g stack_l l
+
   public export
   data Case : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
@@ -218,10 +266,11 @@ mutual
 
       -- ## Session Innvocation
 
-      Run : {as : List Ty.Base}
-         -> {b  : Ty.Base}
-         -> (f  : IsVar stack_g (SESH whom prot as b))
+      Run : {as        : List Ty.Base}
+         -> {b         : Ty.Base}
+         -> (f         : IsVar stack_g (SESH whom prot as b))
+         -> (args_comm : Assigns roles types globals stack_g stack_l prot)
          -- @TODO add context args...
-         -> (a  : DList Ty.Base (Expr roles types ss stack_g stack_l) as)
-               -> Expr roles types globals stack_g stack_l         b
+         -> (args_comp : DList Ty.Base (Expr roles types globals stack_g stack_l) as)
+                      -> Expr roles types globals stack_g stack_l                        b
 -- [ EOF ]

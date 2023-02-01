@@ -551,7 +551,24 @@ mutual
                        v
                        (trans p1 p2))
 
-    eval env heap (Run s xs) = panic "Not Yet Implemented"
+    eval env heap (Run s argsc argsv) = panic "Not Yet Implemented"
+
+
+  namespace Sesh
+    ||| Let's deal with functions separatly.
+    public export
+    eval : {store : List Ty.Base}
+        -> {as    : List Ty.Base}
+        -> {ret   : Ty.Base}
+        -> (env   : DList Ty.Method (Closure) stack_g)
+        -> (heap  : Heap store)
+        -> (func  : Session roles types globals stack_g (SESH w l as ret))
+        -> (vals  : DList Ty.Base (Value store) as)
+                 -> Capable (Expr.Result store ret)
+    eval env heap func vals = panic "Not Yet Implemented"
+
+--    eval env_g heap (Sesh body) args
+--      = ?aas -- eval (MkEnv env_g args) heap body
 
   namespace Func
     ||| Let's deal with functions separatly.
@@ -607,8 +624,12 @@ run er et env heap (DefFunc func rest)
         heap
         rest
 
-run er et env heap (DefSesh g w p s rest)
-  = ?as
+run er et env heap (DefSesh _ _ _ s rest)
+  = run er
+        et
+        (ClosSesh s env :: env)
+        heap
+        rest
 
 -- The main sh-bang
 run _ _ env heap (Main x)
