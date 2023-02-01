@@ -48,10 +48,14 @@ data Ty : (context : List Ty.Base)
                          ts)
                      -> Ty ctxt (TUPLE ts)
 
-    TyUnion : (fields : DList (String, Base) (Ty ctxt . Builtin.snd) (t::ts))
+    TyUnion : (fields : DList (String, Base)
+                              (Ty ctxt . Builtin.snd)
+                              (t::ts))
                     -> Ty ctxt (UNION (t:::ts))
 
-    TyRecord : (fields : DList (String, Base) (Ty ctxt . Builtin.snd) (t::ts))
+    TyRecord : (fields : DList (String, Base)
+                               (Ty ctxt . Builtin.snd)
+                               (t::ts))
                       -> Ty ctxt (RECORD (t:::ts))
 
     TyUnit : Ty ctxt UNIT
@@ -62,9 +66,9 @@ data Ty : (context : List Ty.Base)
     TyHandle : (kind : HandleKind)
                     -> Ty ctxt (HANDLE kind)
 
-    TyFunc : (tmA : DList Ty.Base (Ty ctxt) as)
-          -> (tmB : Ty ctxt b)
-                 -> Ty ctxt (FUNC as b)
+--    TyFunc : (tmA : DList Ty.Base (Ty ctxt) as)
+--          -> (tmB : Ty ctxt b)
+--                 -> Ty ctxt (FUNC as b)
 
     TyVar : TyVar ctxt type
          -> Ty    ctxt type

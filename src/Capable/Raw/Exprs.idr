@@ -192,10 +192,11 @@ mutual
 
       Call : {as   : Vect n Raw.AST.EXPR}
           -> (fc   : FileContext)
-          -> (fun  : Expr f)
+          -> (fun  : Ref)
+          -> (prf  : AsRef s fc ref)
           -> (prf  : AsVect args as)
           -> (argz : All Expr as)
-                  -> Expr (Branch CALL fc (f::args))
+                  -> Expr (Branch (CALL s) fc args)
 
 mutual
 
@@ -298,9 +299,10 @@ mutual
     = Loop fc (toExpr s)
               (toExpr c)
 
-  toExpr (Branch CALL fc (f::as))
+  toExpr (Branch (CALL s) fc as)
     = let (as ** prf) = asVect as
-      in Call fc (toExpr f)
+      in Call fc (MkRef fc s)
+                 R
                  prf
                  (assert_total $ args as)
 

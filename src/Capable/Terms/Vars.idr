@@ -1,9 +1,9 @@
-||| Nameless representation.
+||| Aliases to make nameless representation of things easier to
+||| write..
 |||
 ||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
-||| We can make this more erasable but that is for later.
 |||
 module Capable.Terms.Vars
 
@@ -12,12 +12,6 @@ import public Toolkit.DeBruijn.Renaming
 import Capable.Types
 
 %default total
-
-public export
-Var : (context : List Ty)
-   -> (type    : Ty)
-              -> Type
-Var = IsVar
 
 public export
 TyVar : (context : List Ty.Base)

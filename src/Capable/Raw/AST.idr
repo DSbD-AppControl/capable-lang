@@ -20,6 +20,7 @@ namespace Kind
             | PROT
             | BRANCH
             | TYPE
+            | METH
             | FIELD
             | FIELDV
             | CASE
@@ -165,7 +166,9 @@ namespace Shape
     FIELD : String -> UN Shape FIELD TYPE
     DTYPE : DKind -> Shape TYPE (S n)  (replicate (S n)  FIELD)
 
-    ARROW : Shape TYPE (S n) (replicate (S n) TYPE)
+    ARROW : Shape METH (S n) (replicate (S n) TYPE)
+    SQUIG : Shape METH (S n) (replicate (S n) TYPE)
+    -- @TODO Add other information
 
     -- ## Expressions
 
@@ -222,12 +225,15 @@ namespace Shape
     LOOP : BIN Shape EXPR EXPR EXPR
 
     -- ### Application
-    CALL : Shape EXPR (S n) (EXPR::replicate n EXPR)
+    CALL : String -> Shape EXPR n (replicate n EXPR)
 
     -- ## Functions
     ARG : String -> UN Shape ARG TYPE
     ARGS : Shape ARGS n (replicate n ARG)
     FUN : TRI Shape FUNC ARGS TYPE EXPR
+    -- @TODO add seshs
+
+    -- @TODO add sesh expressions
 
     -- ## Programs
 
@@ -255,6 +261,7 @@ namespace Shape
     show (FIELD str)     = "(FIELD \{show str})"
     show (DTYPE x)       = "(DTYPE \{show x})"
     show ARROW           = "ARROW"
+    show SQUIG           = "SQUIG"
     show (HOLE str)      = "(HOLE \{show str}}"
     show (VAR str)       = "(VAR \{show str})"
     show (LETTY x str)   = "(LETTY \{show x} \{show str})"
@@ -281,7 +288,7 @@ namespace Shape
     show COND            = "COND"
     show SEQ             = "SEQ"
     show LOOP            = "LOOP"
-    show CALL            = "CALL"
+    show (CALL s)        = "(CALL \{show s})"
     show (ARG str)       = "(ARG \{show str})"
     show ARGS            = "ARGS"
     show FUN             = "FUN"
@@ -311,6 +318,10 @@ namespace FileContext
       public export
       FIELD : Type
       FIELD = AST FIELD
+
+      public export
+      METH : Type
+      METH = AST METH
 
       public export
       TYPE : Type

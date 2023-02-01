@@ -60,7 +60,7 @@ namespace Typing
     ArrayAppend : Ty.Base -> Ty.Base -> Typing.Error
     ArgsExpected : List Ty.Base -> Typing.Error
     RedundantArgs : Nat -> Typing.Error
-    FunctionExpected : Ty.Base -> Typing.Error
+    FunctionExpected : Ty.Method -> Typing.Error
     RecordExpected : Ty.Base -> Typing.Error
     UnionExpected : Ty.Base -> Typing.Error
     HandleExpected : Ty.Base -> Typing.Error
@@ -71,6 +71,9 @@ namespace Typing
     ArrayExpected : Ty.Base -> Error
 
     MismatchRole : Ref -> Ref -> Typing.Error
+
+    MismatchM : (given,expected : Ty.Method)
+                               -> Typing.Error
 
     Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error

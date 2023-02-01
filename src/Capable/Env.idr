@@ -48,13 +48,13 @@ extend (elem :: rest) y = elem :: extend rest y
 |||
 ||| We divide into a local and global stack.
 public export
-data Env : (stack_g : List Ty.Base)
+data Env : (stack_g : List Ty.Method)
         -> (stack_l : List Ty.Base)
         -> (store   : List Ty.Base)
                    -> Type
   where
-    MkEnv : (env_g : DList Ty.Base (Value store) stack_g)
-         -> (env_l : DList Ty.Base (Value store) stack_l)
+    MkEnv : (env_g : DList Ty.Method (Closure)     stack_g)
+         -> (env_l : DList Ty.Base   (Value store) stack_l)
                   -> Env stack_g stack_l store
 
 export
@@ -65,9 +65,9 @@ empty = MkEnv Nil Nil
 ||| Extend the global stack with a value.
 export
 extend_g : {type : _}
-        -> (val : Value store type)
-        -> (env : Env        g  l store)
-               -> Env (type::g) l store
+        -> (val : Closure type)
+        -> (env : Env           g  l store)
+               -> Env    (type::g) l store
 extend_g val (MkEnv env_g env_l)
   = MkEnv (val :: env_g) env_l
 
@@ -99,7 +99,7 @@ lookup_l loc (MkEnv env_g env_l)
 export
 lookup_g : (loc : IsVar g type)
         -> (env : Env g l store)
-               -> Value store type
+               -> Closure type
 lookup_g loc (MkEnv env_g env_l)
   = read loc env_g
 
@@ -109,7 +109,7 @@ weaken : Subset old new
       -> Env.Env g l old
       -> Env.Env g l new
 weaken prf (MkEnv env_g env_l)
-  = MkEnv (Env.weaken prf env_g)
+  = MkEnv env_g
           (Env.weaken prf env_l)
 
 namespace Ty

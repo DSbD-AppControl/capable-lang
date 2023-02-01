@@ -68,13 +68,14 @@ expand (Arg ref ty tm rest)
 
 
 export
-synth : {f     : FUNC}
-     -> {rs    : List Ty.Role}
-     -> {ds,gs : List Ty.Base}
-     -> {ss    : List Ty.Session}
-     -> (rho   : Env rs ds ss gs Nil)
-     -> (func  : Fun f)
-              -> Capable (DPair Ty.Base (Func rs ds ss gs))
+synth : {f    : FUNC}
+     -> {rs   : List Ty.Role}
+     -> {ds   : List Ty.Base}
+     -> {gs   : List Ty.Method}
+     -> {ss   : List Ty.Session}
+     -> (rho  : Env rs ds ss gs Nil)
+     -> (func : Fun f)
+             -> Capable (DPair Ty.Method (Func rs ds ss gs))
 synth env (Func fc prf as ret scope)
   = do (tyAS  ** as)  <- args  (delta env) as
        (tyRet ** ret) <- synth (delta env) ret
@@ -87,12 +88,13 @@ synth env (Func fc prf as ret scope)
 
 namespace Raw
   export
-  synth : {rs    : List Ty.Role}
-       -> {ds,gs : List Ty.Base}
-       -> {ss    : List Ty.Session}
-       -> (env   : Env rs ds ss gs Nil)
-       -> (syn   : FUNC)
-              -> Capable (DPair Ty.Base (Func rs ds ss gs))
+  synth : {rs  : List Ty.Role}
+       -> {ds  : List Ty.Base}
+       -> {gs  : List Ty.Method}
+       -> {ss  : List Ty.Session}
+       -> (env : Env rs ds ss gs Nil)
+       -> (syn : FUNC)
+              -> Capable (DPair Ty.Method (Func rs ds ss gs))
   synth env f
     = synth env (toFun f)
 

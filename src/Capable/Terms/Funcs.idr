@@ -13,6 +13,7 @@ import Data.Vect
 import Capable.Terms.Types
 import Capable.Terms.Vars
 import Capable.Terms.Exprs
+import Capable.Terms.Sessions
 
 %default total
 
@@ -20,8 +21,8 @@ public export
 data Func : (roles : List Ty.Role)
          -> (types : List Ty.Base)
          -> (sesh  : List Ty.Session)
-         -> (stack : List Ty.Base)
-         -> (type  :      Ty.Base)
+         -> (stack : List Ty.Method)
+         -> (type  :      Ty.Method)
                   -> Type
   where
     ||| A non-recusive. function.

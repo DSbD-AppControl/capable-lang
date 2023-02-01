@@ -88,13 +88,12 @@ mutual
                     -> Ty (Branch (HANDLE k) fc Nil)
 
 
-      TyFunc : {0 types' : Vect (S n) Raw.AST.TYPE}
-            -> (fc    : FileContext)
-            -> (prf   : AsVect types types')
-            -> (argty : Args          (init types'))
-            -> (retty : Ty            (last types'))
-                     -> Ty (Branch ARROW fc types)
-
+--      TyFunc : {0 types' : Vect (S n) Raw.AST.TYPE}
+--            -> (fc    : FileContext)
+--            -> (prf   : AsVect types types')
+--            -> (argty : Args          (init types'))
+--            -> (retty : Ty            (last types'))
+--                     -> Ty (Branch ARROW fc types)
 
 mutual
 
@@ -137,12 +136,11 @@ mutual
                 prf
                 (assert_total $ toFields vs)
 
-  toType (Branch ARROW fc nodes)
-    = let (vs ** prf) = asVect nodes
-      in TyFunc fc
-                prf
-                (toTypeArgs (init vs))
-                (assert_total $ toType (last vs))
-
+--  toType (Branch ARROW fc nodes)
+--    = let (vs ** prf) = asVect nodes
+--      in TyFunc fc
+--                prf
+--                (toTypeArgs (init vs))
+--                (assert_total $ toType (last vs))
 
 -- [ EOF ]

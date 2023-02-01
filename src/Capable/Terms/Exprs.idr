@@ -37,7 +37,7 @@ mutual
   data Case : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
            -> (globals : List Ty.Session)
-           -> (stack_g : List Ty.Base)
+           -> (stack_g : List Ty.Method)
            -> (stack_l : List Ty.Base)
            -> (ret     : Ty.Base)
            -> (spec    : (String, Ty.Base))
@@ -51,7 +51,7 @@ mutual
   data Field : (roles   : List Ty.Role)
             -> (types   : List Ty.Base)
             -> (globals : List Ty.Session)
-            -> (stack_g : List Ty.Base)
+            -> (stack_g : List Ty.Method)
             -> (stack_l : List Ty.Base)
             -> (spec    : (String, Ty.Base))
                        -> Type
@@ -64,19 +64,23 @@ mutual
   data Expr : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
            -> (globals : List Ty.Session)
-           -> (stack_g : List Ty.Base)
+           -> (stack_g : List Ty.Method)
            -> (stack_l : List Ty.Base)
            -> (type    :      Ty.Base)
                       -> Type
     where
       Hole : String
-          -> Expr roles types globals stack_g stack_g t
-
-      VarG : TyVar stack_g t
           -> Expr roles types globals stack_g stack_l t
 
-      VarL : TyVar stack_l t
-          -> Expr roles types globals stack_g stack_l t
+-- [ NOTE ] Removed because functions are _not_ base types...
+--
+-- @TODO move functions and 'types-as-terms' representation to their own term-space?
+
+--      VarG : TyVar stack_g t
+--          -> Expr roles types globals stack_g stack_l t
+
+      Var : TyVar stack_l t
+         -> Expr roles types globals stack_g stack_l t
 
       ||| Bind things to the *local* stack!
       Let : {type : Ty.Base}
@@ -191,14 +195,6 @@ mutual
                               (a::as))
                      -> Expr roles types globals stack_g stack_l  return
 
-      -- ## Function Application
-
-      Call : {as : List Ty.Base}
-          -> {b  : Ty.Base}
-          -> (f  : Expr roles types globals stack_g stack_l (FUNC as b))
-          -> (a  : DList Ty.Base (Expr roles types ss stack_g stack_l) as)
-                -> Expr roles types globals stack_g stack_l         b
-
       -- ## Type Ascriptions
       The : (ty   : Ty         types                    type)
          -> (expr : Expr roles types globals stack_g stack_l type)
@@ -211,38 +207,21 @@ mutual
           -> (expr : Expr roles types globals stack_g stack_l BOOL)
                   -> Expr roles types globals stack_g stack_l return
 
-      -- ## Typed Sessions
-      {-
-      ||| Create a new session from the given global protocol projected as the given role.
-      NewSession : (g_term     : Global Nil types roles g)
-                -> (principle  : Role roles MkRole)
-                -> (projection : Project Nil roles principle g l)
-                -> (scope      : Expr roles types stack_g (stack_l) a)
-                -- @TODO sort out what local types are...
-                              -> Expr roles types stack_g stack_l a
 
-      Crash : Expr roles types stack_g stack_l (L Crash)
-           -> Expr roles types stack_g stack_l a
+      -- ## Function Application
 
-      End : Expr roles types stack_g stack_l (L End)
-         -> Expr roles types stack_g stack_l a
+      Call : {as : List Ty.Base}
+          -> {b  : Ty.Base}
+          -> (f  : IsVar stack_g (FUNC as b))
+          -> (a  : DList Ty.Base (Expr roles types ss stack_g stack_l) as)
+                -> Expr roles types globals stack_g stack_l         b
 
-      Rec : Expr roles types stack_g (L (Rec k) :: stack_l) (L k)
-         -> Expr roles types stack_g               stack_l) (L (Rec k))
+      -- ## Session Innvocation
 
-      Call : Expr roles types stack_g stack_l (Call X)
-          -> Expr roles types stack_g stack_l a
-
-      Send : Expr roles types stack_g stack_l ...
-          -> (scope : Expr roles types stack_g stack_l )
-          -> Expr roles types stack_g stack_l (L (Select ...))
-
-      Offer : Expr roles types stack_g stack_l ...
-          -> (cases : ...)
-                   -> Expr roles types stack_g stack_l (L (Offer ...))
-      {-
-      Choice (Select and Offer)
-
-      -}
-      -}
+      Run : {as : List Ty.Base}
+         -> {b  : Ty.Base}
+         -> (f  : IsVar stack_g (SESH whom prot as b))
+         -- @TODO add context args...
+         -> (a  : DList Ty.Base (Expr roles types ss stack_g stack_l) as)
+               -> Expr roles types globals stack_g stack_l         b
 -- [ EOF ]

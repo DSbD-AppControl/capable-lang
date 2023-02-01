@@ -398,11 +398,11 @@ mutual
       = panic "Encountered a hole: \{show s}"
 
     -- ### Variables
-    eval env heap (VarG x)
-      = return heap
-               (lookup_g x env)
+--    eval env heap (VarG x)
+--      = return heap
+--               (lookup_g x env)
 
-    eval env heap (VarL x)
+    eval env heap (Var x)
       = return heap
                (lookup_l x env)
 
@@ -516,23 +516,6 @@ mutual
         lookup Here (C s elem :: rest) = elem
         lookup (There y) (elem :: rest) = lookup y rest
 
-
-    -- ### Function Calls
-
-    eval env heap (Call f xs)
-           -- Fetch closure
-      = do Value h (Clos scope clos) prf <- eval env  heap f
-
-           -- Evaluate args
-           Args h args p1 <- Args.eval (weaken prf env) h xs
-
-           -- Call function
-           Value h v p2   <- Func.eval (weaken p1 clos) h scope args
-
-           pure (Value h
-                       v
-                       (trans prf (trans p1 p2)))
-
     -- ### Annotations
 
     eval env heap (The _ expr)
@@ -552,13 +535,31 @@ mutual
              B False -- Return
                => pure (Value h (weaken p2 res) (trans p p2))
 
+    -- ### Function Calls
+
+    eval env heap (Call f xs)
+           -- Fetch closure
+      = do let (ClosFunc scope clos) = lookup_g f env
+
+           -- Evaluate args
+           Args h args p1 <- Args.eval env heap xs
+
+           -- Call function
+           Value h v p2   <- Func.eval clos h scope args
+
+           pure (Value h
+                       v
+                       (trans p1 p2))
+
+    eval env heap (Run s xs) = panic "Not Yet Implemented"
+
   namespace Func
     ||| Let's deal with functions separatly.
     public export
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
         -> {ret : Ty.Base}
-        -> (env   : DList Ty.Base (Value store) stack_g)
+        -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
         -> (func  : Func roles types globals stack_g (FUNC as ret))
         -> (vals  : DList Ty.Base (Value store) as)
@@ -573,12 +574,12 @@ run : {type : Ty.Base}
     -> {store : List Ty.Base}
     -> (envR  : Env roles)
     -> (envT  : Env types)
-    -> (env   : DList Ty.Base (Value store) stack)
+    -> (env   : DList Ty.Method (Closure) stack)
     -> (heap  : Heap store)
     -> (expr  : Prog roles types globals stack type)
              -> Capable (Expr.Result store type)
 
-run er et env heap (DefSesh s scope)
+run er et env heap (DefProt s scope)
   = run er et env heap scope
 
 run er et env heap (DefRole rest)
@@ -587,7 +588,6 @@ run er et env heap (DefRole rest)
         env
         heap
         rest
-
 
 
 -- Typedefs need resolving.
@@ -600,13 +600,15 @@ run er et env heap (DefType tyRef rest)
 
 
 -- Functions store their environment at time of definition.
-run er et env heap (DefFunc sig func rest)
+run er et env heap (DefFunc func rest)
   = run er
         et
-        (extend [Clos func env] env)
+        (ClosFunc func env :: env)
         heap
         rest
 
+run er et env heap (DefSesh g w p s rest)
+  = ?as
 
 -- The main sh-bang
 run _ _ env heap (Main x)

@@ -1,7 +1,6 @@
 ||| Values.
 |||
-||| Module    : Values.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 ||| Based on work by:
@@ -129,12 +128,27 @@ namespace Prefix
   trans (Extend x rest) (Extend x z)
     = Extend x (trans rest z)
 
+||| We treat closures (global stack elements) seperatly from the local
+||| stack and heap.
+public export
+data Closure : Ty.Method
+            -> Type
+  where
+    ClosFunc : (scope : Func roles types globals stack_g (FUNC args ret))
+            -> (env_g : DList Ty.Method (Closure) stack_g)
+                     -> Closure (FUNC args ret)
+
+    ClosSesh : (scope : Session roles types globals stack_g (SESH whom l args ret))
+            -> (env_g : DList Ty.Method (Closure) stack_g)
+                     -> Closure (SESH whom l args ret)
+
 
 mutual
   public export
   data Field : List Base -> (String, Base) -> Type
     where
       F : (s : String) -> (v : Value store t) -> Field store (s,t)
+
 
   ||| Values are resolved expressions, closures, and addresses.
   public export
@@ -151,9 +165,9 @@ mutual
       I : Int    -> Value store INT
       B : Bool   -> Value store BOOL
 
-      Clos : (scope : Func roles types globals ctxt (FUNC a b))
-          -> (env_g : DList Ty.Base (Value store) ctxt)
-                   -> Value store (FUNC a b)
+--      Clos : (scope : Func roles types globals ctxt (FUNC a b))
+--          -> (env_g : DList Ty.Base (Value store) ctxt)
+--                   -> Value store (FUNC a b)
 
       H : (k : HandleKind) -> File -> Value store (HANDLE k)
 
@@ -178,6 +192,14 @@ mutual
          -> Value store (UNION (x:::xs))
 
 export
+Pretty (Closure type) where
+  pretty (ClosFunc scope env)
+    = parens (pretty "Function Closure...")
+
+  pretty (ClosSesh scope env)
+    = parens (pretty "Session Closure...")
+
+export
 Pretty (Value store type) where
   pretty (Address x)
     = group
@@ -193,7 +215,7 @@ Pretty (Value store type) where
 
   pretty (I i) = pretty i
   pretty (B x) = pretty x
-  pretty (Clos scope env) = parens $ pretty "Closure..."
+--  pretty (Clos scope env) = parens $ pretty "Closure..."
   pretty (H k x)
     = group
     $ parens
@@ -281,7 +303,7 @@ mutual
   weaken prf (S x) = S x
   weaken prf (I x) = I x
   weaken prf (B x) = B x
-  weaken prf (Clos s e) = Clos s (weaken prf e)
+--  weaken prf (Clos s e) = Clos s (weaken prf e)
   weaken prf (H k h) = H k h
   weaken prf (ArrayEmpty) = ArrayEmpty
   weaken prf (ArrayCons x xs)

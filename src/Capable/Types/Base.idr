@@ -67,10 +67,9 @@ namespace Ty
       UNION : (fields : (List1 (String, Base)))
                        -> Base
 
-
-      FUNC : (args : List Base)
-          -> (ret  : Base)
-                  -> Base
+--      FUNC : (args : List Base)
+--          -> (ret  : Base)
+--                  -> Base
 
 public export
 data IsUnion : Base -> Type
@@ -107,9 +106,8 @@ Uninhabited (IsUnion (TUPLE u)) where
 Uninhabited (IsUnion (RECORD u)) where
   uninhabited U impossible
 
-
-Uninhabited (IsUnion (FUNC u us)) where
-  uninhabited U impossible
+--Uninhabited (IsUnion (FUNC u us)) where
+--  uninhabited U impossible
 
 export
 isUnion : (base : Base) -> Dec (IsUnion base)
@@ -125,7 +123,7 @@ isUnion (REF x)         = No absurd
 isUnion (ARRAY x k)     = No absurd
 isUnion (RECORD k)      = No absurd
 isUnion (TUPLE fields)  = No absurd
-isUnion (FUNC args ret) = No absurd
+--isUnion (FUNC args ret) = No absurd
 
 namespace Diag
   data Diag : (a,b : Base)
@@ -159,8 +157,9 @@ namespace Diag
            -> (ys : List1 (String, Base))
                  -> Diag (UNION xs) (UNION ys)
 
-      FUNC : (xs, ys : List Base)
-          -> (x , y  :      Base) -> Diag (FUNC xs x) (FUNC ys y)
+--      FUNC : (xs, ys : List Base)
+--          -> (x , y  :      Base) -> Diag (FUNC xs x) (FUNC ys y)
+
 
   diag : (a,b : Base) -> Maybe (Diag a b)
   diag CHAR         CHAR        = Just CHAR
@@ -174,8 +173,7 @@ namespace Diag
   diag (TUPLE xs)   (TUPLE ys)  = Just (TUPLE xs ys)
   diag (UNION xs)   (UNION ys)  = Just (UNION xs ys)
   diag (RECORD xs)  (RECORD ys) = Just (RECORD xs ys)
-  diag (FUNC xs x)  (FUNC ys y) = Just (FUNC xs ys x y)
-
+--  diag (FUNC xs x)  (FUNC ys y) = Just (FUNC xs ys x y)
   diag _ _ = Nothing
 
   diagNot : (s : Base)
@@ -191,7 +189,7 @@ namespace Diag
   diagNot (TUPLE _)   = absurd
   diagNot (UNION _ )  = absurd
   diagNot (RECORD _ ) = absurd
-  diagNot (FUNC _ _)  = absurd
+--  diagNot (FUNC _ _)  = absurd
 
   public export
   DecEq Base where
@@ -227,10 +225,10 @@ namespace Diag
         = decDo $ do Refl <- assert_total $ decEq xs ys `otherwise` (\Refl => Refl)
                      pure Refl
 
-      _ | (Just (FUNC xs ys x y))
-        = decDo $ do Refl <- assert_total $ decEq xs ys `otherwise` (\Refl => Refl)
-                     Refl <- decEq x y `otherwise` (\Refl => Refl)
-                     pure Refl
+--      _ | (Just (FUNC xs ys x y))
+--        = decDo $ do Refl <- assert_total $ decEq xs ys `otherwise` (\Refl => Refl)
+--                     Refl <- decEq x y `otherwise` (\Refl => Refl)
+--                     pure Refl
 
       _ | Nothing = No (\Refl => diagNot _ eq)
 
@@ -306,14 +304,14 @@ type (RECORD xs)
   $ forget xs
   ]
 
-type (FUNC xs x)
-  = group
-  $ parens
-  $ hsep
-  $ punctuate (pretty "->")
-  $ assert_total
-  $ map type
-  $ (xs ++ [x])
+--type (FUNC xs x)
+--  = group
+--  $ parens
+--  $ hsep
+--  $ punctuate (pretty "->")
+--  $ assert_total
+--  $ map type
+--  $ (xs ++ [x])
 
 export
 Pretty Base where

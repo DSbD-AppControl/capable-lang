@@ -130,10 +130,10 @@ mutual
   synth ctxt (TyHandle fc k)
     = pure (_ ** TyHandle k)
 
-  synth ctxt (TyFunc fc prf args retty)
-    = do (tyAS ** args) <- synthArgs ctxt args
-         (tyR  ** ret)  <- synth     ctxt retty
-         pure (_ ** TyFunc args ret)
+--  synth ctxt (TyFunc fc prf args retty)
+--    = do (tyAS ** args) <- synthArgs ctxt args
+--         (tyR  ** ret)  <- synth     ctxt retty
+--         pure (_ ** TyFunc args ret)
 
 namespace Raw
   export
@@ -221,8 +221,9 @@ mutual
 
   reflect delta (HANDLE x)
     = pure (TyHandle x)
-  reflect delta (FUNC xs x)
-    = pure (TyFunc !(reflectArgs delta xs)
-                   !(reflect     delta x))
+
+--  reflect delta (FUNC xs x)
+--    = pure (TyFunc !(reflectArgs delta xs)
+--                   !(reflect     delta x))
 
 -- [ EOF ]

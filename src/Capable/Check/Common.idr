@@ -107,7 +107,8 @@ public export
 data The : (rs    : List Ty.Role)
         -> (ds    : List Ty.Base)
         -> (ss    : List Ty.Session)
-        -> (gs,ls : List Ty.Base)
+        -> (gs    : List Ty.Method)
+        -> (ls    : List Ty.Base)
         -> (type  : Base)
                   -> Type
   where
@@ -142,19 +143,22 @@ exists fc ctxt s
 
 namespace Env
   public export
-  data HoleContext = H (Context Ty.Base ms)
+  data HoleContext
+    = H (Context Ty.Method gs)
+        (Context Ty.Base   ls)
 
   public export
   record Env (rs : List Ty.Role)
              (ds : List Ty.Base)
              (ss : List Ty.Session)
-             (gs,ls : List Ty.Base)
+             (gs : List Ty.Method)
+             (ls : List Ty.Base)
     where
       constructor E
       rho    : Context Ty.Role    rs
       delta  : Context Ty.Base    ds
       sigma  : Context Ty.Session ss
-      gamma  : Context Ty.Base    gs
+      gamma  : Context Ty.Method  gs
       lambda : Context Ty.Base    ls
       mu     : SortedMap String HoleContext
 
@@ -168,7 +172,7 @@ namespace Env
           -> (s   : String)
                  -> Env rs ds ss gs ls
     extend env s
-      = { mu $= insert s (H (gamma env))} env
+      = { mu $= insert s (H (gamma env) (lambda env))} env
 
   namespace Rho
     export
@@ -182,10 +186,18 @@ namespace Env
     export
     extend : (env : Env rs ds ss gs ls)
           -> (s   : String)
-          -> (ty  : Base)
+          -> (ty  : Method)
                  -> Env rs ds ss (ty::gs) ls
     extend env s ty
       = { gamma $= (::) (I s ty) } env
+
+    export
+    lookup : {gs    : _}
+          -> (ctxt  : Env rs ds ss gs ls)
+          -> (s     : Ref)
+                   -> Capable (DPair Ty.Method (IsVar gs))
+    lookup env ref
+      = Common.lookup (gamma env) ref
 
   namespace Sigma
     export
@@ -205,23 +217,33 @@ namespace Env
     extend env s ty
       = { lambda $= (::) (I s ty) } env
 
-  public export
-  data EnvLookup : (gs,ls : List Ty.Base) -> Ty.Base -> Type
-    where
-      IsLocal  : IsVar ls type -> EnvLookup gs ls type
-      IsGlobal : IsVar gs type -> EnvLookup gs ls type
+    export
+    lookup : {ls    : _}
+          -> (ctxt  : Env rs ds ss gs ls)
+          -> (s     : Ref)
+                   -> Capable (DPair Ty.Base (IsVar ls))
+    lookup env ref
+      = Common.lookup (lambda env) ref
 
-  export
-  lookup : {gs,ls : _}
-        -> (ctxt  : Env rs ds ss gs ls)
-        -> (s     : Ref)
-                 -> Capable (DPair Ty.Base (EnvLookup gs ls))
-  lookup env ref
-    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
-                   pure (_ ** IsGlobal idx))
-
-               (\err => do (ty ** idx) <- Common.lookup (lambda env) ref
-                           pure (_ ** IsLocal idx))
+--  public export
+--  data EnvLookup : (gs : List Ty.Method)
+--                -> (ls : List Ty.Base)
+--                -> Ty.Base -> Type
+--    where
+--      IsLocal  : IsVar ls type -> EnvLookup gs ls type
+--      IsGlobal : IsVar gs type -> EnvLookup gs ls type
+--
+--  export
+--  lookup : {gs,ls : _}
+--        -> (ctxt  : Env rs ds ss gs ls)
+--        -> (s     : Ref)
+--                 -> Capable (DPair Ty.Base (EnvLookup gs ls))
+--  lookup env ref
+--    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
+--                   pure (_ ** IsGlobal idx))
+--
+--               (\err => do (ty ** idx) <- Common.lookup (lambda env) ref
+--                           pure (_ ** IsLocal idx))
 
 
 prettyCtxt : Context Ty.Base ls -> List (Doc ann) -> List (Doc ann)

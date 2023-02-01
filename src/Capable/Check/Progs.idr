@@ -199,16 +199,17 @@ generateTags rtype fs scope
 
 check : {p     : PROG}
      -> {rs    : List Ty.Role}
-     -> {ds,gs : List Ty.Base}
+     -> {ds    : List Ty.Base}
+     -> {gs    : List Ty.Method}
      -> {ss    : List Ty.Session}
      -> (env   : Env rs ds ss gs Nil)
      -> (state : State)
      -> (prog  : Prog p)
               -> Capable (Prog rs ds ss gs UNIT, State)
 check env state (Main fc m)
-  = do (tyM ** m) <- synth env m
-
-       Refl <- compare fc (FUNC Nil UNIT) tyM
+  = do (FUNC Nil UNIT ** m) <- synth env m
+         | (ty ** _)
+             => throwAt fc (MismatchM ty (FUNC Nil UNIT))
 
        pure (Main m, state)
 
@@ -267,9 +268,9 @@ check env state (Def fc FUNC n val scope)
 
        (scope, state) <- check env state scope
 
-       tyTm <- reflect (delta env) (FUNC as r)
+--       tyTm <- reflect (delta env) (FUNC as r)
 
-       pure (DefFunc tyTm tm scope, state)
+       pure (DefFunc tm scope, state)
 
 check env state (Def fc ROLE n val scope)
 
@@ -297,7 +298,7 @@ check env state (Def fc PROT n val scope)
 
        (scope, state) <- check env state scope
 
-       pure (DefSesh tm scope, state)
+       pure (DefProt tm  scope, state)
 
 
 namespace Raw

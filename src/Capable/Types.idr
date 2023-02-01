@@ -1,6 +1,5 @@
 ||| Collecting types together into a single type...
 |||
-||| Module    : Capable.Types
 ||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
 |||
@@ -13,14 +12,9 @@ import Toolkit.Decidable.Informative
 import public Capable.Types.Base
 import public Capable.Types.Role
 import public Capable.Types.Protocol
+import public Capable.Types.Methods
 
 %default total
-
-
-||| The types of expressions...
-public export
-data Ty = B Base
-        | L (Local ks rs)
 
 
 -- [ EOF ]

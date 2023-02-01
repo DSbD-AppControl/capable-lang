@@ -44,10 +44,6 @@ Show Ty.Role where
 
 -- @TODO fix assert_total
 
-Show Ty where
-  show (B x) = show x
-  show (L l) = show "L"
-
 Show a => Show (Generic.Error a) where
   show (E v)
     = show v
@@ -133,6 +129,14 @@ Show (Typing.Error) where
     = "Already bound:\n\t\{show (get ref)}"
 
   show (Mismatch given expected)
+    = unlines ["Type Mismatch:"
+              , "  Given:"
+              , "    \{show given}"
+              , "  Expected:"
+              , "    \{show expected}"
+              ]
+
+  show (MismatchM given expected)
     = unlines ["Type Mismatch:"
               , "  Given:"
               , "    \{show given}"

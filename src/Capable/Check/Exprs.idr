@@ -52,7 +52,7 @@ isElem fc fc' s ((s',x) :: xs) with (decEq s s')
 mutual
   checkBinOpB : {a,b      : EXPR}
              -> {rs       : List Ty.Role}
-             -> {ds,gs,ls : List Ty.Base}
+             -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
              -> {ss       : List Ty.Session}
              -> (env      : Env rs ds ss gs ls)
              -> (fc       : FileContext)
@@ -68,7 +68,7 @@ mutual
 
   checkBinOpI : {a,b      : EXPR}
              -> {rs       : List Ty.Role}
-             -> {ds,gs,ls : List Ty.Base}
+             -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
              -> {ss       : List Ty.Session}
              -> (env      : Env rs ds ss gs ls)
              -> (fc       : FileContext)
@@ -85,7 +85,7 @@ mutual
 
   checkCmp : {a,b      : EXPR}
           -> {rs       : List Ty.Role}
-          -> {ds,gs,ls : List Ty.Base}
+          -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
           -> {ss       : List Ty.Session}
           -> (env      : Env rs ds ss gs ls)
           -> (fc       : FileContext)
@@ -104,20 +104,24 @@ mutual
                (cmpTy tyL)
 
   export
-  synth : {e        : EXPR}
-       -> {rs       : List Ty.Role}
-       -> {ds,gs,ls : List Ty.Base}
-       -> {ss       : List Ty.Session}
-       -> (env      : Env rs ds ss gs ls)
-       -> (syn      : Expr e)
-                   -> Capable (DPair Ty.Base (Expr rs ds ss gs ls))
+  synth : {e     : EXPR}
+       -> {rs    : List Ty.Role}
+       -> {ds,ls : List Ty.Base}
+       -> {gs    : List Ty.Method }
+       -> {ss    : List Ty.Session}
+       -> (env   : Env rs ds ss gs ls)
+       -> (syn   : Expr e)
+                -> Capable (DPair Ty.Base (Expr rs ds ss gs ls))
 
   synth env (Hole ref prf) = unknown (span ref)
 
   synth env (Var ref prf)
-    = case !(lookup env ref) of
-        (_ ** IsLocal  idx) => pure (_ ** VarL idx)
-        (_ ** IsGlobal idx) => pure (_ ** VarG idx)
+      = do (ty ** idx) <- Lambda.lookup env ref
+           pure (ty ** Var idx)
+
+--    = case !(lookup env ref) of
+--        (_ ** IsLocal  idx) => pure (_ ** VarL idx)
+--        (_ ** IsGlobal idx) => pure (_ ** VarG idx)
 
 
   synth env (LetTy fc ref st ty val scope)
@@ -503,12 +507,13 @@ mutual
 
          pure (_ ** Loop scope cond)
 
-  synth env (Call fc fun prf argz)
-    = do (FUNC argTys _ ** fun) <- synth env fun
+  synth env (Call fc fun R prf argz)
+    = do (FUNC argTys _ ** idx) <- Gamma.lookup env fun
+         --(FUNC argTys _ ** fun) <- synth env fun
            | (ty ** _) => throwAt fc (FunctionExpected ty)
          args' <- args fc argTys argz
 
-         pure (_ ** Call fun args')
+         pure (_ ** Call idx args')
 
     where size : Vect.Quantifiers.All.All Expr as
               -> Nat
@@ -546,7 +551,7 @@ mutual
     export
     check : {e        : EXPR}
          -> {rs       : List Ty.Role}
-         -> {ds,gs,ls : List Ty.Base}
+         -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
          -> {ss       : List Ty.Session}
          -> (fc       : FileContext)
          -> (env      : Env rs ds ss gs ls)
@@ -562,7 +567,7 @@ mutual
   check : {t        : Base}
        -> {e        : EXPR}
        -> {rs       : List Ty.Role}
-       -> {ds,gs,ls : List Ty.Base}
+       -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
        -> {ss       : List Ty.Session}
        -> (fc       : FileContext)
        -> (env      : Env rs ds ss gs ls)
@@ -597,7 +602,7 @@ mutual
     export
     synthReflect : {e        : EXPR}
                 -> {rs       : List Ty.Role}
-                -> {ds,gs,ls : List Ty.Base}
+                -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
                 -> {ss       : List Ty.Session}
                 -> (env      : Env rs ds ss gs ls)
                 -> (syn      : Expr e)
@@ -610,7 +615,7 @@ mutual
 namespace Raw
   export
   synth : {rs       : List Ty.Role}
-       -> {ds,gs,ls : List Ty.Base}
+       -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
        -> {ss       : List Ty.Session}
        -> (env      : Env rs ds ss gs ls)
        -> (syn      : EXPR)

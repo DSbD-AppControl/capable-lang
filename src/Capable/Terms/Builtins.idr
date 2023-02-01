@@ -73,13 +73,13 @@ cmpTy (RECORD _) = Nothing
 cmpTy UNIT        = Nothing
 cmpTy (REF x)     = Nothing
 cmpTy (HANDLE x)  = Nothing
-cmpTy (FUNC xs x) = Nothing
+--cmpTy (FUNC xs x) = Nothing
 
 ||| Operations on constants
 public export
 data Builtin : (inputs : List Base)
-           -> (return :      Base)
-                     -> Type
+            -> (return :      Base)
+                      -> Type
   where
     -- ## Values
     U :           Builtin Nil UNIT

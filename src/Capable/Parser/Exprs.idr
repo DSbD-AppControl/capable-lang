@@ -251,10 +251,10 @@ mutual
   call : Rule EXPR
   call
     = do s <- Toolkit.location
-         l <- var
+         l <- ref
          a <- args
          e <- Toolkit.location
-         pure (Branch CALL (newFC s e) (l::fromList a))
+         pure (Branch (CALL (get l)) (newFC s e) (fromList a))
 
     where args : Rule (List EXPR)
           args =  symbol "(" *> symbol ")" *> pure Nil

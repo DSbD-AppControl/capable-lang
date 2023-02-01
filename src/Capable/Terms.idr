@@ -15,6 +15,7 @@ import public Capable.Terms.Types
 import public Capable.Terms.Protocols
 import public Capable.Terms.Exprs
 import public Capable.Terms.Funcs
+import public Capable.Terms.Sessions
 import public Capable.Terms.Progs
 
 
