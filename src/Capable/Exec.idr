@@ -129,6 +129,17 @@ namespace Results
             -> (prf   : Subset  old new )
                      -> Results old types
 
+  namespace Session
+    namespace Exprs
+      public export
+      data Result : (roles : List Ty.Role) -> (store : List Ty.Base) -> (type : Ty.Base) -> Type where
+        Value : {new   : List Ty.Base}
+             -> (store : Heap new)
+             -> (chans : Channels roles)
+             -> (value : Value new type)
+             -> (prf   : Subset old new)
+                      -> Result roles old type
+
 ||| An API to support expressions that interact with the heap.
 namespace Heap
 
@@ -553,9 +564,7 @@ mutual
 
     eval env heap (Run s argsc argsv) = panic "Not Yet Implemented"
 
-
-  namespace Sesh
-    ||| Let's deal with functions separatly.
+  namespace Session
     public export
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
@@ -567,8 +576,76 @@ mutual
                  -> Capable (Expr.Result store ret)
     eval env heap func vals = panic "Not Yet Implemented"
 
---    eval env_g heap (Sesh body) args
---      = ?aas -- eval (MkEnv env_g args) heap body
+--  eval env_g heap (Sesh body) args
+--    = ?aas -- eval (MkEnv env_g args) heap body
+
+    namespace Exprs
+
+      public export
+      eval : {store : List Ty.Base}
+          -> {ret   : Ty.Base}
+          -> (env   : Env stack_g stack_l store)
+          -> (heap  : Heap store)
+          -> (rvars : Env roles types globals stack_g stack_r ret)
+          -> (chans : Channels roles)
+          -> (sesh  : Sessions.Expr roles types globals stack_g stack_l stack_r whom l ret)
+                   -> Capable (Session.Exprs.Result roles store ret)
+
+      -- [ NOTE ] Compute the (unsafe) expression and then carry on...
+      eval env heap rvars cs (Seq x y)
+        = do Value h U prf <- Exprs.eval env heap x
+             Value h cs' v prf' <- eval (weaken prf env) h rvars cs y
+             pure (Value h cs' v (trans prf prf'))
+
+      -- [ NOTE ] Local binders...
+      eval env heap rvars cs (Let _ expr rest)
+        = do Value h v prf0 <- Exprs.eval env heap expr
+             let env = extend_l v $ weaken prf0 env
+             Value h cs v prf1 <- eval env h rvars cs rest
+             pure (Value h cs v (trans prf0 prf1))
+
+      -- [ NOTE ] Push a closure onto the stack...
+      eval env@(MkEnv eg el) heap rvars cs (LetRec x)
+        = do let c = SS (LetRec x) el rvars :: rvars
+             Value h cs v prf0 <- Exprs.eval env heap c cs x
+             pure (Value h cs v prf0)
+
+      -- [ NOTE ] Pop a closure and resume...
+      eval (MkEnv env_g _) heap rvars cs (Call loc)
+        = do let SS expr env_l env_rs = read loc rvars
+
+             -- [ NOTE ] nothing to see carry-on
+             --
+             -- this is an absurd hack.
+             case isSubset heap env_l of
+               No _ => panic "Shouldn't happen..."
+               Yes prf => do let env = weaken prf $ (MkEnv env_g env_l)
+                             Value h cs v prf <- Exprs.eval env heap env_rs cs expr
+                             pure (Value h cs v prf)
+
+
+
+
+      -- [ NOTE ] The end of a communication session, must return
+      -- something...
+      eval env heap rvars cs (End x)
+        = do Value h x prf <- Exprs.eval env heap x
+             pure (Value h cs x prf)
+
+      -- [ NOTE ] The end of a *failed* communication session, must return something...
+      eval env heap rvars cs (Crash x)
+        = do Value h v prf0 <- Exprs.eval env heap x
+             pure (Value h cs v prf0)
+
+      eval env heap rvars cs (Read from offers onErr) = ?eval_rhs_6
+      eval env heap rvars cs (Send toWhom payload prf rest onErr) = ?eval_rhs_7
+
+--    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
+--                   pure (_ ** IsGlobal idx))
+--
+--               (\err => do (ty ** idx) <- Common.lookup (lambda env) ref
+--                           pure (_ ** IsLocal idx))
+
 
   namespace Func
     ||| Let's deal with functions separatly.

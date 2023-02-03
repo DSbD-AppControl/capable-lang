@@ -126,7 +126,6 @@ namespace Role
               -> Type
   Env roles = DList Ty.Role Singleton roles
 
-
 namespace Heap
   ||| The heap.
   public export
@@ -147,5 +146,81 @@ namespace Heap
          -> Heap  store
          -> Heap  store
   replace = update
+
+
+||| Representing a set of typed channels involved within a MPST
+||| communication context.
+|||
+||| Notes about the datatypes contained within.
+|||
+||| + We assume that we are _just_ dealing with the IPC context.
+||| + We do not need to type them with a session type, the expressions that detail the communication to that.
+||| + The representation is not 'sparse' we create a 'channel'  for each role defined. This _will_ result in a more verbose data structure. A simple datatype 'Channel' provides a place holder for unused channels.
+||| + Ideally we would have a sub-context that only contains channels for roles involved in the communication. It is not clear how to provide such an elegant context.
+|||   + We would need a _thinning_ of the role context based on if a role is involved in the communication.
+|||   + roles are, however, nameless against the entire role context.
+|||   + So our thinning would need to be rather magical.
+namespace Comms
+
+
+  public export
+  data Channel : (roles : Ty.Role)
+                       -> Type
+    where
+      Used : (h : File)
+               -> Channel role
+
+      UsedNot : Channel role
+
+
+  public export
+  Channels : List Ty.Role -> Type
+  Channels = DList Ty.Role Channel
+
+||| Recursion variables are just closures...
+|||
+namespace RVars
+
+  ||| We treat recursion in a session as a closure.
+  public export
+  data SubSesh : List Role
+              -> List Ty.Base
+              -> List Ty.Session
+              -> List Ty.Method
+              ->      Ty.Base
+              -> (rvar : Kind) -> Type where
+    SS : {old : _}
+      -> (expr : Expr roles   types globals
+                      stack_g
+                      stack_l
+                      stack_r
+                      whom body type)
+      -> (envl : DList Ty.Base (Value old) stack_l)
+      -> (envr : DList Kind (SubSesh roles types globals stack_g type) stack_r)
+              -> SubSesh roles types globals stack_g type R
+
+
+  ||| We need one for types-as-terms too.
+  public export
+  Env : List Role
+              -> List Ty.Base
+                            -> List Ty.Session
+              -> List Ty.Method
+            -> (rs    : List Kind)
+     -> (ty    :      Ty.Base)
+              -> Type
+  Env roles types globals stack_g rvars type
+    = DList Kind (SubSesh roles types globals stack_g type) rvars
+
+  export
+  isSubset : {new, old : _}
+          -> (heap : Heap new)
+          -> (envl : DList Ty.Base (Value old) stack_l)
+                  -> Dec (Subset old new)
+  isSubset {new} {old} _ _ with (isSubset old new)
+    isSubset {new = new} {old = old} _ _ | (Yes prf)
+      = Yes prf
+    isSubset {new = new} {old = old} _ _ | (No contra)
+      = No $ (contra)
 
 -- [ EOF ]

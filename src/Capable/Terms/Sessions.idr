@@ -73,6 +73,7 @@ mutual
           -> (os : Offers roles types globals stack_g stack_l stack_r ret whom os')
                 -> Offers roles types globals stack_g stack_l stack_r ret whom (o'::os')
 
+
   public export
   data Expr : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
@@ -97,19 +98,21 @@ mutual
                  -> Expr roles types globals stack_g          stack_l  stack_r whom k return
 
 
-      Rec : Expr roles types globals stack_g stack_l (R::stack_r) whom      body  type
-         -> Expr roles types globals stack_g stack_l     stack_r  whom (Rec body) type
+      LetRec : Expr roles types globals stack_g stack_l (R::stack_r) whom      body  type
+            -> Expr roles types globals stack_g stack_l     stack_r  whom (Rec body) type
 
       Call : (x : IsVar stack_r R)
                -> Expr roles types globals stack_g stack_l stack_r whom (Call x) type
 
-      Crash : Expr roles types globals stack_g stack_l stack_r whom Crash type
+      Crash : Expr roles types globals stack_g stack_l type
+           -> Expr roles types globals stack_g stack_l stack_r whom Crash type
 
       End : Expr roles types globals stack_g stack_l                  type
          -> Expr roles types globals stack_g stack_l stack_r whom End type
 
       Read : (from   : IsVar roles MkRole)
           -> (offers : Offers  roles types globals stack_g stack_l stack_r type whom (o::os))
+          -> (onErr  : Expr roles types globals stack_g stack_l stack_r whom Crash type)
                     -> Expr roles types globals stack_g stack_l stack_r whom
                                (Choice BRANCH from (Val (UNION (m:::ms))) (o::os))
                                type
@@ -117,7 +120,8 @@ mutual
       Send : (toWhom  : IsVar   roles MkRole)
           -> (payload : Expr    roles types globals stack_g stack_l mtype)
           -> (prf     : Select (B s mtype cont) (o::os))
-          -> (rest    : Expr roles types globals stack_g stack_l stack_r whom cont type)
+          -> (rest    : Expr roles types globals stack_g stack_l stack_r whom cont  type)
+          -> (onErr   : Expr roles types globals stack_g stack_l stack_r whom Crash type)
                      -> Expr roles types globals stack_g stack_l stack_r whom
                                 (Choice SELECT toWhom (Val (UNION (f:::fs))) (o::os))
                                 type

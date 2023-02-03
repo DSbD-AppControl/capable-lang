@@ -78,6 +78,27 @@ namespace Prefix
     uninhabited Empty impossible
     uninhabited (Extend _ rest) impossible
 
+  export
+  isSubset : DecEq type
+          => (xs,ys : List type)
+                   -> Dec (Subset xs ys)
+  isSubset [] ys
+    = Yes Empty
+
+  isSubset (x :: xs) []
+    = No absurd
+
+  isSubset (x :: xs) (y :: ys) with (decEq x y)
+    isSubset (x :: xs) (x :: ys) | (Yes Refl) with (isSubset xs ys)
+      isSubset (x :: xs) (x :: ys) | (Yes Refl) | (Yes prf)
+        = Yes (Extend x prf)
+      isSubset (x :: xs) (x :: ys) | (Yes Refl) | (No contra)
+        = No $ \case (Extend x rest) => contra rest
+
+    isSubset (x :: xs) (y :: ys) | (No contra)
+      = No $ \case (Extend x rest) => contra Refl
+
+
   public export
   snoc_elem : {type : Type}
            -> (xs : List type)
@@ -98,7 +119,6 @@ namespace Prefix
   expand (V (S k) (There later)) (Extend y rest) with (expand (V k later) rest)
     expand (V (S k) (There later)) (Extend y rest) | (V pos prf)
       = V (S pos) (There prf)
-
 
   public export
   snoc_add : (x  : type)
@@ -141,7 +161,6 @@ data Closure : Ty.Method
     ClosSesh : (scope : Session roles types globals stack_g (SESH whom l args ret))
             -> (env_g : DList Ty.Method (Closure) stack_g)
                      -> Closure (SESH whom l args ret)
-
 
 mutual
   public export
