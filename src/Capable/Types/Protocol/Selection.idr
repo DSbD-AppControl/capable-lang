@@ -35,14 +35,18 @@ import Capable.Types.Protocol
 
 public export
 data Select : (this : Branch Local ks rs (l,t))
+           -> (prf  : Marshable (l,t))
            -> (from : DList (String,Base)
                             (Branch Local ks rs)
                             (field::fs))
-          -> Type
+           -> (prfM : DList (String,Base)
+                            Marshable
+                            (field::fs))
+                   -> Type
   where
-    Here : Select b (b::bs)
-    There : Select b bs
-         -> Select b (b'::bs)
+    Here :  Select b f (b::bs) (f::fs)
+    There : Select b f      bs       fs
+         -> Select b f (b'::bs) (f'::fs)
 
 
 -- [ EOF ]

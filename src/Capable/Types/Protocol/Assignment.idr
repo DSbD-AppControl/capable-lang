@@ -41,76 +41,6 @@ Roles rs
   = DList Role (IsVar rs)
 
 
-namespace List
-  public export
-  data Union : (xs,ys,zs : List a) -> Type where
-    End : Union Nil ys ys
-    Pos : Elem x ys
-       -> Union     xs  ys zs
-       -> Union (x::xs) ys zs
-    Neg : Not (Elem x ys)
-       -> Union xs      ys     zs
-       -> Union (x::xs) ys (x::zs)
-
-  export
-  union : DecEq a
-       => (xs,ys : List a)
-                -> DPair (List a) (Union xs ys)
-
-  union [] ys
-    = (ys ** End)
-
-  union (x :: xs) ys with (union xs ys)
-    union (x :: xs) ys | (zs ** prf) with (isElem x ys)
-      union (x :: xs) ys | (zs ** prf) | (Yes prfR)
-        = (zs ** Pos prfR prf)
-      union (x :: xs) ys | (zs ** prf) | (No contra)
-        = (x :: zs ** Neg contra prf)
-
-namespace DList
-  public export
-  data Union : (xs : DList a p ps)
-            -> (ys : DList a p ps')
-            -> (zs : DList a p ps'')
-            -> (prf : Union ps ps' ps'') -> Type
-    where
-      End : Union Nil ys ys End
-      Pos : {xs : DList a p ps}
-         -> {ys : DList a p ps'}
-         -> Union     xs  ys zs rest
-         -> Union (x::xs) ys zs (Pos prf' rest)
-      Neg : {xs : DList a p ps}
-         -> {ys : DList a p ps'}
-         -> Union xs      ys     zs rest
-         -> Union (x::xs) ys (x::zs) (Neg prf' rest)
-
-
-  union' : (xs  : DList a p ps)
-        -> (ys  : DList a p ps')
-        -> (prf : Union ps ps' ps'')
-               -> (zs : DList a p ps'' ** Union xs ys zs prf)
-  union' [] ys End
-    = (ys ** End)
-
-  union' (elem :: rest) ys (Pos x y) with (union' rest ys y)
-    union' (elem :: rest) ys (Pos x y) | (zs ** prf)
-      = (zs ** Pos prf)
-
-  union' (elem :: rest) ys (Neg f x) with (union' rest ys x)
-    union' (elem :: rest) ys (Neg f x) | (zs ** prf)
-      = (elem :: zs ** Neg prf)
-
-  export
-  union : DecEq a
-       => {ps, ps' : _}
-       -> (xs  : DList a p ps)
-       -> (ys  : DList a p ps')
-              -> (ps'' : List a ** zs : DList a p ps''     **
-                  prf : Union ps ps' ps'' ** Union xs ys zs prf)
-  union {ps} {ps'} xs ys with (Assignment.List.union ps ps')
-    union {ps = ps} {ps' = ps'} xs ys | (zs ** prf) with (union' xs ys prf)
-      union {ps = ps} {ps' = ps'} xs ys | (zs ** prf) | (rest ** prf') = (zs ** rest ** prf ** prf')
-
 namespace HasRoles
   mutual
     namespace Protocol
@@ -127,7 +57,7 @@ namespace HasRoles
                -> HasRoles rs lp os
           Choice : Branches.HasRoles rs bs os
                 -> Union [whom] os os' prf
-                -> Protocol.HasRoles rs (Choice kind whom ty bs) os'
+                -> Protocol.HasRoles rs (Choice kind whom ty prfm bs) os'
 
     namespace Branch
       public export
@@ -169,12 +99,12 @@ namespace UsesRole
           CHere : (whom : IsVar rs MkRole)
                -> (prf  : whom = role)
                        -> Protocol.UsesRole rs
-                                            (Choice kind whom ty bs) role
+                                            (Choice kind whom ty prfm bs) role
 
           CThere : (whom : IsVar rs MkRole)
                 -> (prf  : Not (whom = role))
-                -> Branches.UsesRole rs                      bs  role
-                -> Protocol.UsesRole rs (Choice kind whom ty bs) role
+                -> Branches.UsesRole rs                           bs  role
+                -> Protocol.UsesRole rs (Choice kind whom ty prfm bs) role
 
     namespace Branch
       public export
@@ -235,13 +165,13 @@ namespace UsesRole
         usesRole (Rec x) r | (No contra)
           = No $ \case (Rec y) => contra y
 
-      usesRole (Choice kind whom type choices) r with (Equality.decEq whom r)
-        usesRole (Choice kind whom type choices) r | (Yes prf)
+      usesRole (Choice kind whom type p choices) r with (Equality.decEq whom r)
+        usesRole (Choice kind whom type p choices) r | (Yes prf)
           = Yes (CHere whom prf)
-        usesRole (Choice kind whom type choices) r | (No contra) with (usesRole choices r)
-          usesRole (Choice kind whom type choices) r | (No contra) | (Yes prf)
+        usesRole (Choice kind whom type p choices) r | (No contra) with (usesRole choices r)
+          usesRole (Choice kind whom type p choices) r | (No contra) | (Yes prf)
             = Yes (CThere whom contra prf)
-          usesRole (Choice kind whom type choices) r | (No contra) | (No f)
+          usesRole (Choice kind whom type p choices) r | (No contra) | (No f)
             = No $ \case (CHere whom prf) => contra prf
                          (CThere whom prf y) => f y
 

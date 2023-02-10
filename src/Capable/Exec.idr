@@ -32,6 +32,7 @@ import Capable.Core
 import Capable.Terms
 import Capable.Env
 import Capable.Values
+import Capable.Values.Marshall
 
 %default total
 %hide type
@@ -638,8 +639,28 @@ mutual
              pure (Value h cs v prf0)
 
       eval env heap rvars cs (Read from offers onErr) = ?eval_rhs_6
-      eval env heap rvars cs (Send toWhom payload prf rest onErr) = ?eval_rhs_7
+      eval env heap rvars cs (Send toWhom payload marsh idx rest onErr)
+        = ?eval_rhs_7
 
+{-
+
+Send is
+  1. Get the selection (done by label)
+  2. marshall the data
+  3. ship
+  4. if crash then continue else continue
+
+Recv is
+  1. Read from the wire.
+  2. typee-guided unmarhsalling
+  3. if ill formed then crash with malformed data
+     elif wire crash then continue on crash
+     else data is good
+  4. fetch index into offers
+  5. index offers
+  6. continue
+
+-}
 --    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
 --                   pure (_ ** IsGlobal idx))
 --

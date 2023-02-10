@@ -82,7 +82,7 @@ mutual
       $  vsep [ group (pretty "rec" <+> parens (pretty v) <+> pretty ".")
               , indent 2 cont]
 
-  pretty acc kctxt rctxt (Choice BRANCH whom (Val (UNION (f:::fs))) cs)
+  pretty acc kctxt rctxt (Choice BRANCH whom (Val (UNION (f:::fs))) _ cs)
     = group
     $ parens
     $ hsep
@@ -92,7 +92,7 @@ mutual
     , hang 2 (branches acc kctxt rctxt cs) ]
 
 
-  pretty acc kctxt rctxt (Choice SELECT whom (Val (UNION (f:::fs))) cs)
+  pretty acc kctxt rctxt (Choice SELECT whom (Val (UNION (f:::fs))) _ cs)
     = group
     $ parens
     $ hsep

@@ -37,9 +37,6 @@ import Capable.Values
 throw : Marshall.Error -> Capable a
 throw = (throw . Marsh)
 
-unmarshable : (ty : Base) -> (prf : MarshableNot ty) -> Capable a
-unmarshable ty prf = throw (NotMarshable ty prf)
-
 mismatch : (ty : Base) -> (prf : Marshable ty) -> (raw : JSON)
               -> Capable a
 mismatch ty prf raw = throw (Mismatch ty prf raw)
@@ -152,131 +149,131 @@ isElem s ((s',x) :: xs)
 
 mutual
 
-  arrayFromJSON : (ty  : Base)
+  arrayFromJSON : {ty  : Base}
                -> (prf : Marshable ty)
                -> (x   : Nat)
                -> (nat : Nat)
                -> (rs  : List JSON)
                       -> Capable (Value Nil (ARRAY ty nat))
-  arrayFromJSON ty prf _ 0 []
+  arrayFromJSON prf _ 0 []
     = pure ArrayEmpty
 
-  arrayFromJSON ty prf n (S k) []
-    = throw (MissingElems (S k) (ARRAY ty n) (ARRAY prf n))
+  arrayFromJSON prf n (S k) []
+    = throw (MissingElems (S k) _ (ARRAY prf n))
 
-  arrayFromJSON ty prf n 0 (x :: xs)
-    = throw (RedundantElems (ARRAY ty n)
+  arrayFromJSON prf n 0 (x :: xs)
+    = throw (RedundantElems _
                             (ARRAY prf n)
                             (JArray (x::xs)))
 
-  arrayFromJSON ty prf n (S k) (x :: xs)
-    = do x <- fromJSON ty prf x
-         xs <- arrayFromJSON ty prf n k xs
+  arrayFromJSON prf n (S k) (x :: xs)
+    = do x <- fromJSON prf x
+         xs <- arrayFromJSON prf n k xs
          pure (ArrayCons x xs)
 
 
-  tupleFromJSON : (types : Vect n Base)
+  tupleFromJSON : {types : _}
                -> (prfs  : DVect Base Marshable n types)
                -> (c     : Nat)
                -> (rs    : List (String, JSON))
                         -> Capable (DVect Base (Value Nil) n types)
-  tupleFromJSON [] [] _ []
+  tupleFromJSON [] _ []
     = pure Nil
 
-  tupleFromJSON (x :: xs) (p :: ps) _ []
-    = throw (MissingUples (x::xs) (p::ps))
+  tupleFromJSON (p :: ps) _ []
+    = throw (MissingUples _ (p::ps))
 
-  tupleFromJSON [] [] _ (x :: xs)
+  tupleFromJSON [] _ (x :: xs)
     = throw (RedundantUples (JObject $ x::xs))
 
-  tupleFromJSON (t :: ts) (p :: ps) c ((l,r) :: xs)
+  tupleFromJSON (p :: ps) c ((l,r) :: xs)
     = case decEq (show c) l of
         No _ => throw (IllnumberedUple c l)
-        Yes _ => do x <- fromJSON t p r
-                    xs <- tupleFromJSON ts ps (S c) xs
+        Yes _ => do x <- fromJSON p r
+                    xs <- tupleFromJSON ps (S c) xs
                     pure (x::xs)
 
-  fieldsFromJSON : (types : List (String, Base))
+  fieldsFromJSON : {types : _}
                 -> (prfs  : DList (String, Base) Marshable types)
                 -> (rs    : List (String, JSON))
                          -> Capable (DList (String, Base) (Field Nil) types)
-  fieldsFromJSON [] [] []
+  fieldsFromJSON [] []
     = pure Nil
 
-  fieldsFromJSON [] [] (x :: xs)
+  fieldsFromJSON [] (x :: xs)
     = throw (RedundantFields (JObject (x::xs)))
 
-  fieldsFromJSON (t :: ts) (p :: ps) []
-    = throw (MissingFields (t::ts) (p::ps))
+  fieldsFromJSON (p :: ps) []
+    = throw (MissingFields _ (p::ps))
 
 
-  fieldsFromJSON ((lx,t) :: ts) (F lx p :: ps) ((ly,x) :: xs)
+  fieldsFromJSON (F lx p :: ps) ((ly,x) :: xs)
     = case decEq lx ly of
         No _ => throw (FieldMismatch lx ly)
-        Yes Refl => do x <- fromJSON t p x
-                       xs <- fieldsFromJSON ts ps xs
+        Yes Refl => do x <- fromJSON p x
+                       xs <- fieldsFromJSON ps xs
                        pure (F lx x::xs)
 
-  tagFromJSON : (types : List (String, Base))
+  tagFromJSON : {types : _}
              -> (prfs  : DList (String, Base) Marshable types)
              -> (label : String)
              -> (raw   : JSON)
                       -> Capable (DPair Base (\ty => (Elem (label,ty) types, Value Nil ty)))
-  tagFromJSON types prfs label raw
+  tagFromJSON prfs label raw
     = case Marshall.isElem label types of
         Nothing => throw (TagNot label)
         Just (type ** idx) => do let F label prf = lookup idx prfs
-                                 x <- fromJSON type prf raw
+                                 x <- fromJSON prf raw
                                  pure (type ** (idx,x))
 
-  fromJSON : (ty  : Base)
+  fromJSON : {ty  : Base}
           -> (prf : Marshable ty)
           -> (raw : JSON)
                  -> Capable (Value Nil ty)
 
   -- [ NOTE ] Chars are just single character strings...
-  fromJSON CHAR CHAR (JString str)
-    = maybe (mismatch CHAR CHAR (JString str))
+  fromJSON CHAR (JString str)
+    = maybe (mismatch _ CHAR (JString str))
             (pure . C)
             (toChar str)
 
-  fromJSON STR STR (JString str)
+  fromJSON STR (JString str)
     = pure (S str)
 
-  fromJSON INT INT (JNumber n)
-    = maybe (mismatch INT INT (JNumber n))
+  fromJSON INT (JNumber n)
+    = maybe (mismatch _ INT (JNumber n))
             (pure . I)
             (toInt n)
 
-  fromJSON BOOL BOOL (JBoolean b)
+  fromJSON BOOL (JBoolean b)
     = pure (B b)
 
-  fromJSON UNIT UNIT JNull
+  fromJSON UNIT JNull
     = pure U
 
-  fromJSON (ARRAY ty n) (ARRAY x n) (JArray rs)
-    = arrayFromJSON ty x n n rs
+  fromJSON (ARRAY x n) (JArray rs)
+    = arrayFromJSON x n n rs
 
-  fromJSON (TUPLE types) (TUPLE x) (JObject rs)
-    = do (x::y::zs) <- tupleFromJSON types x 1 rs
-           | _ => mismatch (TUPLE types) (TUPLE x) (JObject rs)
+  fromJSON (TUPLE x) (JObject rs)
+    = do (x::y::zs) <- tupleFromJSON x 1 rs
+           | _ => mismatch _ (TUPLE x) (JObject rs)
          pure (Tuple (x::y::zs))
 
-  fromJSON (RECORD (f ::: fs)) (RECORD (p::ps)) (JObject rs)
-    = do (f::fs) <- fieldsFromJSON (f::fs) (p::ps) rs
-           | _ => mismatch (RECORD (f ::: fs)) (RECORD (p::ps)) (JObject rs)
+  fromJSON (RECORD (p::ps)) (JObject rs)
+    = do (f::fs) <- fieldsFromJSON (p::ps) rs
+           | _ => mismatch _ (RECORD (p::ps)) (JObject rs)
          pure (Record (f::fs))
 
-  fromJSON (UNION (f ::: fs)) (UNION fields) (JObject [(l,raw)])
-    = do (_ ** MkPair idx val) <- tagFromJSON (f::fs) fields l raw
+  fromJSON (UNION fields) (JObject [(l,raw)])
+    = do (_ ** MkPair idx val) <- tagFromJSON fields l raw
          pure (Tag l idx val)
 
-  fromJSON ty prf raw
-    = mismatch ty prf raw
+  fromJSON prf raw
+    = mismatch _ prf raw
 
 
 export
-unmarshall : (ty  : Base)
+unmarshall : {ty  : Base}
           -> (prf : Marshable ty)
           -> (raw : JSON)
                  -> Capable (Value Nil ty)

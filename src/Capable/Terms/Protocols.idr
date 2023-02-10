@@ -69,11 +69,19 @@ namespace Global
               -> {fs : (List (String,Base))}
               -> {b  : Branch Global ks rs f}
               -> {bs : Global.Branches ks rs (fs)}
+--              -> {prfM : DList (String, Base) Marshable (f::fs)}
               -> (sender   : Role rs MkRole)
               -> (receiver : Role rs MkRole)
               -> (prf      : Not (Equals Role (IsVar rs) sender receiver))
               -> (type     : Ty ts (UNION (f:::fs)))
+              -> (prfM     : Marshable (UNION (f:::fs)))
               -> (choices  : Branches ks ts rs (b::bs))
-                          -> Global ks ts rs (Choice sender receiver (Val (UNION (f:::fs))) prf (b::bs))
+                          -> Global ks ts rs
+                                    (Choice sender
+                                            receiver
+                                            (Val (UNION (f:::fs)))
+                                                 prfM
+                                            prf
+                                            (b::bs))
 
 -- [ EOF ]

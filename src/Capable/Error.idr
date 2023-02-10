@@ -49,6 +49,9 @@ namespace Parsing
 namespace Typing
   public export
   data Error : Type where
+    NotMarshable : (type : Base)
+                -> (prf  : MarshableNot type)
+                        -> Typing.Error
     OOB : Nat -> Nat -> Typing.Error
     PatternsMissing : List Base -> Typing.Error
     RedundantPatterns : List String -> Typing.Error
@@ -85,9 +88,7 @@ namespace Marshall
 
   public export
   data Error : Type where
-    NotMarshable : (type : Base)
-                -> (prf  : MarshableNot type)
-                        -> Marshall.Error
+
     Mismatch : (type : Base)
             -> (prf  : Marshable type)
             -> (raw  : JSON)

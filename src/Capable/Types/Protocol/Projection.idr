@@ -52,19 +52,19 @@ mutual
                   -> Project ks rs whom (Rec x) (Rec y)
 
         Select : (prf : Equals Role (IsVar rs) whom s)
-              -> (bs  : Branches.Project ks rs whom                            (x::xs) (y::ys))
-                     -> Protocol.Project ks rs whom (Choice        s r t notsr (x::xs))
-                                                    (Choice SELECT   r t         (y::ys))
+              -> (bs  : Branches.Project ks rs whom                              (x::xs) (y::ys))
+                     -> Protocol.Project ks rs whom (Choice        s r t p notsr (x::xs))
+                                                    (Choice SELECT   r t p               (y::ys))
 
         Offer : (prf : Equals Role (IsVar rs) whom r)
-             -> (bs  : Branches.Project ks rs whom                             (x::xs) (y::ys))
-                    -> Protocol.Project ks rs whom (Choice        s r t notstr (x::xs))
-                                                   (Choice BRANCH s   t          (y::ys))
+             -> (bs  : Branches.Project ks rs whom                               (x::xs) (y::ys))
+                    -> Protocol.Project ks rs whom (Choice        s r t p notstr (x::xs))
+                                                   (Choice BRANCH s   t p                (y::ys))
 
         Merge : (prfS  : Not (Equals Role (IsVar rs) whom s))
              -> (prfR  : Not (Equals Role (IsVar rs) whom r))
              -> (prf   : Same ks rs whom (g::gs) (B l t' c))
-                      -> Project ks rs whom (Choice s r t notsr (g::gs))
+                      -> Project ks rs whom (Choice s r t p notsr (g::gs))
                                              c
 
   namespace Branch
@@ -130,30 +130,37 @@ mutual
     funProject (Rec rec) (Rec z)
       = cong Rec (funProject rec z)
 
-    funProject (Select {ys = ys1} (Same Refl Refl) ps) (Select {ys = ys2} (Same Refl Refl) qs)
-      = cong (Choice SELECT _ _)
+    funProject (Select {ys = ys1} (Same Refl Refl) ps)
+               (Select {ys = ys2} (Same Refl Refl) qs)
+      = cong (Choice SELECT _ _ _)
              (funProject ps qs)
 
-    funProject (Select {notsr} (Same Refl Refl) bs) (Offer (Same Refl Refl) w)
+    funProject (Select {notsr} (Same Refl Refl) bs)
+               (Offer          (Same Refl Refl) w)
       = void (notsr (Same Refl Refl))
 
-    funProject (Select (Same Refl Refl) bs) (Merge prfS prfR z)
+    funProject (Select (Same Refl Refl) bs)
+               (Merge prfS prfR z)
       = void (prfS (Same Refl Refl))
 
-    funProject (Offer (Same Refl Refl) bs) (Select {notsr} (Same Refl Refl) w)
+    funProject (Offer          (Same Refl Refl) bs)
+               (Select {notsr} (Same Refl Refl) w)
       = void (notsr (Same Refl Refl))
 
     funProject (Offer _ p) (Offer _ q)
-      = cong (Choice BRANCH _ _)
+      = cong (Choice BRANCH _ _ _)
              (funProject p q)
 
-    funProject (Offer (Same Refl Refl) bs) (Merge prfS prfR z)
+    funProject (Offer (Same Refl Refl) bs)
+               (Merge prfS prfR z)
       = void (prfR (Same Refl Refl))
 
-    funProject (Merge prfS prfR prf) (Select (Same Refl Refl) bs)
+    funProject (Merge prfS prfR prf)
+               (Select (Same Refl Refl) bs)
       = void (prfS (Same Refl Refl))
 
-    funProject (Merge prfS prfR prf) (Offer (Same Refl Refl) bs)
+    funProject (Merge prfS prfR prf)
+               (Offer (Same Refl Refl) bs)
       = void (prfR (Same Refl Refl))
 
     funProject (Merge _ _ p) (Merge _ _ q)

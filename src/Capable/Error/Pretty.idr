@@ -154,6 +154,8 @@ Show (Typing.Error) where
               , "  Expected:"
               , "    \{show expected}"
               ]
+  show (NotMarshable type prf)
+    = "Not a Marshable type:\n\tGiven:\{show type}\n\tReason:\{show prf}"
 
 Show (Running.Error) where
   show (Panic x)
@@ -169,8 +171,6 @@ Show (Running.Error) where
     = "Index Out of Bounds: Given \{show g}; Expected: \{show e}"
 
 Show (Marshall.Error) where
-  show (NotMarshable type prf)
-    = "Not a Marshable type:\n\tGiven:\{show type}\n\tReason:\{show prf}"
 
   show (Mismatch type prf raw)
     = "Error unmarshalling:\n\tExpected:\{show type}\n\tGiven:\{show raw}"

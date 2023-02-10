@@ -114,16 +114,21 @@ mutual
           -> (offers : Offers  roles types globals stack_g stack_l stack_r type whom (o::os))
           -> (onErr  : Expr roles types globals stack_g stack_l stack_r whom Crash type)
                     -> Expr roles types globals stack_g stack_l stack_r whom
-                               (Choice BRANCH from (Val (UNION (m:::ms))) (o::os))
+                               (Choice BRANCH from (Val (UNION (m:::ms)))
+                                                        (UNION (n:: ns))
+                                                        (o::os))
                                type
 
       Send : (toWhom  : IsVar   roles MkRole)
           -> (payload : Expr    roles types globals stack_g stack_l mtype)
-          -> (prf     : Select (B s mtype cont) (o::os))
+          -> (prf     : Marshable (l,mtype))
+          -> (sel     : Select (B l mtype cont) prf (o::os) (g::gs))
           -> (rest    : Expr roles types globals stack_g stack_l stack_r whom cont  type)
           -> (onErr   : Expr roles types globals stack_g stack_l stack_r whom Crash type)
                      -> Expr roles types globals stack_g stack_l stack_r whom
-                                (Choice SELECT toWhom (Val (UNION (f:::fs))) (o::os))
+                                (Choice SELECT toWhom (Val (UNION (f:::fs)))
+                                                      (UNION (g::gs))
+                                                      (o::os))
                                 type
 
 

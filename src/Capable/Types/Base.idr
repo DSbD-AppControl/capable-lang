@@ -324,6 +324,62 @@ mutual
       UNIONNot : (prf : Any MarshableNot (f::fs))
                      -> MarshableNot (UNION (f:::fs))
 
+mutual
+  namespace Marshall
+    namespace Tuple
+      public export
+      decEq : (as : DVect Base Marshable n a)
+           -> (bs : DVect Base Marshable m b)
+           -> (n = m)
+           -> (a = b)
+           -> Equal as bs
+      decEq [] [] Refl Refl = Refl
+      decEq (ex :: rest) (x :: y) Refl Refl
+        = case decEq ex x Refl of
+            Refl =>
+              case decEq rest y Refl Refl of
+                Refl => Refl
+
+    namespace Fields
+      public export
+      decEq : (as : DList (String,Base) Marshable a)
+           -> (bs : DList (String,Base) Marshable b)
+           -> (a = b)
+           -> Equal as bs
+      decEq [] [] Refl = Refl
+      decEq ((F l ex) :: rest) ((F l x) :: y) Refl
+        = case decEq ex x Refl of
+            Refl =>
+              case decEq rest y Refl of
+                Refl => Refl
+
+    public export
+    decEq : (a : Marshall.Marshable tyA)
+         -> (b : Marshall.Marshable tyB)
+         -> (prf : tyA = tyB)
+         -> Equal a b
+    decEq CHAR CHAR Refl = Refl
+    decEq STR STR Refl   = Refl
+    decEq INT INT Refl   = Refl
+    decEq BOOL BOOL Refl = Refl
+    decEq UNIT UNIT Refl = Refl
+
+    decEq (ARRAY y n) (ARRAY x n) Refl
+      = case decEq y x Refl of
+         Refl => Refl
+
+    decEq (TUPLE y) (TUPLE x) Refl
+      = case decEq y x Refl Refl of
+          Refl => Refl
+
+    decEq (RECORD x) (RECORD fields) Refl
+      = case decEq x fields Refl of
+          Refl => Refl
+    decEq (UNION x) (UNION fields) Refl
+      = case decEq x fields Refl of
+             Refl => Refl
+
+  
 namespace Marshall
   prettyNot : Marshall.MarshableNot ty -> Doc ann
   prettyNot REF

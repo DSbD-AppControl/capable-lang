@@ -65,6 +65,7 @@ namespace Global
     Choice : (s : IsVar rs MkRole)
           -> (r : IsVar rs MkRole)
           -> (type   : Singleton (UNION (field:::fs)))
+          -> (prfM   : Marshable (UNION (field:::fs)))
           -> (prfR   : Not (Equals Role (IsVar rs) s r))
           -> (opties : DList (String,Base)
                              (Branch Global ks rs)
@@ -102,6 +103,7 @@ namespace Local
     Choice : (kind : ChoiceTy)
           -> (whom : IsVar rs MkRole)
           -> (type : Singleton (UNION (field:::fs)))
+          -> (prfM   : Marshable (UNION (field:::fs)))
           -> (choices : DList (String,Base)
                               (Branch Local ks rs)
                               (field::fs))
@@ -116,7 +118,7 @@ namespace Local
   Uninhabited (Local.Crash = (Local.Rec x)) where
     uninhabited Refl impossible
 
-  Uninhabited (Local.Crash = (Local.Choice a b c d)) where
+  Uninhabited (Local.Crash = (Local.Choice a b c d e)) where
     uninhabited Refl impossible
 
   Uninhabited (Local.End = (Local.Call x)) where
@@ -125,16 +127,16 @@ namespace Local
   Uninhabited (Local.End = (Local.Rec x)) where
     uninhabited Refl impossible
 
-  Uninhabited (Local.End = (Local.Choice a b c d)) where
+  Uninhabited (Local.End = (Local.Choice a b c d e)) where
     uninhabited Refl impossible
 
   Uninhabited (Local.Call x = (Local.Rec y)) where
     uninhabited Refl impossible
 
-  Uninhabited (Local.Call x = (Local.Choice a b c d)) where
+  Uninhabited (Local.Call x = (Local.Choice a b c d e)) where
     uninhabited Refl impossible
 
-  Uninhabited (Local.Rec x = (Local.Choice a b c d)) where
+  Uninhabited (Local.Rec x = (Local.Choice a b c d e)) where
     uninhabited Refl impossible
 
 
@@ -180,7 +182,7 @@ namespace Local
       = No absurd
     decEq Crash (Rec x)
       = No absurd
-    decEq Crash (Choice kind whom t choices)
+    decEq Crash (Choice kind whom ty prf choices)
       = No absurd
 
 
@@ -192,7 +194,7 @@ namespace Local
       = No absurd
     decEq End (Rec x)
       = No absurd
-    decEq End (Choice kind whom t choices)
+    decEq End (Choice kind whom ty prf choices)
       = No absurd
 
     decEq (Call x) Crash
@@ -208,7 +210,7 @@ namespace Local
 
     decEq (Call x) (Rec y)
       = No absurd
-    decEq (Call x) (Choice kind whom t choices)
+    decEq (Call x) (Choice kind whom ty prf choices)
       = No absurd
 
     decEq (Rec x) Crash
@@ -224,22 +226,24 @@ namespace Local
       decEq (Rec x) (Rec y) | (No contra)
         = No (\Refl => contra Refl)
 
-    decEq (Rec x) (Choice kind whom t choices) = No absurd
+    decEq (Rec x) (Choice kind whom ty prf choices) = No absurd
 
-    decEq (Choice kind whom t choices) Crash
+    decEq (Choice kind whom t p choices) Crash
       = No (negEqSym absurd)
-    decEq (Choice kind whom t choices) End
+    decEq (Choice kind whom t p choices) End
       = No (negEqSym absurd)
-    decEq (Choice kind whom t choices) (Call x)
+    decEq (Choice kind whom t p choices) (Call x)
       = No (negEqSym absurd)
-    decEq (Choice kind whom t choices) (Rec x)
+    decEq (Choice kind whom t p choices) (Rec x)
       = No (negEqSym absurd)
-    decEq (Choice a b (Val (UNION (f:::fs))) cs) (Choice x y (Val (UNION (g:::gs))) zs)
+    decEq (Choice a b (Val (UNION (f:::fs))) (UNION (h::hs)) cs)
+          (Choice x y (Val (UNION (g:::gs))) (UNION (i::is)) zs)
       = decDo $ do Refl <- decEq a x `otherwise` (\Refl => Refl)
                    Refl <- decEq b y `otherwise` (\Refl => Refl)
                    Refl <- decEq (UNION (f:::fs)) (UNION (g:::gs)) `otherwise` (\Refl => Refl)
-                   Refl <- Branches.decEq cs zs `otherwise` (\Refl => Refl)
-                   pure Refl
+                   case decEq (UNION (h::hs)) (UNION (i::is)) Refl of
+                     Refl => do Refl <- Branches.decEq cs zs `otherwise` (\Refl => Refl)
+                                pure Refl
 
     public export
     DecEq (Local ks rs) where

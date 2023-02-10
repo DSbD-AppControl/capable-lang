@@ -105,24 +105,24 @@ mutual
       = No () -- TODO
            (\(R (Rec a) (Rec this)) => no (R a this))
 
-  project whom (Choice s r noSR t bs) with (involved whom s r noSR)
+  project whom (Choice s r noSR t p bs) with (involved whom s r noSR)
 
     -- [ NOTE ] Sender
-    project whom (Choice s r noSR t (b::bs)) | (Sends prfS) with (Branches.project s (b::bs))
-      project s (Choice s r noSR t (b::bs)) | (Sends Refl) | (Yes (R (elem :: rest) (x :: y)))
+    project whom (Choice s r noSR t p (b::bs)) | (Sends prfS) with (Branches.project s (b::bs))
+      project s (Choice s r noSR t p (b::bs)) | (Sends Refl) | (Yes (R (elem :: rest) (x :: y)))
         = Yes (R _ (Select (Same Refl Refl) (x :: y)))
-      project s (Choice s r noSR t (b::bs)) | (Sends Refl) | (No msg no)
+      project s (Choice s r noSR t p (b::bs)) | (Sends Refl) | (No msg no)
         = No () (\case (R _ (Select prf x)) => no (R _ x)
                        (R _ (Offer prf x)) => no (R _ x)
                        (R _ (Merge f prfR prf))  => f (Same Refl Refl))
 
     -- [ NOTE ] Receiving
-    project r (Choice s r noSR t (b :: bs)) | (Recvs Refl) with (Branches.project r (b::bs))
-      project r (Choice s r noSR t (b :: bs)) | (Recvs Refl) | (Yes (R (elem :: rest) (x :: y)))
+    project r (Choice s r noSR t p (b :: bs)) | (Recvs Refl) with (Branches.project r (b::bs))
+      project r (Choice s r noSR t p (b :: bs)) | (Recvs Refl) | (Yes (R (elem :: rest) (x :: y)))
         = Yes (R _ (Offer (Same Refl Refl) (x::y)))
 
 
-      project r (Choice s r noSR t (b :: bs)) | (Recvs Refl) | (No msg no)
+      project r (Choice s r noSR t p (b :: bs)) | (Recvs Refl) | (No msg no)
         = No ()
              (\case (R _ (Select prf x)) => no (R _ x)
                     (R _ (Offer prf x)) => no (R _ x)
@@ -130,11 +130,11 @@ mutual
 
 
     -- [ NOTE ] Not involved
-    project whom (Choice s r noSR t (b :: bs)) | (Skips prfSNot prfRNot) with (same whom (b::bs))
-      project whom (Choice s r noSR t (b :: bs)) | (Skips prfSNot prfRNot) | (Yes (R (B l t' c) (S projs prf)))
+    project whom (Choice s r noSR t p (b :: bs)) | (Skips prfSNot prfRNot) with (same whom (b::bs))
+      project whom (Choice s r noSR t p (b :: bs)) | (Skips prfSNot prfRNot) | (Yes (R (B l t' c) (S projs prf)))
         = Yes (R _ (Merge prfSNot prfRNot (S projs prf)))
 
-      project whom (Choice s r noSR t (b :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
+      project whom (Choice s r noSR t p (b :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
         = No ()
              (\case (R _ (Select prf x)) => prfSNot prf
                     (R _ (Offer prf x)) => prfRNot prf

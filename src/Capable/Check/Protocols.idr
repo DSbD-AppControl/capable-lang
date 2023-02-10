@@ -120,17 +120,20 @@ mutual
          (UNION ((es,et):::fs) ** tmM) <- synth types t
            | (ty ** _) => throwAt fc (UnionExpected ty)
 
-         (tyB ** tmB) <- branch kinds types roles es et x
+         case marshable (UNION ((es,et):::fs)) of
+           No prf _ => throwAt fc (NotMarshable (UNION ((es,et):::fs)) prf)
+           Yes prfM
+             => do (tyB ** tmB) <- branch kinds types roles es et x
 
-         (tyBs ** tmBs) <- branches kinds types roles fc fs xs
+                   (tyBs ** tmBs) <- branches kinds types roles fc fs xs
 
-         case Index.decEq stm rtm of
-           Yes (Same Refl Refl)
-             => do let R s' = s
-                   let R r' = r
-                   throwAt fc (MismatchRole (MkRef emptyFC s') (MkRef emptyFC r'))
-           No prf
-             => pure (_ ** Choice stm rtm prf tmM (tmB::tmBs))
+                   case Index.decEq stm rtm of
+                     Yes (Same Refl Refl)
+                       => do let R s' = s
+                             let R r' = r
+                             throwAt fc (MismatchRole (MkRef emptyFC s') (MkRef emptyFC r'))
+                     No prf
+                       => pure (_ ** Choice stm rtm prf tmM prfM (tmB::tmBs))
 
 namespace View
   export
