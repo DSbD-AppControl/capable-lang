@@ -7,10 +7,12 @@
 module Capable.Error
 
 import System.File
+import Language.JSON
 import Toolkit.Data.Location
 import Toolkit.System
 import Toolkit.Text.Lexer.Run
 import Toolkit.Text.Parser.Run
+import Toolkit.Data.DVect
 import public Toolkit.Options.ArgParse
 import Capable.Types
 import Capable.Lexer.Token
@@ -78,6 +80,52 @@ namespace Typing
     Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error
 
+
+namespace Marshall
+
+  public export
+  data Error : Type where
+    NotMarshable : (type : Base)
+                -> (prf  : MarshableNot type)
+                        -> Marshall.Error
+    Mismatch : (type : Base)
+            -> (prf  : Marshable type)
+            -> (raw  : JSON)
+                     -> Marshall.Error
+
+    MissingElems : (left : Nat)
+                -> (type : Base)
+                -> (prf  : Marshable type)
+                        -> Marshall.Error
+
+    RedundantElems : (type : Base)
+                  -> (prf  : Marshable type)
+                  -> (raw  : JSON)
+                          -> Marshall.Error
+
+    MissingUples : (types : Vect n Base)
+                -> (prfs  : DVect Base Marshable n types)
+                         -> Marshall.Error
+
+    RedundantUples : (raw : JSON)
+                         -> Marshall.Error
+
+    IllnumberedUple : (n : Nat)
+                   -> (l : String)
+                        -> Marshall.Error
+
+    MissingFields : (types : List  (String, Base))
+                 -> (prfs  : DList (String, Base) Marshable types)
+                          -> Marshall.Error
+
+    RedundantFields : (raw : JSON)
+                           -> Marshall.Error
+
+    FieldMismatch : (x,y : String)
+                        -> Marshall.Error
+
+    TagNot : (l : String)
+               -> Marshall.Error
 namespace Running
   public export
   data Error : Type where
@@ -92,6 +140,7 @@ namespace Capable
     Generic : String -> Capable.Error
     Opts    : Options.Error -> Capable.Error
     Lex     : Lexing.Error -> Capable.Error
+    Marsh   : Marshall.Error -> Capable.Error
     Parse   : Parsing.Error -> Capable.Error
     TyCheck : Generic.Error Typing.Error -> Capable.Error
     Exec    : Running.Error -> Capable.Error

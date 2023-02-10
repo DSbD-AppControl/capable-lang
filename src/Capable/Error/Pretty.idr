@@ -9,6 +9,9 @@ module Capable.Error.Pretty
 import Data.String
 import Data.List1
 import System.File
+
+import Language.JSON
+
 import Toolkit.Data.Location
 import Toolkit.System
 import Toolkit.Text.Lexer.Run
@@ -163,12 +166,50 @@ Show (Running.Error) where
     = "Not Yet Implemented"
 
   show (OOB e g)
-    = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."
+    = "Index Out of Bounds: Given \{show g}; Expected: \{show e}"
+
+Show (Marshall.Error) where
+  show (NotMarshable type prf)
+    = "Not a Marshable type:\n\tGiven:\{show type}\n\tReason:\{show prf}"
+
+  show (Mismatch type prf raw)
+    = "Error unmarshalling:\n\tExpected:\{show type}\n\tGiven:\{show raw}"
+
+  show (RedundantElems type prf raw)
+    = "More array elements than expected:\n\t\{show raw}"
+
+  show (MissingElems n type prf)
+    = "More array elements expected:\n\t\{show n} are missing"
+
+  show (MissingUples types _)
+    = "Missing elements from a tuple:\n\t\{show types}"
+
+  show (RedundantUples raw)
+    = "More uples than expected:\n\t\{show raw}"
+
+  show (IllnumberedUple n l)
+    = "Tuple uple was wrongly numbered:\n\tExpected: \{show n}\n\tGiven: \{show l}"
+
+  show (MissingFields types prfs)
+    = "Fields missing:\n\t\{show types}"
+
+  show (RedundantFields raw)
+    = "Fields missing:\n\t\{show raw}"
+
+  show (FieldMismatch x y)
+    = "Labels mismatch:\n\tExpected: \{show x}\n\tGiven: \{show y}"
+
+  show (TagNot l)
+    = "Not a valid tag: \{show l}"
+
 
 export
 Show (Capable.Error) where
   show (Generic err)
     = show err
+
+  show (Marsh err)
+    = "Option Error\n" ++ show err
 
   show (Opts r)
     = "Option Error\n" ++ show r

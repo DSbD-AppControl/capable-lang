@@ -43,7 +43,7 @@ mutual
         -> (eb    : Base)
         -> (bs1   : Branch b)
                  -> Capable (DPair (Branch Global ks    rs (es,eb))
-                               (Branch        ks ts rs))
+                                   (Branch        ks ts rs))
   branch kinds types roles es et (B fc label type cont)
     = do Refl <- embedAt fc (WrongLabel es label) (decEq es label)
 
@@ -64,16 +64,16 @@ mutual
           -> (roles : Context Ty.Role rs)
           -> (fc    : FileContext)
           -> (ls    : List (String,Base))
-          -> (bs1   : All Branch bs)
+          -> (bs1   : Vect.Quantifiers.All.All Branch bs)
                    -> Capable (DPair (Global.Branches ks    rs ls)
-                                 (Branches        ks ts rs))
+                                     (Branches        ks ts rs))
   branches kinds types roles _ Nil Nil
     = pure (_ ** Nil)
 
   branches kinds types roles fc Nil cs
     = throwAt fc (RedundantCases (flattern cs))
 
-    where flattern : All Branch wq -> List String
+    where flattern : Vect.Quantifiers.All.All Branch wq -> List String
           flattern Nil = Nil
           flattern (B fc l s c :: rest)
             = l :: flattern rest
@@ -96,7 +96,7 @@ mutual
        -> (roles : Context Ty.Role rs)
        -> (syn   : Protocol g)
                 -> Capable (DPair (Global ks    rs)
-                              (Global ks ts rs))
+                                  (Global ks ts rs))
   synth kinds types roles (End fc)
     = pure (_ ** End)
 

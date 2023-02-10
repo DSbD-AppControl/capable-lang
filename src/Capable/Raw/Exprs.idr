@@ -311,7 +311,7 @@ getFC : {e : EXPR} -> Expr e -> Singleton (getFC e)
 getFC x = Val (getFC e)
 
 export
-flattern : All Case cs -> List String
+flattern : Vect.Quantifiers.All.All Case cs -> List String
 flattern [] = []
 flattern ((C fc t s c) :: y) = t :: flattern y
 -- [ EOF ]

@@ -1,0 +1,75 @@
+#+TITLE: Notes and Future Directions
+
+Here we describe some open questions and musing towards their answers.
+
+* Recursion
+** General
+We should look at providing recursive calls in the language.
+** Behavioural
+
+Session-Types 'demand' explicit syntax for recursion.
+We use well-scoped recursion variables to keep track.
+Should we names these in the surface language to be ml style:
+
+#+begin_example
+type request = union { once : Int, many : Int };
+type response = union { payload : Int };
+
+let rec pingpoing
+  = A -> B [request] { once (Int) . B -> A []}
+#+end_example
+
+How to deal with recursion properly: Use recursion variables to have a context so we can do ML style recursion.
+
+
+{-
+
+1. How to deal with recursion properly: Use recursion variables to have a context so we can do ML style recursion.
+
+2. How to present handlers/deal with errors.
+   try session as x in a otherwise this
+
+    read Bob { -- <x : Int|y : String>
+      | Crash      => Crash value
+      | Error(a)   => do something within the protocol
+      | Result msg =>
+        match msg with {
+          | x(i) => carry on
+          | y(j) => carry on
+        }
+    }
+
+    send value to Bob {
+      | Result   => carry on
+      | Error(a) => do something within the protocol
+      | Crash    => Crash value
+    }
+
+2. declaration
+
+   session foo follows pingpong as Ponger
+   session foo<pingpong as Ponger>(x : A) -> String {
+   }
+
+2. How to select/deal with communication contexts.
+
+3. Serialisation of data...
+
+4. invocation of sessions...
+   1. caller will point to handler with resolved participants to things
+
+   run foo(1) where [Pinger is "python pinger"]
+
+-}
+
+  -- ## Typed Sessions
+  {-
+  ||| Create a new session from the given global protocol projected as the given role.
+  NewSession : (g_term     : Global Nil types roles g)
+            -> (principle  : Role roles MkRole)
+            -> (projection : Project Nil roles principle g l)
+            -> (scope      : Expr roles types stack_g (stack_l) a)
+            -- @TODO sort out what local types are...
+                          -> Expr roles types stack_g stack_l a
+aa
+-}

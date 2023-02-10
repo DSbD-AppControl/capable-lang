@@ -30,13 +30,13 @@ import Capable.Terms.Funcs
 
 
 data Instrs : (delta : List Ty.Base)
-           -> (args  : All Arg as)
+           -> (args  : Vect.Quantifiers.All.All Arg as)
            -> (tys   : List Ty.Base)
                     -> Type
   where
     Empty : Instrs d Nil Nil
     Arg : {0 ty' : Ty a}
-       -> {  as : All Arg xs}
+       -> {  as : Vect.Quantifiers.All.All Arg xs}
        -> (s   : String)
        -> (ty  : Ty.Base)
        -> (tm  : Ty d ty)
@@ -58,8 +58,8 @@ args delta (A fc ref ty :: y)
        pure (_ ** Arg ref ty tm rest)
 
 
-expand : {as' : All Arg as''}
-      -> (is    : Instrs ds as' as)
+expand : {as' : Vect.Quantifiers.All.All Arg as''}
+      -> (is  : Instrs ds as' as)
                -> Context Ty.Base as
 expand Empty
   = Nil

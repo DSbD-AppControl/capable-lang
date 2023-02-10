@@ -345,7 +345,7 @@ mutual
            | _ => throwAt fc Unknown
          pure (_ ** Tuple (a::b::tms))
 
-    where args : {as' : _} -> All Expr as'
+    where args : {as' : _} -> Vect.Quantifiers.All.All Expr as'
               -> Capable (DPair Nat
                             (\n => DPair (Vect n Base)
                                          (DVect Base (Expr rs ds ss gs ls) n)))
@@ -391,7 +391,7 @@ mutual
             = do (t ** tm) <- synth env e
                  pure (_ ** F s tm)
 
-          fields : All Field as'
+          fields : Vect.Quantifiers.All.All Field as'
                 -> Capable (DPair (List (String, Base))
                               (DList (String,Base)
                                      (Field rs ds ss gs ls)))
@@ -453,7 +453,7 @@ mutual
           cases : (fc : FileContext)
                -> (ret : Base)
                -> (exp : List (String, Base))
-               -> All Case as'
+               -> Vect.Quantifiers.All.All Case as'
                -> Capable (DList (String,Base)
                              (Case rs ds ss gs ls ret)
                              exp)
@@ -523,7 +523,7 @@ mutual
           args : {as   : Vect n EXPR}
               -> (fc   : FileContext)
               -> (tys  : List Ty.Base)
-              -> (args : All Expr as)
+              -> (args : Vect.Quantifiers.All.All Expr as)
                       -> Capable (DList Ty.Base
                                     (Expr rs ds ss gs ls)
                                     tys)

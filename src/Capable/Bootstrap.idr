@@ -46,4 +46,17 @@ export
     decEq x y Refl | (No contra)
       = No (\(Same Refl Refl) => contra Refl)
 
+
+export
+decidable : Lazy b -> Lazy (a -> b) -> Dec a -> b
+decidable _ y (Yes prf)
+  = y prf
+decidable x _ (No _)
+  = x
+
+export
+dec2Maybe : Dec a -> Maybe a
+dec2Maybe (Yes prf) = Just prf
+dec2Maybe (No  _)   = Nothing
+
 -- [ EOF ]

@@ -14,10 +14,15 @@ import Decidable.Equality
 import public Data.Vect
 import public Data.List1
 import public Data.List.Elem
+import public Data.Vect.Quantifiers
+import public Data.List.Quantifiers
 
 import Text.PrettyPrint.Prettyprinter
 
 import        Toolkit.Decidable.Do
+import        Toolkit.Decidable.Informative
+import        Toolkit.Data.DList
+import        Toolkit.Data.DVect
 import        Toolkit.Data.Vect.Extra
 
 %default total
@@ -71,59 +76,6 @@ namespace Ty
 --          -> (ret  : Base)
 --                  -> Base
 
-public export
-data IsUnion : Base -> Type
-  where
-    U : IsUnion (UNION fs)
-
-Uninhabited (IsUnion CHAR) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion STR) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion INT) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion BOOL) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion UNIT) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion (HANDLE u)) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion (REF u)) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion (ARRAY x u)) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion (TUPLE u)) where
-  uninhabited U impossible
-
-Uninhabited (IsUnion (RECORD u)) where
-  uninhabited U impossible
-
---Uninhabited (IsUnion (FUNC u us)) where
---  uninhabited U impossible
-
-export
-isUnion : (base : Base) -> Dec (IsUnion base)
-isUnion (UNION fields) = Yes U
-
-isUnion CHAR            = No absurd
-isUnion STR             = No absurd
-isUnion INT             = No absurd
-isUnion BOOL            = No absurd
-isUnion UNIT            = No absurd
-isUnion (HANDLE x)      = No absurd
-isUnion (REF x)         = No absurd
-isUnion (ARRAY x k)     = No absurd
-isUnion (RECORD k)      = No absurd
-isUnion (TUPLE fields)  = No absurd
---isUnion (FUNC args ret) = No absurd
 
 namespace Diag
   data Diag : (a,b : Base)
@@ -320,5 +272,276 @@ Pretty Base where
 export
 Show Base where
   show = (show . annotate () . pretty)
+
+
+mutual
+  ||| [ NOTE ] Can a datatype be marshalled to/from wires.
+  namespace Marshall
+    namespace Field
+      public export
+      data Marshable : (str : (String, Base)) -> Type where
+        F : (s : String) -> Marshable ty -> Marshable (s, ty)
+
+      public export
+      data MarshableNot : (str : (String, Base)) -> Type where
+        FNot : (str : String)
+            -> (prf : MarshableNot ty)
+                   -> MarshableNot (str, ty)
+
+    public export
+    data Marshable : (type : Base) -> Type where
+      CHAR  : Marshable CHAR
+      STR   : Marshable STR
+      INT   : Marshable INT
+      BOOL  : Marshable BOOL
+      UNIT  : Marshable UNIT
+
+      ARRAY : Marshable ty -> (n : Nat) -> Marshable (ARRAY ty n)
+
+      TUPLE : DVect Base Marshable (S (S n)) types -> Marshable (TUPLE types)
+
+      RECORD : (fields : DList (String, Base) Marshable (f::fs))
+                      -> Marshable (RECORD (f:::fs))
+
+      UNION : (fields : DList (String, Base) Marshable (f::fs))
+                     -> Marshable (UNION (f:::fs))
+
+    public export
+    data MarshableNot : (type : Base) -> Type where
+      REF : MarshableNot (REF r)
+      HANDLE : MarshableNot (HANDLE r)
+
+      ARRAYNot : (prf : MarshableNot ty )
+              -> (n   : Nat)
+                     -> MarshableNot (ARRAY ty n)
+
+      TUPLENot : (prf : Any MarshableNot types)
+                     -> MarshableNot (TUPLE types)
+
+      RECORDNot : (prf : Any MarshableNot (f::fs))
+                      -> MarshableNot (RECORD (f:::fs))
+
+      UNIONNot : (prf : Any MarshableNot (f::fs))
+                     -> MarshableNot (UNION (f:::fs))
+
+namespace Marshall
+  prettyNot : Marshall.MarshableNot ty -> Doc ann
+  prettyNot REF
+    = pretty "Is a Reference."
+
+  prettyNot HANDLE
+    = pretty "Is a handle."
+
+  prettyNot (ARRAYNot prf n)
+    = pretty "Contains a Reference/Handle"
+  prettyNot (TUPLENot prf)
+    = pretty "Contains a Reference/Handle"
+  prettyNot (RECORDNot prf)
+    = pretty "Contains a Reference/Handle"
+  prettyNot (UNIONNot prf)
+    = pretty "Contains a Reference/Handle"
+
+  export
+  Pretty (Marshall.MarshableNot ty) where
+    pretty = prettyNot
+
+  export
+  Show (Marshall.MarshableNot ty) where
+    show = (show . annotate () . pretty)
+
+namespace Marshall
+  export
+  Uninhabited (Marshable (HANDLE ty)) where
+    uninhabited CHAR impossible
+
+  export
+  Uninhabited (Marshable (REF ty)) where
+    uninhabited CHAR impossible
+
+mutual
+  namespace Marshall
+    namespace Field
+      export
+      marshable : (kv : Pair String Base)
+                     -> DecInfo (MarshableNot kv)
+                                (Marshable    kv)
+      marshable (str, ty) with (marshable ty)
+        marshable (str, ty) | (Yes prf)
+          = Yes (F str prf)
+        marshable (str, ty) | (No prf no)
+          = No (FNot str prf) (\(F s prf) => no prf)
+
+    namespace Tuples
+      export
+      marshable : (fields : Vect n Base)
+                         -> DecInfo (Any        MarshableNot   fields)
+                                    (DVect Base Marshable    n fields)
+
+      -- [ NOTE ] This is okay, the input will _always_ be minimum length two.
+      marshable []
+        = Yes []
+
+      marshable (x :: xs) with (marshable x)
+        marshable (x :: xs) | (Yes p) with (marshable xs)
+          marshable (x :: xs) | (Yes p) | (Yes ps)
+            = Yes (p :: ps)
+          marshable (x :: xs) | (Yes p) | (No prf no)
+            = No (There prf)
+                 (\case (ex :: rest) => no rest)
+
+        marshable (x :: xs) | (No prf no)
+          = No (Here prf)
+               (\case (ex :: rest) => no ex)
+
+    namespace Fields
+      export
+      marshable : (fields : List (String, Base))
+                         -> DecInfo (Any                  MarshableNot fields)
+                                    (DList (String, Base) Marshable    fields)
+      -- [ NOTE ] This is okay, as the input will _always_ be minimum length one.
+      marshable []
+        = Yes []
+      marshable (x :: xs) with (marshable x)
+        marshable (x :: xs) | (Yes p) with (marshable xs)
+          marshable (x :: xs) | (Yes p) | (Yes ps)
+            = Yes (p :: ps)
+
+          marshable (x :: xs) | (Yes p) | (No prf no)
+            = No (There prf) (\case (elem :: rest) => no rest)
+
+        marshable (x :: xs) | (No prf no)
+          = No (Here prf) (\case (elem :: rest) => no elem)
+
+    export
+    marshable : (type : Base)
+                     -> DecInfo (MarshableNot type)
+                                (Marshable    type)
+    marshable CHAR
+      = Yes CHAR
+    marshable STR
+      = Yes STR
+    marshable INT
+      = Yes INT
+    marshable BOOL
+      = Yes BOOL
+    marshable UNIT
+      = Yes UNIT
+
+    marshable (HANDLE x)
+      = No HANDLE absurd
+
+    marshable (REF x)
+      = No REF absurd
+
+    marshable (ARRAY ty n) with (marshable ty)
+      marshable (ARRAY ty n) | (Yes prf)
+        = Yes (ARRAY prf n)
+      marshable (ARRAY ty n) | (No prf no)
+        = No (ARRAYNot prf n)
+             (\case (ARRAY x n) => no x)
+
+    marshable (TUPLE fields) with (marshable fields)
+      marshable (TUPLE fields) | (Yes prf)
+        = Yes (TUPLE prf)
+
+      marshable (TUPLE fields) | (No prf no)
+        = No (TUPLENot prf)
+             (\case (TUPLE x) => no x)
+
+    marshable (RECORD (head ::: tail)) with (marshable (head::tail))
+      marshable (RECORD (head ::: tail)) | (Yes prf)
+        = Yes (RECORD prf)
+      marshable (RECORD (head ::: tail)) | (No prf no)
+        = No (RECORDNot prf) (\case (RECORD fields) => no fields)
+
+    marshable (UNION (head ::: tail)) with (marshable (head::tail))
+      marshable (UNION (head ::: tail)) | (Yes prf)
+        = Yes (UNION prf)
+      marshable (UNION (head ::: tail)) | (No prf no)
+        = No (UNIONNot prf) (\case (UNION fields) => no fields)
+
+namespace IsUnion
+  public export
+  data IsUnion : Base -> Type
+    where
+      U : (fields : DList (String, Base) Marshable (f::fs))
+                 -> IsUnion (UNION (f:::fs))
+
+  public export
+  data IsUnionNot : Base -> Type
+    where
+      CHAR  : IsUnionNot CHAR
+      STR   : IsUnionNot STR
+      INT   : IsUnionNot INT
+      BOOL  : IsUnionNot BOOL
+      UNIT  : IsUnionNot UNIT
+
+      HANDLE : IsUnionNot (HANDLE ref)
+      REF    : IsUnionNot (REF ref)
+
+      ARRAY : IsUnionNot (ARRAY ty n)
+
+      TUPLE : IsUnionNot (TUPLE types)
+
+      RECORD : IsUnionNot (RECORD fs)
+
+      UNIONNot : (prf : Any MarshableNot (f::fs))
+                     -> IsUnionNot (UNION (f:::fs))
+
+
+  Uninhabited (IsUnion CHAR) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion STR) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion INT) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion BOOL) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion UNIT) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion (HANDLE u)) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion (REF u)) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion (ARRAY x u)) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion (TUPLE u)) where
+    uninhabited (U _) impossible
+
+  Uninhabited (IsUnion (RECORD u)) where
+    uninhabited (U _) impossible
+
+  --Uninhabited (IsUnion (FUNC u us)) where
+  --  uninhabited (U _) impossible
+
+  export
+  isUnion : (base : Base) -> DecInfo (IsUnionNot base) (IsUnion base)
+  isUnion (UNION (head ::: tail)) with (marshable (head::tail))
+    isUnion (UNION (head ::: tail)) | (Yes prf)
+      = Yes (U prf)
+    isUnion (UNION (head ::: tail)) | (No prf no)
+      = No (UNIONNot prf)
+           (\case (U fields) => no fields)
+
+
+  isUnion CHAR            = No CHAR   absurd
+  isUnion STR             = No STR    absurd
+  isUnion INT             = No INT    absurd
+  isUnion BOOL            = No BOOL   absurd
+  isUnion UNIT            = No UNIT   absurd
+  isUnion (HANDLE x)      = No HANDLE absurd
+  isUnion (REF x)         = No REF    absurd
+  isUnion (ARRAY x k)     = No ARRAY  absurd
+  isUnion (RECORD k)      = No RECORD absurd
+  isUnion (TUPLE fields)  = No TUPLE  absurd
+  --isUnion (FUNC args ret) = No absurd
 
 -- [ EOF ]
