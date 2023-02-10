@@ -11,7 +11,7 @@
 ||| POPL, Article 16 (January 2018), 34
 ||| pages. https://doi.org/10.1145/3158104
 |||
-module Capable.Env
+module Capable.Exec.Env
 
 import Data.Vect
 
