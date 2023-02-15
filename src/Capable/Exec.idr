@@ -38,6 +38,7 @@ import Capable.Exec.Env
 import Capable.Exec.Common
 import Capable.Exec.Results
 import Capable.Exec.Heap
+import Capable.Exec.IPC
 
 
 %default total

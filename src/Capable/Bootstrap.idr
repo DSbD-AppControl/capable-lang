@@ -92,6 +92,14 @@ namespace List
 
 namespace DList
   public export
+  map : (f  : forall x . this x -> that x)
+     -> (ts : DList ty this xs)
+           -> DList ty that xs
+  map f [] = []
+  map f (elem :: rest)
+    = f elem :: map f rest
+
+  public export
   data Union : (xs : DList a p ps)
             -> (ys : DList a p ps')
             -> (zs : DList a p ps'')

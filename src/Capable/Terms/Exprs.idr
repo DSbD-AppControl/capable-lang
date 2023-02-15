@@ -35,51 +35,36 @@ index (y :: xs) (There x) = snd y
 
 
 mutual
-
+  -- @TODO make context dependent
   public export
   data Assign : (roles   : List Ty.Role)
              -> (types   : List Ty.Base)
              -> (globals : List Ty.Session)
              -> (stack_g : List Ty.Method)
              -> (stack_l : List Ty.Base)
-             -> (whom    : IsVar roles MkRole)
---             -> (what    : Ty.Base)
--- @TODO make context dependent
+             -> (proto   : Local ks rs)
+             -> (whom    : Ty.Role)
                         -> Type
     where
-      A : (whom : IsVar roles MkRole)
-       -> (what : Expr roles types globals stack_g stack_l STR)
-               -> Assign roles types globals stack_g stack_l whom
+      IsAssignedNot : Assign roles types globals stack_g stack_l l MkRole
+      IsAssigned : (whom : IsVar             roles MkRole)
+                -> (prf  : Protocol.UsesRole roles l whom)
+                -> (what : Expr              roles types globals stack_g stack_l STR)
+                        -> Assign            roles types globals stack_g stack_l l MkRole
 
+
+  ||| The design of assigns is predicated on ths idea that our role environment is nameless and that, during type-checking, only valid assignements are created.
   public export
-  data Assignments : (roles   : List Ty.Role)
-                  -> (types   : List Ty.Base)
-                  -> (globals : List Ty.Session)
-                  -> (stack_g : List Ty.Method)
-                  -> (stack_l : List Ty.Base)
-                  -> (rs      : Roles roles ss)
---   a          -> (what    : Ty.Base)
--- @TODO make context dependent
-                        -> Type
-
-    where
-      End : Assignments roles types globals stack_g stack_l Nil
-      Add : Assign      roles types globals stack_g stack_l r
-         -> Assignments roles types globals stack_g stack_l rs
-         -> Assignments roles types globals stack_g stack_l (r :: rs)
-
-  public export
-  data Assigns : (roles   : List Ty.Role)
-              -> (types   : List Ty.Base)
-              -> (globals : List Ty.Session)
-              -> (stack_g : List Ty.Method)
-              -> (stack_l : List Ty.Base)
-              -> (rs      : Local ks roles)
-                         -> Type
-    where
-      AS : (prf : HasRoles roles l rs)
-        -> (as  : Assignments roles tyeps globals stack_g stack_l rs)
-               -> Assigns roles tyeps globals stack_g stack_l l
+  Assigns : (roles   : List Ty.Role)
+         -> (types   : List Ty.Base)
+         -> (globals : List Ty.Session)
+         -> (stack_g : List Ty.Method)
+         -> (stack_l : List Ty.Base)
+         -> (proto   : Local ks roles)
+                    -> Type
+  Assigns rs ts gs sg sl proto
+    = DList Ty.Role
+            (Assign rs ts gs sg sl proto) rs
 
   public export
   data Case : (roles   : List Ty.Role)

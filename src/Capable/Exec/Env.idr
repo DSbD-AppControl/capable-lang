@@ -148,34 +148,28 @@ namespace Heap
   replace = update
 
 
-||| Representing a set of typed channels involved within a MPST
-||| communication context.
-|||
-||| Notes about the datatypes contained within.
-|||
-||| + We assume that we are _just_ dealing with the IPC context.
-||| + We do not need to type them with a session type, the expressions that detail the communication to that.
-||| + The representation is not 'sparse' we create a 'channel'  for each role defined. This _will_ result in a more verbose data structure. A simple datatype 'Channel' provides a place holder for unused channels.
-||| + Ideally we would have a sub-context that only contains channels for roles involved in the communication. It is not clear how to provide such an elegant context.
-|||   + We would need a _thinning_ of the role context based on if a role is involved in the communication.
-|||   + roles are, however, nameless against the entire role context.
-|||   + So our thinning would need to be rather magical.
-namespace Comms
-
+namespace Assigns
 
   public export
-  data Channel : (roles : Ty.Role)
-                       -> Type
+  data Assign : (roles : List Ty.Role)
+             -> (store : List Ty.Base)
+             -> (role  :      Ty.Role)
+                      -> Type
     where
-      Used : (h : File)
-               -> Channel role
-
-      UsedNot : Channel role
-
+      AssignedNot : Assign roles store MkRole
+      Assigned : (prf : IsVar roles MkRole)
+              -> (str : Value store STR)
+                     -> Assign roles store MkRole
 
   public export
-  Channels : List Ty.Role -> Type
-  Channels = DList Ty.Role Channel
+  Assignments : (roles : List Ty.Role)
+             -> (store : List Ty.Base)
+                      -> Type
+  Assignments roles store
+    = DList Ty.Role
+            (Assign roles store)
+            roles
+
 
 ||| Recursion variables are just closures...
 |||

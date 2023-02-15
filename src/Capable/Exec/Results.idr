@@ -26,6 +26,7 @@ import Capable.Values.Marshall
 
 import Capable.Exec.Env
 import Capable.Exec.Common
+import Capable.Exec.IPC
 
 %default total
 %hide type

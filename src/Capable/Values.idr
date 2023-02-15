@@ -46,13 +46,6 @@ namespace List
             -> List type
   snoc xs x = xs ++ [x]
 
-  public export
-  map : (f : {x : type} -> etype x -> etype' x)
-     -> DList type etype  xs
-     -> DList type etype' xs
-  map f [] = []
-  map f (elem :: rest) = f elem :: map f rest
-
 namespace DList
 
 
