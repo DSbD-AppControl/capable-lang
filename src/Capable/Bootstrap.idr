@@ -142,4 +142,5 @@ namespace DList
     union {ps = ps} {ps' = ps'} xs ys | (zs ** prf) with (union' xs ys prf)
       union {ps = ps} {ps' = ps'} xs ys | (zs ** prf) | (rest ** prf') = (zs ** rest ** prf ** prf')
 
+
 -- [ EOF ]

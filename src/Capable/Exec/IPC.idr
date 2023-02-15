@@ -126,11 +126,11 @@ closeAll
 
 
 export
-sendOn : (Value store STR)
+sendOn : (str   : String)
       -> (chan  : IsVar    roles role)
       -> (chans : Channels roles)
                -> Capable ()
-sendOn (S str) idx chans
+sendOn str idx chans
   = case read idx chans of
       Open fh
         => either (error)

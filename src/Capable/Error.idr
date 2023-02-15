@@ -89,23 +89,21 @@ namespace Marshall
   public export
   data Error : Type where
 
-    Mismatch : (type : Base)
-            -> (prf  : Marshable type)
+    NotValidJSON : (str : String) -> Marshall.Error
+
+    Mismatch : (prf  : Marshall.Marshable type)
             -> (raw  : JSON)
                      -> Marshall.Error
 
     MissingElems : (left : Nat)
-                -> (type : Base)
-                -> (prf  : Marshable type)
+                -> (prf  : Marshall.Marshable type)
                         -> Marshall.Error
 
-    RedundantElems : (type : Base)
-                  -> (prf  : Marshable type)
+    RedundantElems : (prf  : Marshall.Marshable type)
                   -> (raw  : JSON)
                           -> Marshall.Error
 
-    MissingUples : (types : Vect n Base)
-                -> (prfs  : DVect Base Marshable n types)
+    MissingUples : (prfs  : DVect Base Marshable n types)
                          -> Marshall.Error
 
     RedundantUples : (raw : JSON)
@@ -115,8 +113,7 @@ namespace Marshall
                    -> (l : String)
                         -> Marshall.Error
 
-    MissingFields : (types : List  (String, Base))
-                 -> (prfs  : DList (String, Base) Marshable types)
+    MissingFields : (prfs  : DList (String, Base) Marshable types)
                           -> Marshall.Error
 
     RedundantFields : (raw : JSON)

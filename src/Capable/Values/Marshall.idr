@@ -16,7 +16,7 @@ import public Data.Singleton
 
 import public System.File
 
-import Language.JSON
+import public Language.JSON
 import Text.PrettyPrint.Prettyprinter
 
 import Toolkit.Data.DList
@@ -37,9 +37,9 @@ import Capable.Values
 throw : Marshall.Error -> Capable a
 throw = (throw . Marsh)
 
-mismatch : (ty : Base) -> (prf : Marshable ty) -> (raw : JSON)
+mismatch : (prf : Marshall.Marshable ty) -> (raw : JSON)
               -> Capable a
-mismatch ty prf raw = throw (Mismatch ty prf raw)
+mismatch prf raw = throw (Mismatch prf raw)
 
 mutual
 
@@ -114,10 +114,13 @@ mutual
         in JObject [(s,x)]
 
 export
-marshall : (prf : Marshable ty)
+marshall : (prf : Marshable (l,ty))
         -> (val : Value store ty)
                -> Capable JSON
-marshall prf val = pure (toJSON val prf)
+marshall (F l x) val
+  = do let x = toJSON val x
+       pure (JObject [(l,x)])
+
 
 toChar : String -> Maybe Char
 toChar str with (strM str)
@@ -137,19 +140,19 @@ toInt d
 
 
 isElem : (s      : String)
-      -> (xs     : List (String, Base))
-                -> Maybe (DPair Base (\x => Elem (s,x) xs))
+      -> (xs     : DList (String, Base) Marshable types)
+                -> Maybe (DPair Base (\x => Elem (s,x) types))
 isElem s []
   = Nothing
-isElem s ((s',x) :: xs)
+isElem s (F s' x :: xs)
   = case decEq s s' of
       No _ => do (x' ** prf) <- isElem s xs
                  pure (x' ** There prf)
-      Yes Refl => pure (x ** Here)
+      Yes Refl => pure (_ ** Here)
 
 mutual
 
-  arrayFromJSON : {ty  : Base}
+  arrayFromJSON : {ty  : _}
                -> (prf : Marshable ty)
                -> (x   : Nat)
                -> (nat : Nat)
@@ -159,10 +162,10 @@ mutual
     = pure ArrayEmpty
 
   arrayFromJSON prf n (S k) []
-    = throw (MissingElems (S k) _ (ARRAY prf n))
+    = throw (MissingElems (S k) (ARRAY prf n))
 
   arrayFromJSON prf n 0 (x :: xs)
-    = throw (RedundantElems _
+    = throw (RedundantElems
                             (ARRAY prf n)
                             (JArray (x::xs)))
 
@@ -172,8 +175,7 @@ mutual
          pure (ArrayCons x xs)
 
 
-  tupleFromJSON : {types : _}
-               -> (prfs  : DVect Base Marshable n types)
+  tupleFromJSON : (prfs  : DVect Base Marshable n types)
                -> (c     : Nat)
                -> (rs    : List (String, JSON))
                         -> Capable (DVect Base (Value Nil) n types)
@@ -181,7 +183,7 @@ mutual
     = pure Nil
 
   tupleFromJSON (p :: ps) _ []
-    = throw (MissingUples _ (p::ps))
+    = throw (MissingUples (p::ps))
 
   tupleFromJSON [] _ (x :: xs)
     = throw (RedundantUples (JObject $ x::xs))
@@ -193,8 +195,7 @@ mutual
                     xs <- tupleFromJSON ps (S c) xs
                     pure (x::xs)
 
-  fieldsFromJSON : {types : _}
-                -> (prfs  : DList (String, Base) Marshable types)
+  fieldsFromJSON : (prfs  : DList (String, Base) Marshable types)
                 -> (rs    : List (String, JSON))
                          -> Capable (DList (String, Base) (Field Nil) types)
   fieldsFromJSON [] []
@@ -204,7 +205,7 @@ mutual
     = throw (RedundantFields (JObject (x::xs)))
 
   fieldsFromJSON (p :: ps) []
-    = throw (MissingFields _ (p::ps))
+    = throw (MissingFields (p::ps))
 
 
   fieldsFromJSON (F lx p :: ps) ((ly,x) :: xs)
@@ -214,26 +215,25 @@ mutual
                        xs <- fieldsFromJSON ps xs
                        pure (F lx x::xs)
 
-  tagFromJSON : {types : _}
-             -> (prfs  : DList (String, Base) Marshable types)
+  tagFromJSON : (prfs  : DList (String, Base) Marshable types)
              -> (label : String)
              -> (raw   : JSON)
                       -> Capable (DPair Base (\ty => (Elem (label,ty) types, Value Nil ty)))
   tagFromJSON prfs label raw
-    = case Marshall.isElem label types of
+    = case Marshall.isElem label prfs of
         Nothing => throw (TagNot label)
         Just (type ** idx) => do let F label prf = lookup idx prfs
                                  x <- fromJSON prf raw
                                  pure (type ** (idx,x))
 
-  fromJSON : {ty  : Base}
+  fromJSON : {ty  : _}
           -> (prf : Marshable ty)
           -> (raw : JSON)
                  -> Capable (Value Nil ty)
 
   -- [ NOTE ] Chars are just single character strings...
   fromJSON CHAR (JString str)
-    = maybe (mismatch _ CHAR (JString str))
+    = maybe (mismatch CHAR (JString str))
             (pure . C)
             (toChar str)
 
@@ -241,7 +241,7 @@ mutual
     = pure (S str)
 
   fromJSON INT (JNumber n)
-    = maybe (mismatch _ INT (JNumber n))
+    = maybe (mismatch INT (JNumber n))
             (pure . I)
             (toInt n)
 
@@ -256,12 +256,12 @@ mutual
 
   fromJSON (TUPLE x) (JObject rs)
     = do (x::y::zs) <- tupleFromJSON x 1 rs
-           | _ => mismatch _ (TUPLE x) (JObject rs)
+           | _ => mismatch (TUPLE x) (JObject rs)
          pure (Tuple (x::y::zs))
 
   fromJSON (RECORD (p::ps)) (JObject rs)
     = do (f::fs) <- fieldsFromJSON (p::ps) rs
-           | _ => mismatch _ (RECORD (p::ps)) (JObject rs)
+           | _ => mismatch (RECORD (p::ps)) (JObject rs)
          pure (Record (f::fs))
 
   fromJSON (UNION fields) (JObject [(l,raw)])
@@ -269,15 +269,16 @@ mutual
          pure (Tag l idx val)
 
   fromJSON prf raw
-    = mismatch _ prf raw
+    = mismatch prf raw
 
 
 export
-unmarshall : {ty  : Base}
-          -> (prf : Marshable ty)
-          -> (raw : JSON)
+unmarshall : {ty  : _} -> (prf : Marshable ty)
+          -> (raw : String)
                  -> Capable (Value Nil ty)
-unmarshall
-  = fromJSON
+unmarshall prf str
+  = maybe (throw (NotValidJSON str))
+          (fromJSON prf)
+          (JSON.parse str)
 
 -- [ EOF ]

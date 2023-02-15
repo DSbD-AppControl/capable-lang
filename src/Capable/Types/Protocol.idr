@@ -51,6 +51,14 @@ data Branch : (0 contType : List Kind -> List Role -> Type)
      -> (cont : contType ks rs)
              -> Branch contType ks rs (l,b)
 
+namespace Branch
+  public export
+  data IsLabelled : (s : String)
+                 -> (b : Branch c ks rs (s,t))
+                      -> Type
+    where
+      HasLabel : IsLabelled s (B s b c)
+
 namespace Global
 
   public export

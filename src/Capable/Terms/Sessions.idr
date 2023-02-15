@@ -110,16 +110,20 @@ mutual
       End : Expr roles types globals stack_g stack_l                  type
          -> Expr roles types globals stack_g stack_l stack_r whom End type
 
-      Read : (from   : IsVar roles MkRole)
+      Read : {m,ms : _} -> (from   : IsVar roles MkRole)
+          -> {o    : Branch  Local stack_r roles m}
+          -> {os   : Local.Branches stack_r roles ms}
+          -> (prf    : Marshable (UNION (m:::ms)))
           -> (offers : Offers  roles types globals stack_g stack_l stack_r type whom (o::os))
           -> (onErr  : Expr roles types globals stack_g stack_l stack_r whom Crash type)
                     -> Expr roles types globals stack_g stack_l stack_r whom
                                (Choice BRANCH from (Val (UNION (m:::ms)))
-                                                        (UNION (n:: ns))
+                                                        prf
                                                         (o::os))
                                type
 
-      Send : (toWhom  : IsVar   roles MkRole)
+      Send : {mtype   : _}
+          -> (toWhom  : IsVar   roles MkRole)
           -> (payload : Expr    roles types globals stack_g stack_l mtype)
           -> (prf     : Marshable (l,mtype))
           -> (sel     : Select (B l mtype cont) prf (o::os) (g::gs))

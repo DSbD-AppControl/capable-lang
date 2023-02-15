@@ -148,6 +148,18 @@ handleWith when prog next
                             (when err)
              )
 
+export
+%inline
+tryCatchFinally : (this    : TheRug ea a)
+               -> (catch   : ea -> TheRug ea b)
+               -> (finally : a  -> TheRug ea b)
+                          -> TheRug ea b
+tryCatchFinally (MkTheRug this) catch finally
+  = MkTheRug (do res <- this
+                 either (rugRun . catch)
+                        (rugRun . finally)
+                        res)
+
 namespace Maybe
   export
   %inline

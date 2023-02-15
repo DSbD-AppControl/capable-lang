@@ -379,8 +379,58 @@ mutual
       = case decEq x fields Refl of
              Refl => Refl
 
-  
+
 namespace Marshall
+  export
+  mkPretty : Marshall.Marshable ty -> Doc ann
+  mkPretty CHAR = pretty "Char"
+  mkPretty STR  = pretty "String"
+  mkPretty INT  = pretty "Int"
+  mkPretty BOOL = pretty "Bool"
+  mkPretty UNIT = pretty "Unit"
+  mkPretty (ARRAY x n)
+    = group
+    $ brackets
+    $ hcat
+    [ mkPretty x
+    , semi
+    , pretty n
+    ]
+
+
+  mkPretty (TUPLE xs)
+    = tupled
+    $ assert_total
+    $ Base.toList
+    $ mapToVect mkPretty xs
+
+  mkPretty (RECORD fs)
+    = group
+    $ hsep
+    [ pretty "struct"
+    , fields
+    $ assert_total
+    $ mapToList (\(F k v) => group $ (hsep [pretty k, colon, mkPretty v]))
+                fs
+    ]
+
+  mkPretty (UNION fs)
+    = group
+    $ hsep
+    [ pretty "union"
+    , fields
+    $ assert_total
+    $ mapToList (\(F k v) => group $ (hsep [pretty k, colon, mkPretty v])) fs
+    ]
+
+  export
+  Pretty (Marshall.Marshable ty) where
+    pretty = mkPretty
+
+  export
+  Show (Marshall.Marshable ty) where
+    show = (show . annotate () . pretty)
+
   prettyNot : Marshall.MarshableNot ty -> Doc ann
   prettyNot REF
     = pretty "Is a Reference."

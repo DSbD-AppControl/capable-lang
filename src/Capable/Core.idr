@@ -18,7 +18,7 @@ import        Toolkit.System
 
 import public Capable.Bootstrap
 import public Capable.Error
-import        Capable.Error.Pretty
+import public Capable.Error.Pretty
 
 %default total
 

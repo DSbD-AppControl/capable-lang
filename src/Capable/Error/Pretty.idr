@@ -14,8 +14,11 @@ import Language.JSON
 
 import Toolkit.Data.Location
 import Toolkit.System
+import Toolkit.Data.DVect
 import Toolkit.Text.Lexer.Run
 import Toolkit.Text.Parser.Run
+
+import Text.PrettyPrint.Prettyprinter
 
 import Text.Lexer
 import Capable.Types
@@ -172,17 +175,17 @@ Show (Running.Error) where
 
 Show (Marshall.Error) where
 
-  show (Mismatch type prf raw)
-    = "Error unmarshalling:\n\tExpected:\{show type}\n\tGiven:\{show raw}"
+  show (Mismatch prf raw)
+    = "Error unmarshalling:\n\tExpected:\{show prf}\n\tGiven:\{show raw}"
 
-  show (RedundantElems type prf raw)
+  show (RedundantElems prf raw)
     = "More array elements than expected:\n\t\{show raw}"
 
-  show (MissingElems n type prf)
+  show (MissingElems n prf)
     = "More array elements expected:\n\t\{show n} are missing"
 
-  show (MissingUples types _)
-    = "Missing elements from a tuple:\n\t\{show types}"
+  show (MissingUples prf)
+    = "Missing elements from a tuple:\n\t\{show $ mapToVect show prf}"
 
   show (RedundantUples raw)
     = "More uples than expected:\n\t\{show raw}"
@@ -190,8 +193,9 @@ Show (Marshall.Error) where
   show (IllnumberedUple n l)
     = "Tuple uple was wrongly numbered:\n\tExpected: \{show n}\n\tGiven: \{show l}"
 
-  show (MissingFields types prfs)
-    = "Fields missing:\n\t\{show types}"
+  show (MissingFields prfs)
+    = let fs = mapToList (\(F k v) =>  "\{k} : \{show v}") prfs
+      in "Fields missing:\n\t\{show fs}"
 
   show (RedundantFields raw)
     = "Fields missing:\n\t\{show raw}"
@@ -202,6 +206,8 @@ Show (Marshall.Error) where
   show (TagNot l)
     = "Not a valid tag: \{show l}"
 
+  show (NotValidJSON str)
+    = "Not a valid JSON document: \{show str}"
 
 export
 Show (Capable.Error) where

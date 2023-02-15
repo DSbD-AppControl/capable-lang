@@ -39,6 +39,7 @@ import Capable.Exec.Common
 import Capable.Exec.Results
 import Capable.Exec.Heap
 import Capable.Exec.IPC
+import Capable.Exec.Offers
 
 
 %default total
@@ -430,7 +431,10 @@ mutual
                        v
                        (trans p1 p2))
 
-    eval env heap (Run s argsc argsv) = panic "Not Yet Implemented"
+    eval env heap (Run s argsc argsv)
+      = ?rhs
+
+      -- = panic "Not Yet Implemented"
 
   namespace Session
     public export
@@ -439,13 +443,13 @@ mutual
         -> {ret   : Ty.Base}
         -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
+        -> (cs    : Channels roles)
         -> (func  : Session roles types globals stack_g (SESH w l as ret))
         -> (vals  : DList Ty.Base (Value store) as)
-                 -> Capable (Expr.Result store ret)
-    eval env heap func vals = panic "Not Yet Implemented"
+                 -> Capable (Session.Exprs.Result roles store ret)
+    eval env_g heap cs (Sesh body) vals
+      = Session.Exprs.eval (MkEnv env_g vals) heap Nil cs body
 
---  eval env_g heap (Sesh body) args
---    = ?aas -- eval (MkEnv env_g args) heap body
 
     namespace Exprs
 
@@ -503,37 +507,69 @@ mutual
       -- [ NOTE ] The end of a *failed* communication session, must return something...
       eval env heap rvars cs (Crash x)
         = do Value h v prf0 <- Exprs.eval env heap x
+             cs <- closeAll cs
              pure (Value h cs v prf0)
 
-      eval env heap rvars cs (Read from offers onErr) = ?eval_rhs_6
+      -- [ NOTE ]
+      --
+      -- Try to:
+      --
+      -- 1. Read from the wire on the prescribed channel
+      -- 2. Perform Type-directed unmarshalling
+      --
+      -- If this fails then crash
+      -- Else index into offers and continue
+      eval env heap rvars cs (Read from prf offers onErr)
+          = tryCatchFinally
+              (do str <- recvOn from cs
+                  unmarshall prf str)
+
+              (\err => do printLn err
+                          printLn "Crashing"
+                          Value h cs v p <- Exprs.eval env
+                                                 heap
+                                                 rvars
+                                                 cs
+                                                 onErr
+                          pure (Value h cs v p))
+              (\(Tag s idx val)
+                  => do let (_ ** O _ body) = getIndex idx offers
+                        let e' = extend_l (strengthen heap val Empty) env
+                        Value h cs v p <- Exprs.eval e'
+                                                 heap
+                                                 rvars
+                                                 cs
+                                                 body
+                        pure (Value h cs v p))
+
+
+      -- [ NOTE ]
+      -- Marshalling is a pure operation.
+      --
+      -- 1. marshall the data
+      -- 2. Get the channel.
+      -- 3. ship
+      -- 4. if crash then continue else continue
+      --
       eval env heap rvars cs (Send toWhom payload marsh idx rest onErr)
-        = ?eval_rhs_7
-
-{-
-
-Send is
-  1. Get the selection (done by label)
-  2. marshall the data
-  3. ship
-  4. if crash then continue else continue
-
-Recv is
-  1. Read from the wire.
-  2. typee-guided unmarhsalling
-  3. if ill formed then crash with malformed data
-     elif wire crash then continue on crash
-     else data is good
-  4. fetch index into offers
-  5. index offers
-  6. continue
-
--}
---    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
---                   pure (_ ** IsGlobal idx))
---
---               (\err => do (ty ** idx) <- Common.lookup (lambda env) ref
---                           pure (_ ** IsLocal idx))
-
+        = do Value h v prf <- Exprs.eval env heap payload
+             msg <- marshall marsh v
+             tryCatchFinally
+               (sendOn (show msg) toWhom cs)
+               (\err => do printLn err
+                           printLn "Crashing"
+                           Value h cs v p <- Exprs.eval (weaken prf env)
+                                                  h
+                                                  rvars
+                                                  cs
+                                                  onErr
+                           pure (Value h cs v (trans prf p)))
+               (\val => do Value h cs v p <- Exprs.eval (weaken prf env)
+                                                        h
+                                                        rvars
+                                                        cs
+                                                        rest
+                           pure (Value h cs v (trans prf p)))
 
   namespace Func
     ||| Let's deal with functions separatly.

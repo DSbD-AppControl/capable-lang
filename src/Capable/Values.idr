@@ -366,6 +366,14 @@ mutual
     weaken prf (elem :: rest)
       = weaken prf elem :: Env.weaken prf rest
 
+public export
+strengthen : (heap : DList Ty.Base (Value xs) stack)
+          -> (val  : Value Nil ty)
+          -> (prf  : Subset Nil xs)
+                  -> Value xs  ty
+strengthen heap val prf
+  = weaken prf val
+
 ||| Easier to write some type-level functions.
 public export
 Val : Ty.Base -> List Ty.Base -> Type
