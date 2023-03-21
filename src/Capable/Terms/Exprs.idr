@@ -35,64 +35,6 @@ index (y :: xs) (There x) = snd y
 
 
 mutual
-  -- @TODO make context dependent
-  public export
-  data Assign : (roles   : List Ty.Role)
-             -> (types   : List Ty.Base)
-             -> (globals : List Ty.Session)
-             -> (stack_g : List Ty.Method)
-             -> (stack_l : List Ty.Base)
-             -> (proto   : Local ks rs)
-             -> (whom    : Ty.Role)
-                        -> Type
-    where
-      IsAssignedNot : Assign roles types globals stack_g stack_l l MkRole
-      IsAssigned : (whom : IsVar             roles MkRole)
-                -> (prf  : Protocol.UsesRole roles l whom)
-                -> (what : Expr              roles types globals stack_g stack_l STR)
-                        -> Assign            roles types globals stack_g stack_l l MkRole
-
-
-  ||| The design of assigns is predicated on ths idea that our role environment is nameless and that, during type-checking, only valid assignements are created.
-  public export
-  Assigns : (roles   : List Ty.Role)
-         -> (types   : List Ty.Base)
-         -> (globals : List Ty.Session)
-         -> (stack_g : List Ty.Method)
-         -> (stack_l : List Ty.Base)
-         -> (proto   : Local ks roles)
-                    -> Type
-  Assigns rs ts gs sg sl proto
-    = DList Ty.Role
-            (Assign rs ts gs sg sl proto) rs
-
-  public export
-  data Case : (roles   : List Ty.Role)
-           -> (types   : List Ty.Base)
-           -> (globals : List Ty.Session)
-           -> (stack_g : List Ty.Method)
-           -> (stack_l : List Ty.Base)
-           -> (ret     : Ty.Base)
-           -> (spec    : (String, Ty.Base))
-                      -> Type
-    where
-      C : (s    : String)
-       -> (body : Expr roles types globals stack_g (p::stack_l) return)
-               -> Case roles types globals stack_g     stack_l  return (s,p)
-
-  public export
-  data Field : (roles   : List Ty.Role)
-            -> (types   : List Ty.Base)
-            -> (globals : List Ty.Session)
-            -> (stack_g : List Ty.Method)
-            -> (stack_l : List Ty.Base)
-            -> (spec    : (String, Ty.Base))
-                       -> Type
-    where
-      F : (s : String)
-       -> (v : Expr  roles types globals stack_g stack_l p)
-            -> Field roles types globals stack_g stack_l (s, p)
-
   public export
   data Expr : (roles   : List Ty.Role)
            -> (types   : List Ty.Base)
@@ -254,8 +196,62 @@ mutual
       Run : {as        : List Ty.Base}
          -> {b         : Ty.Base}
          -> (f         : IsVar stack_g (SESH whom prot as b))
-         -> (args_comm : Assigns roles types globals stack_g stack_l prot)
+         -> (args_comm : Assignments rs roles types globals stack_g stack_l prot princs)
+         -> (prf       : Protocol.HasRoles rs prot princs)
          -- @TODO add context args...
          -> (args_comp : DList Ty.Base (Expr roles types globals stack_g stack_l) as)
                       -> Expr roles types globals stack_g stack_l                        b
+
+
+  public export
+  data Case : (roles   : List Ty.Role)
+           -> (types   : List Ty.Base)
+           -> (globals : List Ty.Session)
+           -> (stack_g : List Ty.Method)
+           -> (stack_l : List Ty.Base)
+           -> (ret     : Ty.Base)
+           -> (spec    : (String, Ty.Base))
+                      -> Type
+    where
+      C : (s    : String)
+       -> (body : Expr roles types globals stack_g (p::stack_l) return)
+               -> Case roles types globals stack_g     stack_l  return (s,p)
+
+  public export
+  data Field : (roles   : List Ty.Role)
+            -> (types   : List Ty.Base)
+            -> (globals : List Ty.Session)
+            -> (stack_g : List Ty.Method)
+            -> (stack_l : List Ty.Base)
+            -> (spec    : (String, Ty.Base))
+                       -> Type
+    where
+      F : (s : String)
+       -> (v : Expr  roles types globals stack_g stack_l p)
+            -> Field roles types globals stack_g stack_l (s, p)
+
+
+  ||| A custom association list to collect roles and string expressions.
+  |||
+  ||| If roles where not De Bruijn indexed we could have used _just_
+  ||| an instances of `DList`.
+  public export
+  data Assignments
+     : (roles,rs : List Ty.Role)
+    -> (types    : List Ty.Base)
+    -> (globals  : List Ty.Session)
+    -> (stack_g  : List Ty.Method)
+    -> (stack_l  : List Ty.Base)
+    -> (proto    : Local ks roles)
+    -> (ps       : Roles roles ss)
+                -> Type
+
+    where
+      Empty : Assignments roles rs t g sg sl p Nil
+
+      KV : (whom : IsVar roles MkRole)
+        -> (prf  : Protocol.UsesRole roles p whom)
+        -> (val  : Expr              rs t g sg sl STR)
+        -> (kvs  : Assignments roles rs t g sg sl p rest)
+                -> Assignments roles rs t g sg sl p (whom::rest)
 -- [ EOF ]

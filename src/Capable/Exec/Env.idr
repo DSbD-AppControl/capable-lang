@@ -48,68 +48,90 @@ extend (elem :: rest) y = elem :: extend rest y
 |||
 ||| We divide into a local and global stack.
 public export
-data Env : (stack_g : List Ty.Method)
+data Env : (roles   : List Ty.Role)
+        -> (stack_g : List Ty.Method)
         -> (stack_l : List Ty.Base)
         -> (store   : List Ty.Base)
                    -> Type
   where
-    MkEnv : (env_g : DList Ty.Method (Closure)     stack_g)
+    MkEnv : (roles : DList    Role   (Singleton)   rs)
+         -> (env_g : DList Ty.Method (Closure)     stack_g)
          -> (env_l : DList Ty.Base   (Value store) stack_l)
-                  -> Env stack_g stack_l store
+                  -> Env rs stack_g stack_l store
 
 export
-empty : Env Nil Nil Nil
-empty = MkEnv Nil Nil
+empty : Env Nil Nil Nil Nil
+empty = MkEnv Nil Nil Nil
+
+export
+setRoles : DList Role Singleton roles
+        -> Env rs    g l h
+        -> Env roles g l h
+setRoles x (MkEnv y env_g env_l)
+  = MkEnv x env_g env_l
+
+export
+getRoles : Env roles g l h -> DList Role Singleton roles
+getRoles (MkEnv x _ _) = x
+
+||| Extend the global stack with a value.
+export
+extend_r : (role : Role)
+        -> (env  : Env        rs  g l store)
+                -> Env (role::rs) g l store
+extend_r val (MkEnv rs env_g env_l)
+  = MkEnv (Val val::rs) env_g env_l
 
 
 ||| Extend the global stack with a value.
 export
 extend_g : {type : _}
         -> (val : Closure type)
-        -> (env : Env           g  l store)
-               -> Env    (type::g) l store
-extend_g val (MkEnv env_g env_l)
-  = MkEnv (val :: env_g) env_l
+        -> (env : Env  rs         g  l store)
+               -> Env  rs  (type::g) l store
+extend_g val (MkEnv rs env_g env_l)
+  = MkEnv rs (val :: env_g) env_l
 
 ||| Extend the local stack with a value.
 export
 extend_l : {type : _}
         -> (val : Value store type)
-        -> (env : Env g        l  store)
-               -> Env g (type::l) store
-extend_l val (MkEnv env_g env_l)
-  = MkEnv env_g (val :: env_l)
+        -> (env : Env rs g        l  store)
+               -> Env rs g (type::l) store
+extend_l val (MkEnv rs env_g env_l)
+  = MkEnv rs env_g (val :: env_l)
 
 export
 extend_ls : (val : DVect Ty.Base (Value store) n ts)
-         -> (env : Env g                     l  store)
-                -> Env g (Extra.toList ts ++ l) store
+         -> (env : Env rs g                     l  store)
+                -> Env rs g (Extra.toList ts ++ l) store
 extend_ls Nil     env = env
 extend_ls (x::xs) env = extend_l x (extend_ls xs env)
 
 ||| Lookup variable in the local context
 export
 lookup_l : (loc : IsVar l type)
-        -> (env : Env g l store)
+        -> (env : Env r g l store)
                -> Value store type
-lookup_l loc (MkEnv env_g env_l)
+lookup_l loc (MkEnv rs env_g env_l)
   = read loc env_l
 
 ||| Lookup variable in the local context
 export
 lookup_g : (loc : IsVar g type)
-        -> (env : Env g l store)
+        -> (env : Env r g l store)
                -> Closure type
-lookup_g loc (MkEnv env_g env_l)
+lookup_g loc (MkEnv rs env_g env_l)
   = read loc env_g
 
 ||| Weaken...
 export
 weaken : Subset old new
-      -> Env.Env g l old
-      -> Env.Env g l new
-weaken prf (MkEnv env_g env_l)
-  = MkEnv env_g
+      -> Env.Env r g l old
+      -> Env.Env r g l new
+weaken prf (MkEnv rs env_g env_l)
+  = MkEnv rs
+          env_g
           (Env.weaken prf env_l)
 
 namespace Ty
@@ -151,25 +173,17 @@ namespace Heap
 namespace Assigns
 
   public export
-  data Assign : (roles : List Ty.Role)
-             -> (store : List Ty.Base)
-             -> (role  :      Ty.Role)
-                      -> Type
+  data Assignments
+       : (roles : List Ty.Role)
+      -> (store : List Ty.Base)
+      -> (prins : Roles roles ss)
+               -> Type
     where
-      AssignedNot : Assign roles store MkRole
-      Assigned : (prf : IsVar roles MkRole)
-              -> (str : Value store STR)
-                     -> Assign roles store MkRole
-
-  public export
-  Assignments : (roles : List Ty.Role)
-             -> (store : List Ty.Base)
-                      -> Type
-  Assignments roles store
-    = DList Ty.Role
-            (Assign roles store)
-            roles
-
+      Empty : Assignments roles store Nil
+      KV : (loc : IsVar roles MkRole)
+        -> (val : Value store STR)
+        -> (rest : Assignments roles store ps)
+                -> Assignments roles store (loc :: ps)
 
 ||| Recursion variables are just closures...
 |||

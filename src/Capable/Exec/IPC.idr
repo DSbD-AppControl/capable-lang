@@ -32,25 +32,6 @@ import Capable.Exec.Common
 
 %default total
 
-traverse : (f  : forall a . e a -> Capable (e a))
-        -> (xs : DList ty e ts)
-              -> Capable (DList ty e ts)
-traverse f []
-  = pure []
-traverse f (elem :: rest)
-  = do x <- f elem
-       xs <- traverse f rest
-       pure (x::xs)
-
-traverse_ : (f  : forall a . e a -> Capable ())
-         -> (xs : DList ty e ts)
-               -> Capable ()
-traverse_ f []
-  = pure ()
-traverse_ f (elem :: rest)
-  = do f elem
-       traverse_ f rest
-
 ||| Representing a set of typed channels involved within a MPST
 ||| communication context.
 |||
@@ -63,39 +44,47 @@ traverse_ f (elem :: rest)
 |||   + We would need a _thinning_ of the role context based on if a role is involved in the communication.
 |||   + roles are, however, nameless against the entire role context.
 |||   + So our thinning would need to be rather magical.
-namespace Channel
+export
+data Channel : (role : Ty.Role)
+                    -> Type
+  where
 
+    UsedNot : Channel role
 
-  public export
-  data Channel : (role : Ty.Role)
-                      -> Type
-    where
-
-      UsedNot : Channel role
-
-      Closed : Channel role
-      Waiting : (str : String) -> Channel role
-      Open : (h : File)
-               -> Channel role
+    Closed : Channel role
+    Waiting : (str : String) -> Channel role
+    Open : (h : File)
+             -> Channel role
 
 
 
-  public export
-  Channels : List Ty.Role -> Type
-  Channels = DList Ty.Role Channel
+public export
+Channels : List Ty.Role -> Type
+Channels = DList Ty.Role Channel
 
+||| By default creates a list of unused channels.
+fromEnv : Env rs -> Channels rs
+fromEnv = map (const UsedNot)
 
-process : Assign roles store role
-       -> Channel            role
-process AssignedNot
-  = UsedNot
-process (Assigned prf (S str))
-  = Waiting str
+init1 : (loc : IsVar roles MkRole)
+     -> (val : Value store STR)
+     -> (cs  : Channels roles)
+            -> Channels roles
+init1 loc (S str)
+  = update loc (Waiting str)
+
+initDO : Assignments roles store ps
+      -> Channels roles
+      -> Channels roles
+initDO Empty y = y
+initDO (KV loc val rest) y
+  = initDO rest (init1 loc val y)
 
 export
-populate : Assignments roles store
-        -> Channels    roles
-populate = map process
+init : Env roles
+    -> Assignments       roles store ps
+    -> Capable (Channels roles)
+init rs as = pure $ initDO as (fromEnv rs)
 
 start : Channel role -> Capable (Channel role)
 start (Waiting str)

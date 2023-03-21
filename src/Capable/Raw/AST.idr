@@ -25,6 +25,8 @@ namespace Kind
             | FIELDV
             | CASE
             | EXPR
+            | EXPRSESH
+            | OFFER
             | FUNC
             | ARG
             | ARGS
@@ -235,6 +237,22 @@ namespace Shape
 
     -- @TODO add sesh expressions
 
+    -- ## Session Exprs
+
+    SEQ_SESH : BIN Shape EXPRSESH EXPR EXPRSESH
+    HOLE_SESH : String -> NULL Shape EXPRSESH
+    VAR_SESH : String -> NULL Shape EXPRSESH
+    LETTY_SESH : Stored -> String -> TRI Shape EXPRSESH TYPE EXPR EXPRSESH
+    LET_SESH   : Stored -> String -> BIN Shape EXPRSESH      EXPR EXPRSESH
+    LETREC_SESH : String -> UN Shape EXPRSESH EXPRSESH
+
+    CALL_SESH : String -> NULL SHape EXPRSESH
+    CRASH_SESH : UN Shape EXPRSESH EXPR
+    END_SESH : UN Shape EXPRSESH EXPR
+
+    OFFER : String -> String -> UN Shape CASE EXPR
+    READ : String -> Shape EXPRSESH (S (S n)) (EXPR :: replicate (S n) OFFER)
+    SEND : String -> TRI Shape EXPRSESH EXPR EXPRSESH EXPRSESH
     -- ## Programs
 
     MAIN : UN Shape PROG FUNC

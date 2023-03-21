@@ -4,9 +4,13 @@ import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 import Toolkit.Data.DList.All
 
+import public Toolkit.DeBruijn.Context
+import public Toolkit.DeBruijn.Context.Item
+import public Toolkit.DeBruijn.Renaming
+
 import public Decidable.Equality
 import public Toolkit.Decidable.Equality.Indexed
-import public Toolkit.DeBruijn.Renaming
+import public Toolkit.Decidable.Informative
 import public Toolkit.Data.List.AtIndex
 import Text.PrettyPrint.Prettyprinter
 
@@ -58,10 +62,26 @@ decidable _ y (Yes prf)
 decidable x _ (No _)
   = x
 
+
 export
 dec2Maybe : Dec a -> Maybe a
 dec2Maybe (Yes prf) = Just prf
 dec2Maybe (No  _)   = Nothing
+
+export
+decInfo2Maybe : DecInfo e a -> Maybe a
+decInfo2Maybe (Yes prf) = Just prf
+decInfo2Maybe (No _ _)   = Nothing
+
+export
+decidableI : Lazy (e -> b)
+          -> Lazy (a -> b)
+          -> DecInfo e a
+          -> b
+decidableI _ f (Yes prf)
+  = f prf
+decidableI f _ (No prf _)
+  = f prf
 
 
 namespace List
@@ -141,6 +161,14 @@ namespace DList
   union {ps} {ps'} xs ys with (Bootstrap.List.union ps ps')
     union {ps = ps} {ps' = ps'} xs ys | (zs ** prf) with (union' xs ys prf)
       union {ps = ps} {ps' = ps'} xs ys | (zs ** prf) | (rest ** prf') = (zs ** rest ** prf ** prf')
+
+
+namespace Context
+  export
+  keys : Context ty xs
+      -> List String
+  keys [] = []
+  keys ((I name x) :: rest) = name :: keys rest
 
 
 -- [ EOF ]

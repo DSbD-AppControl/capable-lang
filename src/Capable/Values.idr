@@ -149,10 +149,13 @@ data Closure : Ty.Method
   where
     ClosFunc : (scope : Func roles types globals stack_g (FUNC args ret))
             -> (env_g : DList Ty.Method (Closure) stack_g)
+            -> (rs    : DList    Role   (Singleton) roles)
                      -> Closure (FUNC args ret)
 
-    ClosSesh : (scope : Session roles types globals stack_g (SESH whom l args ret))
-            -> (env_g : DList Ty.Method (Closure) stack_g)
+    ClosSesh : {l     : Local Nil roles}
+            -> (scope : Session roles types globals stack_g (SESH whom l args ret))
+            -> (env_g : DList Ty.Method (Closure)   stack_g)
+            -> (rs    : DList    Role   (Singleton) roles)
                      -> Closure (SESH whom l args ret)
 
 mutual
@@ -205,10 +208,10 @@ mutual
 
 export
 Pretty (Closure type) where
-  pretty (ClosFunc scope env)
+  pretty (ClosFunc scope env rs)
     = parens (pretty "Function Closure...")
 
-  pretty (ClosSesh scope env)
+  pretty (ClosSesh scope env rs)
     = parens (pretty "Session Closure...")
 
 export

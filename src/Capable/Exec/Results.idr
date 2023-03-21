@@ -117,5 +117,17 @@ namespace Session
            -> (prf   : Subset old new)
                     -> Result roles old type
 
+namespace Assigns
+  public export
+  data Result : (store : List Ty.Base)
+
+             -> (roles : List Ty.Role)
+             -> (prin  : Roles roles ss)
+             -> Type where
+    Value : {new   : List Ty.Base}
+         -> (store : Heap new)
+         -> (as    : Assignments roles new ps)
+         -> (prf   : Subset old new)
+                  -> Result old roles ps
 
 -- [ EOF ]

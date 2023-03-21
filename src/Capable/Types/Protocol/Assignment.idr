@@ -35,12 +35,6 @@ import Capable.Types.Protocol.Projection
 
 %default total
 
-public export
-Roles : (rs : List Role) -> (ss : List Role) -> Type
-Roles rs
-  = DList Role (IsVar rs)
-
-
 namespace HasRoles
   mutual
     namespace Protocol

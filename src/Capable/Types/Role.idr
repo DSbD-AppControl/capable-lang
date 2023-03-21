@@ -57,4 +57,12 @@ involved p s r contra with (Index.decEq p s)
     involved p s p contra | (No f) | (Yes (Same Refl Refl)) = (Recvs Refl)
     involved p s r contra | (No f) | (No g) = (Skips f g)
 
+
+
+public export
+Roles : (rs : List Role) -> (ss : List Role) -> Type
+Roles rs
+  = DList Role (IsVar rs)
+
+
 -- [ EOF ]
