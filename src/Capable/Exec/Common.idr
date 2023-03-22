@@ -20,7 +20,7 @@ import Toolkit.Data.DVect
 
 import Capable.Core
 import Capable.Terms
-import Capable.Env
+import Capable.Exec.Env
 import Capable.Values
 import Capable.Values.Marshall
 
