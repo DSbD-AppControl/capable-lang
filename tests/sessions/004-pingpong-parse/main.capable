@@ -72,7 +72,7 @@ main()
 
   local val = 2;
 
-  local res : MaybeInt = run echoClient(t) with [Server as "python echoServer.py" ];
+  local res : MaybeInt = run echoClient(val) with [Server as "python echoServer.py" ];
 
   match res
   {

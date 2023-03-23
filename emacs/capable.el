@@ -19,6 +19,7 @@
                        "session"
                        "protocol"
                        "when"
+                       "run" "with" "as" "recv" "send"
                        "if"
                        "else"
                        "call"
