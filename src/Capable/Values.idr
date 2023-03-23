@@ -152,11 +152,12 @@ data Closure : Ty.Method
             -> (rs    : DList    Role   (Singleton) roles)
                      -> Closure (FUNC args ret)
 
-    ClosSesh : {l     : Local Nil roles}
-            -> (scope : Session roles types globals stack_g (SESH whom l args ret))
+    ClosSesh : {ctzt  : _}
+            -> {l     : Local Nil roles}
+            -> (scope : Session roles types globals stack_g (SESH ctzt whom l args ret))
             -> (env_g : DList Ty.Method (Closure)   stack_g)
             -> (rs    : DList    Role   (Singleton) roles)
-                     -> Closure (SESH whom l args ret)
+                     -> Closure (SESH ctzt whom l args ret)
 
 mutual
   public export

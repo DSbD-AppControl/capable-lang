@@ -66,7 +66,7 @@ Channels = DList Ty.Role Channel
 fromEnv : Env rs -> Channels rs
 fromEnv = map (const UsedNot)
 
-init1 : (loc : IsVar roles MkRole)
+init1 : (loc : IsVar roles x)
      -> (val : Value store STR)
      -> (cs  : Channels roles)
             -> Channels roles

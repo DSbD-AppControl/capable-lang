@@ -18,6 +18,7 @@ import Capable.Raw.Protocols
 import Capable.Raw.Types
 import Capable.Raw.Exprs
 import Capable.Raw.Funcs
+import Capable.Raw.Sessions
 
 %default total
 
@@ -27,12 +28,14 @@ CalcDef TYPE = Ty
 CalcDef FUNC = Fun
 CalcDef ROLE = Role
 CalcDef PROT = Protocol
+CalcDef SESH = Session
 
 toDef : (x : DefKind k) -> (p : AST k) -> CalcDef x p
 toDef TYPE = toType
 toDef FUNC = toFun
 toDef ROLE = toRole
 toDef PROT = toProtocol
+toDef SESH = toSession
 
 public export
 data Prog : (p : PROG) -> Type

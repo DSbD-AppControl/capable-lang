@@ -14,6 +14,7 @@ import Capable.Types
 import Capable.Raw.AST
 
 import Capable.Parser.Types
+import Capable.Parser.Roles
 
 import Debug.Trace
 
@@ -248,6 +249,36 @@ mutual
          e <- Toolkit.location
          pure (un (TAG (get t)) (newFC s e) l)
 
+  run  : Rule EXPR
+  run
+    = do s <- Toolkit.location
+         keyword "run"
+         commit
+         l <- ref
+         a <- args
+         keyword "with"
+         vs <- vals
+         e <- Toolkit.location
+         pure (Branch (RUN (get l)) (newFC s e) (Branch VALS (newFC s e) (head vs::DVect.fromList (tail vs))
+                                                ::fromList a))
+
+    where args : Rule (List EXPR)
+          args =  symbol "(" *> symbol ")" *> pure Nil
+              <|> do as <- symbol "(" *> sepBy1 (symbol ",") expr <* symbol ")"
+                     pure (forget as)
+
+          val : Rule (AST VAL)
+          val
+            = do s <- Toolkit.location
+                 r <- role
+                 keyword "as"
+                 ex <- expr
+                 e <- Toolkit.location
+                 pure (bin VAL (newFC s e) r ex)
+
+          vals : Rule (List1 (AST VAL))
+          vals = symbol "[" *> some val <* symbol "]"
+
   call : Rule EXPR
   call
     = do s <- Toolkit.location
@@ -471,6 +502,7 @@ mutual
       <|> var
       <|> hole
       <|> constants
+      <|> run
       <|> split
       <|> let_ "local" STACK
       <|> let_ "var"   HEAP

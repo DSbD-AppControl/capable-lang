@@ -65,6 +65,12 @@ namespace Typing
     ArrayAppend : Ty.Base -> Ty.Base -> Typing.Error
     ArgsExpected : List Ty.Base -> Typing.Error
     RedundantArgs : Nat -> Typing.Error
+
+    RolesExpected : List String -> Typing.Error
+    RedundantRoles : List String -> Typing.Error
+
+
+    SessionExpected : Ty.Method -> Typing.Error
     FunctionExpected : Ty.Method -> Typing.Error
     RecordExpected : Ty.Base -> Typing.Error
     UnionExpected : Ty.Base -> Typing.Error

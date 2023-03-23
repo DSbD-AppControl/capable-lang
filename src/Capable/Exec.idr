@@ -463,7 +463,7 @@ mutual
     assigns env heap Empty
       = pure (Value heap Empty (noChange _))
 
-    assigns env heap (KV whom _ val kvs)
+    assigns env heap (KV whom val kvs)
       = do Value heap v prf <- eval env heap val
            Value heap kvs prf1 <- assigns (weaken prf env) heap kvs
 
@@ -480,7 +480,7 @@ mutual
         -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
         -> (cs    : Channels roles)
-        -> (func  : Session roles types globals stack_g (SESH w l as ret))
+        -> (func  : Session roles types globals stack_g (SESH ctzt w l as ret))
         -> (vals  : DList Ty.Base (Value store) as)
                  -> Capable (Session.Exprs.Result roles store ret)
     eval rs env_g heap cs (Sesh body) vals
@@ -498,6 +498,10 @@ mutual
           -> (chans : Channels roles)
           -> (sesh  : Sessions.Expr roles types globals stack_g stack_l stack_r whom l ret)
                    -> Capable (Session.Exprs.Result roles store ret)
+
+      eval env heap rvars cs (Hole s)
+        = panic "Encountered a hole: \{show s}"
+
 
       -- [ NOTE ] Compute the (unsafe) expression and then carry on...
       eval env heap rvars cs (Seq x y)

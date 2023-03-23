@@ -44,14 +44,18 @@ namespace HasRoles
                    -> (os : Roles rs ss)
                          -> Type
         where
-          Crash : HasRoles rs lp os
-          End   : HasRoles rs lp os
-          Call  : HasRoles rs lp os
+          Crash : HasRoles rs lp Nil
+          End   : HasRoles rs lp Nil
+          Call  : HasRoles rs lp Nil
           Rec   : HasRoles rs lp os
-               -> HasRoles rs lp os
+               -> HasRoles rs (Rec lp) os
           Choice : Branches.HasRoles rs bs os
                 -> Union [whom] os os' prf
                 -> Protocol.HasRoles rs (Choice kind whom ty prfm bs) os'
+
+      public export
+      data Result : (rs : List Role) -> (p : Local ks rs) -> Type where
+        R : {ss : _} -> (os : Roles rs ss) -> Protocol.HasRoles rs lp os -> Result rs lp
 
     namespace Branch
       public export
@@ -62,6 +66,10 @@ namespace HasRoles
         where
           B : Protocol.HasRoles rs        l  os
            ->   Branch.HasRoles rs (B m t l) os
+
+      public export
+      data Result : (rs : List Role) -> (p : Branch Local ks rs l) -> Type where
+        R : {ss : _} -> (os : Roles rs ss) -> Branch.HasRoles rs lp os -> Result rs lp
 
     namespace Branches
       public export
@@ -77,6 +85,44 @@ namespace HasRoles
              -> Union os os' os'' prf
              -> Branches.HasRoles rs (b::bs) os''
 
+      public export
+      data Result : (rs : List Role) -> (p : Local.Branches ks rs l) -> Type where
+        R : {ss : _} -> (os : Roles rs ss) -> Branches.HasRoles rs lp os -> Result rs lp
+
+namespace HasRoles
+  mutual
+    namespace Protocol
+      export
+      hasRoles : (p : Local ks rs) -> Protocol.Result rs p
+      hasRoles Crash = R [] Crash
+      hasRoles End = R [] End
+      hasRoles (Call x) = R [] Call
+      hasRoles (Rec x)
+        = case hasRoles x of
+            R _ r => R _ (Rec r)
+
+      hasRoles (Choice kind whom type prfM choices)
+        = case hasRoles choices of
+            R as res => case DList.union [whom] as of
+                          (ps ** zs ** prfTy ** prf) => R _ (Choice res prf)
+
+    namespace Branch
+      export
+      hasRoles : (p : Branch Local ks rs l) -> Branch.Result rs p
+      hasRoles (B str b cont)
+        = case hasRoles cont of
+            R _ r => R _ (B r)
+
+    namespace Branches
+      export
+      hasRoles : (p : Local.Branches ks rs l) -> Branches.Result rs p
+      hasRoles []
+        = R _ []
+      hasRoles (elem :: rest)
+        = case hasRoles elem of
+            R a r => case hasRoles rest of
+                       R bs rs => case DList.union a bs of
+                                   (ps ** zs ** prfTy ** prf) => R _ (Add r rs prf)
 
 namespace UsesRole
   mutual

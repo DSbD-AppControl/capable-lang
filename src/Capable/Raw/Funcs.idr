@@ -46,6 +46,7 @@ data Fun : (f : Raw.AST.FUNC) -> Type
                                   , body
                                   ])
 
+export
 toArgs : (as : Vect n Raw.AST.ARG)
             -> All Arg as
 toArgs []

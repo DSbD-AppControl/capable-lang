@@ -104,6 +104,13 @@ Show (Typing.Error) where
               , "  Expected:"
               , "    \{show t}"
               ]
+
+  show (RolesExpected tys)
+    = "Following roles are expected:\n\t\{unlines $ map show tys}"
+  show (RedundantRoles n)
+    = "The following roles are redundant: \{unlines $ map show n}"
+
+
   show (ArgsExpected tys)
     = "Arguments expected but none were given:\n\t\{unlines $ map show tys}"
   show (RedundantArgs n)
@@ -125,6 +132,9 @@ Show (Typing.Error) where
 
   show (FunctionExpected ty)
     = "A Function was expected but was given:\n\t\{show ty}"
+
+  show (SessionExpected ty)
+    = "A session was expected but was given:\n\t\{show ty}"
 
   show (ArrayExpected ty)
     = "Array expected but was given:\n\t\{show ty}"

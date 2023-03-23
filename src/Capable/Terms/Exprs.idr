@@ -17,6 +17,8 @@ import System.File
 import public Toolkit.Data.DList
 import public Toolkit.Data.DVect
 import public Toolkit.Data.Vect.Extra
+import public Toolkit.DeBruijn.Context
+import public Toolkit.DeBruijn.Context.Item
 
 import public Capable.Types.Protocol.Assignment
 
@@ -195,10 +197,11 @@ mutual
 
       Run : {as        : List Ty.Base}
          -> {b         : Ty.Base}
-         -> (f         : IsVar stack_g (SESH whom prot as b))
+         -> {ctzt      : Context Role rs}
+         -> (f         : IsVar stack_g (SESH ctzt whom prot as b))
          -> (args_comm : Assignments rs roles types globals stack_g stack_l prot princs)
          -> (prf       : Protocol.HasRoles rs prot princs)
-         -- @TODO add context args...
+
          -> (args_comp : DList Ty.Base (Expr roles types globals stack_g stack_l) as)
                       -> Expr roles types globals stack_g stack_l                        b
 
@@ -249,8 +252,8 @@ mutual
     where
       Empty : Assignments roles rs t g sg sl p Nil
 
-      KV : (whom : IsVar roles MkRole)
-        -> (prf  : Protocol.UsesRole roles p whom)
+      KV : (whom : IsVar roles x)
+--        -> (prf  : Protocol.UsesRole roles p whom)
         -> (val  : Expr              rs t g sg sl STR)
         -> (kvs  : Assignments roles rs t g sg sl p rest)
                 -> Assignments roles rs t g sg sl p (whom::rest)

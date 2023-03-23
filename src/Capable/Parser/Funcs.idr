@@ -29,6 +29,7 @@ arg
        e <- Toolkit.location
        pure (un (ARG (get n)) (newFC s e) t)
 
+export
 args : Rule ARGS
 args
   = do s <- Toolkit.location

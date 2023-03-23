@@ -28,8 +28,11 @@ namespace Kind
             | EXPRSESH
             | OFFER
             | FUNC
+            | SESH
             | ARG
             | ARGS
+            | VAL
+            | VALS
             | PROG
 
 
@@ -126,6 +129,7 @@ namespace Expr
     FUNC : DefKind FUNC
     ROLE : DefKind ROLE
     PROT : DefKind PROT
+    SESH : DefKind SESH
 
   export
   Show (DefKind k) where
@@ -133,6 +137,7 @@ namespace Expr
     show FUNC = "FUNC"
     show ROLE = "ROLE"
     show PROT = "PROT"
+    show SESH = "SESH"
 
   public export
   data DKind = STRUCT | UNION
@@ -229,30 +234,84 @@ namespace Shape
     -- ### Application
     CALL : String -> Shape EXPR n (replicate n EXPR)
 
+    VAL  : BIN Shape VAL ROLE EXPR
+    VALS : Shape VALS n (replicate n VAL)
+
+    RUN  : String -> Shape EXPR (S n)
+                                (VALS :: replicate n EXPR)
+
     -- ## Functions
     ARG : String -> UN Shape ARG TYPE
     ARGS : Shape ARGS n (replicate n ARG)
-    FUN : TRI Shape FUNC ARGS TYPE EXPR
-    -- @TODO add seshs
 
-    -- @TODO add sesh expressions
+    FUN  : TRI Shape FUNC ARGS TYPE EXPR
+    SESH : String -> Shape SESH 4
+                          ([ROLE, ARGS, TYPE, EXPRSESH])
 
     -- ## Session Exprs
 
---    SEQ_SESH : BIN Shape EXPRSESH EXPR EXPRSESH
---    HOLE_SESH : String -> NULL Shape EXPRSESH
---    VAR_SESH : String -> NULL Shape EXPRSESH
---    LETTY_SESH : Stored -> String -> TRI Shape EXPRSESH TYPE EXPR EXPRSESH
---    LET_SESH   : Stored -> String -> BIN Shape EXPRSESH      EXPR EXPRSESH
---    LETREC_SESH : String -> UN Shape EXPRSESH EXPRSESH
---
---    CALL_SESH : String -> NULL Shape EXPRSESH
---    CRASH_SESH : UN Shape EXPRSESH EXPR
---    END_SESH : UN Shape EXPRSESH EXPR
---
---    OFFER : String -> String -> UN Shape CASE EXPR
---    READ : String -> Shape EXPRSESH (S (S n)) (EXPR :: replicate (S n) OFFER)
---    SEND : String -> TRI Shape EXPRSESH EXPR EXPRSESH EXPRSESH
+    ||| Sequence:
+    ||| - a normal expression
+    ||| -  session typed expression
+    SEQ_SESH : BIN Shape EXPRSESH
+                         EXPR
+                         EXPRSESH
+
+    ||| Meta variables...
+    HOLE_SESH : String -> NULL Shape EXPRSESH
+
+    ||| Locally typed binders
+    |||
+    LETTY_SESH : (how_stored : Stored)
+              -> (real_name  : String)
+                            -> TRI Shape EXPRSESH
+                                         TYPE     -- type
+                                         EXPR     -- value
+                                         EXPRSESH -- body
+
+    ||| Locally inferred binders
+    LET_SESH : (how_stored : Stored)
+            -> (real_name  : String)
+                          -> BIN Shape EXPRSESH
+                                       EXPR     -- value
+                                       EXPRSESH -- scope
+
+    ||| Recursion variables
+    LETREC_SESH : (real_name : String)
+                            -> UN Shape EXPRSESH
+                                        EXPRSESH -- scope
+
+    SPLIT_SESH : List String -> BIN Shape EXPRSESH EXPR EXPRSESH
+
+    ||| Calling recursion variables
+    CALL_SESH : (real_name : String)
+             -> NULL Shape
+                     EXPRSESH
+
+    ||| Crash!
+    CRASH_SESH : UN Shape EXPRSESH EXPR
+
+    ||| Return
+    END_SESH : UN Shape EXPRSESH EXPR
+
+    ||| A case tree for the pattern match style operation for reading.
+    OFFER : (label : String)
+         -> (name  : String)
+                  -> UN Shape OFFER
+                              EXPRSESH -- scope
+
+    ||| A match term that reads from the channel, and then does stuff.
+    READ : Shape EXPRSESH
+                 (S (S (S n)))
+                 (ROLE :: EXPRSESH :: replicate (S n) OFFER)
+
+    SEND : Shape EXPRSESH
+                 4
+                 [ ROLE     -- to whom
+                 , EXPR     -- payload
+                 , EXPRSESH -- rest
+                 , EXPRSESH -- on error
+                 ]
     -- ## Programs
 
     MAIN : UN Shape PROG FUNC
@@ -313,6 +372,27 @@ namespace Shape
     show MAIN            = "MAIN"
     show (DEF str x)     = "(DEF \{show str} \{show x})"
 
+    show SEQ_SESH            = "SEQ_SESH"
+    show (HOLE_SESH s)       = "HOLE_SESH"
+
+    show (LETTY_SESH x str)  = "(LETTY_SESH \{show x} \{show str})"
+    show (LET_SESH x str)    = "(LET_SESH \{show x} \{show str})"
+    show (LETREC_SESH str)   = "(LETREC_SESH \{show str})"
+    show (SPLIT_SESH x)      = "(SPLIT_SESH \{show x})"
+
+    show (CALL_SESH s)      = "(CALL_SESH \{show s})"
+    show (CRASH_SESH)       = "CRASH_SESH"
+    show (END_SESH)         = "CRASH_SESH"
+
+    show (OFFER x y) = "(OFFER \{show x} \{show y})"
+    show (READ)      = "(READ)"
+    show (SEND)      = "(SEND)"
+    show (SESH x)      = "(SESH \{show x})"
+
+    show (VAL) = "(VAL)"
+    show (VALS) = "(VALS)"
+    show (RUN x) = "(RUN \{show x})"
+
 namespace FileContext
   public export
   AST : Kind.Kind -> Type
@@ -356,6 +436,10 @@ namespace FileContext
       public export
       EXPR : Type
       EXPR = AST EXPR
+
+      public export
+      EXPRSESH : Type
+      EXPRSESH = AST EXPRSESH
 
       public export
       ARG : Type

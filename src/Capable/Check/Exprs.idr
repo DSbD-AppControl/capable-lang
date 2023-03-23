@@ -13,6 +13,7 @@
 module Capable.Check.Exprs
 
 import Toolkit.Data.Location
+import Toolkit.Data.DList
 import Toolkit.Data.DVect
 import Toolkit.Data.Vect.Extra
 
@@ -20,6 +21,7 @@ import Capable.Types
 import Capable.Core
 
 import Capable.Raw.AST
+import Capable.Raw.Role
 import Capable.Raw.Types
 import Capable.Raw.Exprs
 
@@ -507,8 +509,8 @@ mutual
 
          pure (_ ** Loop scope cond)
 
-  synth env (Call fc fun R prf argz)
-    = do (FUNC argTys _ ** idx) <- Gamma.lookup env fun
+  synth env (Call fc (MkRef fc s) R prf argz)
+    = do (FUNC argTys _ ** idx) <- Gamma.lookup env (MkRef fc s)
          --(FUNC argTys _ ** fun) <- synth env fun
            | (ty ** _) => throwAt fc (FunctionExpected ty)
          args' <- args fc argTys argz
@@ -546,6 +548,81 @@ mutual
                  rest <- args fc xs tms
 
                  pure (tm :: rest)
+
+  synth env (Run fc (MkRef fc s) R pA argz pV vs)
+    = do (SESH ctxt whom prot argTys _ ** idx) <- Gamma.lookup env (MkRef fc s)
+         --(FUNC argTys _ ** fun) <- synth env fun
+           | (ty ** _) => throwAt fc (SessionExpected ty)
+
+         let (R pz proles) = hasRoles prot
+
+         args' <- args fc argTys argz
+
+         asgns <- assignments ctxt pz vs
+         pure (_ ** Run idx
+                        asgns
+                        proles
+                        args')
+
+    where size : Vect.Quantifiers.All.All Expr as
+              -> Nat
+          size Nil = Z
+          size (x::xs) = S (size xs)
+
+          args : {as   : Vect n EXPR}
+              -> (fc   : FileContext)
+              -> (tys  : List Ty.Base)
+              -> (args : Vect.Quantifiers.All.All Expr as)
+                      -> Capable (DList Ty.Base
+                                    (Expr rs ds ss gs ls)
+                                    tys)
+          args _ [] []
+            = pure Nil
+
+          args fc [] (elem :: rest)
+
+            = throwAt fc (RedundantArgs (size (elem :: rest)))
+
+          args fc (x :: xs) []
+            = throwAt fc (ArgsExpected (x::xs))
+
+          args fc (x :: xs) (tm' :: tms)
+            = do (ty ** tm) <- synth env tm'
+
+                 let Val (getFC q) = getFC tm'
+                 Refl <- compare (getFC q) x ty
+
+                 rest <- args fc xs tms
+
+                 pure (tm :: rest)
+
+          getNames : Vect.Quantifiers.All.All Val qs -> List String
+          getNames Nil = Nil
+          getNames (V fc (R s') _ :: rest) = s' :: getNames rest
+
+          assignments : {vs   : Vect n (AST VAL)}
+                     -> (ctxt : Context Role roles)
+                     -> (prs  : Roles roles ps)
+                     -> (vals : Vect.Quantifiers.All.All Val vs)
+                     -> Capable (Assignments roles rs ds ss gs ls p prs)
+          assignments _ [] []
+            = pure Empty
+
+          assignments _ [] (x :: y)
+            = throwAt fc (RedundantRoles $ getNames (x::y))
+
+          assignments renv (r :: rz) Nil
+            = do let qq = mapToList (reflect renv) (r :: rz)
+                 throwAt fc (RolesExpected qq)
+
+          assignments renv (r :: rz) (V fc' (R r') v::vs)
+            = do let r'' = reflect renv r
+                 Refl <- embedAt fc' (MismatchRole (MkRef fc' r') (MkRef fc' r''))
+                                     (decEq r'' r')
+
+                 T _ tm <- check fc' env TyStr v
+                 rest <- assignments renv rz vs
+                 pure (KV r tm rest)
 
   namespace View
     export

@@ -16,14 +16,6 @@ import Capable.State
 
 %default total
 
-reflect : (ctxt  : Context a rs)
-       -> (loc   : IsVar rs l)
-                -> String
-reflect [] (V _ Here) impossible
-reflect [] (V _ (There later)) impossible
-
-reflect ((I name x) :: rest) (V 0 prf) = name
-reflect (elem :: rest) (V (S k) (There later)) = reflect rest (V k later)
 
 showAcc : Nat -> String
 showAcc n

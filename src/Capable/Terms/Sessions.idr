@@ -86,6 +86,9 @@ mutual
            -> (return  : Ty.Base)
                       -> Type
     where
+      Hole : String
+          -> Expr roles types globals stack_g stack_l stack_r whom k type
+
       Seq : Expr roles types globals stack_g stack_l UNIT
          -> Expr roles types globals stack_g stack_l stack_r whom k type
          -> Expr roles types globals stack_g stack_l stack_r whom k type
@@ -148,6 +151,6 @@ data Session : (roles : List Ty.Role)
     Sesh : {args   : List Ty.Base}
         -> {return : Ty.Base}
         -> (body   : Expr    roles types ss stack args Nil whom l return)
-                  -> Session roles types ss stack    (SESH whom l args return)
+                  -> Session roles types ss stack    (SESH ctzt whom l args return)
 
 -- [ EOF ]

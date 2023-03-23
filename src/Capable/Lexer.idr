@@ -45,6 +45,8 @@ namespace Capable
   Keywords = [ -- Keywords
                "func", "main", "type", "role", "session", "protocol"
 
+             , "as"
+
              , "local", "var", "let"
 
              , "loop", "until"
@@ -74,6 +76,8 @@ namespace Capable
              , "print"
 
              , "read", "close", "write"
+             , "recv", "send"
+             , "catch", "crash"
 
              , "fopen", "popen"
              , "index"
@@ -87,6 +91,7 @@ namespace Capable
              -- Session
              , "rec", "end"
              , "call"
+             , "run", "with"
              ]
 
 

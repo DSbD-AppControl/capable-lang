@@ -268,8 +268,6 @@ check env state (Def fc FUNC n val scope)
 
        (scope, state) <- check env state scope
 
---       tyTm <- reflect (delta env) (FUNC as r)
-
        pure (DefFunc tm scope, state)
 
 check env state (Def fc ROLE n val scope)
@@ -300,7 +298,26 @@ check env state (Def fc PROT n val scope)
 
        pure (DefProt tm  scope, state)
 
+check env state (Def fc SESH n val scope)
+  = do exists fc (gamma env) n
+       printLn "Sessions are not checked yet"
 
+       check env state scope
+
+{-
+       (FUNC as r ** tm) <- synth env val
+         | (ty ** _) => throwAt fc (FunctionExpected ty)
+
+       let env   = Gamma.extend env n (FUNC as r)
+       let state = { funcs $= insert n (F tm)} state
+
+       (scope, state) <- check env state scope
+
+--       tyTm <- reflect (delta env) (FUNC as r)
+
+       pure (DefFunc tm scope, state)
+
+-}
 namespace Raw
   export
   check : (r : PROG) -> Capable (Program,State)

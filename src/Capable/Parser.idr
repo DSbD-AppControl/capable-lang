@@ -21,27 +21,29 @@ import Capable.Parser.Types
 import Capable.Parser.Protocols
 import Capable.Parser.Exprs
 import Capable.Parser.Funcs
+import Capable.Parser.Sessions
 
 %default partial
 
 data Decl = DeclT    FileContext String TYPE
           | DeclF    FileContext String FUNC
           | DeclR    FileContext String
-          | DeclS    FileContext String PROT
+          | DeclP    FileContext String PROT
+          | DeclS    FileContext String (AST SESH)
 
 decls : RuleEmpty (List Decl)
 decls
-    = many (declTy <|> declFunc <|> declRole <|> declSesh)
+    = many (declSesh <|> declTy <|> declFunc <|> declRole <|> declProt)
   where
-    declSesh : Rule Decl
-    declSesh
+    declProt : Rule Decl
+    declProt
       = do s <- Toolkit.location
            keyword "protocol"
            r <- ref
            symbol "="
            r' <- protocol
            e <- Toolkit.location
-           pure (DeclS (newFC s e) (get r) r')
+           pure (DeclP (newFC s e) (get r) r')
 
     declRole : Rule Decl
     declRole
@@ -60,6 +62,13 @@ decls
            ty <- type
            e <- Toolkit.location
            pure (DeclT (newFC s e) (get r) ty)
+
+    declSesh : Rule Decl
+    declSesh
+      = do s <- Toolkit.location
+           fs <- session
+           e <- Toolkit.location
+           pure (DeclS (newFC s e) (get $ fst fs) (snd fs))
 
     declFunc : Rule Decl
     declFunc
@@ -93,6 +102,9 @@ program
   where
     fold : Decl -> PROG -> PROG
     fold (DeclS fc r s)
+      = bin (DEF r SESH) fc s
+
+    fold (DeclP fc r s)
       = bin (DEF r PROT) fc s
 
     fold (DeclR fc r)

@@ -17,6 +17,7 @@ import public Data.Vect.Quantifiers
 
 import Capable.Types
 import Capable.Raw.AST
+import Capable.Raw.Role
 import Capable.Raw.Types
 
 %default total
@@ -41,6 +42,15 @@ mutual
        -> (e   : Expr   r)
 
               -> Field (Branch (KV s) fc [r])
+
+  public export
+  data Val : (s : AST VAL) -> Type
+    where
+      V : (fc   : FileContext)
+       -> (role : Role r)
+       -> (str  : Expr s)
+               -> Val (Branch (VAL) fc [r, s])
+
 
   public export
   data Expr : (s : Raw.AST.EXPR) -> Type
@@ -193,11 +203,21 @@ mutual
       Call : {as   : Vect n Raw.AST.EXPR}
           -> (fc   : FileContext)
           -> (fun  : Ref)
-          -> (prf  : AsRef s fc ref)
+          -> (prf  : AsRef s fc fun)
           -> (prf  : AsVect args as)
           -> (argz : All Expr as)
                   -> Expr (Branch (CALL s) fc args)
 
+      Run : {as   : Vect n Raw.AST.EXPR}
+         -> {vs   : Vect m (AST VAL)}
+         -> (fc   : FileContext)
+         -> (fun  : Ref)
+         -> (prfR : AsRef s fc fun)
+         -> (prfA : AsVect args as)
+         -> (argz : All Expr as)
+         -> (prfV : AsVect v vs)
+         -> (valz : All Val vs)
+                 -> Expr (Branch (RUN s) fc (Branch VALS _ v::args))
 mutual
 
   toCases : (ss : Vect n Raw.AST.CASE) -> All Case ss
@@ -215,6 +235,12 @@ mutual
   args [] = []
   args (ex :: rest)
     = toExpr ex :: args rest
+
+  vals : (az : Vect n (AST VAL)) -> All Val az
+  vals []
+    = []
+  vals ((Branch VAL fc [r,s]) :: xs)
+    = V fc (toRole r) (toExpr s) :: vals xs
 
   export
   toExpr : (e : Raw.AST.EXPR) -> Expr e
@@ -306,6 +332,14 @@ mutual
                  prf
                  (assert_total $ args as)
 
+  toExpr (Branch (RUN x) fc (Branch VALS _ vs :: as))
+    = let (as ** prf) = asVect as
+      in let (vs ** prfV) = asVect vs
+      in  Run fc (MkRef fc x) R
+                 prf
+                 (assert_total $ args as)
+                 prfV
+                 (assert_total $ vals vs)
 export
 getFC : {e : EXPR} -> Expr e -> Singleton (getFC e)
 getFC x = Val (getFC e)

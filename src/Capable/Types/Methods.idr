@@ -16,6 +16,7 @@ import Data.List.Quantifiers
 import Text.PrettyPrint.Prettyprinter
 
 import Toolkit.Decidable.Do
+
 import public Toolkit.Decidable.Informative
 import public Toolkit.Decidable.Equality.Indexed
 
@@ -38,7 +39,8 @@ namespace Ty
   data Method : Type where
     FUNC : (args : List Base) -> (ret : Base) -> Method
 
-    SESH : (whom : IsVar rs MkRole)
+    SESH : (ctxt : Context Role rs)
+        -> (whom : IsVar rs MkRole)
         -> (prot : Local Nil rs)
         -> (args : List Base)
         -> (ret  : Base)
@@ -53,7 +55,7 @@ Technically we should not need it...but you never know...
 -}
 
 method : Method -> Doc ann
-method (SESH w p as r) = pretty "(TODO Sesh)"
+method (SESH ctxt w p as r) = pretty "(TODO Sesh)"
 method (FUNC xs x)
   = group
   $ parens

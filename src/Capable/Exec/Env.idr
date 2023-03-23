@@ -180,7 +180,7 @@ namespace Assigns
                -> Type
     where
       Empty : Assignments roles store Nil
-      KV : (loc : IsVar roles MkRole)
+      KV : (loc : IsVar roles x)
         -> (val : Value store STR)
         -> (rest : Assignments roles store ps)
                 -> Assignments roles store (loc :: ps)
