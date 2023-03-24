@@ -48,90 +48,68 @@ extend (elem :: rest) y = elem :: extend rest y
 |||
 ||| We divide into a local and global stack.
 public export
-data Env : (roles   : List Ty.Role)
-        -> (stack_g : List Ty.Method)
+data Env : (stack_g : List Ty.Method)
         -> (stack_l : List Ty.Base)
         -> (store   : List Ty.Base)
                    -> Type
   where
-    MkEnv : (roles : DList    Role   (Singleton)   rs)
-         -> (env_g : DList Ty.Method (Closure)     stack_g)
+    MkEnv : (env_g : DList Ty.Method (Closure)     stack_g)
          -> (env_l : DList Ty.Base   (Value store) stack_l)
-                  -> Env rs stack_g stack_l store
+                  -> Env stack_g stack_l store
 
 export
-empty : Env Nil Nil Nil Nil
-empty = MkEnv Nil Nil Nil
-
-export
-setRoles : DList Role Singleton roles
-        -> Env rs    g l h
-        -> Env roles g l h
-setRoles x (MkEnv y env_g env_l)
-  = MkEnv x env_g env_l
-
-export
-getRoles : Env roles g l h -> DList Role Singleton roles
-getRoles (MkEnv x _ _) = x
-
-||| Extend the global stack with a value.
-export
-extend_r : (role : Role)
-        -> (env  : Env        rs  g l store)
-                -> Env (role::rs) g l store
-extend_r val (MkEnv rs env_g env_l)
-  = MkEnv (Val val::rs) env_g env_l
+empty : Env Nil Nil Nil
+empty = MkEnv Nil Nil
 
 
 ||| Extend the global stack with a value.
 export
 extend_g : {type : _}
         -> (val : Closure type)
-        -> (env : Env  rs         g  l store)
-               -> Env  rs  (type::g) l store
-extend_g val (MkEnv rs env_g env_l)
-  = MkEnv rs (val :: env_g) env_l
+        -> (env : Env        g  l store)
+               -> Env (type::g) l store
+extend_g val (MkEnv env_g env_l)
+  = MkEnv (val :: env_g) env_l
 
 ||| Extend the local stack with a value.
 export
 extend_l : {type : _}
         -> (val : Value store type)
-        -> (env : Env rs g        l  store)
-               -> Env rs g (type::l) store
-extend_l val (MkEnv rs env_g env_l)
-  = MkEnv rs env_g (val :: env_l)
+        -> (env : Env g        l  store)
+               -> Env g (type::l) store
+extend_l val (MkEnv env_g env_l)
+  = MkEnv env_g (val :: env_l)
 
 export
 extend_ls : (val : DVect Ty.Base (Value store) n ts)
-         -> (env : Env rs g                     l  store)
-                -> Env rs g (Extra.toList ts ++ l) store
+         -> (env : Env g                     l  store)
+                -> Env g (Extra.toList ts ++ l) store
 extend_ls Nil     env = env
 extend_ls (x::xs) env = extend_l x (extend_ls xs env)
 
 ||| Lookup variable in the local context
 export
 lookup_l : (loc : IsVar l type)
-        -> (env : Env r g l store)
+        -> (env : Env g l store)
                -> Value store type
-lookup_l loc (MkEnv rs env_g env_l)
+lookup_l loc (MkEnv env_g env_l)
   = read loc env_l
 
 ||| Lookup variable in the local context
 export
 lookup_g : (loc : IsVar g type)
-        -> (env : Env r g l store)
+        -> (env : Env g l store)
                -> Closure type
-lookup_g loc (MkEnv rs env_g env_l)
+lookup_g loc (MkEnv env_g env_l)
   = read loc env_g
 
 ||| Weaken...
 export
 weaken : Subset old new
-      -> Env.Env r g l old
-      -> Env.Env r g l new
-weaken prf (MkEnv rs env_g env_l)
-  = MkEnv rs
-          env_g
+      -> Env.Env g l old
+      -> Env.Env g l new
+weaken prf (MkEnv env_g env_l)
+  = MkEnv env_g
           (Env.weaken prf env_l)
 
 namespace Ty
@@ -191,34 +169,37 @@ namespace RVars
 
   ||| We treat recursion in a session as a closure.
   public export
-  data SubSesh : List Role
+  data SubSesh : List Role -> List Role
               -> List Ty.Base
               -> List Ty.Session
               -> List Ty.Method
               ->      Ty.Base
               -> (rvar : Kind) -> Type where
     SS : {old : _}
-      -> (expr : Expr roles   types globals
+      -> (expr : Expr rs
+                      roles
+                      types
+                      globals
                       stack_g
                       stack_l
                       stack_r
                       whom body type)
       -> (envl : DList Ty.Base (Value old) stack_l)
-      -> (envr : DList Kind (SubSesh roles types globals stack_g type) stack_r)
-              -> SubSesh roles types globals stack_g type R
+      -> (envr : DList Kind (SubSesh rs roles types globals stack_g type) stack_r)
+              -> SubSesh rs roles types globals stack_g type R
 
 
   ||| We need one for types-as-terms too.
   public export
-  Env : List Role
+  Env : List Role -> List Role
               -> List Ty.Base
                             -> List Ty.Session
               -> List Ty.Method
             -> (rs    : List Kind)
      -> (ty    :      Ty.Base)
               -> Type
-  Env roles types globals stack_g rvars type
-    = DList Kind (SubSesh roles types globals stack_g type) rvars
+  Env rs roles types globals stack_g rvars type
+    = DList Kind (SubSesh rs roles types globals stack_g type) rvars
 
   export
   isSubset : {new, old : _}

@@ -36,9 +36,9 @@ export
 getIndex : {o    : Branch  Local stack_r roles x}
         -> {os   : Local.Branches stack_r roles xs}
         -> (prf    : Elem (s,a) (x::xs))
-        -> (offers : Offers roles types globals stack_g stack_l stack_r ty whom (o::os))
+        -> (offers : Offers roles rs types globals stack_g stack_l stack_r ty whom (o::os))
         -> DPair (Branch Local stack_r roles (s,a))
-                 (Offer roles types globals stack_g stack_l stack_r ty whom)
+                 (Offer roles rs types globals stack_g stack_l stack_r ty whom)
 getIndex Here ((O s body) :: z)
   = (B s _ _ ** O s body)
 

@@ -17,6 +17,10 @@ namespace Ty
   public export
   data Role = MkRole
 
+public export
+Role : (rs : List Role) -> Type
+Role rs = IsVar rs MkRole
+
 
 export
 DecEq Role where
@@ -29,9 +33,9 @@ Show (IsVar ks MkRole) where
 
 public export
 data Involved : (rs : List Role)
-             -> (p : IsVar rs MkRole)
-             -> (s : IsVar rs MkRole)
-             -> (r : IsVar rs MkRole)
+             -> (p : Role rs)
+             -> (s : Role rs)
+             -> (r : Role rs)
                         -> Type
   where
     Sends : (prfS : role = s)
@@ -46,9 +50,9 @@ data Involved : (rs : List Role)
 
 public export
 involved : {rs : List Role}
-        -> (p : IsVar rs MkRole)
-        -> (s : IsVar rs MkRole)
-        -> (r : IsVar rs MkRole)
+        -> (p : Role rs)
+        -> (s : Role rs)
+        -> (r : Role rs)
         -> (contra  : Not (Equals Role (IsVar rs) s r))
                    -> Involved rs p s r
 involved p s r contra with (Index.decEq p s)

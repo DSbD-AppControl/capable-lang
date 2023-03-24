@@ -1,24 +1,30 @@
 Running Test
-Capable> # Finished Parsing
+# Finished Parsing
 # Finished Type Checking
-Capable> (selects from Ponger union {msg : Int} [ msg(Int)
-                                         .(offers to Ponger union {msg : Int} [ msg(Int)
-                                                                                .End])])
-Capable> (offers to Pinger union {msg : Int} [ msg(Int)
-                                      .(selects from Pinger union {msg : Int} [ msg(Int)
-                                                                                .End])])
-Capable> rec(a).
-  (selects from Ponger union {stop : Int; cont : Int} [ stop(Int)
-                                                        .(offers to Ponger union {msg : Int} [ msg(Int)
-                                                                                               .End])
-                                                        | cont(Int)
-                                                          .(offers to Ponger union {msg : Int} [ msg(Int)
-                                                                                                 .(Call a)])])
-Capable> rec(a).
-  (offers to Pinger union {stop : Int; cont : Int} [ stop(Int)
-                                                     .(selects from Pinger union {msg : Int} [ msg(Int)
-                                                                                               .End])
-                                                     | cont(Int)
-                                                       .(selects from Pinger union {msg : Int} [ msg(Int)
-                                                                                                 .(Call a)])])
-Capable> Exiting the REPL
+# Finished Parsing
+Type Checking Error
+mainerr.capable:62:2-0:
+Session is ill-typed, expecting an expression of type:
+	An offer needs to be made
+
+# Finished Parsing
+Showing first available hole.
+Need to collect them...
+## Typing Context
+i : Int
+## Recursion Vars
+[]
+## Roles
+["Server", "Client"]
+---
+aa : TODO
+# Finished Parsing
+Type Checking Error
+mainun.capable:59:2-0:
+Roles matched:
+  Given:
+    "Client"
+  Expected:
+    "Server"
+
+

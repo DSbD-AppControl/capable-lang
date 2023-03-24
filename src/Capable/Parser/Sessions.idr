@@ -59,12 +59,15 @@ mutual
          keyword "send"
          commit
          r <- role
+         l <- ref
+         symbol "("
          p <- expr
+         symbol ")"
          keyword "catch"
          er <- Sessions.block
          n <- Sessions.expr
          e <- Toolkit.location
-         pure (Branch SEND (newFC s e) [r,p,n,er])
+         pure (Branch (SEND (get l)) (newFC s e) [r,p,n,er])
 
   read : Rule (AST EXPRSESH)
   read

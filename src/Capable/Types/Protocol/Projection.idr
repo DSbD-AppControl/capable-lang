@@ -39,7 +39,7 @@ mutual
     public export
     data Project : (ks   : List Kind)
                 -> (rs   : List Role)
-                -> (role : IsVar rs MkRole)
+                -> (role : Role rs)
                 -> (g    : Global ks rs)
                 -> (l    : Local  ks rs)
                         -> Type
@@ -72,7 +72,7 @@ mutual
       public export
       data Project : (ks : List Kind)
                   -> (rs : List Role)
-                  -> (role   : IsVar rs MkRole)
+                  -> (role   : IsVar rs r)
                   -> (global : Branch Global ks rs l)
                   -> (local  : Branch Local  ks rs l)
                             -> Type
@@ -87,7 +87,7 @@ mutual
     public export
     data Project : (ks : List Kind)
                 -> (rs : List Role)
-                -> (role : IsVar rs MkRole)
+                -> (role : Role rs)
                 -> (gs   : Global.Branches ks rs lts)
                 -> (ls   :  Local.Branches ks rs lts)
                         -> Type
@@ -102,7 +102,7 @@ mutual
     public export
     data Same : (ks : List Kind)
              -> (rs : List Role)
-             -> (role : IsVar rs MkRole)
+             -> (role : Role rs)
              -> (gs   : Global.Branches ks rs ltss)
              -> (l    : Branch Local    ks rs lts)
                       -> Type
@@ -195,5 +195,139 @@ mutual
            -> x === y
     funSame (S (p :: ps) eqp) (S (q :: qs) eqq)
       = case funProject p q of Refl => Refl
+
+
+mutual
+  namespace Protocol
+    export
+    project : {ks, rs : _}
+           -> (whom : Role rs)
+           -> (type : Global ks rs)
+                   -> DecInfo () -- TODO
+                              (DPair (Local   ks rs)
+                                     (Project ks rs whom type))
+    project whom End
+      = Yes (End ** End)
+
+    project whom (Call x)
+      = Yes (Call x ** Call)
+
+    project whom (Rec x) with (project whom x)
+      project whom (Rec x) | (Yes (l ** prf))
+        = Yes (Rec l ** Rec prf)
+      project whom (Rec x) | (No msgWhyNot prfWhyNot)
+        = No ()
+             (\case (Rec y ** Rec rec) => prfWhyNot (y ** rec))
+
+    project whom (Choice s x type prfM prfR opties) with (involved whom s x prfR)
+
+      -- [ NOTE ] Sender
+      project s (Choice s x type prfM prfR (b :: bs)) | (Sends Refl) with (Branches.project s (b::bs))
+        project s (Choice s x type prfM prfR (b :: bs)) | (Sends Refl) | (Yes (((y :: ys) ** (z :: zs))))
+          = Yes (_ ** Select (Same Refl Refl) (z::zs))
+
+        project s (Choice s x type prfM prfR (b :: bs)) | (Sends Refl) | (No msg no)
+          = No ()
+               (\case (_ ** Select prf x) => no (_ ** x)
+                      (_ ** Offer  prf x) => no (_ ** x)
+                      (_ ** Merge f prfR prf) => f (Same Refl Refl))
+
+      -- [ NOTE ] Receiving
+      project x (Choice s x type prfM prfR (b :: bs)) | (Recvs Refl) with (Branches.project x (b::bs))
+        project x (Choice s x type prfM prfR (b :: bs)) | (Recvs Refl) | (Yes ((y::ys) ** (z::zs)))
+          = Yes (_ ** Offer (Same Refl Refl) (z::zs))
+
+        project x (Choice s x type prfM prfR (b :: bs)) | (Recvs Refl) | (No msg no)
+          = No ()
+               (\case (_ ** (Select prf x)) => no (_ ** x)
+                      (_ ** (Offer prf x)) => no (_ ** x)
+                      (_ ** (Merge prfS prfR prf)) => prfR (Same Refl Refl))
+
+      -- [ NOTE ] Not involved
+      project whom (Choice s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) with (same whom (B l b cont :: bs))
+        project whom (Choice s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) | (Yes (((B l b z) ** (S projs prf))))
+          = Yes (_ ** Merge prfSNot prfRNot (S projs prf))
+
+        project whom (Choice s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
+          = No ()
+               (\case (_ ** (Select prf y)) => prfSNot prf
+                      (_ ** (Offer prf y)) => prfRNot prf
+                      (_ ** (Merge prfS f (S projs prf))) => no (_ ** (S projs prf)))
+
+
+  namespace Branch
+    export
+    project : {ks, s, rs : _}
+           -> (whom : Role rs)
+           -> (g  : Branch Global ks rs (s,t))
+                   -> DecInfo ()
+                              (DPair (Branch Local ks rs (s,t))
+                                     (Project ks rs whom g))
+    project whom (B s t cont) with (project whom cont)
+      project whom (B s t cont) | (Yes (l ** prf))
+        = Yes (B s t l ** B s t prf)
+      project whom (B s t cont) | (No msg no)
+        = No ()
+             (\case ((B s t l) ** (B s t y)) => no (l ** y))
+
+  namespace Branches
+    export
+    project : {ks, lts, rs : _}
+           -> (whom : Role rs)
+           -> (bs   : Global.Branches ks rs lts)
+                     -> DecInfo () -- TODO
+                                (DPair (Local.Branches ks rs lts)
+                                       (Project ks rs whom bs))
+    project whom []
+      = Yes ([] ** [])
+
+    project whom ((B l b cont) :: rest) with (project whom (B l b cont))
+      project whom ((B l b cont) :: rest) | (Yes (lp ** prf)) with (project whom rest)
+        project whom ((B l b cont) :: rest) | (Yes (lp ** prf)) | (Yes (lps ** prfs))
+          = Yes (lp :: lps ** prf :: prfs)
+        project whom ((B l b cont) :: rest) | (Yes (lp ** prf)) | (No msg no)
+          = No ()
+               (\case ((y :: ys) ** (z :: zs)) => no (ys ** zs))
+
+      project whom ((B l b cont) :: rest) | (No msg no)
+        = No ()
+             (\case ((y :: ys) ** (z :: zs)) => no (y ** z))
+
+  namespace Same
+
+    export
+    same : {ks, l,s : _}
+        -> {ls,rs : _}
+        -> (whom : Role rs)
+        -> (bs   : Global.Branches ks rs ((l,s) :: ls))
+                -> DecInfo ()
+                           (DPair (Branch Local ks rs (l,s))
+                                  (Same ks rs whom bs))
+    same whom bs with (project whom bs)
+      same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) with (branchesEq y ys)
+        same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) | (Yes prfWhy)
+          = Yes (y ** S (z :: zs) prfWhy)
+        same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) | (No msg no)
+          = No ()
+               (\case (fst ** (S (w :: v) prf))
+                      => no $ rewrite sym (funProject w z) in
+                              rewrite sym (funProject v zs) in prf)
+      same whom bs | (No msg no)
+        = No ()
+             (\case (fst ** (S projs prf)) => no (fst :: _ ** projs))
+
+
+
+
+namespace Closed
+  export
+  project : {rs : List Role}
+         -> (whom : Role rs)
+         -> (type : Global Nil rs)
+                 -> DecInfo () -- TODO
+                            (DPair (Local Nil rs)
+                                   (Project Nil rs whom type))
+  project
+    = Protocol.project
 
 -- [ EOF ]

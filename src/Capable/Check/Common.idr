@@ -208,6 +208,14 @@ namespace Env
     extend env s ty
       = { sigma $= (::) (I s ty) } env
 
+    export
+    lookup : {ss    : _}
+          -> (ctxt  : Env rs ds ss gs ls)
+          -> (s     : Ref)
+                   -> Capable (DPair Ty.Session (IsVar ss))
+    lookup env ref
+      = Common.lookup (sigma env) ref
+
   namespace Lambda
     export
     extend : (env : Env rs ds ss gs ls)
@@ -246,25 +254,10 @@ namespace Env
 --                           pure (_ ** IsLocal idx))
 
 
-prettyCtxt : Context Ty.Base ls -> List (Doc ann) -> List (Doc ann)
+prettyCtxt : Pretty a => Context a ls -> List (Doc ann) -> List (Doc ann)
 prettyCtxt [] acc = acc
 prettyCtxt ((I name x) :: rest) acc
   = prettyCtxt rest (acc ++ [(hsep [pretty name, colon, pretty x])])
-
-prettyHole : Context Ty.Base ls
-          -> String
-          -> Base
-          -> Doc ann
-prettyHole x str y
-  = vcat
-  $ prettyCtxt x Nil
-  ++ [ pretty "---"
-     , group
-     $ hsep
-     [ pretty str
-     , colon
-     , pretty y]
-     ]
 
 export
 showHoleExit : Context Ty.Base ls
@@ -272,10 +265,45 @@ showHoleExit : Context Ty.Base ls
             -> Base
             -> Capable e
 showHoleExit g n t
+    = do putStrLn "Showing first available hole."
+         putStrLn "Need to collect them..."
+         let pc = prettyHole g n t
+         putStrLn $ (show . annotate ()) pc
+         exitSuccess
+
+    where
+      prettyHole : Context Ty.Base ls
+                -> String
+                -> Base
+                -> Doc ann
+      prettyHole x str y
+        = vcat
+        $ prettyCtxt x Nil
+        ++ [ pretty "---"
+           , group
+           $ hsep
+           [ pretty str
+           , colon
+           , pretty y]
+           ]
+
+export
+showHoleSessionExit : Context Ty.Base ls
+                   -> Context Ty.Role rs
+                   -> Context Protocol.Kind ks
+                   -> Local ks rs
+                   -> String
+                   -> Capable e
+showHoleSessionExit g r k t x
   = do putStrLn "Showing first available hole."
        putStrLn "Need to collect them..."
-       let pc = prettyHole g n t
-       putStrLn $ (show . annotate ()) pc
+       putStrLn "## Typing Context"
+       putStrLn $ (show . annotate ()) (vcat $ prettyCtxt g Nil)
+       putStrLn "## Recursion Vars"
+       printLn  $ keys k
+       putStrLn "## Roles"
+       printLn $ keys r
+       putStrLn "---"
+       putStrLn "\{x} : TODO"
        exitSuccess
-
 -- [ EOF ]

@@ -28,7 +28,7 @@ import Capable.Terms.Funcs
 
 %default total
 
-
+export
 data Instrs : (delta : List Ty.Base)
            -> (args  : Vect.Quantifiers.All.All Arg as)
            -> (tys   : List Ty.Base)
@@ -43,6 +43,7 @@ data Instrs : (delta : List Ty.Base)
        -> (rest : Instrs d                as         tys)
                -> Instrs d (A fc s ty' :: as) (ty :: tys)
 
+export
 args : {ds    : List Ty.Base}
     -> (delta : Context Ty.Base ds)
     -> {as    : Vect n ARG}
@@ -57,7 +58,7 @@ args delta (A fc ref ty :: y)
        (_ ** rest) <- args delta y
        pure (_ ** Arg ref ty tm rest)
 
-
+export
 expand : {as' : Vect.Quantifiers.All.All Arg as''}
       -> (is  : Instrs ds as' as)
                -> Context Ty.Base as

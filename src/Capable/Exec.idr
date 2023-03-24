@@ -63,10 +63,11 @@ mutual
     export
     eval : {store : List Ty.Base}
         -> {as    : List (String,Base)}
-        -> (env   : Env rs stack_g stack_l store)
+        -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
         -> (args  : DList (String, Ty.Base) (Field rs tys gs stack_g stack_l) as)
                  -> Capable (Fields.Results store as)
+
     eval env heap []
       = pure (Fields heap
                      Nil
@@ -82,10 +83,11 @@ mutual
   namespace Args
     export
     eval : {as,store : List Ty.Base}
-        -> (env   : Env rs stack_g stack_l store)
+        -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
         -> (args  : DList Ty.Base (Expr rs tys gs stack_g stack_l) as)
                  -> Capable (Args.Results store as)
+
     eval env heap []
       = pure (Args heap
                    Nil
@@ -102,10 +104,11 @@ mutual
     export
     eval : {as    : Vect n Ty.Base}
         -> {store : List Ty.Base}
-        -> (env   : Env rs stack_g stack_l store)
+        -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
         -> (args  : DVect Ty.Base (Expr rs tys gs stack_g stack_l) n as)
                  -> Capable (Results store as)
+
     eval env heap []
       = pure (Args heap
                    Nil
@@ -117,6 +120,7 @@ mutual
            pure (Args h
                       ((weaken ps v)::vs)
                       (trans p ps))
+
   namespace Builtins
     ||| Executing builtins
     export
@@ -251,10 +255,10 @@ mutual
   namespace Exprs
     %inline
     when : {type : Ty.Base}
-        -> (env  : Env roles stack_g stack_l store)
+        -> (env  : Env stack_g stack_l store)
         -> (cond : Expr.Result store BOOL)
-        -> (tt   : Expr roles types gs stack_g stack_l type)
-        -> (ff   : Expr roles types gs stack_g stack_l type)
+        -> (tt   : Expr rs types gs stack_g stack_l type)
+        -> (ff   : Expr rs types gs stack_g stack_l type)
                 -> Capable (Expr.Result store type)
 
     when env (Value h (B False) prf) _ ff
@@ -269,10 +273,11 @@ mutual
     public export
     eval : {type  : Ty.Base}
         -> {store : List Ty.Base}
-        -> (env   : Env roles stack_g stack_l store)
+        -> (env   : Env stack_g stack_l store)
         -> (heap  : Heap store)
-        -> (expr  : Expr roles types globals stack_g stack_l type)
+        -> (expr  : Expr rs types globals stack_g stack_l type)
                  -> Capable (Expr.Result store type)
+
     -- ### Holes
     eval env heap (Hole s)
       = panic "Encountered a hole: \{show s}"
@@ -419,20 +424,20 @@ mutual
 
     eval env heap (Call f xs)
            -- Fetch closure
-      = do let (ClosFunc scope clos rs) = lookup_g f env
+      = do let (ClosFunc scope clos _) = lookup_g f env
 
            -- Evaluate args
            Args h args p1 <- Args.eval env heap xs
 
            -- Call function
-           Value h v p2   <- Func.eval rs clos h scope args
+           Value h v p2   <- Func.eval clos h scope args
 
            pure (Value h
                        v
                        (trans p1 p2))
 
     eval env heap (Run s argsc _ argsv)
-      = do let (ClosSesh scope clos rs) = lookup_g s env
+      = do let (ClosSesh rs scope clos) = lookup_g s env
 
            -- Evaluate args
            Args h args p1 <- Args.eval env heap argsv
@@ -444,22 +449,23 @@ mutual
 
            cs <- startAll cs
 
-           Value h cs v p3 <- Session.eval rs clos h cs scope (weaken p2 args)
+           Value h cs v p3 <- Session.eval clos h cs scope (weaken p2 args)
 
            cs <- closeAll cs
 
            pure (Value h v
                          (trans p1 (trans p2 p3)))
 
-      -- = panic "Not Yet Implemented"
+
 
     assigns : {store : List Ty.Base}
-           -> (env   : Env roles stack_g stack_l store)
+           -> (env   : Env stack_g stack_l store)
 
 --           -> (er    : Env rs)
            -> (heap  : Heap store)
            -> (expr  : Assignments rs roles types globals stack_g stack_l proto princs)
                     -> Capable (Assigns.Result store rs princs)
+
     assigns env heap Empty
       = pure (Value heap Empty (noChange _))
 
@@ -470,21 +476,20 @@ mutual
            pure (Value heap (KV whom (weaken prf1 v) kvs)
                        (trans prf prf1))
 
-
   namespace Session
     public export
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
         -> {ret   : Ty.Base}
-        -> (rs    : Env roles)
+        -> {ctzt  : Context Role rz}
         -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
-        -> (cs    : Channels roles)
+        -> (cs    : Channels rz)
         -> (func  : Session roles types globals stack_g (SESH ctzt w l as ret))
         -> (vals  : DList Ty.Base (Value store) as)
-                 -> Capable (Session.Exprs.Result roles store ret)
-    eval rs env_g heap cs (Sesh body) vals
-      = Session.Exprs.eval (MkEnv rs env_g vals) heap Nil cs body
+                 -> Capable (Session.Exprs.Result rz store ret)
+    eval env_g heap cs (Sesh body) vals
+      = Session.Exprs.eval (MkEnv env_g vals) heap Nil cs body
 
 
     namespace Exprs
@@ -492,16 +497,21 @@ mutual
       public export
       eval : {store : List Ty.Base}
           -> {ret   : Ty.Base}
-          -> (env   : Env roles stack_g stack_l store)
+          -> (env   : Env stack_g stack_l store)
           -> (heap  : Heap store)
-          -> (rvars : Env roles types globals stack_g stack_r ret)
-          -> (chans : Channels roles)
-          -> (sesh  : Sessions.Expr roles types globals stack_g stack_l stack_r whom l ret)
-                   -> Capable (Session.Exprs.Result roles store ret)
+          -> (rvars : Env rs roles types globals stack_g stack_r ret)
+          -> (chans : Channels rs)
+          -> (sesh  : Sessions.Expr rs roles types globals stack_g stack_l stack_r whom l ret)
+                   -> Capable (Session.Exprs.Result rs store ret)
 
       eval env heap rvars cs (Hole s)
         = panic "Encountered a hole: \{show s}"
 
+
+      eval env heap rvars cs (Split t rest)
+        = do Value h (Tuple vs) prf <- Exprs.eval env heap t
+             Value h cs' v prf' <- eval (extend_ls vs $ weaken prf env) h rvars cs rest
+             pure (Value h cs' v (trans prf prf'))
 
       -- [ NOTE ] Compute the (unsafe) expression and then carry on...
       eval env heap rvars cs (Seq x y)
@@ -517,13 +527,13 @@ mutual
              pure (Value h cs v (trans prf0 prf1))
 
       -- [ NOTE ] Push a closure onto the stack...
-      eval env@(MkEnv rs eg el) heap rvars cs (LetRec x)
+      eval env@(MkEnv eg el) heap rvars cs (LetRec x)
         = do let c = SS (LetRec x) el rvars :: rvars
              Value h cs v prf0 <- Exprs.eval env heap c cs x
              pure (Value h cs v prf0)
 
       -- [ NOTE ] Pop a closure and resume...
-      eval (MkEnv rs env_g _) heap rvars cs (Call loc)
+      eval (MkEnv env_g _) heap rvars cs (Call loc)
         = do let SS expr env_l env_rs = read loc rvars
 
              -- [ NOTE ] nothing to see carry-on
@@ -531,7 +541,7 @@ mutual
              -- this is an absurd hack.
              case isSubset heap env_l of
                No _ => panic "Shouldn't happen..."
-               Yes prf => do let env = weaken prf $ (MkEnv rs env_g env_l)
+               Yes prf => do let env = weaken prf $ (MkEnv env_g env_l)
                              Value h cs v prf <- Exprs.eval env heap env_rs cs expr
                              pure (Value h cs v prf)
 
@@ -616,14 +626,13 @@ mutual
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
         -> {ret : Ty.Base}
-        -> (er    : Env roles)
         -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
         -> (func  : Func roles types globals stack_g (FUNC as ret))
         -> (vals  : DList Ty.Base (Value store) as)
                  -> Capable (Expr.Result store ret)
-    eval er env_g heap (Fun body) args
-      = eval (MkEnv er env_g args) heap body
+    eval env_g heap (Fun body) args
+      = eval (MkEnv env_g args) heap body
 
 
 ||| Run a programme.
@@ -665,16 +674,17 @@ run er et env heap (DefFunc func rest)
         heap
         rest
 
-run er et env heap (DefSesh _ _ _ s rest)
+run er et env heap (DefSesh s rest)
   = run er
         et
-        (ClosSesh s env er :: env)
+        (ClosSesh _ s env :: env)
         heap
         rest
 
 -- The main sh-bang
 run er _ env heap (Main x)
-  = eval er env heap x Nil
+  = eval env heap x Nil
+
 
 ||| Only run closed programmes.
 export

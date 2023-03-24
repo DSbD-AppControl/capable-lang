@@ -57,17 +57,11 @@ session echoClient <Echo as Client>(i : Int) -> MaybeInt
 
   -- Send message to server if comms crash then return (0)
   print("Sending message: ");
+
   send Server msg(i) catch { printLn("Crashing"); crash(nout(unit)) }
 
-  -- Recv message from server, if comms crash then return (0)
-  recv Server {
-    when msg(i)
-    {
-       print("Received message: ");
-       printLn(toString(i));
-       end(this(i))
-    }
-  } catch { printLn("Crashing"); crash(nout(unit)) }
+  ?aa
+
 }
 
 -- ### Program Entry Point

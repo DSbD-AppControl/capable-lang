@@ -16,6 +16,8 @@ import Data.List.Quantifiers
 
 import System.File
 
+import Toolkit.DeBruijn.Context
+import Toolkit.DeBruijn.Context.Item
 import Toolkit.Data.Vect.Extra
 import Toolkit.Data.DList
 import Toolkit.Data.DVect
@@ -63,7 +65,7 @@ Channels : List Ty.Role -> Type
 Channels = DList Ty.Role Channel
 
 ||| By default creates a list of unused channels.
-fromEnv : Env rs -> Channels rs
+fromEnv : Context Role rs -> Channels rs
 fromEnv = map (const UsedNot)
 
 init1 : (loc : IsVar roles x)
@@ -81,7 +83,7 @@ initDO (KV loc val rest) y
   = initDO rest (init1 loc val y)
 
 export
-init : Env roles
+init : Context Role roles
     -> Assignments       roles store ps
     -> Capable (Channels roles)
 init rs as = pure $ initDO as (fromEnv rs)

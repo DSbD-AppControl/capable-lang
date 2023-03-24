@@ -1,6 +1,9 @@
 echo "Running Test"
 
-$1 --repl < input
+for i in `ls *.capable`;
+do
+    $1 --checkOnly $i
+done
 
 
 # Local Variables:

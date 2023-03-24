@@ -305,7 +305,8 @@ namespace Shape
                  (S (S (S n)))
                  (ROLE :: EXPRSESH :: replicate (S n) OFFER)
 
-    SEND : Shape EXPRSESH
+    SEND : (label : String)
+        -> Shape EXPRSESH
                  4
                  [ ROLE     -- to whom
                  , EXPR     -- payload
@@ -386,7 +387,7 @@ namespace Shape
 
     show (OFFER x y) = "(OFFER \{show x} \{show y})"
     show (READ)      = "(READ)"
-    show (SEND)      = "(SEND)"
+    show (SEND s)     = "(SEND s)"
     show (SESH x)      = "(SESH \{show x})"
 
     show (VAL) = "(VAL)"

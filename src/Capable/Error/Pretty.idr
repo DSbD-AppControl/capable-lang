@@ -18,6 +18,9 @@ import Toolkit.Data.DVect
 import Toolkit.Text.Lexer.Run
 import Toolkit.Text.Parser.Run
 
+import Toolkit.DeBruijn.Context
+import Toolkit.DeBruijn.Context.Item
+
 import Text.PrettyPrint.Prettyprinter
 
 import Text.Lexer
@@ -70,6 +73,13 @@ Show (Parsing.Error) where
 
 
 Show (Typing.Error) where
+  show (MismatchK e g)
+    = "Recursion variable mismatch:\n\t Expected: \{e}\n\t Given: \{g}"
+  show (IllTypedSession p)
+    = "Session is ill-typed, expecting an expression of type:\n\t\{p}"
+  show (ProjectionError)
+    = "Error projecting global typing, Error message yet to be realised..."
+
   show (OOB e g)
     = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."
 
@@ -152,8 +162,24 @@ Show (Typing.Error) where
               , "    \{show expected}"
               ]
 
+  show (LabelMismatch s ss)
+    = unlines ["Label Mismatch:"
+              , "  Given:"
+              , "    \{show s}"
+              , "  Expected:"
+              , "    \{show ss}"
+              ]
+
   show (MismatchM given expected)
     = unlines ["Type Mismatch:"
+              , "  Given:"
+              , "    \{show given}"
+              , "  Expected:"
+              , "    \{show expected}"
+              ]
+
+  show (MismatchRoleS given expected)
+    = unlines ["Roles matched:"
               , "  Given:"
               , "    \{show given}"
               , "  Expected:"

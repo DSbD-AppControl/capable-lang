@@ -30,7 +30,8 @@ import Capable.Raw.Protocols
 mutual
   public export
   data Offer : (s : AST OFFER) -> Type where
-    O : (fc : FileContext)
+    O : {sc   : _}
+     -> (fc : FileContext)
      -> (t,s  : String)
      -> (c    : Expr sc)
              -> Offer (Branch (OFFER t s) fc [sc])
@@ -69,7 +70,7 @@ mutual
                      -> Expr (Branch (LETREC_SESH s) fc [body])
 
       Call : (fc : FileContext)
-          -> (s  : String)
+          -> (s  : String) -- @TODO change to ref
                 -> Expr (Branch (CALL_SESH s) fc Nil)
 
       Split : (fc    : FileContext)
@@ -97,14 +98,38 @@ mutual
 
       Send : (fc : FileContext)
           -> (role : Role r)
+          -> (s    : String)
           -> (msg  : Expr payload)
           -> (body : Expr rest)
           -> (exc  : Expr except)
-                  -> Expr (Branch SEND fc [r, payload, rest, except])
+                  -> Expr (Branch (SEND s) fc [r, payload, rest, except])
+
+namespace Offer
+  export
+  getFC : Sessions.Offer o -> FileContext
+  getFC (O fc t s c) = fc
+
+namespace Expr
+  export
+  getFC : Sessions.Expr e -> FileContext
+  getFC (Seq fc x y) = fc
+  getFC (Hole ref prf) = span ref
+  getFC (LetTy fc s st ty val scope) = fc
+  getFC (Let fc s st val scope) = fc
+  getFC (LetRec fc s scope) = fc
+  getFC (Call fc s) = fc
+  getFC (Split fc ss val scope) = fc
+  getFC (Crash fc expr) = fc
+  getFC (End fc expr) = fc
+  getFC (Read fc role prf offs onEr) = fc
+  getFC (Send fc role l msg body exc) = fc
+
+
 
 public export
 data Session : (raw : AST SESH) -> Type where
-  Sesh : (fc    : FileContext)
+  Sesh : {body, az   : _}
+      -> (fc    : FileContext)
       -> (prin : Role princ)
       -> (ref   : Ref)
       -> (p     : AsRef prot fc ref)
@@ -170,8 +195,9 @@ mutual
     = let (os ** prf) = asVect os
       in Read fc (toRole r) prf (assert_total $ toOffers os) (toExpr err)
 
-  toExpr (Branch SEND fc [r, val,scope,err])
+  toExpr (Branch (SEND s) fc [r, val,scope,err])
     = Send fc (toRole r)
+              s
               (toExpr val)
               (toExpr scope)
               (toExpr err)
@@ -188,5 +214,10 @@ toSession (Branch (SESH a) fc [p,Branch ARGS _ as,c,d])
                (toArgs az)
                (toType c)
                (toExpr d)
+
+export
+flattern : Vect.Quantifiers.All.All Offer cs -> List String
+flattern [] = []
+flattern ((O _ t s e) :: y) = t :: flattern y
 
 -- [ EOF ]

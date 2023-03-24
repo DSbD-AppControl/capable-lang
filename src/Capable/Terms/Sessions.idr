@@ -41,98 +41,106 @@ mutual
 
   public export
   data Offer : (roles   : List Ty.Role)
+            -> (rs      : List Ty.Role)
             -> (types   : List Ty.Base)
             -> (globals : List Ty.Session)
             -> (stack_g : List Ty.Method)
             -> (stack_l : List Ty.Base)
             -> (stack_r : List Kind) -- recursion variables
             -> (ret     : Ty.Base)
-            -> (whom    : IsVar roles MkRole)
+            -> (whom    : Role roles)
             -> (spec    : Branch Local stack_r roles (s,t))
                       -> Type
     where
       O : (s    : String)
-       -> (body : Expr  roles types globals stack_g (t::stack_l) stack_r  whom g return)
-               -> Offer roles types globals stack_g     stack_l  stack_r         return whom (B s t g)
+       -> (body : Expr  roles rs  types globals stack_g (t::stack_l) stack_r  whom g return)
+               -> Offer roles rs  types globals stack_g     stack_l  stack_r         return whom (B s t g)
 
   public export
   data Offers : (roles   : List Ty.Role)
+             -> (rs      : List Ty.Role)
              -> (types   : List Ty.Base)
              -> (globals : List Ty.Session)
              -> (stack_g : List Ty.Method)
              -> (stack_l : List Ty.Base)
              -> (stack_r : List Kind) -- recursion variables
              -> (ret     : Ty.Base)
-             -> (whom    : IsVar roles MkRole)
+             -> (whom    :  Role roles)
              -> (os      : Local.Branches stack_r roles lts)
                         -> Type
     where
-      Nil : Offers roles types globals stack_g stack_l stack_r ret whom Nil
+      Nil : Offers roles rs types globals stack_g stack_l stack_r ret whom Nil
 
-      (::) : (o  : Offer  roles types globals stack_g stack_l stack_r ret whom o')
-          -> (os : Offers roles types globals stack_g stack_l stack_r ret whom os')
-                -> Offers roles types globals stack_g stack_l stack_r ret whom (o'::os')
+      (::) : (o  : Offer  roles rs types globals stack_g stack_l stack_r ret whom o')
+          -> (os : Offers roles rs types globals stack_g stack_l stack_r ret whom os')
+                -> Offers roles rs types globals stack_g stack_l stack_r ret whom (o'::os')
 
 
   public export
   data Expr : (roles   : List Ty.Role)
+           -> (rs      : List Ty.Role)
            -> (types   : List Ty.Base)
            -> (globals : List Ty.Session)
            -> (stack_g : List Ty.Method)
            -> (stack_l : List Ty.Base)
            -> (stack_r : List Kind) -- recursion variables
            -> (whom    : IsVar roles MkRole)
-           -> (local   : Local ks roles)
+           -> (local   : Local stack_r roles)
            -> (return  : Ty.Base)
                       -> Type
     where
       Hole : String
-          -> Expr roles types globals stack_g stack_l stack_r whom k type
+          -> Expr roles rs types globals stack_g stack_l stack_r whom k type
 
-      Seq : Expr roles types globals stack_g stack_l UNIT
-         -> Expr roles types globals stack_g stack_l stack_r whom k type
-         -> Expr roles types globals stack_g stack_l stack_r whom k type
+      Seq : Expr       rs types globals stack_g stack_l UNIT
+         -> Expr roles rs types globals stack_g stack_l stack_r whom k type
+         -> Expr roles rs types globals stack_g stack_l stack_r whom k type
 
       ||| Bind things to the *local* stack!
       Let : {type : Ty.Base}
-         -> (ty   : Ty         types                                                  type)
-         -> (expr : Expr roles types globals stack_g          stack_l                 type)
-         -> (rest : Expr roles types globals stack_g (type :: stack_l) stack_r whom k return)
-                 -> Expr roles types globals stack_g          stack_l  stack_r whom k return
+         -> (ty   : Ty            types                                                  type)
+         -> (expr : Expr       rs types globals stack_g          stack_l                 type)
+         -> (rest : Expr roles rs types globals stack_g (type :: stack_l) stack_r whom k return)
+                 -> Expr roles rs types globals stack_g          stack_l  stack_r whom k return
 
+      Split : {ss : _}
+           -> (expr : Expr       rs types globals stack_g                     stack_l  (TUPLE ss))
+           -> (rest : Expr roles rs types globals stack_g (Extra.toList ss ++ stack_l) stack_r whom k return)
+                   -> Expr roles rs types globals stack_g                     stack_l  stack_r whom k return
 
-      LetRec : Expr roles types globals stack_g stack_l (R::stack_r) whom      body  type
-            -> Expr roles types globals stack_g stack_l     stack_r  whom (Rec body) type
+      LetRec : Expr roles rs types globals stack_g stack_l (R::stack_r) whom      body  type
+            -> Expr roles rs types globals stack_g stack_l     stack_r  whom (Rec body) type
 
-      Call : (x : IsVar stack_r R)
-               -> Expr roles types globals stack_g stack_l stack_r whom (Call x) type
+      Call : (x : RecVar stack_r)
+               -> Expr roles rs types globals stack_g stack_l stack_r whom (Call x) type
 
-      Crash : Expr roles types globals stack_g stack_l type
-           -> Expr roles types globals stack_g stack_l stack_r whom Crash type
+      Crash : Expr       rs types globals stack_g stack_l type
+           -> Expr roles rs types globals stack_g stack_l stack_r whom Crash type
 
-      End : Expr roles types globals stack_g stack_l                  type
-         -> Expr roles types globals stack_g stack_l stack_r whom End type
+      End : Expr       rs types globals stack_g stack_l                  type
+         -> Expr roles rs types globals stack_g stack_l stack_r whom End type
 
-      Read : {m,ms : _} -> (from   : IsVar roles MkRole)
-          -> {o    : Branch  Local stack_r roles m}
-          -> {os   : Local.Branches stack_r roles ms}
+      Read : {m,ms   : _}
+          -> (from   : Role roles)
+          -> {o      : Branch  Local stack_r roles m}
+          -> {os     : Local.Branches stack_r roles ms}
           -> (prf    : Marshable (UNION (m:::ms)))
-          -> (offers : Offers  roles types globals stack_g stack_l stack_r type whom (o::os))
-          -> (onErr  : Expr roles types globals stack_g stack_l stack_r whom Crash type)
-                    -> Expr roles types globals stack_g stack_l stack_r whom
-                               (Choice BRANCH from (Val (UNION (m:::ms)))
+          -> (offers : Offers roles rs types globals stack_g stack_l stack_r type whom (o::os))
+          -> (onErr  : Expr   roles rs types globals stack_g stack_l stack_r whom Crash type)
+                    -> Expr   roles rs types globals stack_g stack_l stack_r whom
+                              (Choice BRANCH from (Val (UNION (m:::ms)))
                                                         prf
                                                         (o::os))
                                type
 
       Send : {mtype   : _}
-          -> (toWhom  : IsVar   roles MkRole)
-          -> (payload : Expr    roles types globals stack_g stack_l mtype)
+          -> (toWhom  : Role roles)
+          -> (payload : Expr    rs types globals stack_g stack_l mtype)
           -> (prf     : Marshable (l,mtype))
           -> (sel     : Select (B l mtype cont) prf (o::os) (g::gs))
-          -> (rest    : Expr roles types globals stack_g stack_l stack_r whom cont  type)
-          -> (onErr   : Expr roles types globals stack_g stack_l stack_r whom Crash type)
-                     -> Expr roles types globals stack_g stack_l stack_r whom
+          -> (rest    : Expr roles rs types globals stack_g stack_l stack_r whom cont  type)
+          -> (onErr   : Expr roles rs types globals stack_g stack_l stack_r whom Crash type)
+                     -> Expr roles rs types globals stack_g stack_l stack_r whom
                                 (Choice SELECT toWhom (Val (UNION (f:::fs)))
                                                       (UNION (g::gs))
                                                       (o::os))
@@ -141,7 +149,7 @@ mutual
 
 
 public export
-data Session : (roles : List Ty.Role)
+data Session : (rs    : List Ty.Role)
             -> (types : List Ty.Base)
             -> (sesh  : List Ty.Session)
             -> (stack : List Ty.Method)
@@ -150,7 +158,7 @@ data Session : (roles : List Ty.Role)
   where
     Sesh : {args   : List Ty.Base}
         -> {return : Ty.Base}
-        -> (body   : Expr    roles types ss stack args Nil whom l return)
-                  -> Session roles types ss stack    (SESH ctzt whom l args return)
+        -> (body   : Expr    roles rs types ss stack args Nil whom l return)
+                  -> Session rs types ss stack    (SESH ctzt whom l args return)
 
 -- [ EOF ]

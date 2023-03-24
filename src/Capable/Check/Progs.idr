@@ -27,10 +27,12 @@ import Capable.Check.Roles
 import Capable.Check.Protocols
 import Capable.Check.Exprs
 import Capable.Check.Funcs
+import Capable.Check.Sessions
 
 import Capable.Terms.Vars
 import Capable.Terms.Roles
 import Capable.Terms.Protocols
+import Capable.Terms.Sessions
 import Capable.Terms.Types
 import Capable.Terms.Exprs
 import Capable.Terms.Funcs
@@ -291,7 +293,8 @@ check env state (Def fc PROT n val scope)
 
        (g ** tm) <- synth (delta env) (rho env) val
 
-       let env   = { sigma $= \c => extend c n (S g)} env
+       let env = Sigma.extend env n (S (rho env) g)
+
        let state = {protocols $= insert n (P (rho env) tm)} state
 
        (scope, state) <- check env state scope
@@ -300,24 +303,16 @@ check env state (Def fc PROT n val scope)
 
 check env state (Def fc SESH n val scope)
   = do exists fc (gamma env) n
-       printLn "Sessions are not checked yet"
 
-       check env state scope
+       (SESH ctzt whom l as r ** tm) <- synth env val
+         | (ty ** _) => throwAt fc (SessionExpected ty)
 
-{-
-       (FUNC as r ** tm) <- synth env val
-         | (ty ** _) => throwAt fc (FunctionExpected ty)
-
-       let env   = Gamma.extend env n (FUNC as r)
-       let state = { funcs $= insert n (F tm)} state
+       let env = Gamma.extend env n (SESH ctzt whom l as r)
+       -- @ TODO add sessions to state
 
        (scope, state) <- check env state scope
+       pure (DefSesh tm scope, state)
 
---       tyTm <- reflect (delta env) (FUNC as r)
-
-       pure (DefFunc tm scope, state)
-
--}
 namespace Raw
   export
   check : (r : PROG) -> Capable (Program,State)

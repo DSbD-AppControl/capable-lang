@@ -1,6 +1,0 @@
-:load main.capable
-:project handshake Pinger
-:project handshake Ponger
-:project handshakeRec Pinger
-:project handshakeRec Ponger
-:q

@@ -40,7 +40,7 @@ namespace Ty
     FUNC : (args : List Base) -> (ret : Base) -> Method
 
     SESH : (ctxt : Context Role rs)
-        -> (whom : IsVar rs MkRole)
+        -> (whom : Role rs)
         -> (prot : Local Nil rs)
         -> (args : List Base)
         -> (ret  : Base)

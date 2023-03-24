@@ -59,7 +59,7 @@ namespace Global
       where
         End : Global ks ts rs End
 
-        Call : (prf : IsVar ks R)
+        Call : (prf : RecVar ks)
                    -> Global ks ts rs (Call prf)
 
         Rec : Global (R::ks) ts rs      type

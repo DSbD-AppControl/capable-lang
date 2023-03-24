@@ -86,7 +86,7 @@ process st (Project str str1)
            case Projection.Closed.project rs p of
              No msg _ => do putStrLn "Error projecting on: \{str1}."
                             todo st
-             Yes (R l _) => do putStrLn (Pretty.toString r l)
+             Yes (R l _) => do putStrLn (toString r l)
                                pure st
 
 export covering

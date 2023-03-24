@@ -29,7 +29,7 @@ import Capable.Terms.Roles
 export
 synth : {roles : List Ty.Role}
      -> (ctxt  : Context Ty.Role roles)
-     -> (syn   : Role r)
+     -> (syn   : Raw.Role.Role r)
               -> Capable (DPair Ty.Role (Role roles))
 synth ctxt (R x)
   = lookup ctxt (MkRef emptyFC x)

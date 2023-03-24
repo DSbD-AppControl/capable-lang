@@ -8,6 +8,8 @@ module Capable.Error
 
 import System.File
 import Language.JSON
+import Toolkit.DeBruijn.Context
+import Toolkit.DeBruijn.Context.Item
 import Toolkit.Data.Location
 import Toolkit.System
 import Toolkit.Text.Lexer.Run
@@ -28,8 +30,8 @@ namespace Generic -- @TODO Pull out to Toolkit?
   data Error : (type : Type) -> Type where
     E : (v : type) -> Error type
     S : (loc : FileContext)
-     -> (err : Error type)
-            -> Error type
+     -> (err : Generic.Error type)
+            -> Generic.Error type
 
 namespace Options
   public export
@@ -69,7 +71,8 @@ namespace Typing
     RolesExpected : List String -> Typing.Error
     RedundantRoles : List String -> Typing.Error
 
-
+    ProjectionError : Typing.Error
+    LabelMismatch : String -> List String -> Typing.Error
     SessionExpected : Ty.Method -> Typing.Error
     FunctionExpected : Ty.Method -> Typing.Error
     RecordExpected : Ty.Base -> Typing.Error
@@ -82,6 +85,7 @@ namespace Typing
     ArrayExpected : Ty.Base -> Error
 
     MismatchRole : Ref -> Ref -> Typing.Error
+    MismatchRoleS : String -> String -> Typing.Error
 
     MismatchM : (given,expected : Ty.Method)
                                -> Typing.Error
@@ -89,7 +93,8 @@ namespace Typing
     Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error
 
-
+    IllTypedSession : String -> Typing.Error
+    MismatchK : String -> String -> Typing.Error
 namespace Marshall
 
   public export

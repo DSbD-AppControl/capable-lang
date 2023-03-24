@@ -689,6 +689,21 @@ mutual
            tm <- reflect (delta env) ty
            pure (_ ** T tm expr)
 
+    export
+    check : {e        : EXPR}
+         -> {rs       : List Ty.Role}
+         -> {ds,ls : List Ty.Base} -> { gs : List Ty.Method }
+         -> {ss       : List Ty.Session}
+         -> (fc       : FileContext)
+         -> (env      : Env rs ds ss gs ls)
+         -> (ty       : Base)
+         -> (syn      : Expr e)
+                     -> Capable (Expr rs ds ss gs ls ty)
+    check fc env ty syn
+      = do (ty' ** expr) <- Exprs.synth env syn
+           Refl <- compare fc ty ty'
+           pure expr
+
 namespace Raw
   export
   synth : {rs       : List Ty.Role}
