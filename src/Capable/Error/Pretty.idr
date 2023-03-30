@@ -251,7 +251,7 @@ Show (Capable.Error) where
     = show err
 
   show (Marsh err)
-    = "Option Error\n" ++ show err
+    = "Marsh Error\n" ++ show err
 
   show (Opts r)
     = "Option Error\n" ++ show r

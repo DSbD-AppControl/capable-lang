@@ -14,7 +14,9 @@ import Data.List.Elem
 import Data.List1.Elem
 import Data.List.Quantifiers
 
+import Data.String
 import System.File
+import System.Escape
 
 import Toolkit.DeBruijn.Context
 import Toolkit.DeBruijn.Context.Item
@@ -92,7 +94,7 @@ start : Channel role -> Capable (Channel role)
 start (Waiting str)
   = either (error)
            (pure . Open)
-           (!(embed $ popen str ReadWrite))
+           (!(embed $ popen str WriteTruncate))
 start UsedNot = pure $ UsedNot
 start _
   = panic "Error starting channel"
@@ -124,9 +126,11 @@ sendOn : (str   : String)
 sendOn str idx chans
   = case read idx chans of
       Open fh
-        => either (error)
-                  (const $ pure ())
-                  (!(embed $ fPutStrLn fh str))
+        => do embed $ fflush fh
+              either (error)
+                  (const $ do (embed $ fflush fh)
+                              pure ())
+                  (!(embed $ fPutStrLn fh (trim str)))
 
       _ => panic "Channel in wrong state."
 
@@ -137,8 +141,10 @@ recvOn : (chan  : IsVar roles role)
 recvOn idx chans
   = case read idx chans of
       Open fh
-        => either error
-                  pure
+        => do embed $ fflush fh
+              either error
+                  (\res => do (embed $ fflush fh)
+                              pure (trim res))
                   (!(embed (fGetLine fh)))
 
       _ => panic "Channel in wrong state."

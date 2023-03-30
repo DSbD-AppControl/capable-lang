@@ -48,8 +48,8 @@ Show Token where
 
   show (ModeString str)    = showToken "ModeString" str
   show (LitInt n) = showToken "Int" n
-  show (LitStr s) = showToken "Str" s
-  show (LitChr s) = showToken "Chr" s
+  show (LitStr s) = "(Str \{s})"
+  show (LitChr s) = "(Chr \{s})"
 
   show (Symbol s) = showToken "Symbol" s
   show (WS ws) = "WS"

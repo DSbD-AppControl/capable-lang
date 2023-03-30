@@ -57,7 +57,9 @@ session echoClient <Echo as Client>(i : Int) -> MaybeInt
 
   -- Send message to server if comms crash then return (0)
   print("Sending message: ");
-  send Server msg(i) catch { printLn("Crashing"); crash(nout(unit)) }
+  printLn(toString(i));
+
+  send Server msg(i) catch { printLn("Crashing on Send"); crash(nout(unit)) }
 
   -- Recv message from server, if comms crash then return (0)
   recv Server {
@@ -65,9 +67,10 @@ session echoClient <Echo as Client>(i : Int) -> MaybeInt
     {
        print("Received message: ");
        printLn(toString(i));
+
        end(this(i))
     }
-  } catch { printLn("Crashing"); crash(nout(unit)) }
+  } catch { printLn("Crashing on Recv"); crash(nout(unit)) }
 }
 
 -- ### Program Entry Point
@@ -78,7 +81,7 @@ main()
   local val = 2;
 
   -- Run a session, assigning processes to roles.
-  local res : MaybeInt = run echoClient(val) with [Server as "python echoServer.py" ];
+  local res : MaybeInt = run echoClient(val) with [Server as "python3 echoServer.py" ];
 
   match res
   {

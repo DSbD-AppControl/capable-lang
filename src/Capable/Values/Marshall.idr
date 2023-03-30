@@ -12,6 +12,8 @@ import Data.List1.Elem
 import Data.Vect
 import Data.String
 
+import System.Escape
+
 import public Data.Singleton
 
 import public System.File

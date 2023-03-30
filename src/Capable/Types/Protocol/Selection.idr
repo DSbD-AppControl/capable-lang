@@ -85,4 +85,10 @@ select s (p::(p' :: ps)) ((B l b cont) :: (b'::bs)) with (decEq s l)
                   (R t c prf (There x)) => g (R t c prf x))
 
 
+export
+toIndex : {from : DList (String,Base) (Branch Local ks rs) (f::fs)}
+       -> Select (B s t c) prf from prfM -> Elem (s,t) (f::fs)
+toIndex Here = Here
+toIndex (There x) = There (toIndex x)
+
 -- [ EOF ]

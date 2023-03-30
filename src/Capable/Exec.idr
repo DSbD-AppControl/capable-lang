@@ -23,7 +23,7 @@ import Data.List1.Elem
 import Data.List.Quantifiers
 
 import System.File
-
+import System.Escape
 import Toolkit.Data.Vect.Extra
 import Toolkit.Data.DList
 import Toolkit.Data.DVect
@@ -573,9 +573,7 @@ mutual
               (do str <- recvOn from cs
                   unmarshall prf str)
 
-              (\err => do printLn err
-                          printLn "Crashing"
-                          Value h cs v p <- Exprs.eval env
+              (\err => do Value h cs v p <- Exprs.eval env
                                                  heap
                                                  rvars
                                                  cs
@@ -605,9 +603,7 @@ mutual
              msg <- marshall marsh v
              tryCatchFinally
                (sendOn (show msg) toWhom cs)
-               (\err => do printLn err
-                           printLn "Crashing"
-                           Value h cs v p <- Exprs.eval (weaken prf env)
+               (\err => do Value h cs v p <- Exprs.eval (weaken prf env)
                                                   h
                                                   rvars
                                                   cs
