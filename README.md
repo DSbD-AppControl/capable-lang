@@ -42,14 +42,13 @@ What we will contribute:
 1. A session typed runtime, including session error handling
 1. Capabilities, and what they may look like
 
-* Things to do that are interesting
+## Things to do that are interesting
 
-+ true coverage checking
-+ pattern matching...
-+ Garbage collection _a la_ rust?
++ true coverage checking & pattern matching...
++ Memory management _a la_ rust?
 + linear/quantitative types?
 + Completeness of Type-Checker. It would be nice to do the type-checking properly through a proof, but that is not a high priority.
-+ How best to add a session-typed runtime.
++ How best to provide a session-typed runtime.
 + How best to add capabilities.
 + ...
 
@@ -58,12 +57,24 @@ What we will contribute:
 
 Evaluation is through definitional interpretation based on work.
 
-> Casper Bach Poulsen, Arjen Rouvoet, Andrew Tolmach, Robbert Krebbers, and Eelco Visser. 2017. Intrinsically-typed definitional interpreters for imperative languages. Proc. ACM Program. Lang. 2, POPL, Article 16 (January 2018), 34 pages. https://doi.org/10.1145/3158104
+> Casper Bach Poulsen, Arjen Rouvoet, Andrew Tolmach, Robbert
+> Krebbers, and Eelco Visser. 2017. Intrinsically-typed definitional
+> interpreters for imperative languages. Proc. ACM Program. Lang. 2,
+> POPL, Article 16 (January 2018), 34
+> pages. https://doi.org/10.1145/3158104
 
 Session Types is through _Less is More_, based on:
 
-> Alceste Scalas and Nobuko Yoshida. 2019. Less is more: multiparty session types revisited. Proc. ACM Program. Lang. 3, POPL, Article 30 (January 2019), 29 pages. https://doi.org/10.1145/3290343
+> Alceste Scalas and Nobuko Yoshida. 2019. Less is more: multiparty
+> session types revisited. Proc. ACM Program. Lang. 3, POPL, Article
+> 30 (January 2019), 29 pages. https://doi.org/10.1145/3290343
 
+Use of Crash Local types is based on:
+
+> Simon Fowler, Sam Lindley, J. Garrett Morris, and Sára
+> Decova. 2019. Exceptional asynchronous session types: session types
+> without tiers. Proc. ACM Program. Lang. 3, POPL, Article 28 (January
+> 2019), 29 pages. https://doi.org/10.1145/3290341
 
 ## Artefact
 
