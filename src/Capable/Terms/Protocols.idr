@@ -84,4 +84,10 @@ namespace Global
                                             prf
                                             (b::bs))
 
+
+export
+getLabels : Branches ks ts rs bs -> List String
+getLabels [] = []
+getLabels ((B s type choice) :: x) = s :: getLabels x
+
 -- [ EOF ]

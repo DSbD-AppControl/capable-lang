@@ -19,7 +19,7 @@ import public Data.List1.Quantifiers
 import public Toolkit.Data.DList
 import public Toolkit.Data.DList.All
 
-
+import Capable.Error
 import public Capable.Types
 import public Capable.Types.Protocol
 import public Capable.Types.Protocol.Projection
@@ -89,7 +89,7 @@ mutual
          -> {0 global : Global ks rs}
          -> (whom : Role rs MkRole)
          -> (type : Global ks ts rs global)
-                 -> DecInfo () -- TODO
+                 -> DecInfo Projection.Error
                             (Result ks rs whom global)
   project whom End
     = Yes (R _ End)
@@ -102,7 +102,7 @@ mutual
       = Yes (R _ (Rec proj))
 
     project whom (Rec type) | (No msg no)
-      = No () -- TODO
+      = No (Rec msg)
            (\(R (Rec a) (Rec this)) => no (R a this))
 
   project whom (Choice s r noSR t p bs) with (involved whom s r noSR)
@@ -112,9 +112,10 @@ mutual
       project s (Choice s r noSR t p (b::bs)) | (Sends Refl) | (Yes (R (elem :: rest) (x :: y)))
         = Yes (R _ (Select (Same Refl Refl) (x :: y)))
       project s (Choice s r noSR t p (b::bs)) | (Sends Refl) | (No msg no)
-        = No () (\case (R _ (Select prf x)) => no (R _ x)
-                       (R _ (Offer prf x)) => no (R _ x)
-                       (R _ (Merge f prfR prf))  => f (Same Refl Refl))
+        = No (Select msg)
+             (\case (R _ (Select prf x)) => no (R _ x)
+                    (R _ (Offer prf x)) => no (R _ x)
+                    (R _ (Merge f prfR prf))  => f (Same Refl Refl))
 
     -- [ NOTE ] Receiving
     project r (Choice s r noSR t p (b :: bs)) | (Recvs Refl) with (Branches.project r (b::bs))
@@ -123,7 +124,7 @@ mutual
 
 
       project r (Choice s r noSR t p (b :: bs)) | (Recvs Refl) | (No msg no)
-        = No ()
+        = No (Offer msg)
              (\case (R _ (Select prf x)) => no (R _ x)
                     (R _ (Offer prf x)) => no (R _ x)
                     (R _ (Merge prfS prfR prf)) => prfR (Same Refl Refl))
@@ -135,7 +136,7 @@ mutual
         = Yes (R _ (Merge prfSNot prfRNot (S projs prf)))
 
       project whom (Choice s r noSR t p (b :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
-        = No ()
+        = No (Skip msg)
              (\case (R _ (Select prf x)) => prfSNot prf
                     (R _ (Offer prf x)) => prfRNot prf
                     (R _ (Merge prfS prfR (S projs prf))) => no (R _ (S projs prf)))
@@ -147,14 +148,14 @@ mutual
            -> (whom : Role rs MkRole)
            -> {0 g  : Branch Global ks    rs (s,t)}
            -> (type : Global.Branch ks ts rs g)
-                   -> DecInfo ()
+                   -> DecInfo Projection.Error
                               (Branch.Result ks rs whom g)
     project whom (B s type choice) with (project whom choice)
       project whom (B s type choice) | (Yes (R local proj))
         = Yes (R (B s t local) (B s t proj))
 
       project whom (B s type choice) | (No msg no)
-        = No ()
+        = No (BranchNotProjectionable s msg)
              (\case (R (B s t l) (B s t y)) => no (R l y))
 
   namespace Branches
@@ -165,7 +166,7 @@ mutual
            -> (  whom : Role rs MkRole)
            -> {0 bs   : Global.Branches ks rs lts}
            -> (type   : Branches ks ts rs bs)
-                     -> DecInfo () -- TODO
+                     -> DecInfo Projection.Error
                                 (Branches.Result ks rs whom bs)
     project whom []
       = Yes (R [] [])
@@ -175,11 +176,11 @@ mutual
         project whom (x :: xs) | (Yes (R l p)) | (Yes (R ls ps))
           = Yes (R (l :: ls) (p :: ps))
         project whom (x :: xs) | (Yes (R l p)) | (No msg no)
-          = No ()
+          = No msg
                (\case (R (y :: ys) (z :: zs)) => no (R ys zs))
 
       project whom (x :: xs) | (No msg no)
-        = No () (\case (R (y :: ys) (z :: zs)) => no (R y z))
+        = No msg (\case (R (y :: ys) (z :: zs)) => no (R y z))
 
   namespace Same
 
@@ -191,7 +192,7 @@ mutual
         -> {0 bs   : Global.Branches ks rs ls}
         -> (  whom : Role rs MkRole)
         -> (  gs   : Branches ks ts rs (b::bs))
-                  -> DecInfo ()
+                  -> DecInfo Projection.Error
                              (Same.Result ks rs whom (b::bs))
     same whom gs with (Branches.project whom gs)
       same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) with (branchesEq l' ls')
@@ -200,13 +201,13 @@ mutual
           = Yes (R _ (S (b' :: bs') prf))
 
         same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) | (No msg no)
-          = No ()
+          = No (NotAllSame (getLabels gs))
                (\case (R l (S (p :: ps) prf)) =>
                         no $ rewrite sym (funProject p  b') in
                              rewrite sym (funProject ps bs') in prf)
 
       same whom gs | (No msg no)
-        = No ()
+        = No msg
              (\case (R x (S projs prf)) => no (R _ projs))
 
 namespace Closed
@@ -215,7 +216,7 @@ namespace Closed
          -> {0 global : Global Nil rs}
          -> (whom : Role rs MkRole)
          -> (type : Global Nil ts rs global)
-                 -> DecInfo () -- TODO
+                 -> DecInfo Projection.Error
                             (Result Nil rs whom global)
   project
     = Projection.project

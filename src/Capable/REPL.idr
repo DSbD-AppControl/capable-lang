@@ -85,7 +85,8 @@ process st (Project str str1)
          Just (MkRole ** rs) =>
            case Projection.Closed.project rs p of
              No msg _ => do putStrLn "Error projecting on: \{str1}."
-                            todo st
+                            printLn msg
+                            pure st
              Yes (R l _) => do putStrLn (toString r l)
                                pure st
 

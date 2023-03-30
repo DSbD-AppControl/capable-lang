@@ -48,6 +48,16 @@ namespace Parsing
   data Error : Type where
      PError : String -> ParseError (Token) -> Parsing.Error
 
+namespace Projection
+  public export
+  data Error : Type where
+    NotAllSame : List String -> Projection.Error
+    BranchNotProjectionable : String -> Projection.Error -> Projection.Error
+    Skip : Projection.Error -> Projection.Error
+    Offer : Projection.Error -> Projection.Error
+    Select : Projection.Error -> Projection.Error
+    Rec : Projection.Error -> Projection.Error
+
 namespace Typing
   public export
   data Error : Type where

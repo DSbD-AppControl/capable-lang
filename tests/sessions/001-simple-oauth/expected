@@ -12,5 +12,7 @@ Capable> (selects from Client union {login : Unit; cancel : Unit} [ login(Unit)
                                                                                                   .End])
                                                            | cancel(Unit).End])
 Capable> Error projecting on: Auth.
-Not yet implemented
+Error merging:
+	Branches differ (TODO Make printing better!)
+	["login", "cancel"]
 Capable> Exiting the REPL

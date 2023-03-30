@@ -71,6 +71,24 @@ Show (Parsing.Error) where
   show (PError _ err)
     = show @{capablePE} err
 
+export
+Show (Projection.Error) where
+  show (NotAllSame bs) = "Branches differ (TODO Make printing better!)\n\t\{show bs}"
+  show (BranchNotProjectionable str x)
+    = unlines ["Error projecting branch \{str}:"
+              , "\n\t\{show x}"]
+
+  show (Skip x)
+    = "Error merging:\n\t\{show x}"
+
+  show (Offer x)
+    = "Error generating Offer:\n\t\{show x}"
+
+  show (Select x)
+    = "Error generating Select:\n\t\{show x}"
+
+  show (Rec x)
+    = "Error generating Rec:\n\t\{show x}"
 
 Show (Typing.Error) where
   show (MismatchK e g)
