@@ -3,9 +3,22 @@ Running Test
 # Finished Type Checking
 # Finished Parsing
 Type Checking Error
+maindeux.capable:61:2-0:
+Session is ill-typed, expecting an expression of type:
+	(selects from Server union {msg : Int} [ msg(Int)
+                                         .(offers to Server union {msg : Int} [ msg(Int)
+                                                                                .End])])
+but given:
+	End
+
+
+# Finished Parsing
+Type Checking Error
 mainerr.capable:62:2-0:
 Session is ill-typed, expecting an expression of type:
 	(offers to Server union {msg : Int} [msg(Int).End])
+but could not synthesis given type.
+
 
 # Finished Parsing
 Showing first available hole.
