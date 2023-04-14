@@ -58,6 +58,9 @@ mutual
     = do s <- Toolkit.location
          keyword "send"
          commit
+         symbol "["
+         ty <- type
+         symbol "]"
          r <- role
          l <- ref
          symbol "("
@@ -67,13 +70,16 @@ mutual
          er <- Sessions.block
          n <- Sessions.expr
          e <- Toolkit.location
-         pure (Branch (SEND (get l)) (newFC s e) [r,p,n,er])
+         pure (Branch (SEND (get l)) (newFC s e) [r,ty, p,n,er])
 
   read : Rule (AST EXPRSESH)
   read
       = do s <- Toolkit.location
            keyword "recv"
            commit
+           symbol "["
+           ty <- type
+           symbol "]"
            r <- role
            symbol "{"
            os <- some offer
@@ -81,7 +87,7 @@ mutual
            keyword "catch"
            err <- Sessions.block
            e <- Toolkit.location
-           pure (Branch READ (newFC s e) (r::err:: head os :: (DVect.fromList (tail os))))
+           pure (Branch READ (newFC s e) (r::ty::err:: head os :: (DVect.fromList (tail os))))
 
     where offer : Rule (AST OFFER)
           offer

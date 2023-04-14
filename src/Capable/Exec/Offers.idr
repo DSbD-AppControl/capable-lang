@@ -33,11 +33,11 @@ import Capable.Exec.Common
 %default total
 
 export
-getIndex : {o    : Branch  Local stack_r roles x}
-        -> {os   : Local.Branches stack_r roles xs}
+getIndex : {o    : Branch  Synth.Local stack_r roles x}
+        -> {os   : Synth.Branches stack_r roles xs}
         -> (prf    : Elem (s,a) (x::xs))
         -> (offers : Offers roles rs types globals stack_g stack_l stack_r ty whom (o::os))
-        -> DPair (Branch Local stack_r roles (s,a))
+        -> DPair (Branch Synth.Local stack_r roles (s,a))
                  (Offer roles rs types globals stack_g stack_l stack_r ty whom)
 getIndex Here ((O s body) :: z)
   = (B s _ _ ** O s body)

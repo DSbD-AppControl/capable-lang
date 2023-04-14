@@ -302,13 +302,14 @@ namespace Shape
 
     ||| A match term that reads from the channel, and then does stuff.
     READ : Shape EXPRSESH
-                 (S (S (S n)))
-                 (ROLE :: EXPRSESH :: replicate (S n) OFFER)
+                 (S (S (S (S n))))
+                 (ROLE :: TYPE :: EXPRSESH :: replicate (S n) OFFER)
 
     SEND : (label : String)
         -> Shape EXPRSESH
-                 4
+                 5
                  [ ROLE     -- to whom
+                 , TYPE     -- The Type
                  , EXPR     -- payload
                  , EXPRSESH -- rest
                  , EXPRSESH -- on error

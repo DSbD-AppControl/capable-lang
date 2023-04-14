@@ -91,18 +91,20 @@ mutual
       -- ## Channel Operations
       Read : (fc   : FileContext)
           -> (role : Role r)
+          -> (type : Ty ty)
           -> (prf  : AsVect os offers')
           -> (offs : All Offer offers')
           -> (onEr : Expr err)
-                  -> Expr (Branch READ fc (r::err::os))
+                  -> Expr (Branch READ fc (r::ty::err::os))
 
       Send : (fc : FileContext)
           -> (role : Role r)
+          -> (type : Ty ty)
           -> (s    : String)
           -> (msg  : Expr payload)
           -> (body : Expr rest)
           -> (exc  : Expr except)
-                  -> Expr (Branch (SEND s) fc [r, payload, rest, except])
+                  -> Expr (Branch (SEND s) fc [r, ty, payload, rest, except])
 
 namespace Offer
   export
@@ -121,8 +123,8 @@ namespace Expr
   getFC (Split fc ss val scope) = fc
   getFC (Crash fc expr) = fc
   getFC (End fc expr) = fc
-  getFC (Read fc role prf offs onEr) = fc
-  getFC (Send fc role l msg body exc) = fc
+  getFC (Read fc role ty prf offs onEr) = fc
+  getFC (Send fc role ty l msg body exc) = fc
 
 
 
@@ -191,12 +193,17 @@ mutual
   toExpr (Branch END_SESH fc [a])
     = End fc (toExpr a)
 
-  toExpr (Branch READ fc (r :: err :: os))
+  toExpr (Branch READ fc (r :: ty :: err :: os))
     = let (os ** prf) = asVect os
-      in Read fc (toRole r) prf (assert_total $ toOffers os) (toExpr err)
+      in Read fc (toRole r)
+                 (toType ty)
+                 prf
+                 (assert_total $ toOffers os)
+                 (toExpr err)
 
-  toExpr (Branch (SEND s) fc [r, val,scope,err])
+  toExpr (Branch (SEND s) fc [r, ty, val,scope,err])
     = Send fc (toRole r)
+              (toType ty)
               s
               (toExpr val)
               (toExpr scope)

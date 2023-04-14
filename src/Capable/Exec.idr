@@ -598,9 +598,9 @@ mutual
       -- 3. ship
       -- 4. if crash then continue else continue
       --
-      eval env heap rvars cs (Send toWhom payload marsh idx rest onErr)
+      eval env heap rvars cs (Send toWhom label payload marsh rest onErr)
         = do Value h v prf <- Exprs.eval env heap payload
-             msg <- marshall marsh v
+             msg <- marshall (F label marsh) v
              tryCatchFinally
                (sendOn (show msg) toWhom cs)
                (\err => do Value h cs v p <- Exprs.eval (weaken prf env)

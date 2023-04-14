@@ -25,6 +25,7 @@ import public Toolkit.Data.DList
 import public Toolkit.Data.DVect
 import public Toolkit.Data.Vect.Extra
 
+import Capable.Types.Protocol.Local.Synth
 import Capable.Types.Protocol.Selection
 
 import Capable.Terms.Types
@@ -49,7 +50,7 @@ mutual
             -> (stack_r : List Kind) -- recursion variables
             -> (ret     : Ty.Base)
             -> (whom    : Role roles)
-            -> (spec    : Branch Local stack_r roles (s,t))
+            -> (spec    : Branch Synth.Local stack_r roles (s,t))
                       -> Type
     where
       O : (s    : String)
@@ -65,8 +66,8 @@ mutual
              -> (stack_l : List Ty.Base)
              -> (stack_r : List Kind) -- recursion variables
              -> (ret     : Ty.Base)
-             -> (whom    :  Role roles)
-             -> (os      : Local.Branches stack_r roles lts)
+             -> (whom    : Role roles)
+             -> (os      : Synth.Branches stack_r roles lts)
                         -> Type
     where
       Nil : Offers roles rs types globals stack_g stack_l stack_r ret whom Nil
@@ -85,7 +86,7 @@ mutual
            -> (stack_l : List Ty.Base)
            -> (stack_r : List Kind) -- recursion variables
            -> (whom    : IsVar roles MkRole)
-           -> (local   : Local stack_r roles)
+           -> (local   : Synth.Local stack_r roles)
            -> (return  : Ty.Base)
                       -> Type
     where
@@ -122,28 +123,27 @@ mutual
 
       Read : {m,ms   : _}
           -> (from   : Role roles)
-          -> {o      : Branch  Local stack_r roles m}
-          -> {os     : Local.Branches stack_r roles ms}
+          -> {o      : Branch  Synth.Local stack_r roles m}
+          -> {os     : Synth.Branches stack_r roles ms}
           -> (prf    : Marshable (UNION (m:::ms)))
           -> (offers : Offers roles rs types globals stack_g stack_l stack_r type whom (o::os))
           -> (onErr  : Expr   roles rs types globals stack_g stack_l stack_r whom Crash type)
                     -> Expr   roles rs types globals stack_g stack_l stack_r whom
-                              (Choice BRANCH from (Val (UNION (m:::ms)))
-                                                        prf
-                                                        (o::os))
+                              (Offer from (Val (UNION (m:::ms)))
+                                          prf
+                                                      (o::os))
                                type
 
       Send : {mtype   : _}
           -> (toWhom  : Role roles)
+          -> (label   : String)
           -> (payload : Expr    rs types globals stack_g stack_l mtype)
-          -> (prf     : Marshable (l,mtype))
-          -> (sel     : Select (B l mtype cont) prf (o::os) (g::gs))
+          -> (mprf    : Marshable mtype)
           -> (rest    : Expr roles rs types globals stack_g stack_l stack_r whom cont  type)
           -> (onErr   : Expr roles rs types globals stack_g stack_l stack_r whom Crash type)
                      -> Expr roles rs types globals stack_g stack_l stack_r whom
-                                (Choice SELECT toWhom (Val (UNION (f:::fs)))
-                                                      (UNION (g::gs))
-                                                      (o::os))
+                                (Select toWhom label mtype mprf cont)
+
                                 type
 
 

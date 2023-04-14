@@ -20,6 +20,7 @@ import public Toolkit.Data.DList
 import public Toolkit.Data.DList.All
 
 import Capable.Error
+
 import public Capable.Types
 import public Capable.Types.Protocol
 import public Capable.Types.Protocol.Projection
@@ -40,7 +41,7 @@ namespace Protocl
              -> (global : Global ks rs)
                        -> Type
     where
-      R :  (local : Local ks rs)
+      R :  (local : Local.Local ks rs)
         -> (proj  : Protocol.Project ks rs whom global local)
                  -> Result ks rs whom global
 
@@ -53,7 +54,7 @@ namespace Branch
              -> (global : Branch Global ks rs (s,t))
                        -> Type
     where
-      R : (l    : Branch Local ks rs (s,t))
+      R : (l    : Branch Local.Local ks rs (s,t))
        -> (proj : Branch.Project ks rs whom g l)
                -> Result ks rs whom g
 

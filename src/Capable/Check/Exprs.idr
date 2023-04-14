@@ -37,7 +37,7 @@ import Debug.Trace
 
 %default total
 
-
+export
 isElem : (fc,fc' : FileContext)
       -> (s      : String)
       -> (xs     : List (String, Base))

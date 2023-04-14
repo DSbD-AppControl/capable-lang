@@ -154,7 +154,7 @@ data Closure : Ty.Method
 
     ClosSesh : {whom  : _}
             -> (ctzt  : Context Role rs)
-            -> {l     : Local Nil rs}
+            -> {l     : Synth.Local Nil rs}
             -> (scope : Session roles types globals stack_g (SESH ctzt whom l args ret))
             -> (env_g : DList Ty.Method (Closure)   stack_g)
                      -> Closure (SESH ctzt whom l args ret)

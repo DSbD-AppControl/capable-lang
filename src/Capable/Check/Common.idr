@@ -95,6 +95,15 @@ namespace Decidable
                -> Capable   a
     embedAtInfo = embedAt
 
+    namespace Error
+      export
+      embedAt : FileContext
+             -> (e -> Typing.Error)
+             -> DecInfo e a
+             -> Capable   a
+      embedAt _ _ (Yes p) = pure p
+      embedAt fc e (No msg _) = throwAt fc (e msg)
+
 export
 compare : (fc  : FileContext)
        -> (a,b : Ty.Base)
@@ -291,7 +300,7 @@ export
 showHoleSessionExit : Context Ty.Base ls
                    -> Context Ty.Role rs
                    -> Context Protocol.Kind ks
-                   -> Local ks rs
+                   -> Local.Local ks rs
                    -> String
                    -> Capable e
 showHoleSessionExit g r k t x
@@ -304,6 +313,6 @@ showHoleSessionExit g r k t x
        putStrLn "## Roles"
        printLn $ keys r
        putStrLn "---"
-       putStrLn "\{x} : TODO"
+       putStrLn "\{x} : \{toString k r t}"
        exitSuccess
 -- [ EOF ]

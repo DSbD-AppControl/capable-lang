@@ -30,7 +30,8 @@ import Capable.Bootstrap
 import Capable.Types.Role
 import Capable.Types.Base
 
-import Capable.Types.Protocol
+import Capable.Types.Protocol.Global
+import Capable.Types.Protocol.Local.Synth
 import Capable.Types.Protocol.Projection
 
 %default total
@@ -49,9 +50,14 @@ namespace HasRoles
           Call  : HasRoles rs lp Nil
           Rec   : HasRoles rs lp os
                -> HasRoles rs (Rec lp) os
+
+          Select : HasRoles rs cont os
+                -> Union [whom] os os' prf
+                -> HasRoles rs (Select whom label ty prfm cont) os'
+
           Choice : Branches.HasRoles rs bs os
                 -> Union [whom] os os' prf
-                -> Protocol.HasRoles rs (Choice kind whom ty prfm bs) os'
+                -> Protocol.HasRoles rs (Offer whom ty prfm bs) os'
 
       public export
       data Result : (rs : List Role) -> (p : Local ks rs) -> Type where
@@ -74,7 +80,7 @@ namespace HasRoles
     namespace Branches
       public export
       data HasRoles : (rs : List Role)
-                   -> (lp : Local.Branches ks rs lts)
+                   -> (lp : Synth.Branches ks rs lts)
                    -> (os : Roles rs ss)
                          -> Type
         where
@@ -86,8 +92,9 @@ namespace HasRoles
              -> Branches.HasRoles rs (b::bs) os''
 
       public export
-      data Result : (rs : List Role) -> (p : Local.Branches ks rs l) -> Type where
+      data Result : (rs : List Role) -> (p : Synth.Branches ks rs l) -> Type where
         R : {ss : _} -> (os : Roles rs ss) -> Branches.HasRoles rs lp os -> Result rs lp
+
 
 namespace HasRoles
   mutual
@@ -100,8 +107,11 @@ namespace HasRoles
       hasRoles (Rec x)
         = case hasRoles x of
             R _ r => R _ (Rec r)
-
-      hasRoles (Choice kind whom type prfM choices)
+      hasRoles (Select whom label ty prfM cont)
+        = case hasRoles cont of
+            R as res => case DList.union [whom] as of
+                          (ps ** zs ** prfTy ** prf) => R _ (Select res prf)
+      hasRoles (Offer whom type prfM choices)
         = case hasRoles choices of
             R as res => case DList.union [whom] as of
                           (ps ** zs ** prfTy ** prf) => R _ (Choice res prf)
@@ -115,7 +125,7 @@ namespace HasRoles
 
     namespace Branches
       export
-      hasRoles : (p : Local.Branches ks rs l) -> Branches.Result rs p
+      hasRoles : (p : Synth.Branches ks rs l) -> Branches.Result rs p
       hasRoles []
         = R _ []
       hasRoles (elem :: rest)
@@ -123,6 +133,7 @@ namespace HasRoles
             R a r => case hasRoles rest of
                        R bs rs => case DList.union a bs of
                                    (ps ** zs ** prfTy ** prf) => R _ (Add r rs prf)
+
 
 namespace UsesRole
   mutual
@@ -139,12 +150,24 @@ namespace UsesRole
           CHere : (whom : IsVar rs MkRole)
                -> (prf  : whom = role)
                        -> Protocol.UsesRole rs
-                                            (Choice kind whom ty prfm bs) role
+                                            (Offer whom ty prfm bs)
+                                                   role
+
+          SHere : (whom : IsVar rs MkRole)
+               -> (prf  : whom = role)
+                       -> Protocol.UsesRole rs (Select whom label ty prfM cont)
+                                                       role
+
+
+          SThere : (whom : IsVar rs MkRole)
+                -> (prf  : Not (whom = role))
+                        -> Protocol.UsesRole rs                            cont  role
+                        -> Protocol.UsesRole rs (Select whom label ty prfM cont) role
 
           CThere : (whom : IsVar rs MkRole)
                 -> (prf  : Not (whom = role))
-                -> Branches.UsesRole rs                           bs  role
-                -> Protocol.UsesRole rs (Choice kind whom ty prfm bs) role
+                -> Branches.UsesRole rs                     bs  role
+                -> Protocol.UsesRole rs (Offer whom ty prfm bs) role
 
     namespace Branch
       public export
@@ -159,7 +182,7 @@ namespace UsesRole
     namespace Branches
       public export
       data UsesRole : (rs : List Role)
-                   -> (lp : Local.Branches ks rs lts)
+                   -> (lp : Synth.Branches ks rs lts)
                    -> (r  : IsVar rs MkRole)
                           -> Type
         where
@@ -187,7 +210,7 @@ namespace UsesRole
   mutual
     namespace Protocol
       export
-      usesRole : (lp : Local ks rs)
+      usesRole : (lp : Synth.Local ks rs)
               -> (r  : IsVar rs MkRole)
                     -> Dec (UsesRole rs lp r)
       usesRole Crash _
@@ -205,13 +228,23 @@ namespace UsesRole
         usesRole (Rec x) r | (No contra)
           = No $ \case (Rec y) => contra y
 
-      usesRole (Choice kind whom type p choices) r with (Equality.decEq whom r)
-        usesRole (Choice kind whom type p choices) r | (Yes prf)
-          = Yes (CHere whom prf)
-        usesRole (Choice kind whom type p choices) r | (No contra) with (usesRole choices r)
-          usesRole (Choice kind whom type p choices) r | (No contra) | (Yes prf)
+      usesRole (Select whom label type p cont) r with (Equality.decEq whom r)
+        usesRole (Select whom label type p cont) r | (Yes prf)
+          = Yes (SHere whom prf)
+        usesRole (Select whom label type p cont) r | (No contra) with (usesRole cont r)
+          usesRole (Select whom label type p cont) r | (No contra) | (Yes prf)
+            = Yes (SThere whom contra prf)
+          usesRole (Select whom label type p cont) r | (No contra) | (No f)
+            = No $ \case (SHere whom prf) => contra prf
+                         (SThere whom prf y) => f y
+
+      usesRole (Offer whom type p choices) r with (Equality.decEq whom r)
+        usesRole (Offer whom type p choices) r | (Yes prf)
+           = Yes (CHere whom prf)
+        usesRole (Offer whom type p choices) r | (No contra) with (usesRole choices r)
+          usesRole (Offer whom type p choices) r | (No contra) | (Yes prf)
             = Yes (CThere whom contra prf)
-          usesRole (Choice kind whom type p choices) r | (No contra) | (No f)
+          usesRole (Offer whom type p choices) r | (No contra) | (No f)
             = No $ \case (CHere whom prf) => contra prf
                          (CThere whom prf y) => f y
 
@@ -228,7 +261,7 @@ namespace UsesRole
 
     namespace Branches
       export
-      usesRole : (lp : Local.Branches ks rs lts)
+      usesRole : (lp : Synth.Branches ks rs lts)
               -> (r  : IsVar rs MkRole)
                     -> Dec (UsesRole rs lp r)
       usesRole [] r

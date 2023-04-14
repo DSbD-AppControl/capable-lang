@@ -5,7 +5,7 @@ Running Test
 Type Checking Error
 mainerr.capable:62:2-0:
 Session is ill-typed, expecting an expression of type:
-	An offer needs to be made
+	(offers to Server union {msg : Int} [msg(Int).End])
 
 # Finished Parsing
 Showing first available hole.
@@ -17,7 +17,7 @@ i : Int
 ## Roles
 ["Server", "Client"]
 ---
-aa : TODO
+aa : (offers to Server union {msg : Int} [msg(Int).End])
 # Finished Parsing
 Type Checking Error
 mainun.capable:59:2-0:

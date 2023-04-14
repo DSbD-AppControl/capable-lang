@@ -29,7 +29,7 @@ import Capable.Bootstrap
 import Capable.Types.Role
 import Capable.Types.Base
 
-import Capable.Types.Protocol
+import Capable.Types.Protocol.Local
 
 %default total
 
@@ -50,6 +50,8 @@ data Select : (this : Branch Local ks rs (l,t))
 
 public export
 data Result : (s : String)
+           -> (ks   : List Kind)
+           -> (rs   : List Role)
            -> (from : DList (String,Base)
                             (Branch Local ks rs)
                             (fs))
@@ -58,16 +60,18 @@ data Result : (s : String)
                             (fs))
            -> Type
   where
-    R : (t : Base) -> (c : Local ks rs)
+    R : (t : Base)
+     -> (c : Local ks rs)
      -> (prf : Marshable (s,t))
-     -> Select (B s t c) prf from prfM -> Result s from prfM
+     -> Select (B s t c) prf from prfM
+     -> Result s ks rs from prfM
 
 
 export
 select : (s : String)
       -> (prf : DList (String, Base) Marshable ((f::fs)))
       -> (bs  : DList (String, Base) (Branch Local ks rs) (f::fs))
-             -> Dec (Result s bs prf )
+             -> Dec (Result s ks rs bs prf )
 select s (p::[]) ((B l b cont) :: []) with (decEq s l)
   select s (p::[]) ((B s b cont) :: []) | (Yes Refl)
     = Yes (R b cont p Here)

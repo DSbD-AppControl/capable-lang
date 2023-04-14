@@ -1,0 +1,34 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
+main()
+{
+  printLn("My First Program with files")
+; local mfh = popen("python3 echoServer.py", #(w))
+; match mfh
+  { when left(e) { printLn("Error opening") }
+
+    when right(fh)
+    { local resm = write(fh, "{ \"msg\" : 1 }")
+    ; match resm
+      { when left(err) { printLn("Error writing line.") }
+
+        when right(str)
+        { printLn("A line from the file:")
+        ; local resm = read(fh)
+        ; match resm
+          { when left(e) { printLn("Error closing.") }
+            when right(msg)
+            { printLn(msg)
+            ; close(fh)
+            }
+          }
+        }
+      }
+    }
+  }
+}

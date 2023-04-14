@@ -30,7 +30,8 @@ import Capable.Error
 import Capable.Types.Role
 import Capable.Types.Base
 
-import Capable.Types.Protocol
+import Capable.Types.Protocol.Global
+import Capable.Types.Protocol.Local
 
 %default total
 

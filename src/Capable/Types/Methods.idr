@@ -30,7 +30,7 @@ import public Toolkit.DeBruijn.Renaming
 import Capable.Bootstrap
 import Capable.Types.Role
 import Capable.Types.Base
-import Capable.Types.Protocol
+import Capable.Types.Protocol.Local.Synth
 
 %default total
 

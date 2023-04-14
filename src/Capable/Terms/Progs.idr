@@ -57,10 +57,9 @@ data Prog : (roles   : List Ty.Role)
                      -> Prog roles types globals                      stack   UNIT
 
     ||| A session definition.
-    DefSesh : {ctzt   : _}
+    DefSesh : {ctzt,l   : _}
            -> {args   : List Ty.Base}
            -> {return : Ty.Base}
-           -> {l      : Local Nil rs}
 --           -> (proto  : IsVar globals (S ctzt global))
            -> {whom   : Role rs}
 --           -> (prf    : Project Nil rs whom global l)

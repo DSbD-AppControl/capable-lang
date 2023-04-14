@@ -20,6 +20,7 @@ import public Toolkit.Data.Vect.Extra
 import public Toolkit.DeBruijn.Context
 import public Toolkit.DeBruijn.Context.Item
 
+import public Capable.Types.Protocol.Local.Synth
 import public Capable.Types.Protocol.Assignment
 
 import Capable.Terms.Types
@@ -245,7 +246,7 @@ mutual
     -> (globals  : List Ty.Session)
     -> (stack_g  : List Ty.Method)
     -> (stack_l  : List Ty.Base)
-    -> (proto    : Local ks roles)
+    -> (proto    : Synth.Local ks roles)
     -> (ps       : Roles roles ss)
                 -> Type
 
@@ -253,7 +254,6 @@ mutual
       Empty : Assignments roles rs t g sg sl p Nil
 
       KV : (whom : IsVar roles x)
---        -> (prf  : Protocol.UsesRole roles p whom)
         -> (val  : Expr              rs t g sg sl STR)
         -> (kvs  : Assignments roles rs t g sg sl p rest)
                 -> Assignments roles rs t g sg sl p (whom::rest)
