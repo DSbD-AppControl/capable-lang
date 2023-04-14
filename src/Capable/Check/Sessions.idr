@@ -635,12 +635,14 @@ namespace Expr
                                   (get ref)
 
     check e er ec p ret type term
-      = tryCatch (do R syn tm <- synth e er ec p ret term
-                     let msg = unlines [ toString ec er type
-                                            , toString ec er syn]
-                     throwAt (getFC term) (IllTypedSession msg))
+      = do R syn tm <- tryCatch (synth e er ec p ret term)
 
-                 (const $ throwAt (getFC term) (IllTypedSession (toString ec er type)))
+                                (const $ throwAt (getFC term) (IllTypedSession (unlines [toString ec er type
+                          , "but could not synthesis given type."])))
+
+           let msg = unlines [ toString ec er type
+                             , "but given:\n\t\{toString ec er syn}"]
+           throwAt (getFC term) (IllTypedSession msg)
 
 {-
 

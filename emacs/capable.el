@@ -11,6 +11,7 @@
 (defvar capable-keywords '("func"
                        "main"
                        "match"
+                       "catch"
                        "local"
                        "var"
                        "let"
