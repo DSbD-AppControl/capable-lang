@@ -1,6 +1,8 @@
 Running Test
+main.capable
 # Finished Parsing
 # Finished Type Checking
+maindeux.capable
 # Finished Parsing
 Type Checking Error
 maindeux.capable:61:2-0:
@@ -12,6 +14,7 @@ but given:
 	End
 
 
+mainerr.capable
 # Finished Parsing
 Type Checking Error
 mainerr.capable:62:2-0:
@@ -20,6 +23,7 @@ Session is ill-typed, expecting an expression of type:
 but could not synthesis given type.
 
 
+mainhole.capable
 # Finished Parsing
 Showing first available hole.
 Need to collect them...
@@ -31,6 +35,7 @@ i : Int
 ["Server", "Client"]
 ---
 aa : (offers to Server union {msg : Int} [msg(Int).End])
+mainun.capable
 # Finished Parsing
 Type Checking Error
 mainun.capable:59:2-0:
@@ -41,5 +46,3 @@ Roles matched:
     "Server"
 
 
-# Finished Parsing
-# Finished Type Checking

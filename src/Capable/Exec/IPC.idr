@@ -57,7 +57,7 @@ data Channel : (role : Ty.Role)
 
     Closed : Channel role
     Waiting : (str : String) -> Channel role
-    Open : (h : File)
+    Open : (h : SubProcess)
              -> Channel role
 
 
@@ -94,7 +94,7 @@ start : Channel role -> Capable (Channel role)
 start (Waiting str)
   = either (error)
            (pure . Open)
-           (!(embed $ popen str WriteTruncate))
+           (!(embed $ popen2 str))
 start UsedNot = pure $ UsedNot
 start _
   = panic "Error starting channel"
@@ -106,11 +106,12 @@ startAll = traverse start
 
 close : Channel role -> Capable (Channel role)
 close (Open fh)
-  = do _ <- embed (pclose fh)
+  = do _ <- embed (pclose (input fh))
+       _ <- embed (pclose (output fh))
        pure Closed
 close UsedNot = pure $ UsedNot
 close _
-  = panic "Error starting channel"
+  = panic "Error closing channel"
 
 export
 closeAll : Channels roles -> Capable (Channels roles)
@@ -126,11 +127,11 @@ sendOn : (str   : String)
 sendOn str idx chans
   = case read idx chans of
       Open fh
-        => do embed $ fflush fh
+        => do embed $ fflush (input fh)
               either (error)
-                  (const $ do (embed $ fflush fh)
-                              pure ())
-                  (!(embed $ fPutStrLn fh (trim str)))
+                     (const $ do (embed $ fflush (input fh))
+                                 pure ())
+                     (!(embed $ fPutStrLn (input fh) (trim str)))
 
       _ => panic "Channel in wrong state."
 
@@ -141,11 +142,11 @@ recvOn : (chan  : IsVar roles role)
 recvOn idx chans
   = case read idx chans of
       Open fh
-        => do embed $ fflush fh
+        => do embed $ fflush (output fh)
               either error
-                  (\res => do (embed $ fflush fh)
-                              pure (trim res))
-                  (!(embed (fGetLine fh)))
+                     (\res => do (embed $ fflush (output fh))
+                                 pure (trim res))
+                     (!(embed (fGetLine (output fh))))
 
       _ => panic "Channel in wrong state."
 

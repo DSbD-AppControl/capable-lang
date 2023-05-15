@@ -2,6 +2,7 @@ echo "Running Test"
 
 for i in `ls *.capable`;
 do
+    echo "$i"
     $1 --checkOnly $i
 done
 

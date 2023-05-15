@@ -9,14 +9,14 @@ def main():
         try:
             payload = json.loads(line.rstrip())
 
-        except ValueError as ex:
-            print(json.dumps({"msg" : str(ex), "payload" : line}))
-            continue
 
-        if "msg" in payload and len(payload.keys()) == 1:
-            print(json.dumps(payload))
-        else:
+            if "msg" in payload and len(payload.keys()) == 1:
+                sys.stdout.write(json.dumps(payload) + '\n')
+                break
+
+        except Exception as ex:
             print(json.dumps({"msg" : str(ex), "payload" : line}))
+            break
 
 if __name__ == "__main__":
     main()

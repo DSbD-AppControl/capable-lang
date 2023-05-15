@@ -1,24 +1,12 @@
 Running Test
-Capable> # Finished Parsing
+Single Shot
+# Finished Parsing
 # Finished Type Checking
-Capable> (selects from Ponger union {msg : Int} [ msg(Int)
-                                         .(offers to Ponger union {msg : Int} [ msg(Int)
-                                                                                .End])])
-Capable> (offers to Pinger union {msg : Int} [ msg(Int)
-                                      .(selects from Pinger union {msg : Int} [ msg(Int)
-                                                                                .End])])
-Capable> rec(a).
-  (selects from Ponger union {stop : Int; cont : Int} [ stop(Int)
-                                                        .(offers to Ponger union {msg : Int} [ msg(Int)
-                                                                                               .End])
-                                                        | cont(Int)
-                                                          .(offers to Ponger union {msg : Int} [ msg(Int)
-                                                                                                 .(Call a)])])
-Capable> rec(a).
-  (offers to Pinger union {stop : Int; cont : Int} [ stop(Int)
-                                                     .(selects from Pinger union {msg : Int} [ msg(Int)
-                                                                                               .End])
-                                                     | cont(Int)
-                                                       .(selects from Pinger union {msg : Int} [ msg(Int)
-                                                                                                 .(Call a)])])
-Capable> Exiting the REPL
+# Executing
+```
+My First Session-Typed Interaction
+Sending message: 2
+Received message: 2
+We echoed this, successfully: 2
+```
+# Finished

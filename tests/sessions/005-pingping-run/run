@@ -1,6 +1,12 @@
 echo "Running Test"
 
-$1 --repl < input
+echo "Single Shot"
+
+$1 singleshot.capable
+
+#echo "Recursive"
+
+# $1 singleshot.capable
 
 
 # Local Variables:
