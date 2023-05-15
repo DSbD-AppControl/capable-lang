@@ -1,4 +1,4 @@
-# -- [ Makefile ]
+ # -- [ Makefile ]
 #
 # Makefile for the project.
 #
@@ -63,10 +63,15 @@ capable-vm:
 	${MAKE} -C artefact artefact
 
 artefact: archive capable capable-doc capable-srcs capable-vm
+
 	mkdir -p artefact-staging
+
 	cp capable.tar.gz artefact-staging/capable.tar.gz
-	tar -zcvf artefact-staging/capable_doc.tar.gz ${BUILDDIR}/docs/
-	tar -zcvf artefact-staging/capable_html.tar.gz ${BUILDDIR}/html/
+
+	tar -zcvf artefact-staging/capable_doc.tar.gz -C ${BUILDDIR} docs
+
+	tar -zcvf artefact-staging/capable_html.tar.gz -C ${BUILDDIR} html
+
 	cp artefact/output/capable.box artefact-staging/
 	cp artefact/README.md artefact-staging/
 
