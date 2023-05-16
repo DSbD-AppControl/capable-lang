@@ -4,10 +4,9 @@ echo "Single Shot"
 
 $1 singleshot.capable
 
-#echo "Recursive"
+echo "Recursive"
 
-# $1 singleshot.capable
-
+$1 recursive.capable
 
 # Local Variables:
 # mode: sh

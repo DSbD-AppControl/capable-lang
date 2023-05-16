@@ -291,6 +291,9 @@ namespace Shape
     ||| Crash!
     CRASH_SESH : UN Shape EXPRSESH EXPR
 
+    ||| COnditions
+    COND_SESH : TRI Shape EXPRSESH EXPR EXPRSESH EXPRSESH
+
     ||| Return
     END_SESH : UN Shape EXPRSESH EXPR
 
@@ -381,6 +384,8 @@ namespace Shape
     show (LET_SESH x str)    = "(LET_SESH \{show x} \{show str})"
     show (LETREC_SESH str)   = "(LETREC_SESH \{show str})"
     show (SPLIT_SESH x)      = "(SPLIT_SESH \{show x})"
+
+    show (COND_SESH)        = "COND_SESH"
 
     show (CALL_SESH s)      = "(CALL_SESH \{show s})"
     show (CRASH_SESH)       = "CRASH_SESH"

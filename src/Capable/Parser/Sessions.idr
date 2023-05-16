@@ -170,11 +170,25 @@ mutual
                (\ty => pure (tri (LETTY_SESH sto (get v)) (newFC s e) ty ex scope))
                t
 
+  cond : Rule (AST EXPRSESH)
+  cond
+    = do s <- Toolkit.location
+         keyword "if"
+         commit
+         c <- Exprs.expr
+         lb <- Sessions.block
+         keyword "else"
+         rb <- Sessions.block
+         e <- Toolkit.location
+         pure (tri COND_SESH (newFC s e) c lb rb)
+
   rec : Rule (AST EXPRSESH)
   rec
     = do s <- Toolkit.location
          keyword "rec"
+         symbol "("
          l <- Capable.ref
+         symbol ")"
          scope <- Sessions.block
          e <- Toolkit.location
          pure (un (LETREC_SESH (get l)) (newFC s e) scope)
@@ -189,6 +203,7 @@ mutual
     <|> split
     <|> let_ "local" STACK
     <|> let_ "var"   HEAP
+    <|> cond
     <|> rec
     <|> send
     <|> read

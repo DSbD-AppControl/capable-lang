@@ -88,6 +88,13 @@ mutual
          -> (expr : Expr val)
                  -> Expr (Branch (END_SESH) fc [val])
 
+      -- ## Conditionalsa
+      Cond : (fc   : FileContext)
+          -> (cond : Expr test)
+          -> (tt   : Expr whenTrue)
+          -> (ff   : Expr whenFalse)
+                  -> Expr (Branch COND_SESH fc [test, whenTrue, whenFalse])
+
       -- ## Channel Operations
       Read : (fc   : FileContext)
           -> (role : Role r)
@@ -123,6 +130,7 @@ namespace Expr
   getFC (Split fc ss val scope) = fc
   getFC (Crash fc expr) = fc
   getFC (End fc expr) = fc
+  getFC (Cond fc _ _ _) = fc
   getFC (Read fc role ty prf offs onEr) = fc
   getFC (Send fc role ty l msg body exc) = fc
 
@@ -192,6 +200,11 @@ mutual
 
   toExpr (Branch END_SESH fc [a])
     = End fc (toExpr a)
+
+  toExpr (Branch COND_SESH fc [test, wt, wf])
+    = Cond fc (toExpr test)
+              (toExpr wt)
+              (toExpr wf)
 
   toExpr (Branch READ fc (r :: ty :: err :: os))
     = let (os ** prf) = asVect os

@@ -1,0 +1,133 @@
+-- ## Utilities
+--
+-- We are in a featherweight language that has no concept of:
+--
+-- + modules/imports;
+-- + polymorphism;
+--
+-- So we have some utilities for making writing program's better.
+--
+
+type MaybeInt = union { nout : Unit; this : Int}
+
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+-- ## A Recursive Ping Pong Protocol
+--
+-- Here is a flagship protocol: Echo!
+
+-- ### Roles
+--
+-- First we define some roles to make endpoints discernable.
+--
+role Client
+role Server
+
+-- ### Messages
+--
+-- Messages need to be labelled.
+--
+-- Our language supports _Tagged Unions_, which provide a source of
+-- message labels.
+--
+
+type cmd = union { stop : Int ; cont : Int }
+type rsp = union { msg  : Int }
+
+-- ### Actions
+--
+-- We now define our global multiparty session types.
+--
+
+protocol Echo
+  = rec(X)
+  . Client ==> Server [cmd] { stop(Int)
+                              . Server ==> Client [rsp] { msg(Int)
+                              . end
+                              }
+                            | cont(Int)
+                              . Server ==> Client [rsp] { msg(Int)
+                              . call(X)
+                              }
+  }
+
+-- ### Implementation
+--
+-- We now define a realisation of an Echo Client that echo's the numbers from 1..10.
+--
+session echoClient <Echo as Client>(s : Int, e : Int) -> MaybeInt
+{
+   printLn("Entering Session, initialising store.");
+   var cnt = s;
+   rec(X)
+   {
+
+      printLn("Checking if counter is less than 10");
+      if lt(!cnt,e)
+      {
+        print("Sending value to echo: ");
+        printLn(toString(!cnt));
+        send[cmd] Server cont(!cnt) catch { printLn("Crashing on Send"); crash(nout(unit)) }
+
+        printLn("Incrementing counter");
+        mut(cnt,add(!cnt,1));
+
+        printLn("Receiving response from server");
+        recv[rsp] Server
+        {
+          when msg(x)
+          {
+            print("Received: ");
+            printLn(toString(x));
+            printLn("Recursion");
+            call(X)
+          }
+        } catch { printLn("Crashing on Rec Recv"); crash(nout(unit)) }
+
+      } else
+      {
+        print("Sending one last echo message: ");
+        printLn(toString(!cnt));
+        send[cmd] Server stop(!cnt) catch { printLn("Crashing on Last send"); crash(nout(unit)) }
+
+        printLn("Receiving response from server");
+        recv[rsp] Server
+        {
+          when msg(x)
+          {
+            print("Received: ");
+            printLn(toString(x));
+            printLn("Stopping Session");
+            end(this(x))
+          }
+        } catch { printLn("Crashing on Final Recv"); crash(nout(unit)) }
+      }
+   }
+}
+
+
+
+-- ### Program Entry Point
+main()
+{
+  printLn("My First Session-Typed Interaction");
+
+  -- Run a session, assigning processes to roles.
+  match run echoClient(1,10) with [Server as "python3 echoServer.py" ]
+  {
+    when nout(i)
+    {
+      printLn("Oops we crashed!")
+    }
+    when this(i)
+    {
+      printLn("We did some echoing and counted up to 10.")
+    }
+  }
+}
+
+-- [ EOF ]

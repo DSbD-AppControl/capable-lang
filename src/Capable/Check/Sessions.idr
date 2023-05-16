@@ -186,6 +186,19 @@ namespace Expr
       = do tm <- check fc env ret expr
            pure (R End (End tm))
 
+    synth env er ec p ret (Cond fc cond tt ff)
+      = do tm <- check fc env BOOL cond
+           R tyT tmT <- synth env er ec p ret tt
+           R tyF tmF <- synth env er ec p ret ff
+
+           Refl <- embedAt fc (let msg = unlines [ "Branches differ:"
+                                                 , "\t When True:\n\t\t\{toString ec er tyT}"
+                                                 , "\t When False:\n\t\t\{toString ec er tyF}"]
+                               in IllTypedSession msg)
+                              (Synth.decEq tyT tyF)
+
+           pure (R tyT (Cond tm tmT tmF))
+
 
     synth env er ec p ret (LetRec fc s scope)
       = do (R l tm) <- synth env er (I s R :: ec) p ret scope
@@ -634,6 +647,20 @@ namespace Expr
                                   type
                                   (get ref)
 
+    check env er ec p ret type (Cond fc cond tt ff)
+      = do tm <- check fc env BOOL cond
+           R tyT prfT tmT <- check env er ec p ret type tt
+           R tyF prfF tmF <- check env er ec p ret type ff
+
+           Refl <- embedAt fc (let msg = unlines [ "Branches differ:"
+                                                 , "\t When True:\n\t\t\{toString ec er tyT}"
+                                                 , "\t When False:\n\t\t\{toString ec er tyF}"
+                                                 ]
+                               in IllTypedSession msg)
+                              (Equality.decEq tyT tyF)
+
+           pure (R tyT prfT (Cond tm tmT tmF))
+
     check e er ec p ret type term
       = do R syn tm <- tryCatch (synth e er ec p ret term)
 
@@ -644,17 +671,6 @@ namespace Expr
                              , "but given:\n\t\{toString ec er syn}"]
            throwAt (getFC term) (IllTypedSession msg)
 
-{-
-
-    check env er ec p type local expr
-      = do (R local' type' tm) <- synth env er ec p expr
-           Refl <- compare (getFC expr) type type'
-           Refl <- embedAt (getFC expr)
-                           (IllTypedSession "\{toString ec er local}\n\n\{toString ec er local'}")
-                           (Local.decEq local local')
-           pure tm
-
--}
 
 export
 synth : {rs   : List Ty.Role}

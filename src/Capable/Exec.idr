@@ -545,7 +545,15 @@ mutual
                              Value h cs v prf <- Exprs.eval env heap env_rs cs expr
                              pure (Value h cs v prf)
 
+      -- [ NOTE ]
+      eval env heap rvars cs (Cond test tt ff)
+        = do Value h (B b) prf0 <- Exprs.eval env heap test
+             if b
+               then do Value h cs v prf1 <- eval (weaken prf0 env) h rvars cs tt
+                       pure (Value h cs v (trans prf0 prf1))
 
+               else do Value h cs v prf1 <- eval (weaken prf0 env) h rvars cs ff
+                       pure (Value h cs v (trans prf0 prf1))
 
 
       -- [ NOTE ] The end of a communication session, must return
