@@ -74,7 +74,10 @@ mutual
             -> Unify (Rec this) (Rec that)
 
         Select : {this : _}
-              -> Select (B l tyM this) (F l prfM) (o::os) (p::ps)
+              -> Select (B l tyM this)
+                        (F l prfM)
+                        (o::os)
+                        (p::ps)
               -> Protocol.Unify this that
               -> Unify (Choice SELECT target (Val (UNION (f:::fs))) (UNION (p::ps)) (o::os))
                        (Select        target l tyM prfM that)
@@ -83,6 +86,11 @@ mutual
               -> Unify (Choice BRANCH target ty prfOS these)
                        (Offer         target ty prfOS those)
 
+        Choices : Unify this lthat
+               -> Unify this rthat
+               -> Unify this (Choices lthat rthat)
+
+{-
 Uninhabited (Unify Crash End) where
   uninhabited _ impossible
 
@@ -169,7 +177,7 @@ Uninhabited (Unify (Rec x) (Call a)) where
 
 Uninhabited (Unify (Rec x) (Offer whom typ prfM ca)) where
   uninhabited _ impossible
-
+-}
 {- @TODO Revisit
 mutual
   namespace Branch

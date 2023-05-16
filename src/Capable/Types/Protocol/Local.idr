@@ -51,7 +51,8 @@ data Local : List Kind -> List Role -> Type where
   End : Local ks rs
   Call : {vs : _} -> RecVar vs -> Local vs rs
   Rec : Local (R::vs) rs -> Local vs rs
-  Choice : {rs : _} -> (kind : ChoiceTy)
+  Choice : {rs : _}
+        -> (kind : ChoiceTy)
         -> (whom : Role rs)
         -> (type : Singleton (UNION (field:::fs)))
         -> (prfM   : Marshable (UNION (field:::fs)))

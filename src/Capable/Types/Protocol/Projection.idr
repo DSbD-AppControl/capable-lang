@@ -112,7 +112,11 @@ mutual
         S : {l : _}
          -> {ls : _}
          -> (projs : Branches.Project ks rs whom (g::gs) (l::ls))
-         -> (prf   : All (String,Base) (Branch Local ks rs) (Equal l) ll ls)
+         -> (prf   : All (String,Base)
+                         (Branch Local ks rs)
+                         (Equal l)
+                         ll
+                         ls)
                   -> Same ks rs whom (g::gs) l
 
 mutual

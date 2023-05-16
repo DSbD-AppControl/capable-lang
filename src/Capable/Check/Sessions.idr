@@ -152,19 +152,19 @@ namespace Expr
                    -> Result roles rs ds ss gs ks ls p lts ret
 
   namespace Exprs
-    mutual
-      synth : {e, roles, ls, ks : _}
-           -> {rs    : List Ty.Role}
-           -> {ds    : List Ty.Base}
-           -> {gs    : List Ty.Method}
-           -> {ss    : List Ty.Session}
-           -> (env   : Env rs ds ss gs ls)
-           -> (enr   : Context Role roles)
-           -> (enc   : Context Protocol.Kind ks)
-           -> (princ : Role roles)
-           -> (ret   : Base)
-           -> (expr  : Sessions.Expr e)
-                    -> Capable (Synth.Result roles rs ds ss gs ks ls princ ret)
+
+    synth : {e, roles, ls, ks : _}
+         -> {rs    : List Ty.Role}
+         -> {ds    : List Ty.Base}
+         -> {gs    : List Ty.Method}
+         -> {ss    : List Ty.Session}
+         -> (env   : Env rs ds ss gs ls)
+         -> (enr   : Context Role roles)
+         -> (enc   : Context Protocol.Kind ks)
+         -> (princ : Role roles)
+         -> (ret   : Base)
+         -> (expr  : Sessions.Expr e)
+                  -> Capable (Synth.Result roles rs ds ss gs ks ls princ ret)
 
     -- [ NOTE ] Session Typed Terms
 
@@ -191,13 +191,7 @@ namespace Expr
            R tyT tmT <- synth env er ec p ret tt
            R tyF tmF <- synth env er ec p ret ff
 
-           Refl <- embedAt fc (let msg = unlines [ "Branches differ:"
-                                                 , "\t When True:\n\t\t\{toString ec er tyT}"
-                                                 , "\t When False:\n\t\t\{toString ec er tyF}"]
-                               in IllTypedSession msg)
-                              (Synth.decEq tyT tyF)
-
-           pure (R tyT (Cond tm tmT tmF))
+           pure (R (Choices tyT tyF) (Cond tm tmT tmF))
 
 
     synth env er ec p ret (LetRec fc s scope)
@@ -372,7 +366,7 @@ namespace Expr
                      pure (Lambda.extend rest x y)
 
 
-    export
+    partial export
     check : {e, roles, ls,ks : _}
          -> {rs   : List Ty.Role}
          -> {ds   : List Ty.Base}
@@ -424,6 +418,7 @@ namespace Expr
 
            pure (R (Rec lsyn) (Rec prf) (LetRec tm))
 
+
     --
     check e er ec p ret (Choice BRANCH whom (Val (UNION ((l,t):::fs)))
                                                  (UNION (m::ms))
@@ -458,7 +453,7 @@ namespace Expr
            R Crash Crash onErr <- check e er ec p ret Crash onErr
 
            -- 5. Return Evidence
-           pure (Check.R
+           pure (R
                    (Offer target (Val (UNION ((lf,tf):::fields)))
                                  (UNION (m::ms))
                                  (B lf tf synO::synOS))
@@ -639,6 +634,18 @@ namespace Expr
               = do rest <- zip env xs ys
                    pure (Lambda.extend rest x y)
 
+    check env er ec p ret type (Cond fc cond tt ff)
+      = do tm <- check fc env BOOL cond
+
+           R tyL uL tmL <- check env er ec p ret type tt
+           R tyR uR tmR <- check env er ec p ret type ff
+
+           pure (R (Choices tyL  tyR)
+                   (Choices uL   uR)
+                   (Cond tm tmL  tmR)
+                )
+
+
     -- [ NOTE ] Holes are only checkable terms as they inherit the checked types.
     check env er ec princ ret type (Hole ref prf)
       = showHoleSessionExit (lambda env)
@@ -646,20 +653,6 @@ namespace Expr
                                   ec
                                   type
                                   (get ref)
-
-    check env er ec p ret type (Cond fc cond tt ff)
-      = do tm <- check fc env BOOL cond
-           R tyT prfT tmT <- check env er ec p ret type tt
-           R tyF prfF tmF <- check env er ec p ret type ff
-
-           Refl <- embedAt fc (let msg = unlines [ "Branches differ:"
-                                                 , "\t When True:\n\t\t\{toString ec er tyT}"
-                                                 , "\t When False:\n\t\t\{toString ec er tyF}"
-                                                 ]
-                               in IllTypedSession msg)
-                              (Equality.decEq tyT tyF)
-
-           pure (R tyT prfT (Cond tm tmT tmF))
 
     check e er ec p ret type term
       = do R syn tm <- tryCatch (synth e er ec p ret term)
@@ -693,13 +686,17 @@ synth env (Sesh fc prin ref p prf as ret scope)
                                   (ProjectionError) -- @TODO Error messages.
                                   (Projection.Closed.project principle tyGlobal)
 
-       R tyLocal' prf tm <- check ({ lambda := expand as} env)
-                                  rh
-                                  Nil
-                                  principle
-                                  tyRET
-                                  tyLocal
-                                  scope
+       R tyLocal' prf tm <- assert_total -- @TODO this is bad, but the
+                                         -- totality hcecker is
+                                         -- throwing an error where
+                                         -- there _should not_ be one.
+                            $ check ({ lambda := expand as} env)
+                                    rh
+                                    Nil
+                                    principle
+                                    tyRET
+                                    tyLocal
+                                    scope
 
        pure (SESH rh principle tyLocal' tyARGS tyRET ** Sesh tm)
 

@@ -53,6 +53,9 @@ data Local : List Kind -> List Role -> Type where
                             (field::fs))
                   -> Local ks rs
 
+  Choices : {rs,ks:_} -> (left,right : Local ks rs)
+                       -> Local ks rs
+
 
 public export
 Branches : List Kind -> List Role -> List (String, Base)-> Type
@@ -76,6 +79,9 @@ Uninhabited (Synth.Crash = (Synth.Select a b c d e)) where
 Uninhabited (Synth.Crash = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
+Uninhabited (Synth.Crash = (Synth.Choices a b)) where
+  uninhabited Refl impossible
+
 Uninhabited (Synth.End = (Synth.Call x)) where
   uninhabited Refl impossible
 
@@ -88,6 +94,9 @@ Uninhabited (Synth.End = (Synth.Select a b c d e)) where
 Uninhabited (Synth.End = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
+Uninhabited (Synth.End = (Synth.Choices a b)) where
+  uninhabited Refl impossible
+
 Uninhabited (Synth.Call x = (Synth.Rec y)) where
   uninhabited Refl impossible
 
@@ -97,16 +106,26 @@ Uninhabited (Synth.Call x = (Synth.Select a b c d e)) where
 Uninhabited (Synth.Call x = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
+Uninhabited (Synth.Call x = (Synth.Choices a b)) where
+  uninhabited Refl impossible
+
 Uninhabited (Synth.Rec x = (Synth.Select a b c d e)) where
   uninhabited Refl impossible
 
 Uninhabited (Synth.Rec x = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
+Uninhabited (Synth.Rec x = (Synth.Choices a b)) where
+  uninhabited Refl impossible
 
 Uninhabited ((Synth.Select a b c d e) = (Synth.Offer x y z w)) where
   uninhabited Refl impossible
 
+Uninhabited ((Synth.Select a b c d e) = (Synth.Choices x y)) where
+  uninhabited Refl impossible
+
+Uninhabited ((Synth.Offer a b c d) = (Synth.Choices x y)) where
+  uninhabited Refl impossible
 
 mutual
   namespace Branch
@@ -155,6 +174,9 @@ mutual
   decEq Crash (Offer kind whom ty prf)
     = No absurd
 
+  decEq Crash (Choices l r)
+    = No absurd
+
 
   decEq End Crash
     = No (negEqSym absurd)
@@ -167,6 +189,8 @@ mutual
   decEq End (Select kind whom ty prf choices)
     = No absurd
   decEq End (Offer kind whom ty prf)
+    = No absurd
+  decEq End (Choices l r)
     = No absurd
 
 
@@ -187,6 +211,9 @@ mutual
     = No absurd
   decEq (Call x) (Offer kind whom ty prf)
     = No absurd
+  decEq (Call x) (Choices l r)
+    = No absurd
+
 
   decEq (Rec x) Crash
     = No (negEqSym absurd)
@@ -203,6 +230,9 @@ mutual
 
   decEq (Rec x) (Select kind whom ty prf choices) = No absurd
   decEq (Rec x) (Offer  kind whom ty prf) = No absurd
+  decEq (Rec x) (Choices l r)
+    = No absurd
+
 
   decEq (Select kind whom t p choices) Crash
     = No (negEqSym absurd)
@@ -232,6 +262,9 @@ mutual
 
   decEq (Select kind whom t p choices) (Offer x type prfM y)
     = No absurd
+  decEq (Select kind whom t p choices) (Choices l r)
+    = No absurd
+
 
   decEq (Offer kind whom t p) Crash
     = No (negEqSym absurd)
@@ -257,6 +290,26 @@ mutual
                         => case decEq csX csY of
                              No no => No (\Refl => no Refl)
                              Yes Refl => Yes Refl
+
+  decEq (Offer kind whom t p) (Choices l r)
+    = No absurd
+
+  decEq (Choices l r) Crash
+    = No (negEqSym absurd)
+  decEq (Choices l r) End
+    = No (negEqSym absurd)
+  decEq (Choices l r) (Call x)
+    = No (negEqSym absurd)
+  decEq (Choices l r) (Rec x)
+    = No (negEqSym absurd)
+  decEq (Choices l r) (Select whom label type prf cont)
+    = No (negEqSym absurd)
+  decEq (Choices l r) (Offer whom type prfM choices)
+    = No (negEqSym absurd)
+  decEq (Choices l r) (Choices left right)
+    = decDo $ do Refl <- Synth.decEq l left  `otherwise` (\Refl => Refl)
+                 Refl <- Synth.decEq r right `otherwise` (\Refl => Refl)
+                 pure Refl
 
   public export
   DecEq (Local ks rs) where
@@ -342,6 +395,14 @@ namespace Closed
       , pretty (reflect rctxt whom)
       , pretty (show (UNION (f:::fs)))
       , hang 2 (branches acc kctxt rctxt cs) ]
+
+    pretty acc kctxt rctxt (Choices l r)
+      = group
+      $ parens
+      $ hsep
+      [ pretty "Choices"
+      , hang 2 $ pretty acc kctxt rctxt l
+      , hang 2 $ pretty acc kctxt rctxt r]
 
   export
   toString : (rctxt : Context Ty.Role rs)

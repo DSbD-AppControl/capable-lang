@@ -112,9 +112,10 @@ mutual
       LetRec : Expr roles rs types globals stack_g stack_l (R::stack_r) whom      body  type
             -> Expr roles rs types globals stack_g stack_l     stack_r  whom (Rec body) type
 
-      Cond : (cond  : Expr       rs types globals stack_g stack_l BOOL)
-          -> (tt,ff : Expr roles rs types globals stack_g stack_l stack_r whom k type)
-                   -> Expr roles rs types globals stack_g stack_l stack_r whom k type
+      Cond : (cond : Expr       rs types globals stack_g stack_l                            BOOL)
+          -> (tt   : Expr roles rs types globals stack_g stack_l stack_r whom l             type)
+          -> (ff   : Expr roles rs types globals stack_g stack_l stack_r whom r             type)
+                  -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices l r) type
 
       Call : (x : RecVar stack_r)
                -> Expr roles rs types globals stack_g stack_l stack_r whom (Call x) type

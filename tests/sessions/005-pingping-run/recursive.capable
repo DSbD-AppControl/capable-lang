@@ -71,6 +71,7 @@ session echoClient <Echo as Client>(s : Int, e : Int) -> MaybeInt
       {
         print("Sending value to echo: ");
         printLn(toString(!cnt));
+
         send[cmd] Server cont(!cnt) catch { printLn("Crashing on Send"); crash(nout(unit)) }
 
         printLn("Incrementing counter");
@@ -92,6 +93,7 @@ session echoClient <Echo as Client>(s : Int, e : Int) -> MaybeInt
       {
         print("Sending one last echo message: ");
         printLn(toString(!cnt));
+
         send[cmd] Server stop(!cnt) catch { printLn("Crashing on Last send"); crash(nout(unit)) }
 
         printLn("Receiving response from server");
@@ -117,7 +119,7 @@ main()
   printLn("My First Session-Typed Interaction");
 
   -- Run a session, assigning processes to roles.
-  match run echoClient(1,10) with [Server as "python3 echoServer.py" ]
+  match run echoClient(1,10) with [Server as "python3 pingpong_r.py" ]
   {
     when nout(i)
     {
