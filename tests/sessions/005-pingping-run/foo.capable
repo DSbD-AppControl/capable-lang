@@ -66,49 +66,47 @@ session echoClient <Echo as Client>(s : Int, e : Int) -> MaybeInt
    rec(X)
    {
 
-      printLn("Checking if counter is less than 10");
-      if gt(!cnt,e)
+      if lt(10,s)
       {
 
-        print("Sending one last echo message: ");
-        printLn(toString(!cnt));
+      printLn("t Checking if counter is less than 10");
+      print("Sending one last echo message: ");
+      printLn(toString(!cnt));
 
-        send[cmd] Server stop(!cnt) catch { printLn("Crashing on Last send"); crash(nout(unit)) }
+      send[cmd] Server stop(!cnt) catch { printLn("Crashing on Last send"); crash(nout(unit)) }
 
-        printLn("Receiving response from server");
-        recv[rsp] Server
+      printLn("Receiving response from server");
+      recv[rsp] Server
+      {
+        when msg(x)
         {
-          when msg(x)
-          {
-            print("Received: ");
-            printLn(toString(x));
-            printLn("Stopping Session");
-            end(this(x))
-          }
-        } catch { printLn("Crashing on Final Recv"); crash(nout(unit)) }
+          print("Received: ");
+          printLn(toString(x));
+          printLn("Stopping Session");
+          end(this(1))
+        }
+      } catch { printLn("Crashing on Final Recv"); crash(nout(unit)) }
       } else
       {
-        print("Sending value to echo: ");
-        printLn(toString(!cnt));
+       printLn("f Checking if counter is less than 10");
+      print("Sending one last echo message: ");
+      printLn(toString(!cnt));
 
-        send[cmd] Server cont(!cnt) catch { printLn("Crashing on Send"); crash(nout(unit)) }
+      send[cmd] Server stop(!cnt) catch { printLn("Crashing on Last send"); crash(nout(unit)) }
 
-        printLn("Incrementing counter");
-        mut(cnt,add(!cnt,1));
-
-        printLn("Receiving response from server");
-        recv[rsp] Server
+      printLn("Receiving response from server");
+      recv[rsp] Server
+      {
+        when msg(x)
         {
-          when msg(x)
-          {
-            print("Received: ");
-            printLn(toString(x));
-            printLn("Recursion");
-            call(X)
-          }
-        } catch { printLn("Crashing on Rec Recv"); crash(nout(unit)) }
+          print("Received: ");
+          printLn(toString(x));
+          printLn("Stopping Session");
+          end(this(2))
+        }
+      } catch { printLn("Crashing on Final Recv"); crash(nout(unit)) }
+}
 
-      }
    }
 }
 

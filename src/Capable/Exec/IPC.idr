@@ -127,12 +127,11 @@ sendOn : (str   : String)
 sendOn str idx chans
   = case read idx chans of
       Open fh
-        => do embed $ fflush (input fh)
+        => do res <- embed $ fPutStrLn (input fh) (trim str)
+              embed $ fflush (input fh)
               either (error)
-                     (const $ do (embed $ fflush (input fh))
-                                 pure ())
-                     (!(embed $ fPutStrLn (input fh) (trim str)))
-
+                     (const $ pure ())
+                     res
       _ => panic "Channel in wrong state."
 
 export
@@ -142,11 +141,11 @@ recvOn : (chan  : IsVar roles role)
 recvOn idx chans
   = case read idx chans of
       Open fh
-        => do embed $ fflush (output fh)
+        => do res <- embed (fGetLine (output fh))
+              embed $ fflush (output fh)
               either error
-                     (\res => do (embed $ fflush (output fh))
-                                 pure (trim res))
-                     (!(embed (fGetLine (output fh))))
+                     (\res => pure (trim res))
+                     res
 
       _ => panic "Channel in wrong state."
 

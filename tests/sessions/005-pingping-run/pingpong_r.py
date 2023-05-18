@@ -8,14 +8,14 @@ def main():
     for line in sys.stdin:
         try:
             payload = json.loads(line.rstrip())
-
+            sys.stdin.flush
 
             if "stop" in payload and len(payload.keys()) == 1:
-                sys.stdout.write(json.dumps({"msg" : payload["stop"]}) + '\n')
+                print(json.dumps({"msg" : payload["stop"]}),flush=True)
                 break
 
             if "cont" in payload and len(payload.keys()) == 1:
-                sys.stdout.write(json.dumps({"msg" : payload["cont"]}) + '\n')
+                print(json.dumps({"msg" : payload["cont"]}),flush=True)
                 continue
 
         except Exception as ex:

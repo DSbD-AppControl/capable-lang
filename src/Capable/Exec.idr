@@ -528,7 +528,7 @@ mutual
 
       -- [ NOTE ] Push a closure onto the stack...
       eval env@(MkEnv eg el) heap rvars cs (LetRec x)
-        = do let c = SS (LetRec x) el rvars :: rvars
+        = do let c = SS x el rvars :: rvars
              Value h cs v prf0 <- Exprs.eval env heap c cs x
              pure (Value h cs v prf0)
 
@@ -542,7 +542,7 @@ mutual
              case isSubset heap env_l of
                No _ => panic "Shouldn't happen..."
                Yes prf => do let env = weaken prf $ (MkEnv env_g env_l)
-                             Value h cs v prf <- Exprs.eval env heap env_rs cs expr
+                             Value h cs v prf <- Exprs.eval env heap env_rs cs (LetRec expr)
                              pure (Value h cs v prf)
 
       -- [ NOTE ]
@@ -578,24 +578,24 @@ mutual
       -- Else index into offers and continue
       eval env heap rvars cs (Read from prf offers onErr)
           = tryCatchFinally
-              (do str <- recvOn from cs
-                  unmarshall prf str)
+                (do str <- recvOn from cs
+                    unmarshall prf str)
 
-              (\err => do Value h cs v p <- Exprs.eval env
-                                                 heap
-                                                 rvars
-                                                 cs
-                                                 onErr
+                (\err => do Value h cs v p <- Exprs.eval env
+                                                   heap
+                                                   rvars
+                                                   cs
+                                                   onErr
+                            pure (Value h cs v p))
+                (\(Tag s idx val)
+                    => do let (_ ** O _ body) = getIndex idx offers
+                          let e' = extend_l (strengthen heap val Empty) env
+                          Value h cs v p <- Exprs.eval e'
+                                                   heap
+                                                   rvars
+                                                   cs
+                                                   body
                           pure (Value h cs v p))
-              (\(Tag s idx val)
-                  => do let (_ ** O _ body) = getIndex idx offers
-                        let e' = extend_l (strengthen heap val Empty) env
-                        Value h cs v p <- Exprs.eval e'
-                                                 heap
-                                                 rvars
-                                                 cs
-                                                 body
-                        pure (Value h cs v p))
 
 
       -- [ NOTE ]

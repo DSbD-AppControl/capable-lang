@@ -182,7 +182,7 @@ namespace RVars
                       globals
                       stack_g
                       stack_l
-                      stack_r
+                      (R :: stack_r)
                       whom body type)
       -> (envl : DList Ty.Base (Value old) stack_l)
       -> (envr : DList Kind (SubSesh rs roles types globals stack_g type) stack_r)

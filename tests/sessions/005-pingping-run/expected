@@ -1,5 +1,95 @@
 Running Test
-Single Shot
+foo.capable
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+My First Session-Typed Interaction
+Entering Session, initialising store.
+f Checking if counter is less than 10
+Sending one last echo message: 1
+Receiving response from server
+Received: 1
+Stopping Session
+We did some echoing and counted up to 10.
+```
+# Finished
+recursive.capable
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+My First Session-Typed Interaction
+Entering Session, initialising store.
+Checking if counter is less than 10
+Sending value to echo: 1
+Incrementing counter
+Receiving response from server
+Received: 1
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 2
+Incrementing counter
+Receiving response from server
+Received: 2
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 3
+Incrementing counter
+Receiving response from server
+Received: 3
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 4
+Incrementing counter
+Receiving response from server
+Received: 4
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 5
+Incrementing counter
+Receiving response from server
+Received: 5
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 6
+Incrementing counter
+Receiving response from server
+Received: 6
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 7
+Incrementing counter
+Receiving response from server
+Received: 7
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 8
+Incrementing counter
+Receiving response from server
+Received: 8
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 9
+Incrementing counter
+Receiving response from server
+Received: 9
+Recursion
+Checking if counter is less than 10
+Sending value to echo: 10
+Incrementing counter
+Receiving response from server
+Received: 10
+Recursion
+Checking if counter is less than 10
+Sending one last echo message: 11
+Receiving response from server
+Received: 11
+Stopping Session
+We did some echoing and counted up to 10.
+```
+# Finished
+singleshot.capable
 # Finished Parsing
 # Finished Type Checking
 # Executing
@@ -7,6 +97,18 @@ Single Shot
 My First Session-Typed Interaction
 Sending message: 2
 Received message: 2
+We echoed this, successfully: 2
+```
+# Finished
+temp.capable
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+My First Session-Typed Interaction
+Sending message: 2
+Received: 2
+Recursion
 We echoed this, successfully: 2
 ```
 # Finished

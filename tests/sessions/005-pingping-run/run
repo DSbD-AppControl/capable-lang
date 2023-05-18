@@ -1,12 +1,10 @@
 echo "Running Test"
 
-echo "Single Shot"
-
-$1 singleshot.capable
-
-echo "Recursive"
-
-$1 recursive.capable
+for i in `ls *.capable`;
+do
+    echo "$i"
+    $1 $i
+done
 
 # Local Variables:
 # mode: sh

@@ -9,14 +9,13 @@ def main():
         try:
             payload = json.loads(line.rstrip())
             sys.stdin.flush
-
             if "msg" in payload and len(payload.keys()) == 1:
-                print(json.dumps(payload) + '\n', flush=True)
-                break
+                print(json.dumps({"msg" : payload["msg"]}),flush=True)
+                continue
 
         except Exception as ex:
-            print(json.dumps({"msg" : str(ex), "payload" : line}))
-            break
+            print(json.dumps({"error" : str(ex), "payload" : line}))
+            continue
 
 if __name__ == "__main__":
     main()
