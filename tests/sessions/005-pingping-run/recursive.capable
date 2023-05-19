@@ -63,7 +63,7 @@ session echoClient <Echo as Client>(s : Int, e : Int) -> MaybeInt
 {
    printLn("Entering Session, initialising store.");
    var cnt = s;
-   rec(X)
+   loop(X)
    {
 
       printLn("Checking if counter is less than 10");

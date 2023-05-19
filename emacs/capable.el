@@ -16,6 +16,7 @@
                        "var"
                        "let"
                        "type"
+                       "loop"
                        "role"
                        "session"
                        "protocol"

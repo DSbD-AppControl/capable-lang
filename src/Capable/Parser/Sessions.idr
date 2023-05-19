@@ -185,7 +185,7 @@ mutual
   rec : Rule (AST EXPRSESH)
   rec
     = do s <- Toolkit.location
-         keyword "rec"
+         (keyword "rec" <|> keyword "loop")
          symbol "("
          l <- Capable.ref
          symbol ")"
