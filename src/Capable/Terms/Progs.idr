@@ -9,6 +9,7 @@ import Data.List.Elem
 import Data.Vect
 
 import Capable.Types.Protocol.Projection
+import Capable.Types.Protocol.Global.WellFormed
 
 import Capable.Terms.Vars
 import Capable.Terms.Roles
@@ -36,6 +37,7 @@ data Prog : (roles   : List Ty.Role)
                   -> Type
   where
     DefProt : (prot  : Global Nil types roles g)
+           -> (prf   : WellFormed roles g)
            -> (scope : Prog roles types (S ctxt g::globals) stack UNIT)
                     -> Prog roles types            globals  stack UNIT
 

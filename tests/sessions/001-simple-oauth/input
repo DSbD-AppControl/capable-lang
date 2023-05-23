@@ -1,5 +1,2 @@
 :load main.capable
-:project oauthSimple Client
-:project oauthSimple Service
-:project oauthSimple Auth
 :q

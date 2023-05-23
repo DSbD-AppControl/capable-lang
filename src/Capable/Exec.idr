@@ -650,7 +650,7 @@ run : {type : Ty.Base}
     -> (expr  : Prog roles types globals stack type)
              -> Capable (Expr.Result store type)
 
-run er et env heap (DefProt s scope)
+run er et env heap (DefProt s _ scope)
   = run er et env heap scope
 
 run er et env heap (DefRole rest)

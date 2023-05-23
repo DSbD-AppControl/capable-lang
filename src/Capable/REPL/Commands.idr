@@ -50,7 +50,6 @@ commands
                  (options [REQ "protocol", REQ "role"])
                  Project
                  "Project a global type."
-
     ]
 
 export

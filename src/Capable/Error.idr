@@ -61,6 +61,7 @@ namespace Projection
 namespace Typing
   public export
   data Error : Type where
+    WellFormed : String -> Typing.Error
     NotMarshable : (type : Base)
                 -> (prf  : MarshableNot type)
                         -> Typing.Error

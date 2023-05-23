@@ -91,6 +91,8 @@ Show (Projection.Error) where
     = "Error generating Rec:\n\t\{show x}"
 
 Show (Typing.Error) where
+  show (WellFormed g)
+    = "Protocol is not well-formed:\n\t\{g}"
   show (MismatchK e g)
     = "Recursion variable mismatch:\n\t Expected: \{e}\n\t Given: \{g}"
   show (IllTypedSession p)

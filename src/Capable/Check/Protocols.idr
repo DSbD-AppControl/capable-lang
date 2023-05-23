@@ -143,7 +143,7 @@ namespace View
        -> (roles : Context Ty.Role rs)
        -> (syn   : Protocol g)
                 -> Capable (DPair (Global Nil    rs)
-                              (Global Nil ts rs))
+                                  (Global Nil ts rs))
   synth types roles p
     = synth Nil types roles p
 
@@ -156,7 +156,7 @@ namespace Raw
        -> (roles : Context Ty.Role rs)
        -> (sesh  : PROT)
                 -> Capable (DPair (Global Nil    rs)
-                              (Global Nil ts rs))
+                                  (Global Nil ts rs))
   synth types roles p
     = synth Nil types roles (toProtocol p)
 

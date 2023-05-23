@@ -13,6 +13,8 @@ import Toolkit.Data.Location
 import Capable.Types
 import Capable.Core
 
+import Capable.Types.Protocol.Global.WellFormed
+
 import Capable.Raw.AST
 import Capable.Raw.Types
 import Capable.Raw.Exprs
@@ -293,13 +295,16 @@ check env state (Def fc PROT n val scope)
 
        (g ** tm) <- synth (delta env) (rho env) val
 
+       prf <- embedAt fc (\(r,err) => WellFormed "\{reflect (rho env) r} causes:\n\{show err}")
+                         (wellFormed g)
+
        let env = Sigma.extend env n (S (rho env) g)
 
        let state = {protocols $= insert n (P (rho env) tm)} state
 
        (scope, state) <- check env state scope
 
-       pure (DefProt tm  scope, state)
+       pure (DefProt tm prf scope, state)
 
 check env state (Def fc SESH n val scope)
   = do exists fc (gamma env) n

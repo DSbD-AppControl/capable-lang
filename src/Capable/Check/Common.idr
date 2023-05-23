@@ -65,6 +65,17 @@ namespace Maybe
   embedAt fc err Nothing
     = throwAt fc err
 
+namespace Either
+  export
+  embedAt : FileContext
+         -> (e -> Typing.Error)
+         -> Either e a
+         -> Capable  a
+  embedAt _ _ (Right prf)
+    = pure prf
+  embedAt fc err (Left e)
+    = throwAt fc (err e)
+
 namespace Decidable
   export
   embedAt : FileContext

@@ -1,18 +1,11 @@
 Running Test
 Capable> # Finished Parsing
-# Finished Type Checking
-Capable> (offers to Service union {login : Unit; cancel : Unit} [ login(Unit)
-                                                         .(selects from Auth union {pword : String} [ pword(String)
-                                                                                                      .End])
-                                                         | cancel(Unit)
-                                                           .(selects from Auth union {quit : Unit} [ quit(Unit)
-                                                                                                     .End])])
-Capable> (selects from Client union {login : Unit; cancel : Unit} [ login(Unit)
-                                                           .(offers to Auth union {auth : Bool} [ auth(Bool)
-                                                                                                  .End])
-                                                           | cancel(Unit).End])
-Capable> Error projecting on: Auth.
+Type Checking Error
+main.capable:16:0-0:
+Protocol is not well-formed:
+	Auth causes:
 Error merging:
 	Branches differ (TODO Make printing better!)
 	["login", "cancel"]
+
 Capable> Exiting the REPL
