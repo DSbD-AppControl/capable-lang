@@ -37,7 +37,7 @@ namespace Protocl
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
-             -> (whom : Role rs MkRole)
+             -> (whom : DeBruijn.Role rs w)
              -> (global : Global ks rs)
                        -> Type
     where
@@ -50,7 +50,7 @@ namespace Branch
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
-             -> (whom   : Role rs MkRole)
+             -> (whom   : DeBruijn.Role rs w)
              -> (global : Branch Global ks rs (s,t))
                        -> Type
     where
@@ -62,7 +62,7 @@ namespace Branches
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
-             -> (whom   : Role rs MkRole)
+             -> (whom   : DeBruijn.Role rs w)
              -> (global : Global.Branches ks rs ls)
                        -> Type
     where
@@ -75,7 +75,7 @@ namespace Branches
     public export
     data Result : (ks : List Kind)
                -> (rs : List Role)
-               -> (whom   : Role rs MkRole)
+               -> (whom   : DeBruijn.Role rs w)
                -> (global : Global.Branches ks rs ls)
                          -> Type
       where
@@ -86,9 +86,9 @@ namespace Branches
 mutual
 
   export
-  project : {rs,ks : _}
+  project : {rs,ks,w : _}
          -> {0 global : Global ks rs}
-         -> (whom : Role rs MkRole)
+         -> (whom : DeBruijn.Role rs w)
          -> (type : Global ks ts rs global)
                  -> DecInfo Projection.Error
                             (Result ks rs whom global)
@@ -144,9 +144,9 @@ mutual
 
   namespace Branch
     export
-    project : {s, rs : _}
+    project : {s,w,rs : _}
            -> {ks : _}
-           -> (whom : Role rs MkRole)
+           -> (whom : DeBruijn.Role rs w)
            -> {0 g  : Branch Global ks    rs (s,t)}
            -> (type : Global.Branch ks ts rs g)
                    -> DecInfo Projection.Error
@@ -164,7 +164,8 @@ mutual
     project : {lts : _}
            -> {rs : _}
            -> {ks : _}
-           -> (  whom : Role rs MkRole)
+           -> {w : _}
+           -> (  whom : DeBruijn.Role rs w)
            -> {0 bs   : Global.Branches ks rs lts}
            -> (type   : Branches ks ts rs bs)
                      -> DecInfo Projection.Error
@@ -189,9 +190,10 @@ mutual
     same : {l,s : _}
         -> {ls,rs : _}
         -> {ks : _}
+        -> {w  : _}
         -> {0 b    : Branch Global   ks rs (l,s)}
         -> {0 bs   : Global.Branches ks rs ls}
-        -> (  whom : Role rs MkRole)
+        -> (  whom : DeBruijn.Role rs w)
         -> (  gs   : Branches ks ts rs (b::bs))
                   -> DecInfo Projection.Error
                              (Same.Result ks rs whom (b::bs))
@@ -213,9 +215,9 @@ mutual
 
 namespace Closed
   export
-  project : {rs : List Role}
+  project : {w : _} -> {rs : List Role}
          -> {0 global : Global Nil rs}
-         -> (whom : Role rs MkRole)
+         -> (whom : DeBruijn.Role rs w)
          -> (type : Global Nil ts rs global)
                  -> DecInfo Projection.Error
                             (Result Nil rs whom global)

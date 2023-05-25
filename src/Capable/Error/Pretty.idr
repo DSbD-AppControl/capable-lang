@@ -48,7 +48,7 @@ import Capable.Lexer.Token
     = trim $ unlines [show l, show i]
 
 Show Ty.Role where
-  show MkRole = "Role"
+  show (MkRole s) = "(Role \{s})"
 
 
 -- @TODO fix assert_total

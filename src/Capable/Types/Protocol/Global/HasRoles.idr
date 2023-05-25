@@ -31,6 +31,7 @@ import Capable.Types.Role
 import Capable.Types.Base
 
 import Capable.Types.Protocol.Global
+--import Capable.Types.Protocol.Global.HasRoles
 import Capable.Types.Protocol.Local
 import Capable.Types.Protocol.Projection
 
@@ -51,7 +52,7 @@ mutual
              -> HasRoles rs (Rec lp) os
 
         Choice : Branches.HasRoles rs bs os
-              -> Union [s,r] os os' prf
+              -> Union [s,r]             os os' prf
               -> Protocol.HasRoles rs (Choice s r ty prfm notsr bs)
                                       os'
 

@@ -19,8 +19,8 @@ import Capable.Terms
 public export
 data Protocol : Type where
   P : {rs : _}
-   -> { type : Global Nil rs}
    -> (Context Ty.Role rs)
+   -> (type : Global Nil rs)
    -> (Global.Global Nil ts rs type)
    -> Protocol
 

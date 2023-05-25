@@ -42,7 +42,7 @@ mutual
     public export
     data UsesRole : (rs : List Role)
                  -> (lp : Global ks rs)
-                 -> (o  : Role rs)
+                 -> (o  : Role rs u)
                        -> Type
       where
         RLater : UsesRole rs      lp  o
@@ -60,7 +60,7 @@ mutual
     public export
     data UsesRole : (rs : List Role)
                  -> (lp : Branch Global ks rs l)
-                 -> (o  : Role rs)
+                 -> (o  : Role rs u)
                        -> Type
       where
         B : Protocol.UsesRole rs        l  o
@@ -71,7 +71,7 @@ mutual
     public export
     data UsesRole : (rs : List Role)
                  -> (lp : Global.Branches ks rs lts)
-                 -> (o  : Role rs)
+                 -> (o  : Role rs u)
                        -> Type
       where
         Nil : UsesRole rs Nil o

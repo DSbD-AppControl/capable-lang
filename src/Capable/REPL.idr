@@ -19,6 +19,8 @@ import Capable.Check.Common
 import Capable.Check
 import Capable.Check.Roles
 
+import Capable.Types.Protocol.Global.HasRoles
+
 import Capable.Terms
 import Capable.Terms.Protocols.Projection
 import Capable.Exec
@@ -39,7 +41,7 @@ todo st = do putStrLn "Not yet implemented"
 roleCheck' : {roles : List Ty.Role}
           -> (ctxt  : Context Ty.Role roles)
           -> (syn   : String)
-                   -> Maybe (DPair Ty.Role (Role roles))
+                   -> Maybe (DPair Ty.Role (DeBruijn.Role roles))
 
 roleCheck' ctxt str
   = case Lookup.lookup str ctxt of
@@ -73,7 +75,7 @@ process st Run
           (prog st)
 
 process st (Project str str1)
-  = do Just (P r p) <- getProtocol st str
+  = do Just (P r g p) <- getProtocol st str
          | Nothing => do putStrLn "Not a bound protocol: \{str}"
                          pure st
 
@@ -82,13 +84,23 @@ process st (Project str str1)
          Nothing => do putStrLn "Not a bound role: \{str1}"
                        pure st
 
-         Just (MkRole ** rs) =>
+         Just (_ ** rs) =>
            case Projection.Closed.project rs p of
              No msg _ => do putStrLn "Error projecting on: \{str1}."
                             printLn msg
                             pure st
              Yes (R l _) => do putStrLn (toString r l)
                                pure st
+process st (Roles str)
+  = do Just (P r g p) <- getProtocol st str
+         | Nothing => do putStrLn "Not a bound protocol: \{str}"
+                         pure st
+
+       let R os prf = Protocol.hasRoles g
+       traverse_ (\o => putStrLn $ (reflect r o)) os
+       pure st
+
+
 
 export covering
 repl : Capable ()

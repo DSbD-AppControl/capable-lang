@@ -653,8 +653,8 @@ run : {type : Ty.Base}
 run er et env heap (DefProt s _ scope)
   = run er et env heap scope
 
-run er et env heap (DefRole rest)
-  = run (Val MkRole::er)
+run er et env heap (DefRole r rest)
+  = run (Val r::er)
         et
         env
         heap

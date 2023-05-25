@@ -18,6 +18,7 @@ main
            , !(mkPool "files"    "File Handling")
            , !(mkPool "examples" "Working Examples")
            , !(mkPool "sessions" "Session Types")
+           , !(mkPool "benchmarks" "Programs of interest for benchmarking.")
            ]
 
   where mkPool : (dirName, poolName : String)

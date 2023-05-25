@@ -1,0 +1,48 @@
+{- A Realisation of the Three Buyer Protocol.
+
+The protocol allows three people (Alice, Bob, Carol) to neogiate buying a book from the 'Seller'.
+
+Informally:
+
+Alice -> Seller | title : String
+Seller -> { Alice, Bob} | quote : Int
+
+If quote is within Bob's Budget
+  then Bob -> {Alice, Seller} | response : Unit
+       Bob -> Seller          | address : String
+       Seller -> Bob          | date : String
+  else Bob -> Carol | contrib : Int (quote - budget)
+       if contrib is within Carol's Budget
+       then Carol -> {Alice,Seller} | response : Unit
+            Carol -> Seller         | address : String
+            Seller -> Carol         | date : String
+       else Carol -> {Alice,Bob,Seller} | quite : Unit
+
+-}
+
+role Alice
+role Bob
+role Carol
+role Seller
+
+
+
+
+
+
+protocol pingpong = Alice ==> Bob   [ping] { ping(String)
+                  . Bob   ==> Alice [pong] { pong(String)
+                  . end }}
+
+protocol pingpongR = rec(x)
+                   . Alice ==> Bob   [ping] { ping(String)
+                   . Bob   ==> Alice [pongR] { pongR(String) . call(x)
+                                             | quit(String) . end
+                                             }}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

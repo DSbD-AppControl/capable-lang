@@ -1,0 +1,50 @@
+{- A Realisation of the Two Buyer Protocol.
+
+The protocol allows two people (Alice, Bob) to neogiate buying a book from the 'Seller'.
+
+Informally:
+
+Alice -> Seller | title : String
+Seller -> { Alice, Bob } | quote : Int
+
+Alice -> Bob    | offer : Int (quote / 2)
+Bob   -> Seller | { quit . end
+                  , acceptance . Bob -> Seller | address
+                               . Seller -> Bob | date
+                               , end }
+
+
+-}
+
+
+role Bob
+role Seller
+role Alice
+
+type request = union { title : String }
+type quote   = union { quote : Int}
+type address = union { addr  : String}
+type date    = union { date  : String}
+
+type steps = union { quit   : Unit
+                   ; accept : Unit
+                   }
+
+protocol twoBuyerOG
+  = Alice  ==> Seller [ request ] { title(String)
+  . Seller ==> Alice  [ quote ]   { quote(Int)
+  . Seller ==> Bob    [ quote ]   { quote(Int)
+  . Alice  ==> Bob    [ quote ]   { quote(Int)
+  . Bob    ==> Seller [ steps ]   { quit(Unit).end
+                                  | accept(Unit)
+                                  . Bob    ==> Seller [ address ] { addr(String)
+                                  . Seller ==> Bob    [ date    ] { date(String)
+                                  . end
+  }}}}}}}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

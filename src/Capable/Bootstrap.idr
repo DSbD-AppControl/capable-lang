@@ -102,7 +102,7 @@ namespace List
        -> Union     xs  ys zs
        -> Union (x::xs) ys zs
     Neg : Not (Elem x ys)
-       -> Union xs      ys     zs
+       -> Union     xs  ys     zs
        -> Union (x::xs) ys (x::zs)
 
   export
@@ -138,11 +138,11 @@ namespace DList
       End : Union Nil ys ys End
       Pos : {xs : DList a p ps}
          -> {ys : DList a p ps'}
-         -> Union     xs  ys zs rest
+         -> Union     xs  ys zs            rest
          -> Union (x::xs) ys zs (Pos prf' rest)
       Neg : {xs : DList a p ps}
          -> {ys : DList a p ps'}
-         -> Union xs      ys     zs rest
+         -> Union     xs  ys     zs            rest
          -> Union (x::xs) ys (x::zs) (Neg prf' rest)
 
 

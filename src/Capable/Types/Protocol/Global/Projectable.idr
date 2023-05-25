@@ -61,11 +61,11 @@ export
 projectable : {rs : _}
            -> (os : Roles     rs ss)
            -> ( g : Global Nil rs)
-                 -> DecInfo (Role rs,Projection.Error)
+                 -> DecInfo (DPair Role (Role rs),Projection.Error)
                             (ProjAll rs g os)
 projectable {ss = []} [] g
   = Yes End
-projectable {ss = (MkRole :: xs)} (elem :: rest) g
+projectable {ss = (MkRole s :: xs)} (elem :: rest) g
   = case Closed.project elem g of
       Yes (l ** p) =>
         case projectable rest g of
@@ -74,7 +74,7 @@ projectable {ss = (MkRole :: xs)} (elem :: rest) g
             => No msg
                   (\case (Ext x y) => no y)
       No msg no =>
-        No (elem,msg)
+        No ((_ ** elem),msg)
            (\case (Ext {l} x y) => no (l ** x))
 
 -- [ EOF ]

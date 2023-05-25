@@ -154,31 +154,31 @@ namespace UsesRole
       public export
       data UsesRole : (rs : List Role)
                    -> (lp : Local ks rs)
-                   -> (r  : IsVar rs MkRole)
+                   -> (r  : Role rs r')
                          -> Type
         where
           Rec   : UsesRole rs       t  role
                -> UsesRole rs (Rec  t) role
 
-          CHere : (whom : IsVar rs MkRole)
-               -> (prf  : whom = role)
+          CHere : (whom : Role rs r)
+               -> (prf  : REquals rs whom role)
                        -> Protocol.UsesRole rs
                                             (Offer whom ty prfm bs)
                                                    role
 
-          SHere : (whom : IsVar rs MkRole)
-               -> (prf  : whom = role)
+          SHere : (whom : Role rs r)
+               -> (prf  : REquals rs whom role)
                        -> Protocol.UsesRole rs (Select whom label ty prfM cont)
                                                        role
 
 
-          SThere : (whom : IsVar rs MkRole)
-                -> (prf  : Not (whom = role))
+          SThere : (whom : Role rs r)
+                -> (prf  : Not (REquals rs whom role))
                         -> Protocol.UsesRole rs                            cont  role
                         -> Protocol.UsesRole rs (Select whom label ty prfM cont) role
 
-          CThere : (whom : IsVar rs MkRole)
-                -> (prf  : Not (whom = role))
+          CThere : (whom : Role rs r)
+                -> (prf  : Not (REquals rs whom role))
                 -> Branches.UsesRole rs                     bs  role
                 -> Protocol.UsesRole rs (Offer whom ty prfm bs) role
 
@@ -192,7 +192,7 @@ namespace UsesRole
       public export
       data UsesRole : (rs : List Role)
                    -> (lp : Branch Local ks rs l)
-                   -> (r  : IsVar rs MkRole)
+                   -> (r  : Role rs r')
                          -> Type
         where
           B : Protocol.UsesRole rs        l  role
@@ -202,7 +202,7 @@ namespace UsesRole
       public export
       data UsesRole : (rs : List Role)
                    -> (lp : Synth.Branches ks rs lts)
-                   -> (r  : IsVar rs MkRole)
+                   -> (r  : Role rs r')
                           -> Type
         where
           Here :   Branch.UsesRole rs  b      role
@@ -229,8 +229,9 @@ namespace UsesRole
   mutual
     namespace Protocol
       export
-      usesRole : (lp : Synth.Local ks rs)
-              -> (r  : IsVar rs MkRole)
+      usesRole : {r' : _}
+              -> (lp : Synth.Local ks rs)
+              -> (r  : Role rs r')
                     -> Dec (UsesRole rs lp r)
       usesRole Crash _
         = No absurd
@@ -247,7 +248,7 @@ namespace UsesRole
         usesRole (Rec x) r | (No contra)
           = No $ \case (Rec y) => contra y
 
-      usesRole (Select whom label type p cont) r with (Equality.decEq whom r)
+      usesRole (Select whom label type p cont) r with (Index.decEq whom r)
         usesRole (Select whom label type p cont) r | (Yes prf)
           = Yes (SHere whom prf)
         usesRole (Select whom label type p cont) r | (No contra) with (usesRole cont r)
@@ -257,7 +258,7 @@ namespace UsesRole
             = No $ \case (SHere whom prf) => contra prf
                          (SThere whom prf y) => f y
 
-      usesRole (Offer whom type p choices) r with (Equality.decEq whom r)
+      usesRole (Offer whom type p choices) r with (Index.decEq whom r)
         usesRole (Offer whom type p choices) r | (Yes prf)
            = Yes (CHere whom prf)
         usesRole (Offer whom type p choices) r | (No contra) with (usesRole choices r)
@@ -279,8 +280,9 @@ namespace UsesRole
 
     namespace Branch
       export
-      usesRole : (lp : Branch Local ks rs l)
-              -> (r  : IsVar rs MkRole)
+      usesRole : {r' : _}
+              -> (lp : Branch Local ks rs l)
+              -> (r  : Role rs r')
                      -> Dec (UsesRole rs lp r)
       usesRole (B str b cont) r with (usesRole cont r)
         usesRole (B str b cont) r | (Yes prf)
@@ -290,8 +292,9 @@ namespace UsesRole
 
     namespace Branches
       export
-      usesRole : (lp : Synth.Branches ks rs lts)
-              -> (r  : IsVar rs MkRole)
+      usesRole : {r' : _}
+              -> (lp : Synth.Branches ks rs lts)
+              -> (r  : Role rs r')
                     -> Dec (UsesRole rs lp r)
       usesRole [] r
         = No absurd
