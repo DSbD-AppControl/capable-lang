@@ -63,7 +63,7 @@ data WellFormed : (rs : List Role)
 export
 wellFormed : {rs : _}
           -> (g  : Global Nil rs)
-                -> Either (Role rs,Projection.Error)
+                -> Either (DPair Role (Role rs),Projection.Error)
                           (WellFormed rs g)
 wellFormed g with (hasRoles g)
   wellFormed g | (R os prf) with (projectable os g)

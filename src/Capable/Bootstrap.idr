@@ -27,6 +27,13 @@ reflect ((I name x) :: rest) (V 0 prf) = name
 reflect (elem :: rest) (V (S k) (There later)) = reflect rest (V k later)
 
 export
+rebuild : (a -> String)
+       -> (as : List a)
+              -> Context a as
+rebuild _ [] = []
+rebuild f (x :: xs) = I (f x) x :: rebuild f xs
+
+export
 Uninhabited (AtIndex x [] n) where
   uninhabited at impossible
 
@@ -102,7 +109,7 @@ namespace List
        -> Union     xs  ys zs
        -> Union (x::xs) ys zs
     Neg : Not (Elem x ys)
-       -> Union xs      ys     zs
+       -> Union     xs  ys     zs
        -> Union (x::xs) ys (x::zs)
 
   export
@@ -138,11 +145,11 @@ namespace DList
       End : Union Nil ys ys End
       Pos : {xs : DList a p ps}
          -> {ys : DList a p ps'}
-         -> Union     xs  ys zs rest
+         -> Union     xs  ys zs            rest
          -> Union (x::xs) ys zs (Pos prf' rest)
       Neg : {xs : DList a p ps}
          -> {ys : DList a p ps'}
-         -> Union xs      ys     zs rest
+         -> Union     xs  ys     zs            rest
          -> Union (x::xs) ys (x::zs) (Neg prf' rest)
 
 

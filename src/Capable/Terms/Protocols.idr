@@ -59,20 +59,21 @@ namespace Global
       where
         End : Global ks ts rs End
 
-        Call : (prf : RecVar ks)
+        Call : {v : _}
+            -> (prf : RecVar ks v)
                    -> Global ks ts rs (Call prf)
 
-        Rec : Global (R::ks) ts rs      type
-           -> Global     ks  ts rs (Rec type)
+        Rec : Global (v::ks) ts rs        type
+           -> Global     ks  ts rs (Rec v type)
 
-        Choice : {f : (String,Base) }
+        Choice : {s,r : _}
+              -> {f : (String,Base) }
               -> {fs : (List (String,Base))}
               -> {b  : Branch Global ks rs f}
               -> {bs : Global.Branches ks rs (fs)}
---              -> {prfM : DList (String, Base) Marshable (f::fs)}
-              -> (sender   : Role rs MkRole)
-              -> (receiver : Role rs MkRole)
-              -> (prf      : Not (Equals Role (IsVar rs) sender receiver))
+              -> (sender   : DeBruijn.Role rs s)
+              -> (receiver : DeBruijn.Role rs r)
+              -> (prf      : Not (REquals rs sender receiver))
               -> (type     : Ty ts (UNION (f:::fs)))
               -> (prfM     : Marshable (UNION (f:::fs)))
               -> (choices  : Branches ks ts rs (b::bs))

@@ -49,7 +49,7 @@ mutual
             -> (stack_l : List Ty.Base)
             -> (stack_r : List Kind) -- recursion variables
             -> (ret     : Ty.Base)
-            -> (whom    : Role roles)
+            -> (whom    : Role roles r)
             -> (spec    : Branch Synth.Local stack_r roles (s,t))
                       -> Type
     where
@@ -66,7 +66,7 @@ mutual
              -> (stack_l : List Ty.Base)
              -> (stack_r : List Kind) -- recursion variables
              -> (ret     : Ty.Base)
-             -> (whom    : Role roles)
+             -> (whom    : Role roles r)
              -> (os      : Synth.Branches stack_r roles lts)
                         -> Type
     where
@@ -85,7 +85,7 @@ mutual
            -> (stack_g : List Ty.Method)
            -> (stack_l : List Ty.Base)
            -> (stack_r : List Kind) -- recursion variables
-           -> (whom    : IsVar roles MkRole)
+           -> (whom    : Role roles r)
            -> (local   : Synth.Local stack_r roles)
            -> (return  : Ty.Base)
                       -> Type
@@ -109,15 +109,17 @@ mutual
            -> (rest : Expr roles rs types globals stack_g (Extra.toList ss ++ stack_l) stack_r whom k return)
                    -> Expr roles rs types globals stack_g                     stack_l  stack_r whom k return
 
-      LetRec : Expr roles rs types globals stack_g stack_l (R::stack_r) whom      body  type
-            -> Expr roles rs types globals stack_g stack_l     stack_r  whom (Rec body) type
+      LetRec : {e,stack_r,body : _}
+            -> Expr roles rs types globals stack_g stack_l (e::stack_r) whom        body  type
+            -> Expr roles rs types globals stack_g stack_l     stack_r  whom (Rec e body) type
 
       Cond : (cond : Expr       rs types globals stack_g stack_l                            BOOL)
           -> (tt   : Expr roles rs types globals stack_g stack_l stack_r whom l             type)
           -> (ff   : Expr roles rs types globals stack_g stack_l stack_r whom r             type)
                   -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices l r) type
 
-      Call : (x : RecVar stack_r)
+      Call : {stack_r,v : _}
+          -> (x : RecVar stack_r v)
                -> Expr roles rs types globals stack_g stack_l stack_r whom (Call x) type
 
       Crash : Expr       rs types globals stack_g stack_l type
@@ -127,7 +129,7 @@ mutual
          -> Expr roles rs types globals stack_g stack_l stack_r whom End type
 
       Read : {m,ms   : _}
-          -> (from   : Role roles)
+          -> (from   : Role roles f)
           -> {o      : Branch  Synth.Local stack_r roles m}
           -> {os     : Synth.Branches stack_r roles ms}
           -> (prf    : Marshable (UNION (m:::ms)))
@@ -140,7 +142,7 @@ mutual
                                type
 
       Send : {mtype   : _}
-          -> (toWhom  : Role roles)
+          -> (toWhom  : Role roles s)
           -> (label   : String)
           -> (payload : Expr    rs types globals stack_g stack_l mtype)
           -> (mprf    : Marshable mtype)

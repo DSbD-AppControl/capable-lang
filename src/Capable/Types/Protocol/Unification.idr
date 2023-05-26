@@ -71,7 +71,7 @@ mutual
         End : Unify End End
         Call : Unify (Call idx) (Call idx)
         Rec  : Unify this that
-            -> Unify (Rec this) (Rec that)
+            -> Unify (Rec k this) (Rec k that)
 
         Select : {this : _}
               -> Select (B l tyM this)

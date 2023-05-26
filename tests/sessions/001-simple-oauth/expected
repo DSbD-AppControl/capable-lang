@@ -5,7 +5,11 @@ main.capable:16:0-0:
 Protocol is not well-formed:
 	Auth causes:
 Error merging:
-	Branches differ (TODO Make printing better!)
-	["login", "cancel"]
+	Branches differ 
+	[ login(Unit)
+  .(offers to Client union {pword : String} [ pword(String)
+                                             .(selects from Service union {auth : Bool} [ auth(Bool)
+                                                                                          .End])])
+| cancel(Unit).(offers to Client union {quit : Unit} [quit(Unit).End])]
 
 Capable> Exiting the REPL

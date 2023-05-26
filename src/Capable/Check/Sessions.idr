@@ -51,7 +51,7 @@ namespace Expr
                -> (gs   : List Ty.Method)
                -> (ks   : List Protocol.Kind)
                -> (ls   : List Ty.Base)
-               -> (p    : Role roles)
+               -> (p    : DeBruijn.Role roles p')
                -> (l    : Local.Local ks roles)
                -> (ret  : Base)
                        -> Type
@@ -70,7 +70,7 @@ namespace Expr
                  -> (gs   : List Ty.Method)
                  -> (ks   : List Protocol.Kind)
                  -> (ls   : List Ty.Base)
-                 -> (p    : Role roles)
+                 -> (p    : DeBruijn.Role roles p')
                  -> (b    : Branch Local.Local ks roles (l,t))
                  -> (ret  : Base)
                          -> Type
@@ -89,7 +89,7 @@ namespace Expr
                  -> (gs   : List Ty.Method)
                  -> (ks   : List Protocol.Kind)
                  -> (ls   : List Ty.Base)
-                 -> (p    : Role roles)
+                 -> (p    : DeBruijn.Role roles p')
                  -> (bs   : Local.Branches ks roles lts)
                  -> (ret  : Base)
                          -> Type
@@ -108,7 +108,7 @@ namespace Expr
                -> (gs   : List Ty.Method)
                -> (ks   : List Protocol.Kind)
                -> (ls   : List Ty.Base)
-               -> (p    : Role roles)
+               -> (p    : DeBruijn.Role roles p')
                -> (ret  : Base)
                        -> Type
       where
@@ -124,7 +124,7 @@ namespace Expr
                  -> (gs   : List Ty.Method)
                  -> (ks   : List Protocol.Kind)
                  -> (ls   : List Ty.Base)
-                 -> (p    : Role roles)
+                 -> (p    : DeBruijn.Role roles p')
                  -> (s    : (String,Base))
                  -> (ret  : Base)
                          -> Type
@@ -141,7 +141,7 @@ namespace Expr
                  -> (gs   : List Ty.Method)
                  -> (ks   : List Protocol.Kind)
                  -> (ls   : List Ty.Base)
-                 -> (p    : Role roles)
+                 -> (p    : DeBruijn.Role roles p')
                  -> (lts  : List (String,Base))
                  -> (ret  : Base)
                          -> Type
@@ -161,7 +161,7 @@ namespace Expr
          -> (env   : Env rs ds ss gs ls)
          -> (enr   : Context Role roles)
          -> (enc   : Context Protocol.Kind ks)
-         -> (princ : Role roles)
+         -> (princ : DeBruijn.Role roles p')
          -> (ret   : Base)
          -> (expr  : Sessions.Expr e)
                   -> Capable (Synth.Result roles rs ds ss gs ks ls princ ret)
@@ -172,7 +172,7 @@ namespace Expr
       = unknown (span ref)
 
     synth env er ec p ret (Call fc ref)
-      = do (R ** idx) <- lookup ec (MkRef fc ref)
+      = do (r ** idx) <- lookup ec (MkRef fc ref)
            -- @TODO change to ref
 
            pure (R (Call idx) (Call idx))
@@ -195,8 +195,8 @@ namespace Expr
 
 
     synth env er ec p ret (LetRec fc s scope)
-      = do (R l tm) <- synth env er (I s R :: ec) p ret scope
-           pure (R (Rec l) (LetRec tm))
+      = do (R l tm) <- synth env er (I s (R s) :: ec) p ret scope
+           pure (R (Rec _ l) (LetRec tm))
 
 
     synth env er ec p ret (Read fc r ty prf (ofs::offs) onEr)
@@ -206,7 +206,7 @@ namespace Expr
              prfM <- embedAt fc (\prf => NotMarshable (UNION ((es,et):::fs)) prf)
                                 (marshable (UNION ((es,et):::fs)))
 
-             (MkRole ** target) <- synth er r
+             (r' ** target) <- synth er r
 
              O  b  o    <- offer  fc ret es et ofs
              OS bs offs <- offers fc ret   fs  offs
@@ -263,7 +263,7 @@ namespace Expr
              | (ty ** _) => throwAt fc (UnionExpected ty)
 
            -- 2. Get the role.
-           (MkRole ** target) <- synth er role
+           (r ** target) <- synth er role
 
            -- 3. Get the type of the payload.
            (tyM' ** tmM) <- synth env msg
@@ -375,7 +375,7 @@ namespace Expr
          -> (env  : Env rs ds ss gs ls)
          -> (enr  : Context Role roles)
          -> (enc  : Context Protocol.Kind ks)
-         -> (princ : Role roles)
+         -> (princ : DeBruijn.Role roles p)
          -> (ret  : Base)
          -> (type : Local.Local ks roles)
          -> (expr : Sessions.Expr e)
@@ -396,7 +396,7 @@ namespace Expr
 
     --
     check e er ec princ ret (Call x) (Call fc ref)
-      = do (R ** idx) <- lookup ec (MkRef fc ref)
+      = do (r ** idx) <- lookup ec (MkRef fc ref)
            -- @TODO change to ref
 
            Same Refl Refl <- embedAt fc
@@ -407,16 +407,16 @@ namespace Expr
 
 
     --
-    check e er ec p ret (Rec type) (LetRec fc s scope)
+    check e er ec p ret (Rec l type) (LetRec fc s scope)
       = do R lsyn prf tm <- check e
                                   er
-                                  (I s R :: ec)
+                                  (I s l :: ec)
                                   p
                                   ret
                                   type
                                   scope
 
-           pure (R (Rec lsyn) (Rec prf) (LetRec tm))
+           pure (R (Rec _ lsyn) (Rec prf) (LetRec tm))
 
 
     --
@@ -438,7 +438,7 @@ namespace Expr
 
 
            -- 2. Check that the role is correct
-           (MkRole ** target) <- synth er role
+           (r ** target) <- synth er role
 
            Same Refl Refl <- embedAt fc
                                      (MismatchRoleS (let R s = role in s)
@@ -523,7 +523,7 @@ namespace Expr
                               (UNION (f     ::: fs))
 
            -- 2. Check that the role is correct
-           (MkRole ** target) <- synth er role
+           (r ** target) <- synth er role
 
            Same Refl Refl <- embedAt fc
                                      (MismatchRoleS (let R s = role in s)
@@ -676,7 +676,7 @@ synth : {rs   : List Ty.Role}
 synth env (Sesh fc prin ref p prf as ret scope)
   = do (S rh tyGlobal ** prot) <- Sigma.lookup env ref
 
-       (MkRole ** principle) <- synth rh prin
+       (p ** principle) <- synth rh prin
 
        (tyARGS ** as) <- args (delta env) as
 

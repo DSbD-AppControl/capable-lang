@@ -37,7 +37,7 @@ namespace Protocl
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
-             -> (whom : Role rs MkRole)
+             -> (whom : DeBruijn.Role rs w)
              -> (global : Global ks rs)
                        -> Type
     where
@@ -50,7 +50,7 @@ namespace Branch
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
-             -> (whom   : Role rs MkRole)
+             -> (whom   : DeBruijn.Role rs w)
              -> (global : Branch Global ks rs (s,t))
                        -> Type
     where
@@ -62,7 +62,7 @@ namespace Branches
   public export
   data Result : (ks : List Kind)
              -> (rs : List Role)
-             -> (whom   : Role rs MkRole)
+             -> (whom   : DeBruijn.Role rs w)
              -> (global : Global.Branches ks rs ls)
                        -> Type
     where
@@ -75,7 +75,7 @@ namespace Branches
     public export
     data Result : (ks : List Kind)
                -> (rs : List Role)
-               -> (whom   : Role rs MkRole)
+               -> (whom   : DeBruijn.Role rs w)
                -> (global : Global.Branches ks rs ls)
                          -> Type
       where
@@ -86,9 +86,9 @@ namespace Branches
 mutual
 
   export
-  project : {rs,ks : _}
-         -> {0 global : Global ks rs}
-         -> (whom : Role rs MkRole)
+  project : {rs,ks,w : _}
+         -> {global : Global ks rs}
+         -> (whom : DeBruijn.Role rs w)
          -> (type : Global ks ts rs global)
                  -> DecInfo Projection.Error
                             (Result ks rs whom global)
@@ -100,11 +100,11 @@ mutual
 
   project whom (Rec type) with (project whom type)
     project whom (Rec type) | (Yes (R l proj))
-      = Yes (R _ (Rec proj))
+      = Yes (R (Rec _ l) (Rec proj))
 
     project whom (Rec type) | (No msg no)
       = No (Rec msg)
-           (\(R (Rec a) (Rec this)) => no (R a this))
+           (\(R (Rec _ a) (Rec this)) => no (R a this))
 
   project whom (Choice s r noSR t p bs) with (involved whom s r noSR)
 
@@ -144,10 +144,10 @@ mutual
 
   namespace Branch
     export
-    project : {s, rs : _}
+    project : {s,w,rs : _}
            -> {ks : _}
-           -> (whom : Role rs MkRole)
-           -> {0 g  : Branch Global ks    rs (s,t)}
+           -> (whom : DeBruijn.Role rs w)
+           -> {g  : Branch Global ks    rs (s,t)}
            -> (type : Global.Branch ks ts rs g)
                    -> DecInfo Projection.Error
                               (Branch.Result ks rs whom g)
@@ -164,8 +164,9 @@ mutual
     project : {lts : _}
            -> {rs : _}
            -> {ks : _}
-           -> (  whom : Role rs MkRole)
-           -> {0 bs   : Global.Branches ks rs lts}
+           -> {w : _}
+           -> (  whom : DeBruijn.Role rs w)
+           -> {bs   : Global.Branches ks rs lts}
            -> (type   : Branches ks ts rs bs)
                      -> DecInfo Projection.Error
                                 (Branches.Result ks rs whom bs)
@@ -189,20 +190,21 @@ mutual
     same : {l,s : _}
         -> {ls,rs : _}
         -> {ks : _}
-        -> {0 b    : Branch Global   ks rs (l,s)}
-        -> {0 bs   : Global.Branches ks rs ls}
-        -> (  whom : Role rs MkRole)
+        -> {w  : _}
+        -> {b    : Branch Global   ks rs (l,s)}
+        -> {bs   : Global.Branches ks rs ls}
+        -> (  whom : DeBruijn.Role rs w)
         -> (  gs   : Branches ks ts rs (b::bs))
                   -> DecInfo Projection.Error
                              (Same.Result ks rs whom (b::bs))
     same whom gs with (Branches.project whom gs)
-      same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) with (branchesEq l' ls')
+      same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) with (branchesEQ l' ls')
         same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) | (Yes prf)
 
           = Yes (R _ (S (b' :: bs') prf))
 
         same whom gs | (Yes (R (l' :: ls') (b' :: bs'))) | (No msg no)
-          = No (NotAllSame (getLabels gs))
+          = No (NotAllSame (l'::ls'))
                (\case (R l (S (p :: ps) prf)) =>
                         no $ rewrite sym (funProject p  b') in
                              rewrite sym (funProject ps bs') in prf)
@@ -213,9 +215,9 @@ mutual
 
 namespace Closed
   export
-  project : {rs : List Role}
-         -> {0 global : Global Nil rs}
-         -> (whom : Role rs MkRole)
+  project : {w : _} -> {rs : List Role}
+         -> {global : Global Nil rs}
+         -> (whom : DeBruijn.Role rs w)
          -> (type : Global Nil ts rs global)
                  -> DecInfo Projection.Error
                             (Result Nil rs whom global)

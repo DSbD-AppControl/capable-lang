@@ -481,6 +481,7 @@ mutual
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
         -> {ret   : Ty.Base}
+        -> {l     : Synth.Local Nil rz}
         -> {ctzt  : Context Role rz}
         -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
@@ -496,6 +497,8 @@ mutual
 
       public export
       eval : {store : List Ty.Base}
+          -> {stack_r : _}
+          -> {l     : Synth.Local stack_r rs}
           -> {ret   : Ty.Base}
           -> (env   : Env stack_g stack_l store)
           -> (heap  : Heap store)
@@ -653,8 +656,8 @@ run : {type : Ty.Base}
 run er et env heap (DefProt s _ scope)
   = run er et env heap scope
 
-run er et env heap (DefRole rest)
-  = run (Val MkRole::er)
+run er et env heap (DefRole r rest)
+  = run (Val r::er)
         et
         env
         heap

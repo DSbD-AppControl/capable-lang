@@ -175,18 +175,18 @@ namespace RVars
               -> List Ty.Method
               ->      Ty.Base
               -> (rvar : Kind) -> Type where
-    SS : {old : _}
+    SS : {stack_r,body,old : _}
       -> (expr : Expr rs
                       roles
                       types
                       globals
                       stack_g
                       stack_l
-                      (R :: stack_r)
+                      (r :: stack_r)
                       whom body type)
       -> (envl : DList Ty.Base (Value old) stack_l)
       -> (envr : DList Kind (SubSesh rs roles types globals stack_g type) stack_r)
-              -> SubSesh rs roles types globals stack_g type R
+              -> SubSesh rs roles types globals stack_g type r
 
 
   ||| We need one for types-as-terms too.

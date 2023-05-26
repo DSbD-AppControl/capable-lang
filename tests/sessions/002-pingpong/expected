@@ -7,16 +7,16 @@ Capable> (selects from Ponger union {ping : Int} [ ping(Int)
 Capable> (offers to Pinger union {ping : Int} [ ping(Int)
                                        .(selects from Pinger union {pong : Int} [ pong(Int)
                                                                                   .End])])
-Capable> rec(a).
+Capable> rec(X).
   (selects from Ponger union {ping : Int} [ ping(Int)
                                             .(offers to Ponger union {stop : Int; cont : Int} [ stop(Int)
                                                                                                 .End
                                                                                                 | cont(Int)
-                                                                                                  .(Call a)])])
-Capable> rec(a).
+                                                                                                  .(Call X)])])
+Capable> rec(X).
   (offers to Pinger union {ping : Int} [ ping(Int)
                                          .(selects from Pinger union {stop : Int; cont : Int} [ stop(Int)
                                                                                                 .End
                                                                                                 | cont(Int)
-                                                                                                  .(Call a)])])
+                                                                                                  .(Call X)])])
 Capable> Exiting the REPL

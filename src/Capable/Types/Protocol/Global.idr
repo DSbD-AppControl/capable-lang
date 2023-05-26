@@ -34,17 +34,18 @@ public export
 data Global : List Kind -> List Role -> Type where
   End : Global ks rs
 
-  Call : {vs : _} -> RecVar vs -> Global vs rs
+  Call : {v,vs : _} -> RecVar vs v -> Global vs rs
 
-  Rec : Global (R::vs) rs
+  Rec : (v : Kind)
+     -> Global (v::vs) rs
      -> Global     vs  rs
 
-  Choice : {fs : _}
-        -> (s : Role rs)
-        -> (r : Role rs)
+  Choice : {x,y, fs : _}
+        -> (s : Role rs x)
+        -> (r : Role rs y)
         -> (type   : Singleton (UNION (field:::fs)))
         -> (prfM   : Marshable (UNION (field:::fs)))
-        -> (prfR   : Not (Equals Role (IsVar rs) s r))
+        -> (prfR   : Not (REquals rs s r))
         -> (opties : DList (String,Base)
                            (Branch Global ks rs)
                            (field::fs))

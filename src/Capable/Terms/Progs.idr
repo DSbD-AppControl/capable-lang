@@ -41,8 +41,9 @@ data Prog : (roles   : List Ty.Role)
            -> (scope : Prog roles types (S ctxt g::globals) stack UNIT)
                     -> Prog roles types            globals  stack UNIT
 
-    DefRole : (rest : Prog (MkRole::roles) types globals stack UNIT)
-                   -> Prog          roles  types globals stack UNIT
+    DefRole : (r    : Ty.Role)
+           -> (rest : Prog (r::roles) types globals stack UNIT)
+                   -> Prog     roles  types globals stack UNIT
 
     ||| A Type-Def.
     DefType : {type : Ty.Base}
@@ -63,7 +64,7 @@ data Prog : (roles   : List Ty.Role)
            -> {args   : List Ty.Base}
            -> {return : Ty.Base}
 --           -> (proto  : IsVar globals (S ctzt global))
-           -> {whom   : Role rs}
+           -> {whom   : DeBruijn.Role rs w}
 --           -> (prf    : Project Nil rs whom global l)
            -> (sesh   : Session roles types globals                             stack   (SESH ctzt whom l args return))
            -> (rest   : Prog    roles types globals (SESH ctzt whom l args return :: stack)  UNIT)

@@ -7,6 +7,7 @@
 module Capable.Types.Role
 
 import Decidable.Equality
+import Toolkit.Decidable.Do
 
 import Capable.Bootstrap
 
@@ -15,27 +16,37 @@ import Capable.Bootstrap
 namespace Ty
   ||| Roles will be distinguished as De Bruijn indices.
   public export
-  data Role = MkRole
+  data Role = MkRole String
 
-public export
-Role : (rs : List Role) -> Type
-Role rs = IsVar rs MkRole
+namespace DeBruijn
+  public export
+  Role : (rs : List Role) -> Role -> Type
+  Role = IsVar
 
 
 export
 DecEq Role where
-  decEq MkRole MkRole = Yes Refl
+  decEq (MkRole a) (MkRole b)
+    = decDo $ do Refl <- decEq a b `otherwise` (\Refl => Refl)
+                 pure Refl
 
-export
-Show (IsVar ks MkRole) where
-  show (V pos prf) = "(RoleVar \{show pos})"
+--export
+--Show (IsVar ks MkRole) where
+--  show (V pos prf) = "(RoleVar \{show pos})"
 
+public export
+REquals : (rs  : List Role)
+       -> {a,b : Role}
+       -> (x  : Role rs a)
+       -> (y  : Role rs b)
+       -> Type
+REquals rs x y = Indexed.Equals Role (Role rs) x y
 
 public export
 data Involved : (rs : List Role)
-             -> (p : Role rs)
-             -> (s : Role rs)
-             -> (r : Role rs)
+             -> (p : Role rs x)
+             -> (s : Role rs y)
+             -> (r : Role rs z)
                         -> Type
   where
     Sends : (prfS : role = s)
@@ -44,29 +55,29 @@ data Involved : (rs : List Role)
     Recvs : (prfR : role = r)
                  -> Involved rs role s r
 
-    Skips : (prfSNot : Not (Equals Role (IsVar rs) role s))
-         -> (prfRNot : Not (Equals Role (IsVar rs) role r))
+    Skips : (prfSNot : (REquals rs role s) -> Void)
+         -> (prfRNot : (REquals rs role r) -> Void)
                     -> Involved rs role s r
 
 public export
 involved : {rs : List Role}
-        -> (p : Role rs)
-        -> (s : Role rs)
-        -> (r : Role rs)
-        -> (contra  : Not (Equals Role (IsVar rs) s r))
+        -> {x,y,z : Role}
+        -> (p : Role rs x)
+        -> (s : Role rs y)
+        -> (r : Role rs z)
+        -> (contra  : Not (REquals rs s r))
                    -> Involved rs p s r
 involved p s r contra with (Index.decEq p s)
-  involved p p r contra | (Yes (Same Refl Refl)) = (Sends Refl)
+  involved s s r contra | (Yes (Same Refl Refl))
+    = Sends Refl
   involved p s r contra | (No f) with (Index.decEq p r)
-    involved p s p contra | (No f) | (Yes (Same Refl Refl)) = (Recvs Refl)
-    involved p s r contra | (No f) | (No g) = (Skips f g)
-
-
+    involved p s p contra | (No f) | (Yes (Same Refl Refl))
+      = Recvs Refl
+    involved p s r contra | (No f) | (No g)
+      = Skips f g
 
 public export
 Roles : (rs : List Role) -> (ss : List Role) -> Type
-Roles rs
-  = DList Role (IsVar rs)
-
+Roles rs = DList Role (Role rs)
 
 -- [ EOF ]

@@ -31,6 +31,7 @@ import Capable.Types.Role
 import Capable.Types.Base
 
 import Capable.Types.Protocol.Global
+--import Capable.Types.Protocol.Global.HasRoles
 import Capable.Types.Protocol.Local
 import Capable.Types.Protocol.Projection
 
@@ -48,10 +49,10 @@ mutual
         End   : HasRoles rs lp Nil
         Call  : HasRoles rs lp Nil
         Rec   : HasRoles rs lp os
-             -> HasRoles rs (Rec lp) os
+             -> HasRoles rs (Rec v lp) os
 
         Choice : Branches.HasRoles rs bs os
-              -> Union [s,r] os os' prf
+              -> Union [s,r]             os os' prf
               -> Protocol.HasRoles rs (Choice s r ty prfm notsr bs)
                                       os'
 
@@ -117,7 +118,7 @@ mutual
 
     hasRoles End = R [] End
     hasRoles (Call x) = R [] End
-    hasRoles (Rec x)
+    hasRoles (Rec v x)
       = case hasRoles x of
         R _ r => R _ (Rec r)
 

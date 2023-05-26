@@ -1,0 +1,130 @@
+{- Modelling and Realisation of the Two Buyer Protocol.
+
+The protocol allows two people (Alice, Bob) to neogiate buying a book from the 'Seller'.
+
+Informally:
+
+Alice -> Seller | title : String
+Seller -> { Alice, Bob } | quote : Int
+
+Alice -> Bob    | offer : Int (quote / 2)
+Bob   -> Seller | { quit . end
+                  , acceptance . Bob -> Seller | address
+                               . Seller -> Bob | date
+                               , end }
+
+-}
+
+
+role Bob
+role Seller
+role Alice
+
+type request = union { title : String }
+type quote   = union { quote : Int}
+type address = union { addr  : String}
+type date    = union { date  : String}
+
+type steps = union { quit   : Unit
+                   ; accept : Unit
+                   }
+
+type MaybeDate = union { nout : Unit; cancelled : Unit; mdate : String}
+type MaybeSale = union { noutS : Unit; sale : String; cancelledS : Unit}
+
+protocol twoBuyer
+  = Alice  ==> Seller [ request ] { title(String)
+  . Seller ==> Alice  [ quote ]   { quote(Int)
+  . Seller ==> Bob    [ quote ]   { quote(Int)
+  . Alice  ==> Bob    [ quote ]   { quote(Int)
+  . Bob    ==> Seller [ steps ]   { quit(Unit).end
+                                  | accept(Unit)
+                                  . Bob    ==> Seller [ address ] { addr(String)
+                                  . Seller ==> Bob    [ date    ] { date(String)
+                                  . end
+  }}}}}}}
+
+session twoBuyerAlice <twoBuyer as Alice>( title : String ) -> Bool
+{
+  send [request] Seller title(title) catch { crash(false) }
+  recv [quote] Seller
+  {
+    when quote(q)
+    {
+      local newQuote = div(q,2);
+      send [quote] Bob quote(newQuote) catch { crash(false) }
+      end(true)
+    }
+  } catch { crash(false) }
+}
+
+session twoBuyerBob <twoBuyer as Bob>( max : Int, address : String) -> MaybeDate
+{
+  recv [quote] Seller
+  {
+    when quote(q)
+    {
+      recv [quote] Alice
+      {
+        when quote(offer)
+        {
+          local result = lte(sub(q,offer),max);
+          if result
+          {
+            send [steps]   Seller accept(unit)  catch { crash(nout(unit)) }
+            send [address] Seller addr(address) catch { crash(nout(unit)) }
+            recv [date] Seller
+            {
+                when date(d)
+                {
+                        end(mdate(d))
+                }
+            } catch { crash(nout(unit)) }
+          } else
+          {
+            send [steps] Seller quit(unit) catch { crash(nout(unit)) }
+            end(cancelled(unit))
+          }
+        }
+      } catch { crash(nout(unit)) }
+    }
+  } catch { crash(nout(unit)) }
+}
+
+session twoBuyerSeller <twoBuyer as Seller>() -> MaybeSale
+{
+  recv [request] Alice
+  {
+    when title(t)
+    {
+      send[quote] Alice quote(123) catch { crash(noutS(unit)) }
+      send[quote] Bob   quote(123) catch { crash(noutS(unit)) }
+
+      recv [steps] Bob
+      {
+        when quit(q)
+        {
+          end(cancelledS(unit))
+        }
+        when accept(q)
+        {
+          recv [address] Bob
+          {
+            when addr(a)
+            {
+              send[date] Bob date("123") catch { crash(noutS(unit)) }
+              end(sale(a))
+            }
+          } catch { crash(noutS(unit)) }
+        }
+      } catch { crash(noutS(unit)) }
+    }
+  } catch { crash(noutS(unit)) }
+}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

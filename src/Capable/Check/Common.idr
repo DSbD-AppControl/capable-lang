@@ -198,9 +198,9 @@ namespace Env
     export
     extend : (env : Env rs ds ss gs ls)
           -> (s   : String)
-                 -> Env (MkRole::rs) ds ss gs ls
+                 -> Env (MkRole s::rs) ds ss gs ls
     extend env s
-      = { rho $= (::) (I s MkRole)} env
+      = { rho $= (::) (I s (MkRole s))} env
 
   namespace Gamma
     export

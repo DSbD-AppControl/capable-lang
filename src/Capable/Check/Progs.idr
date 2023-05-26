@@ -277,15 +277,15 @@ check env state (Def fc FUNC n val scope)
 check env state (Def fc ROLE n val scope)
 
   = do exists fc (rho env) n
-       let env = extend env n
+       let env = Rho.extend env n
 
-       (MkRole ** role) <- synth (rho env) val
+--       (r ** role) <- synth (rho env) val
 
-       let state = {roles $= insert n (MkRole)} state
+       let state = {roles $= insert n (MkRole n)} state
 
        (scope, state) <- check env state scope
 
-       pure (DefRole scope, state)
+       pure (DefRole (MkRole n) scope, state)
 
 
 check env state (Def fc PROT n val scope)
@@ -295,12 +295,12 @@ check env state (Def fc PROT n val scope)
 
        (g ** tm) <- synth (delta env) (rho env) val
 
-       prf <- embedAt fc (\(r,err) => WellFormed "\{reflect (rho env) r} causes:\n\{show err}")
+       prf <- embedAt fc (\((r' ** r),err) => WellFormed "\{reflect (rho env) r} causes:\n\{show err}")
                          (wellFormed g)
 
        let env = Sigma.extend env n (S (rho env) g)
 
-       let state = {protocols $= insert n (P (rho env) tm)} state
+       let state = {protocols $= insert n (P (rho env) g tm)} state
 
        (scope, state) <- check env state scope
 

@@ -30,7 +30,7 @@ export
 synth : {roles : List Ty.Role}
      -> (ctxt  : Context Ty.Role roles)
      -> (syn   : Raw.Role.Role r)
-              -> Capable (DPair Ty.Role (Role roles))
+              -> Capable (DPair Ty.Role (DeBruijn.Role roles))
 synth ctxt (R x)
   = lookup ctxt (MkRef emptyFC x)
 

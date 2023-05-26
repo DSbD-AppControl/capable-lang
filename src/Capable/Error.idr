@@ -51,7 +51,7 @@ namespace Parsing
 namespace Projection
   public export
   data Error : Type where
-    NotAllSame : List String -> Projection.Error
+    NotAllSame : {ks,rs : _} -> Local.Branches ks rs ls -> Projection.Error
     BranchNotProjectionable : String -> Projection.Error -> Projection.Error
     Skip : Projection.Error -> Projection.Error
     Offer : Projection.Error -> Projection.Error

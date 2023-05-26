@@ -24,6 +24,7 @@ import Toolkit.DeBruijn.Context.Item
 import Text.PrettyPrint.Prettyprinter
 
 import Text.Lexer
+import Capable.Bootstrap
 import Capable.Types
 import Capable.Types.Base
 import Capable.Error
@@ -48,7 +49,7 @@ import Capable.Lexer.Token
     = trim $ unlines [show l, show i]
 
 Show Ty.Role where
-  show MkRole = "Role"
+  show (MkRole s) = "(Role \{s})"
 
 
 -- @TODO fix assert_total
@@ -71,9 +72,35 @@ Show (Parsing.Error) where
   show (PError _ err)
     = show @{capablePE} err
 
+urg : Context Kind ks
+   -> Context Ty.Role rs
+   -> Branch Local.Local ks rs laty -> Doc ()
+urg ctxtk ctxtr (B label type c)
+  = group
+  $ align
+  $ vcat
+  [ pretty label <+> parens (pretty (show type))
+  , pretty "." <+> pretty (Open.toString ctxtk
+                                          ctxtr
+                                  c)
+  ]
+
+urgh : {rs, ks : _} -> Local.Branches ks rs ls -> Doc ()
+urgh bs
+  = choices $ mapToList (urg (ctxtK bs) (ctxtR bs)) bs
+
+  where
+    ctxtR : {rs : _} -> (bs : Local.Branches ks rs ls) -> Context Ty.Role rs
+    ctxtR {rs} _ = rebuild (\(MkRole r) => r)rs
+
+    ctxtK : {ks : _} ->(bs : Local.Branches ks rs ls) -> Context Kind ks
+    ctxtK {ks} _ = rebuild (\(R a) => a) ks
+
 export
 Show (Projection.Error) where
-  show (NotAllSame bs) = "Branches differ (TODO Make printing better!)\n\t\{show bs}"
+  show (NotAllSame bs)
+    = "Branches differ \n\t\{show $ urgh bs}"
+
   show (BranchNotProjectionable str x)
     = unlines ["Error projecting branch \{str}:"
               , "\n\t\{show x}"]

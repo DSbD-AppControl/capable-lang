@@ -41,7 +41,7 @@ mutual
     public export
     data Project : (ks   : List Kind)
                 -> (rs   : List Role)
-                -> (role : Role rs)
+                -> (whom : Role rs w)
                 -> (g    : Global ks rs)
                 -> (l    : Local  ks rs)
                         -> Type
@@ -50,8 +50,8 @@ mutual
 
         Call : Project ks rs whom (Call idx) (Call idx)
 
-        Rec : (rec : Project (R::ks) rs whom      x       y)
-                  -> Project ks rs whom (Rec x) (Rec y)
+        Rec : (rec : Project (k::ks) rs whom      x       y)
+                  -> Project ks rs whom (Rec k x) (Rec k y)
 
         Select : (prf : Equals Role (IsVar rs) whom s)
               -> (bs  : Branches.Project ks rs whom                              (x::xs) (y::ys))
@@ -74,7 +74,7 @@ mutual
       public export
       data Project : (ks : List Kind)
                   -> (rs : List Role)
-                  -> (role   : IsVar rs r)
+                  -> (role   : Role rs r)
                   -> (global : Branch Global ks rs l)
                   -> (local  : Branch Local  ks rs l)
                             -> Type
@@ -89,7 +89,7 @@ mutual
     public export
     data Project : (ks : List Kind)
                 -> (rs : List Role)
-                -> (role : Role rs)
+                -> (role : Role rs w)
                 -> (gs   : Global.Branches ks rs lts)
                 -> (ls   :  Local.Branches ks rs lts)
                         -> Type
@@ -104,7 +104,7 @@ mutual
     public export
     data Same : (ks : List Kind)
              -> (rs : List Role)
-             -> (role : Role rs)
+             -> (role : Role rs w)
              -> (gs   : Global.Branches ks rs ltss)
              -> (l    : Branch Local    ks rs lts)
                       -> Type
@@ -114,7 +114,7 @@ mutual
          -> (projs : Branches.Project ks rs whom (g::gs) (l::ls))
          -> (prf   : All (String,Base)
                          (Branch Local ks rs)
-                         (Equal l)
+                         (BranchEQ l)
                          ll
                          ls)
                   -> Same ks rs whom (g::gs) l
@@ -134,7 +134,7 @@ mutual
       = Refl
 
     funProject (Rec rec) (Rec z)
-      = cong Rec (funProject rec z)
+      = cong (Rec _) (funProject rec z)
 
     funProject (Select {ys = ys1} (Same Refl Refl) ps)
                (Select {ys = ys2} (Same Refl Refl) qs)
@@ -206,8 +206,8 @@ mutual
 mutual
   namespace Protocol
     export
-    project : {ks, rs : _}
-           -> (whom : Role rs)
+    project : {ks, rs, w : _}
+           -> (whom : Role rs w)
            -> (type : Global ks rs)
                    -> DecInfo Projection.Error
                               (DPair (Local   ks rs)
@@ -218,12 +218,12 @@ mutual
     project whom (Call x)
       = Yes (Call x ** Call)
 
-    project whom (Rec x) with (project whom x)
-      project whom (Rec x) | (Yes (l ** prf))
-        = Yes (Rec l ** Rec prf)
-      project whom (Rec x) | (No msgWhyNot prfWhyNot)
+    project whom (Rec v x) with (project whom x)
+      project whom (Rec v x) | (Yes (l ** prf))
+        = Yes (Rec v l ** Rec prf)
+      project whom (Rec v x) | (No msgWhyNot prfWhyNot)
         = No (Rec msgWhyNot)
-             (\case (Rec y ** Rec rec) => prfWhyNot (y ** rec))
+             (\case (Rec v y ** Rec rec) => prfWhyNot (y ** rec))
 
     project whom (Choice s x type prfM prfR opties) with (involved whom s x prfR)
 
@@ -263,8 +263,8 @@ mutual
 
   namespace Branch
     export
-    project : {ks, s, rs : _}
-           -> (whom : Role rs)
+    project : {ks, s, rs, w: _}
+           -> (whom : Role rs w)
            -> (g  : Branch Global ks rs (s,t))
                    -> DecInfo Projection.Error
                               (DPair (Branch Local ks rs (s,t))
@@ -278,8 +278,8 @@ mutual
 
   namespace Branches
     export
-    project : {ks, lts, rs : _}
-           -> (whom : Role rs)
+    project : {ks, lts, rs, w: _}
+           -> (whom : Role rs w)
            -> (bs   : Global.Branches ks rs lts)
                      -> DecInfo Projection.Error
                                 (DPair (Local.Branches ks rs lts)
@@ -302,19 +302,19 @@ mutual
   namespace Same
 
     export
-    same : {ks, l,s : _}
+    same : {w, ks, l,s : _}
         -> {ls,rs : _}
-        -> (whom : Role rs)
+        -> (whom : Role rs w)
         -> (bs   : Global.Branches ks rs ((l,s) :: ls))
                 -> DecInfo Projection.Error
                            (DPair (Branch Local ks rs (l,s))
                                   (Same ks rs whom bs))
     same whom bs with (project whom bs)
-      same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) with (branchesEq y ys)
+      same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) with (branchesEQ y ys)
         same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) | (Yes prfWhy)
           = Yes (y ** S (z :: zs) prfWhy)
         same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) | (No msg no)
-          = No (NotAllSame (mapToList (\(B l _ _) => l) (x::xs)))
+          = No (NotAllSame (y::ys))
                (\case (fst ** (S (w :: v) prf))
                       => no $ rewrite sym (funProject w z) in
                               rewrite sym (funProject v zs) in prf)
@@ -327,8 +327,9 @@ mutual
 
 namespace Closed
   export
-  project : {rs : List Role}
-         -> (whom : Role rs)
+  project : {w : _}
+         -> {rs : List Role}
+         -> (whom : Role rs w)
          -> (type : Global Nil rs)
                  -> DecInfo Projection.Error
                             (DPair (Local Nil rs)

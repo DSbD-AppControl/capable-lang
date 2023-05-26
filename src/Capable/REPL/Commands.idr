@@ -18,6 +18,7 @@ data Cmd = Quit
          | Run
          | AskTy String
          | Project String String
+         | Roles String
 
 export
 commands : Commands Cmd
@@ -50,6 +51,10 @@ commands
                  (options [REQ "protocol", REQ "role"])
                  Project
                  "Project a global type."
+    , newCommand (names ["roles"])
+                 (options [REQ "protocol"])
+                 Roles
+                 "Get the roles involved in a protocol."
     ]
 
 export

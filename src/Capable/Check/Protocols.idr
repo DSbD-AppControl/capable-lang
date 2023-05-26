@@ -101,12 +101,12 @@ mutual
     = pure (_ ** End)
 
   synth kinds types roles (Call fc r prf)
-    = do (R ** idx) <- lookup kinds r
+    = do (_ ** idx) <- lookup kinds r
 
          pure (_ ** Call idx)
 
   synth kinds types roles (Rec fc r prf scope)
-    = do (g ** scope) <- synth (extend kinds (get r) R)
+    = do (g ** scope) <- synth (extend kinds (get r) (R (get r)))
                                types
                                roles
                                scope
@@ -114,8 +114,8 @@ mutual
          pure (_ ** Rec scope)
 
   synth kinds types roles (Choice fc s r t prf (B1 (x::xs)))
-    = do (MkRole ** stm) <- synth roles s
-         (MkRole ** rtm) <- synth roles r
+    = do (s ** stm) <- synth roles s
+         (r ** rtm) <- synth roles r
 
          (UNION ((es,et):::fs) ** tmM) <- synth types t
            | (ty ** _) => throwAt fc (UnionExpected ty)
@@ -129,8 +129,8 @@ mutual
 
                    case Index.decEq stm rtm of
                      Yes (Same Refl Refl)
-                       => do let R s' = s
-                             let R r' = r
+                       => do let MkRole s' = s
+                             let MkRole r' = r
                              throwAt fc (MismatchRole (MkRef emptyFC s') (MkRef emptyFC r'))
                      No prf
                        => pure (_ ** Choice stm rtm prf tmM prfM (tmB::tmBs))
