@@ -49,7 +49,7 @@ mutual
         End   : HasRoles rs lp Nil
         Call  : HasRoles rs lp Nil
         Rec   : HasRoles rs lp os
-             -> HasRoles rs (Rec lp) os
+             -> HasRoles rs (Rec v lp) os
 
         Choice : Branches.HasRoles rs bs os
               -> Union [s,r]             os os' prf
@@ -118,7 +118,7 @@ mutual
 
     hasRoles End = R [] End
     hasRoles (Call x) = R [] End
-    hasRoles (Rec x)
+    hasRoles (Rec v x)
       = case hasRoles x of
         R _ r => R _ (Rec r)
 

@@ -172,7 +172,7 @@ namespace Expr
       = unknown (span ref)
 
     synth env er ec p ret (Call fc ref)
-      = do (R ** idx) <- lookup ec (MkRef fc ref)
+      = do (r ** idx) <- lookup ec (MkRef fc ref)
            -- @TODO change to ref
 
            pure (R (Call idx) (Call idx))
@@ -195,8 +195,8 @@ namespace Expr
 
 
     synth env er ec p ret (LetRec fc s scope)
-      = do (R l tm) <- synth env er (I s R :: ec) p ret scope
-           pure (R (Rec l) (LetRec tm))
+      = do (R l tm) <- synth env er (I s (R s) :: ec) p ret scope
+           pure (R (Rec _ l) (LetRec tm))
 
 
     synth env er ec p ret (Read fc r ty prf (ofs::offs) onEr)
@@ -396,7 +396,7 @@ namespace Expr
 
     --
     check e er ec princ ret (Call x) (Call fc ref)
-      = do (R ** idx) <- lookup ec (MkRef fc ref)
+      = do (r ** idx) <- lookup ec (MkRef fc ref)
            -- @TODO change to ref
 
            Same Refl Refl <- embedAt fc
@@ -407,16 +407,16 @@ namespace Expr
 
 
     --
-    check e er ec p ret (Rec type) (LetRec fc s scope)
+    check e er ec p ret (Rec l type) (LetRec fc s scope)
       = do R lsyn prf tm <- check e
                                   er
-                                  (I s R :: ec)
+                                  (I s l :: ec)
                                   p
                                   ret
                                   type
                                   scope
 
-           pure (R (Rec lsyn) (Rec prf) (LetRec tm))
+           pure (R (Rec _ lsyn) (Rec prf) (LetRec tm))
 
 
     --

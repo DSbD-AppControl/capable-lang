@@ -49,7 +49,7 @@ namespace HasRoles
           End   : HasRoles rs lp Nil
           Call  : HasRoles rs lp Nil
           Rec   : HasRoles rs lp os
-               -> HasRoles rs (Rec lp) os
+               -> HasRoles rs (Rec v lp) os
 
           Select : HasRoles rs cont os
                 -> Union [whom] os os' prf
@@ -109,7 +109,7 @@ namespace HasRoles
       hasRoles Crash = R [] Crash
       hasRoles End = R [] End
       hasRoles (Call x) = R [] Call
-      hasRoles (Rec x)
+      hasRoles (Rec v x)
         = case hasRoles x of
             R _ r => R _ (Rec r)
       hasRoles (Select whom label ty prfM cont)
@@ -157,8 +157,8 @@ namespace UsesRole
                    -> (r  : Role rs r')
                          -> Type
         where
-          Rec   : UsesRole rs       t  role
-               -> UsesRole rs (Rec  t) role
+          Rec   : UsesRole rs        t  role
+               -> UsesRole rs (Rec v t) role
 
           CHere : (whom : Role rs r)
                -> (prf  : REquals rs whom role)
@@ -242,10 +242,10 @@ namespace UsesRole
       usesRole (Call x) _
         = No absurd
 
-      usesRole (Rec x) r with (usesRole x r)
-        usesRole (Rec x) r | (Yes prf)
+      usesRole (Rec v x) r with (usesRole x r)
+        usesRole (Rec v x) r | (Yes prf)
           = Yes (Rec prf)
-        usesRole (Rec x) r | (No contra)
+        usesRole (Rec v x) r | (No contra)
           = No $ \case (Rec y) => contra y
 
       usesRole (Select whom label type p cont) r with (Index.decEq whom r)

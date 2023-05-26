@@ -59,11 +59,12 @@ namespace Global
       where
         End : Global ks ts rs End
 
-        Call : (prf : RecVar ks)
+        Call : {v : _}
+            -> (prf : RecVar ks v)
                    -> Global ks ts rs (Call prf)
 
-        Rec : Global (R::ks) ts rs      type
-           -> Global     ks  ts rs (Rec type)
+        Rec : Global (v::ks) ts rs        type
+           -> Global     ks  ts rs (Rec v type)
 
         Choice : {s,r : _}
               -> {f : (String,Base) }

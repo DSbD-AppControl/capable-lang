@@ -30,11 +30,13 @@ import Capable.Types.Base
 
 namespace Protocol
   public export
-  data Kind = R -- To capture recursion variables
+  data Kind = R String -- To capture recursion variables
 
   export
   DecEq Kind where
-    decEq R R = Yes Refl
+    decEq (R a) (R b)
+      = decDo $ do Refl <- decEq a b `otherwise` (\Refl => Refl)
+                   pure Refl
 
   public export
   data Branch : (0 contType : List Kind -> List Role -> Type)
@@ -91,8 +93,8 @@ namespace Protocol
                      Refl <- Branches.decEq g xs ys `otherwise` (\Refl => Refl)
                      pure Refl
   public export
-  RecVar : List Kind -> Type
-  RecVar ks = IsVar ks R
+  RecVar : List Kind -> Kind  -> Type
+  RecVar = IsVar
 
   export
   getLTs : DList (String, Base)
@@ -105,43 +107,42 @@ namespace Protocol
     getLTs ((B l b cont) :: rest) | (Val xs)
       = Val ((l, b) :: xs)
 
+export
 choices : List (Doc ann) -> Doc ann
 choices = group . encloseSep (flatAlt (pretty "[ ") (pretty "["))
                              (flatAlt (pretty "]")  (pretty "]"))
                              (flatAlt (pretty "| ") (pretty " | "))
 
-branch : (Nat -> Context Kind ks -> Context Ty.Role rs -> c ks rs -> Doc ())
-      -> (acc : Nat)
+branch : (Context Kind ks -> Context Ty.Role rs -> c ks rs -> Doc ())
       -> (kctxt : Context Kind ks)
       -> (rctxt : Context Ty.Role rs)
       -> Branch c ks rs l
       -> Doc ()
-branch g acc kctxt rctxt (B label type c)
+branch g kctxt rctxt (B label type c)
   = group
   $ align
   $ vcat
   [ pretty label <+> parens (pretty (show type))
-  , pretty "." <+> g acc kctxt rctxt c
+  , pretty "." <+> g kctxt rctxt c
   ]
 
 export
-branches : (Nat -> Context Kind ks -> Context Ty.Role rs -> c ks rs -> Doc ())
-        -> (acc : Nat)
+branches : (Context Kind ks -> Context Ty.Role rs -> c ks rs -> Doc ())
         -> (kctxt : Context Kind ks)
         -> (rctxt : Context Ty.Role rs)
         -> (bs    : DList (String,Base)
                           (Branch c ks rs)
                           ls)
                  -> Doc ()
-branches g acc kctxt rctxt xs
-  = let prettyXS = mapToList (branch g acc kctxt rctxt) xs
+branches g kctxt rctxt xs
+  = let prettyXS = mapToList (branch g kctxt rctxt) xs
     in assert_total
     $ choices prettyXS
 
-export
-showAcc : Nat -> String
-showAcc n
-    = if lt n 26
-           then singleton (chr (cast (plus 97 n)))
-           else (singleton (chr (cast (plus 97 (mod n 26))))) <+> (assert_total $ showAcc  (minus n 26))
+--export
+--showAcc : Nat -> String
+--showAcc n
+--    = if lt n 26
+--           then singleton (chr (cast (plus 97 n)))
+--           else (singleton (chr (cast (plus 97 (mod n 26))))) <+> (assert_total $ showAcc  (minus n 26))
 -- [ EOF ]

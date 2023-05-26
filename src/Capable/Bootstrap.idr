@@ -27,6 +27,13 @@ reflect ((I name x) :: rest) (V 0 prf) = name
 reflect (elem :: rest) (V (S k) (There later)) = reflect rest (V k later)
 
 export
+rebuild : (a -> String)
+       -> (as : List a)
+              -> Context a as
+rebuild _ [] = []
+rebuild f (x :: xs) = I (f x) x :: rebuild f xs
+
+export
 Uninhabited (AtIndex x [] n) where
   uninhabited at impossible
 

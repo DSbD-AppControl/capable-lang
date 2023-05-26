@@ -45,8 +45,8 @@ mutual
                  -> (o  : Role rs u)
                        -> Type
       where
-        RLater : UsesRole rs      lp  o
-              -> UsesRole rs (Rec lp) o
+        RLater : UsesRole rs        lp  o
+              -> UsesRole rs (Rec v lp) o
 
         Sender : Protocol.UsesRole rs (Choice s r ty p nsr bs) s
 

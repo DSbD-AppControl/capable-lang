@@ -101,12 +101,12 @@ mutual
     = pure (_ ** End)
 
   synth kinds types roles (Call fc r prf)
-    = do (R ** idx) <- lookup kinds r
+    = do (_ ** idx) <- lookup kinds r
 
          pure (_ ** Call idx)
 
   synth kinds types roles (Rec fc r prf scope)
-    = do (g ** scope) <- synth (extend kinds (get r) R)
+    = do (g ** scope) <- synth (extend kinds (get r) (R (get r)))
                                types
                                roles
                                scope

@@ -109,15 +109,17 @@ mutual
            -> (rest : Expr roles rs types globals stack_g (Extra.toList ss ++ stack_l) stack_r whom k return)
                    -> Expr roles rs types globals stack_g                     stack_l  stack_r whom k return
 
-      LetRec : Expr roles rs types globals stack_g stack_l (R::stack_r) whom      body  type
-            -> Expr roles rs types globals stack_g stack_l     stack_r  whom (Rec body) type
+      LetRec : {e,stack_r,body : _}
+            -> Expr roles rs types globals stack_g stack_l (e::stack_r) whom        body  type
+            -> Expr roles rs types globals stack_g stack_l     stack_r  whom (Rec e body) type
 
       Cond : (cond : Expr       rs types globals stack_g stack_l                            BOOL)
           -> (tt   : Expr roles rs types globals stack_g stack_l stack_r whom l             type)
           -> (ff   : Expr roles rs types globals stack_g stack_l stack_r whom r             type)
                   -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices l r) type
 
-      Call : (x : RecVar stack_r)
+      Call : {stack_r,v : _}
+          -> (x : RecVar stack_r v)
                -> Expr roles rs types globals stack_g stack_l stack_r whom (Call x) type
 
       Crash : Expr       rs types globals stack_g stack_l type

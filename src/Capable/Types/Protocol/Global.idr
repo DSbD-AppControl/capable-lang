@@ -34,9 +34,10 @@ public export
 data Global : List Kind -> List Role -> Type where
   End : Global ks rs
 
-  Call : {vs : _} -> RecVar vs -> Global vs rs
+  Call : {v,vs : _} -> RecVar vs v -> Global vs rs
 
-  Rec : Global (R::vs) rs
+  Rec : (v : Kind)
+     -> Global (v::vs) rs
      -> Global     vs  rs
 
   Choice : {x,y, fs : _}

@@ -50,8 +50,8 @@ mutual
 
         Call : Project ks rs whom (Call idx) (Call idx)
 
-        Rec : (rec : Project (R::ks) rs whom      x       y)
-                  -> Project ks rs whom (Rec x) (Rec y)
+        Rec : (rec : Project (k::ks) rs whom      x       y)
+                  -> Project ks rs whom (Rec k x) (Rec k y)
 
         Select : (prf : Equals Role (IsVar rs) whom s)
               -> (bs  : Branches.Project ks rs whom                              (x::xs) (y::ys))
@@ -114,7 +114,7 @@ mutual
          -> (projs : Branches.Project ks rs whom (g::gs) (l::ls))
          -> (prf   : All (String,Base)
                          (Branch Local ks rs)
-                         (Equal l)
+                         (BranchEQ l)
                          ll
                          ls)
                   -> Same ks rs whom (g::gs) l
@@ -134,7 +134,7 @@ mutual
       = Refl
 
     funProject (Rec rec) (Rec z)
-      = cong Rec (funProject rec z)
+      = cong (Rec _) (funProject rec z)
 
     funProject (Select {ys = ys1} (Same Refl Refl) ps)
                (Select {ys = ys2} (Same Refl Refl) qs)
@@ -218,12 +218,12 @@ mutual
     project whom (Call x)
       = Yes (Call x ** Call)
 
-    project whom (Rec x) with (project whom x)
-      project whom (Rec x) | (Yes (l ** prf))
-        = Yes (Rec l ** Rec prf)
-      project whom (Rec x) | (No msgWhyNot prfWhyNot)
+    project whom (Rec v x) with (project whom x)
+      project whom (Rec v x) | (Yes (l ** prf))
+        = Yes (Rec v l ** Rec prf)
+      project whom (Rec v x) | (No msgWhyNot prfWhyNot)
         = No (Rec msgWhyNot)
-             (\case (Rec y ** Rec rec) => prfWhyNot (y ** rec))
+             (\case (Rec v y ** Rec rec) => prfWhyNot (y ** rec))
 
     project whom (Choice s x type prfM prfR opties) with (involved whom s x prfR)
 
@@ -310,11 +310,11 @@ mutual
                            (DPair (Branch Local ks rs (l,s))
                                   (Same ks rs whom bs))
     same whom bs with (project whom bs)
-      same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) with (branchesEq y ys)
+      same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) with (branchesEQ y ys)
         same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) | (Yes prfWhy)
           = Yes (y ** S (z :: zs) prfWhy)
         same whom (x :: xs) | (Yes ((y :: ys) ** (z :: zs))) | (No msg no)
-          = No (NotAllSame (mapToList (\(B l _ _) => l) (x::xs)))
+          = No (NotAllSame (y::ys))
                (\case (fst ** (S (w :: v) prf))
                       => no $ rewrite sym (funProject w z) in
                               rewrite sym (funProject v zs) in prf)
