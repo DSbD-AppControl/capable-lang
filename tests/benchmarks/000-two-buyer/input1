@@ -1,5 +1,0 @@
-:load attempt_one.capable
-:project twoBuyerOG Alice
-:project twoBuyerOG Bob
-:project twoBuyerOG Seller
-:quit
