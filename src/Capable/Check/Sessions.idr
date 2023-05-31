@@ -191,7 +191,7 @@ namespace Expr
            R tyT tmT <- synth env er ec p ret tt
            R tyF tmF <- synth env er ec p ret ff
 
-           pure (R (Choices tyT tyF) (Cond tm tmT tmF))
+           pure (R (Choices [B "true" UNIT tyT, B "false" UNIT tyF]) (Cond tm tmT tmF))
 
 
     synth env er ec p ret (LetRec fc s scope)
@@ -492,7 +492,7 @@ namespace Expr
                            -> Capable (Check.Offers.Result roles rs ds ss gs ks ls p bs ret)
 
               offers fc _ Nil Nil
-                = pure (OS Nil Nil Sessions.Nil)
+                = pure (OS Nil Nil Offers.Nil)
 
               offers fc _ Nil os
                 = throwAt fc (RedundantCases (flattern os))
@@ -640,8 +640,8 @@ namespace Expr
            R tyL uL tmL <- check env er ec p ret type tt
            R tyR uR tmR <- check env er ec p ret type ff
 
-           pure (R (Choices tyL  tyR)
-                   (Choices uL   uR)
+           pure (R (Choices [B "true" UNIT tyL, B "false" UNIT tyR])
+                   (Choices [uL, uR])
                    (Cond tm tmL  tmR)
                 )
 

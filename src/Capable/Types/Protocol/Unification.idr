@@ -47,6 +47,19 @@ mutual
          -> Unify (B l t this)
                   (B l t that)
 
+  namespace Cases
+
+    public export
+    data Unify : (this : Local.Local ks rs)
+              -> (that : Synth.Branches ks rs lbs)
+                      -> Type
+      where
+        Nil : Unify this Nil
+        (::) : Protocol.Unify this that
+            -> Cases.Unify this those
+            -> Unify this
+                     (B l t that::those)
+
   namespace Branches
 
     public export
@@ -55,7 +68,7 @@ mutual
                       -> Type
       where
         Nil : Unify Nil Nil
-        (::) : Unify this  that
+        (::) : Branch.Unify this  that
             -> Branches.Unify these those
             -> Unify (this::these)
                      (that::those)
@@ -86,9 +99,8 @@ mutual
               -> Unify (Choice BRANCH target ty prfOS these)
                        (Offer         target ty prfOS those)
 
-        Choices : Unify this lthat
-               -> Unify this rthat
-               -> Unify this (Choices lthat rthat)
+        Choices : Unify this those
+               -> Unify this (Choices those)
 
 {-
 Uninhabited (Unify Crash End) where

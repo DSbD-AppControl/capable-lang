@@ -39,26 +39,9 @@ import Capable.Terms.Exprs
 
 
 mutual
-
-  public export
-  data Offer : (roles   : List Ty.Role)
-            -> (rs      : List Ty.Role)
-            -> (types   : List Ty.Base)
-            -> (globals : List Ty.Session)
-            -> (stack_g : List Ty.Method)
-            -> (stack_l : List Ty.Base)
-            -> (stack_r : List Kind) -- recursion variables
-            -> (ret     : Ty.Base)
-            -> (whom    : Role roles r)
-            -> (spec    : Branch Synth.Local stack_r roles (s,t))
-                      -> Type
-    where
-      O : (s    : String)
-       -> (body : Expr  roles rs  types globals stack_g (t::stack_l) stack_r  whom g return)
-               -> Offer roles rs  types globals stack_g     stack_l  stack_r         return whom (B s t g)
-
-  public export
-  data Offers : (roles   : List Ty.Role)
+  namespace Cases
+    public export
+    data Case : (roles   : List Ty.Role)
              -> (rs      : List Ty.Role)
              -> (types   : List Ty.Base)
              -> (globals : List Ty.Session)
@@ -67,14 +50,70 @@ mutual
              -> (stack_r : List Kind) -- recursion variables
              -> (ret     : Ty.Base)
              -> (whom    : Role roles r)
-             -> (os      : Synth.Branches stack_r roles lts)
+             -> (ltc     : (String,Base))
+             -> (not_b   : Branch Synth.Local stack_r roles ltc)
                         -> Type
-    where
-      Nil : Offers roles rs types globals stack_g stack_l stack_r ret whom Nil
+      where
+        C : (s    : String)
+         -> (body : Expr roles rs types globals stack_g (t::stack_l) stack_r whom g return)
+                 -> Case roles rs types globals stack_g stack_l stack_r return whom (s,t) (B s t g)
 
-      (::) : (o  : Offer  roles rs types globals stack_g stack_l stack_r ret whom o')
-          -> (os : Offers roles rs types globals stack_g stack_l stack_r ret whom os')
-                -> Offers roles rs types globals stack_g stack_l stack_r ret whom (o'::os')
+    public export
+    data Cases : (roles   : List Ty.Role)
+              -> (rs      : List Ty.Role)
+              -> (types   : List Ty.Base)
+              -> (globals : List Ty.Session)
+              -> (stack_g : List Ty.Method)
+              -> (stack_l : List Ty.Base)
+              -> (stack_r : List Kind) -- recursion variables
+              -> (ret     : Ty.Base)
+              -> (whom    : Role roles r)
+              -> (ltcs    : List (String,Base))
+              -> (gs      : Synth.Branches stack_r roles ltcs)
+                         -> Type
+      where
+        Nil : Cases roles rs types globals sg sl sr ret whom Nil Nil
+        (::) : {c : _}
+            -> Case  roles rs types globals sg sl sr ret whom ltc c
+            -> Cases roles rs types globals sg sl sr ret whom ltcs cs
+            -> Cases roles rs types globals sg sl sr ret whom (ltc::ltcs) (c::cs)
+
+  namespace Offers
+    public export
+    data Offer : (roles   : List Ty.Role)
+              -> (rs      : List Ty.Role)
+              -> (types   : List Ty.Base)
+              -> (globals : List Ty.Session)
+              -> (stack_g : List Ty.Method)
+              -> (stack_l : List Ty.Base)
+              -> (stack_r : List Kind) -- recursion variables
+              -> (ret     : Ty.Base)
+              -> (whom    : Role roles r)
+              -> (spec    : Branch Synth.Local stack_r roles (s,t))
+                        -> Type
+      where
+        O : (s    : String)
+         -> (body : Expr  roles rs  types globals stack_g (t::stack_l) stack_r  whom g return)
+                 -> Offer roles rs  types globals stack_g     stack_l  stack_r         return whom (B s t g)
+
+    public export
+    data Offers : (roles   : List Ty.Role)
+               -> (rs      : List Ty.Role)
+               -> (types   : List Ty.Base)
+               -> (globals : List Ty.Session)
+               -> (stack_g : List Ty.Method)
+               -> (stack_l : List Ty.Base)
+               -> (stack_r : List Kind) -- recursion variables
+               -> (ret     : Ty.Base)
+               -> (whom    : Role roles r)
+               -> (os      : Synth.Branches stack_r roles lts)
+                          -> Type
+      where
+        Nil : Offers roles rs types globals stack_g stack_l stack_r ret whom Nil
+
+        (::) : (o  : Offer  roles rs types globals stack_g stack_l stack_r ret whom o')
+            -> (os : Offers roles rs types globals stack_g stack_l stack_r ret whom os')
+                  -> Offers roles rs types globals stack_g stack_l stack_r ret whom (o'::os')
 
 
   public export
@@ -116,7 +155,15 @@ mutual
       Cond : (cond : Expr       rs types globals stack_g stack_l                            BOOL)
           -> (tt   : Expr roles rs types globals stack_g stack_l stack_r whom l             type)
           -> (ff   : Expr roles rs types globals stack_g stack_l stack_r whom r             type)
-                  -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices l r) type
+                  -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices (B "true" UNIT l::[B "false" UNIT r])) type
+
+      Match : {a      : (String, Base)}
+           -> {as     : List (String, Base)}
+           -> {c      : Branch Synth.Local stack_r roles a}
+           -> {cs     : Synth.Branches stack_r roles as}
+           -> (expr : Expr roles types globals stack_g stack_l (UNION (a:::as)))
+           -> (cases : Cases roles rs types globals stack_g stack_l stack_r type whom (a::as) (c::cs))
+                    -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices (c::cs)) type
 
       Call : {stack_r,v : _}
           -> (x : RecVar stack_r v)
