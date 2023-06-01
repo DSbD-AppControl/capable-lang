@@ -95,6 +95,13 @@ mutual
           -> (ff   : Expr whenFalse)
                   -> Expr (Branch COND_SESH fc [test, whenTrue, whenFalse])
 
+      -- ## Matches
+      Match : (fc : FileContext)
+           -> (cond : Expr m)
+           -> (prf  : AsVect os offers')
+           -> (offs : All Offer offers')
+                   -> Expr (Branch MATCH_SESH fc (m::os))
+
       -- ## Channel Operations
       Read : (fc   : FileContext)
           -> (role : Role r)
@@ -133,6 +140,7 @@ namespace Expr
   getFC (Cond fc _ _ _) = fc
   getFC (Read fc role ty prf offs onEr) = fc
   getFC (Send fc role ty l msg body exc) = fc
+  getFC (Match fc _ _ _) = fc
 
 
 
@@ -222,6 +230,12 @@ mutual
               (toExpr scope)
               (toExpr err)
 
+
+  toExpr (Branch MATCH_SESH fc (cond::cs))
+    = let (os ** prf) = asVect cs
+      in Match fc (toExpr cond)
+                  prf
+                  (assert_total $ toOffers os)
 
 export
 toSession : (e : AST SESH) -> Session e

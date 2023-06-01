@@ -161,7 +161,7 @@ mutual
            -> {as     : List (String, Base)}
            -> {c      : Branch Synth.Local stack_r roles a}
            -> {cs     : Synth.Branches stack_r roles as}
-           -> (expr : Expr roles types globals stack_g stack_l (UNION (a:::as)))
+           -> (expr : Expr rs types globals stack_g stack_l (UNION (a:::as)))
            -> (cases : Cases roles rs types globals stack_g stack_l stack_r type whom (a::as) (c::cs))
                     -> Expr roles rs types globals stack_g stack_l stack_r whom (Choices (c::cs)) type
 

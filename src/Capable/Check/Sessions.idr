@@ -62,6 +62,27 @@ namespace Expr
                  -> Result roles rs ds ss gs ks ls p chk ret
 
 
+    namespace Case
+      public export
+      data Result : (roles, rs : List Ty.Role)
+                 -> (ds   : List Ty.Base)
+                 -> (ss   : List Ty.Session)
+                 -> (gs   : List Ty.Method)
+                 -> (ks   : List Protocol.Kind)
+                 -> (ls   : List Ty.Base)
+                 -> (p    : DeBruijn.Role roles p')
+                 -> (lt   : Pair String Base)
+                 -> (b    : Local.Local ks roles)
+                 -> (ret  : Base)
+                         -> Type
+        where
+          C : {cchk : Local.Local ks roles}
+           -> (csyn : Synth.Local ks roles)
+           -> (prf  : Unify cchk
+                            csyn)
+           -> (expr : Case roles rs ds ss gs ls ks ret p (l,t) (B l t csyn))
+                  -> Result roles rs ds ss gs ks ls p (l,t) cchk ret
+
     namespace Offer
       public export
       data Result : (roles, rs : List Ty.Role)
@@ -80,6 +101,26 @@ namespace Expr
                             (B l t csyn))
            -> (expr : Offer roles rs ds ss gs ls ks ret p (B l t csyn))
                   -> Result roles rs ds ss gs ks ls p (B l t cchk) ret
+
+    namespace Cases
+      public export
+      data Result : (roles, rs : List Ty.Role)
+                 -> (ds   : List Ty.Base)
+                 -> (ss   : List Ty.Session)
+                 -> (gs   : List Ty.Method)
+                 -> (ks   : List Protocol.Kind)
+                 -> (ls   : List Ty.Base)
+                 -> (p    : DeBruijn.Role roles p')
+                 -> (lts  : List (Pair String Base))
+                 -> (bs   : Local.Local ks roles)
+                 -> (ret  : Base)
+                         -> Type
+        where
+          CS : {chk  : Local.Local ks roles}
+            -> (syn  : Synth.Branches ks roles lts)
+            -> (prf  : Cases.Unify chk syn)
+            -> (expr : Cases roles rs ds ss gs ls ks ret p lts syn)
+                    -> Result roles rs ds ss gs ks ls p lts chk ret
 
     namespace Offers
       public export
@@ -116,6 +157,40 @@ namespace Expr
          -> (expr : Expr   roles rs ds ss gs ls ks p l ret)
                  -> Result roles rs ds ss gs ks ls p ret
 
+    namespace Case
+      public export
+      data Result : (roles, rs : List Ty.Role)
+                 -> (ds   : List Ty.Base)
+                 -> (ss   : List Ty.Session)
+                 -> (gs   : List Ty.Method)
+                 -> (ks   : List Protocol.Kind)
+                 -> (ls   : List Ty.Base)
+                 -> (p    : DeBruijn.Role roles p')
+                 -> (s    : (String,Base))
+                 -> (ret  : Base)
+                         -> Type
+        where
+          C : (b    : Branch Synth.Local ks roles (s,t))
+           -> (expr : Case roles rs ds ss gs ls ks ret p (s,t) b)
+                  -> Result roles rs ds ss gs ks ls p (s,t) ret
+
+    namespace Cases
+      public export
+      data Result : (roles, rs : List Ty.Role)
+                 -> (ds   : List Ty.Base)
+                 -> (ss   : List Ty.Session)
+                 -> (gs   : List Ty.Method)
+                 -> (ks   : List Protocol.Kind)
+                 -> (ls   : List Ty.Base)
+                 -> (p    : DeBruijn.Role roles p')
+                 -> (lts  : List (String,Base))
+                 -> (ret  : Base)
+                         -> Type
+        where
+          CS : {lts : _}
+           -> (bs   : Synth.Branches ks roles lts)
+           -> (expr : Cases roles rs ds ss gs ls ks ret p lts bs)
+                   -> Result roles rs ds ss gs ks ls p lts ret
     namespace Offer
       public export
       data Result : (roles, rs : List Ty.Role)
@@ -192,6 +267,51 @@ namespace Expr
            R tyF tmF <- synth env er ec p ret ff
 
            pure (R (Choices [B "true" UNIT tyT, B "false" UNIT tyF]) (Cond tm tmT tmF))
+
+    synth env er ec p ret (Match fc cond prf (c::cs))
+      = do (UNION ((es,et) ::: fs) ** tm) <- synth env cond
+               | (ty ** _) => throwAt fc (UnionExpected ty)
+
+           C  b  a  <- case' fc ret es et c
+           CS bs as <- cases fc ret  fs   cs
+
+           pure (R (Choices (b::bs))
+                   (Match tm (a::as))
+                         -- (Match tm (a::as))
+                   )
+
+      where case' : (fc   : FileContext)
+                 -> (ret  : Base)
+                 -> (expL : String)
+                 -> (et   : Base)
+                 -> (o    : Offer oraw)
+                         -> Capable (Case.Result roles rs ds ss gs ks ls p (expL,et) ret)
+            case' fc ret el et (O fc' l' mn cont)
+              = do Refl <- embedAt fc' (WrongLabel el l')
+                                       (decEq el l')
+                   R local cont <- synth (Lambda.extend env mn et)
+                                                 er ec p ret cont
+                   pure (C (B el et local) (C el cont))
+
+            cases : (fc : FileContext)
+                 -> (ret : Base)
+                 -> (bs : List (String,Base))
+                 -> (os : Vect.Quantifiers.All.All Offer as')
+                       -> Capable (Cases.Result roles rs ds ss gs ks ls p bs ret)
+            cases fc _ Nil Nil
+              = pure (CS Nil Nil)
+
+            cases fc _ Nil os
+              = throwAt fc (RedundantCases (flattern os))
+
+            cases fc _ bs Nil
+              = throwAt fc (CasesMissing bs)
+
+            cases fc ret ((expL,expTy)::bs) (o::os)
+              = do C (B l t b) o' <- case' fc ret expL expTy o
+                   CS bs os <- cases fc ret bs os
+
+                   pure (CS (B l t b::bs) ((::) o' os))
 
 
     synth env er ec p ret (LetRec fc s scope)
@@ -379,7 +499,7 @@ namespace Expr
          -> (ret  : Base)
          -> (type : Local.Local ks roles)
          -> (expr : Sessions.Expr e)
-                 -> Capable (Result roles rs ds ss gs ks ls princ type ret)
+                 -> Capable (Check.Result roles rs ds ss gs ks ls princ type ret)
 
 
     -- [ NOTE ] Session Typed Terms
@@ -645,6 +765,54 @@ namespace Expr
                    (Cond tm tmL  tmR)
                 )
 
+    check env er ec p ret ptype (Match fc cond prf (c::cs))
+      = do (UNION ((es,et) ::: fs) ** tm) <- synth env cond
+               | (ty ** _) => throwAt fc (UnionExpected ty)
+
+           C  l  p  a  <- case' fc ret es et c
+           CS ls ps as <- cases fc ret  fs   cs
+
+           pure (Check.R (Choices (B es et l::ls))
+                   (Choices (p::ps))
+                   (Match tm (a::as))
+                         -- (Match tm (a::as))
+                   )
+
+      where case' : (fc   : FileContext)
+                 -> (ret  : Base)
+                 -> (expL : String)
+                 -> (et   : Base)
+                 -> (o    : Offer oraw)
+                         -> Capable (Check.Case.Result roles rs ds ss gs ks ls p (expL,et) ptype ret)
+            case' fc ret el et (O fc' l' mn cont)
+              = do Refl <- embedAt fc' (WrongLabel el l')
+                                       (decEq el l')
+                   R tySyn pU cont <- check (Lambda.extend env mn et)
+                                            er ec p ret ptype cont
+
+                   pure (C tySyn pU (C el cont))
+
+            cases : (fc  : FileContext)
+                 -> (ret : Base)
+                 -> (bs  : List (Pair String Base))
+                 -> (os  : Vect.Quantifiers.All.All Offer as')
+                        -> Capable (Check.Cases.Result roles rs ds ss gs ks ls p bs ptype ret)
+
+            cases fc _ Nil Nil
+              = pure (CS Nil Nil Cases.Nil)
+
+            cases fc _ Nil os
+              = throwAt fc (RedundantCases (flattern os))
+
+            cases fc _ bs Nil
+              = throwAt fc (CasesMissing bs)
+
+            cases fc ret (MkPair l t::bs) (o::os)
+              = do C  lSyn  pU  o  <- case' fc ret l t o
+                   CS lSyns pUs os <- cases fc ret bs os
+                   pure (CS (B l t lSyn::lSyns)
+                            (pU::pUs)
+                            (o::os))
 
     -- [ NOTE ] Holes are only checkable terms as they inherit the checked types.
     check env er ec princ ret type (Hole ref prf)
