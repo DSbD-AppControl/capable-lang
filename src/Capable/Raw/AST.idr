@@ -294,6 +294,8 @@ namespace Shape
     ||| COnditions
     COND_SESH : TRI Shape EXPRSESH EXPR EXPRSESH EXPRSESH
 
+    MATCH_SESH : Shape EXPRSESH (S (S n)) (EXPR::replicate (S n) OFFER)
+
     ||| Return
     END_SESH : UN Shape EXPRSESH EXPR
 
@@ -386,7 +388,7 @@ namespace Shape
     show (SPLIT_SESH x)      = "(SPLIT_SESH \{show x})"
 
     show (COND_SESH)        = "COND_SESH"
-
+    show (MATCH_SESH)       = "MATCH_SESH"
     show (CALL_SESH s)      = "(CALL_SESH \{show s})"
     show (CRASH_SESH)       = "CRASH_SESH"
     show (END_SESH)         = "CRASH_SESH"

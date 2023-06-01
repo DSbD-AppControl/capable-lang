@@ -55,8 +55,11 @@ data Local : List Kind -> List Role -> Type where
                            (field::fs))
                   -> Local ks rs
 
-  Choices : {rs,ks:_} -> (left,right : Local ks rs)
-                       -> Local ks rs
+  Choices : {rs,ks:_}
+         -> (cs : DList (String, Base)
+                        (Branch Local ks rs)
+                        (field::fs))
+               -> Local ks rs
 
 
 public export
@@ -81,7 +84,7 @@ Uninhabited (Synth.Crash = (Synth.Select a b c d e)) where
 Uninhabited (Synth.Crash = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
-Uninhabited (Synth.Crash = (Synth.Choices a b)) where
+Uninhabited (Synth.Crash = (Synth.Choices as)) where
   uninhabited Refl impossible
 
 Uninhabited (Synth.End = (Synth.Call x)) where
@@ -96,7 +99,7 @@ Uninhabited (Synth.End = (Synth.Select a b c d e)) where
 Uninhabited (Synth.End = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
-Uninhabited (Synth.End = (Synth.Choices a b)) where
+Uninhabited (Synth.End = (Synth.Choices as)) where
   uninhabited Refl impossible
 
 Uninhabited (Synth.Call x = (Synth.Rec _ y)) where
@@ -108,7 +111,7 @@ Uninhabited (Synth.Call x = (Synth.Select a b c d e)) where
 Uninhabited (Synth.Call x = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
-Uninhabited (Synth.Call x = (Synth.Choices a b)) where
+Uninhabited (Synth.Call x = (Synth.Choices as)) where
   uninhabited Refl impossible
 
 Uninhabited (Synth.Rec v x = (Synth.Select a b c d e)) where
@@ -117,16 +120,16 @@ Uninhabited (Synth.Rec v x = (Synth.Select a b c d e)) where
 Uninhabited (Synth.Rec v x = (Synth.Offer a b c d)) where
   uninhabited Refl impossible
 
-Uninhabited (Synth.Rec v x = (Synth.Choices a b)) where
+Uninhabited (Synth.Rec v x = (Synth.Choices as)) where
   uninhabited Refl impossible
 
 Uninhabited ((Synth.Select a b c d e) = (Synth.Offer x y z w)) where
   uninhabited Refl impossible
 
-Uninhabited ((Synth.Select a b c d e) = (Synth.Choices x y)) where
+Uninhabited ((Synth.Select a b c d e) = (Synth.Choices as)) where
   uninhabited Refl impossible
 
-Uninhabited ((Synth.Offer a b c d) = (Synth.Choices x y)) where
+Uninhabited ((Synth.Offer a b c d) = (Synth.Choices as)) where
   uninhabited Refl impossible
 
 mutual
@@ -147,7 +150,7 @@ mutual
   decEq Crash (Offer kind whom ty prf)
     = No absurd
 
-  decEq Crash (Choices l r)
+  decEq Crash (Choices _)
     = No absurd
 
 
@@ -163,7 +166,7 @@ mutual
     = No absurd
   decEq End (Offer kind whom ty prf)
     = No absurd
-  decEq End (Choices l r)
+  decEq End (Choices _)
     = No absurd
 
 
@@ -184,7 +187,7 @@ mutual
     = No absurd
   decEq (Call x) (Offer kind whom ty prf)
     = No absurd
-  decEq (Call x) (Choices l r)
+  decEq (Call x) (Choices _)
     = No absurd
 
 
@@ -202,7 +205,7 @@ mutual
 
   decEq (Rec v x) (Select kind whom ty prf choices) = No absurd
   decEq (Rec v x) (Offer  kind whom ty prf) = No absurd
-  decEq (Rec v x) (Choices l r)
+  decEq (Rec v x) (Choices _)
     = No absurd
 
 
@@ -234,7 +237,7 @@ mutual
 
   decEq (Select kind whom t p choices) (Offer x type prfM y)
     = No absurd
-  decEq (Select kind whom t p choices) (Choices l r)
+  decEq (Select kind whom t p choices) (Choices _)
     = No absurd
 
 
@@ -263,25 +266,26 @@ mutual
                              No no => No (\Refl => no Refl)
                              Yes Refl => Yes Refl
 
-  decEq (Offer kind whom t p) (Choices l r)
+  decEq (Offer kind whom t p) (Choices _)
     = No absurd
 
-  decEq (Choices l r) Crash
+  decEq (Choices _) Crash
     = No (negEqSym absurd)
-  decEq (Choices l r) End
+  decEq (Choices _) End
     = No (negEqSym absurd)
-  decEq (Choices l r) (Call x)
+  decEq (Choices _) (Call x)
     = No (negEqSym absurd)
-  decEq (Choices l r) (Rec v x)
+  decEq (Choices _) (Rec v x)
     = No (negEqSym absurd)
-  decEq (Choices l r) (Select whom label type prf cont)
+  decEq (Choices _) (Select whom label type prf cont)
     = No (negEqSym absurd)
-  decEq (Choices l r) (Offer whom type prfM choices)
+  decEq (Choices _) (Offer whom type prfM choices)
     = No (negEqSym absurd)
-  decEq (Choices l r) (Choices left right)
-    = decDo $ do Refl <- Synth.decEq l left  `otherwise` (\Refl => Refl)
-                 Refl <- Synth.decEq r right `otherwise` (\Refl => Refl)
-                 pure Refl
+
+  decEq (Choices xs) (Choices ys)
+    = case assert_total $ decEq Synth.decEq xs ys of
+        No no => No (\Refl => no Refl)
+        Yes Refl => Yes Refl
 
   public export
   DecEq (Local ks rs) where
@@ -333,13 +337,12 @@ namespace Closed
     , pretty (show (UNION (f:::fs)))
     , hang 2 (assert_total $ branches pretty kctxt rctxt cs) ]
 
-  pretty kctxt rctxt (Choices l r)
+  pretty kctxt rctxt (Choices cs)
     = group
     $ parens
     $ hsep
     [ pretty "Choices"
-    , hang 2 $ pretty kctxt rctxt l
-    , hang 2 $ pretty kctxt rctxt r]
+    , hang 2 (assert_total $ branches pretty kctxt rctxt cs) ]
 
   export
   toString : (rctxt : Context Ty.Role rs)

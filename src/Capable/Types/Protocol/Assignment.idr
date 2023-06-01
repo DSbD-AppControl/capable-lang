@@ -59,10 +59,8 @@ namespace HasRoles
                 -> Union [whom] os os' prf
                 -> Protocol.HasRoles rs (Offer whom ty prfm bs) os'
 
-          Choices : HasRoles rs l ls
-                 -> HasRoles rs r zs
-                 -> Union ls zs os' prf
-                 -> Protocol.HasRoles rs (Choices l r) os'
+          Choices : Branches.HasRoles rs cs ls
+                 -> Protocol.HasRoles rs (Choices cs) ls
 
       public export
       data Result : (rs : List Role) -> (p : Local ks rs) -> Type where
@@ -121,13 +119,10 @@ namespace HasRoles
             R as res => case DList.union [whom] as of
                           (ps ** zs ** prfTy ** prf) => R _ (Choice res prf)
 
-      hasRoles (Choices l r)
-        = case hasRoles l of
-            R ls lres
-              => case hasRoles r of
-                   R rz rres
-                     => case DList.union ls rz of
-                         (ps ** zs ** prfTy ** prf) => R _ (Choices lres rres prf)
+      hasRoles (Choices ls)
+        = case hasRoles ls of
+            (R os x) => R os (Choices x)
+
 
     namespace Branch
       export
@@ -182,11 +177,9 @@ namespace UsesRole
                 -> Branches.UsesRole rs                     bs  role
                 -> Protocol.UsesRole rs (Offer whom ty prfm bs) role
 
-          LB : UsesRole rs          l    role
-            -> UsesRole rs (Choices l r) role
+          BThere : Branches.UsesRole rs bs  role
+                -> Protocol.UsesRole rs (Choices bs) role
 
-          RB : UsesRole rs            r  role
-            -> UsesRole rs (Choices l r) role
 
     namespace Branch
       public export
@@ -268,15 +261,11 @@ namespace UsesRole
             = No $ \case (CHere whom prf) => contra prf
                          (CThere whom prf y) => f y
 
-      usesRole (Choices l r) p with (usesRole l p)
-        usesRole (Choices l r) p | (Yes prf)
-          = Yes (LB prf)
-        usesRole (Choices l r) p | (No contra) with (usesRole r p)
-          usesRole (Choices l r) p | (No contra) | (Yes prf)
-            = Yes (RB prf)
-          usesRole (Choices l r) p | (No contra) | (No f)
-            = No (\case (LB x) => contra x
-                        (RB x) => f x)
+      usesRole (Choices ls) p with (usesRole ls p)
+        usesRole (Choices ls) p | (Yes prf)
+          = Yes (BThere prf)
+        usesRole (Choices ls) p | (No contra)
+          = No $ \case (BThere x) => contra x
 
     namespace Branch
       export

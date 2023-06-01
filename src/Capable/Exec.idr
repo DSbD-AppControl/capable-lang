@@ -559,6 +559,32 @@ mutual
                        pure (Value h cs v (trans prf0 prf1))
 
 
+      -- [ NOTE ] Matching
+      -- ### Matching
+      eval env heap rvars cs (Match expr cases)
+        = do Value heap (Tag s pos v) prf <- Exprs.eval env heap expr
+             let (_ ** kase) = lookup pos cases
+
+             Value heap cs v prf' <- eval (extend_l v (weaken prf env))
+                                          heap
+                                          rvars
+                                          cs
+                                          kase
+
+             pure (Value heap cs v (trans prf prf'))
+
+        where lookup : {s   : String}
+                    -> {ret : Base}
+                    -> (pos : Elem (s,x) xs)
+                    -> (qq  : Cases rs roles types globals sg sl sr ret whom xs us)
+                           -> DPair (Synth.Local sr rs)
+                                    (\l => Expr rs roles types globals sg (x::sl) sr whom l ret)
+              lookup Here ((::) {c = B _ _ g} (C s body) _)
+                = (g ** body)
+              lookup (There y) (_ :: later)
+                = lookup y later
+
+
       -- [ NOTE ] The end of a communication session, must return
       -- something...
       eval env heap rvars cs (End x)
