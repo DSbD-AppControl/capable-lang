@@ -72,6 +72,31 @@ mutual
          e <- Toolkit.location
          pure (Branch (SEND (get l)) (newFC s e) [r,ty, p,n,er])
 
+  match : Rule (AST EXPRSESH)
+  match
+    = do s <- Toolkit.location
+         keyword "match"
+         commit
+         c <- expr
+         symbol "{"
+         cs <- some case'
+         symbol "}"
+         e <- Toolkit.location
+
+         pure (Branch MATCH_SESH (newFC s e) (c :: head cs:: DVect.fromList (tail cs)))
+
+    where case' : Rule (AST OFFER)
+          case'
+            = do s <- Toolkit.location
+                 keyword "when"
+                 tag <- Capable.ref
+                 symbol "("
+                 n <- Capable.ref
+                 symbol ")"
+                 scope <- Sessions.block
+                 e <- Toolkit.location
+                 pure (un (OFFER (get tag) (get n)) (newFC s e) scope)
+
   read : Rule (AST EXPRSESH)
   read
       = do s <- Toolkit.location
@@ -203,6 +228,7 @@ mutual
     <|> split
     <|> let_ "local" STACK
     <|> let_ "var"   HEAP
+    <|> match
     <|> cond
     <|> rec
     <|> send

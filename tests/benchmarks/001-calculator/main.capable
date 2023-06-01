@@ -19,7 +19,7 @@ type responsePure
 type responseEffect -- this is bad as not all commands cause div by zero
   = union { divByZero : Unit; answerE : Int}
 
-type MaybeAnswer = union { crashed : Unit; result : Int }
+type MaybeAnswer = union { crashed : Unit; dz : Unit; result : Int }
 
 protocol OneShotCalcutron
   = Client ==> Server [ command ]
@@ -91,6 +91,76 @@ session calcutronClientAdder
   } catch { crash(crashed(unit)) }
 }
 
+session calcutronClientGeneral
+        <OneShotCalcutron as Client>
+        (cmd : command) -> MaybeAnswer
+{
+  match cmd
+  {
+    when adder(b)
+    {
+      send [ command ] Server adder(b) catch { crash(crashed()) }
+      recv [ responsePure ] Server
+      {
+        when answer(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+    when suber(b)
+    {
+      send [ command ] Server suber(b) catch { crash(crashed()) }
+      recv [ responsePure ] Server
+      {
+        when answer(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+    when diver(b)
+    {
+      send [ command ] Server suber(b) catch { crash(crashed()) }
+      recv [ responseEffect ] Server
+      {
+        when divByZero(i)
+        {
+          end(dz())
+        }
+        when answerE(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+
+    when muler(b)
+    {
+      send [ command ] Server muler(b) catch { crash(crashed()) }
+      recv [ responsePure ] Server
+      {
+        when answer(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+
+  }
+--
+--  send [ command ] Server adder(body(x,y))
+--    catch { crash(crashed(unit)) }
+--
+--
+--  recv [ responsePure ] Server
+--  {
+--    when answer(i)
+--    {
+--      end(result(i))
+--    }
+--  } catch { crash(crashed(unit)) }
+}
 main()
 {
   print("My First Program")
