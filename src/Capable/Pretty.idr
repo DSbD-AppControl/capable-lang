@@ -59,7 +59,7 @@ command k v
 
 escape : Doc KIND -> Doc KIND
 escape
-  = annotate ESCAPE
+  = id
 
 lbrace' : Doc KIND
 lbrace' = escape lbrace
@@ -229,7 +229,7 @@ tri f a b c
   , tupled [a, b, c]
   ]
 
-stored : Stored -> Doc KIND
+stored : Stored -> String
 stored HEAP  = "val"
 stored STACK = "local"
 
@@ -262,7 +262,7 @@ expr (LetTy fc s st ty val scope)
   = vsep
   [ group
     $ hsep
-      [ stored st
+      [ keyword (stored st)
       , binder s
       , colon
       , type ty
@@ -276,7 +276,7 @@ expr (Let fc s st val scope)
   = vsep
   [ group
     $ hsep
-      [ stored st
+      [ keyword (stored st)
       , binder s
       , equals
       , expr val
@@ -576,7 +576,7 @@ sexpr (LetTy fc s st ty val scope)
   = vsep
   [ group
     $ hsep
-      [ stored st
+      [ keyword (stored st)
       , binder s
       , colon
       , type ty
@@ -591,7 +591,7 @@ sexpr (Let fc s st val scope)
   = vsep
   [ group
     $ hsep
-      [ stored st
+      [ keyword (stored st)
       , binder s
       , equals
       , expr val
@@ -846,6 +846,8 @@ toLaTeX
         e = (foldr (<+>) "" . map f . unpack)
             where f : Char -> String
                   f '_' =  "\\_"
+                  f '{' = "\\{"
+                  f '}' = "\\}"
                   f c   = cast c
 
         foo : KIND -> String
@@ -864,6 +866,6 @@ toLaTeX
         foo TODO
           = cmd "TODO"
         foo ESCAPE
-          = "\\ensuremath{\\"
+          = ""
 
 -- [ EOF ]
