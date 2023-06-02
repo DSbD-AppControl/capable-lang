@@ -818,7 +818,7 @@ renderAs e f g SEmpty
   = neutral
 
 renderAs e f g (SChar c rest)
-  = singleton c <+> renderAs e f g rest
+  = (e (cast c)) <+> renderAs e f g rest
 
 renderAs e f g (SText l t rest)
   = e t <+> renderAs e f g rest

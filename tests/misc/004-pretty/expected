@@ -3,33 +3,33 @@ Running Test
 # Finished Type Checking
 ```
 \CapableBound{main} () \CapableKeyword{->} \CapableType{Unit}
-{
+\{
 \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{' '}));
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableValue{2}) ;
   \CapableValue{unit}
-}
+\}
 ```
 # Finished Parsing
 # Finished Type Checking
 ```
 \CapableKeyword{func} \CapableBound{greeting} () \CapableKeyword{->} \CapableType{Unit}
-{
+\{
 \CapableKeyword{local} \CapableBound{s} = \CapableValue{"String"} ;
   \CapableKeyword{local} \CapableBound{t} = \CapableValue{"1"} ;
   \CapableValue{unit}
-}
+\}
 \CapableKeyword{func} \CapableBound{two} () \CapableKeyword{->} \CapableType{Int}
-{
+\{
 \CapableValue{2}
-}
+\}
 \CapableBound{main} () \CapableKeyword{->} \CapableType{Unit}
-{
+\{
 \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{' '}));
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableBound{two}()) ;
   \CapableValue{unit}
-}
+\}
 ```
 # Finished Parsing
 # Finished Type Checking
