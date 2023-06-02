@@ -99,7 +99,7 @@ session calcutronClientGeneral
   {
     when adder(b)
     {
-      send [ command ] Server adder(b) catch { crash(crashed()) }
+      send [ command ] Server adder(b) catch { crash(crashed(unit)) }
       recv [ responsePure ] Server
       {
         when answer(i)
@@ -110,7 +110,7 @@ session calcutronClientGeneral
     }
     when suber(b)
     {
-      send [ command ] Server suber(b) catch { crash(crashed()) }
+      send [ command ] Server suber(b) catch { crash(crashed(unit)) }
       recv [ responsePure ] Server
       {
         when answer(i)
@@ -121,12 +121,12 @@ session calcutronClientGeneral
     }
     when diver(b)
     {
-      send [ command ] Server suber(b) catch { crash(crashed()) }
+      send [ command ] Server diver(b) catch { crash(crashed(unit)) }
       recv [ responseEffect ] Server
       {
         when divByZero(i)
         {
-          end(dz())
+          end(dz(unit))
         }
         when answerE(i)
         {
@@ -137,7 +137,7 @@ session calcutronClientGeneral
 
     when muler(b)
     {
-      send [ command ] Server muler(b) catch { crash(crashed()) }
+      send [ command ] Server muler(b) catch { crash(crashed(unit)) }
       recv [ responsePure ] Server
       {
         when answer(i)

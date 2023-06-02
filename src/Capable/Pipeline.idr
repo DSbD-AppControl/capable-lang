@@ -16,7 +16,7 @@ import Capable.Check
 import Capable.Terms
 import Capable.Exec
 import Capable.State
-import Capable.LaTeX
+import Capable.Pretty
 
 import Capable.Options
 
