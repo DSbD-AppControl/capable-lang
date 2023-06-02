@@ -401,7 +401,9 @@ expr (SetR fc loc tup v)
 expr (Match fc cond prf cs)
   = vcat
   $
-  [ keyword "match"
+  [ hsep [ keyword "match"
+         , expr cond
+         ]
   , lbrace'
   ]
   ++
@@ -498,28 +500,241 @@ function (Func fc prf as ret scope)
   ]
 
 protocol : Protocol p -> Doc KIND
-protocol (End fc) = ?protocol_rhs_0
-protocol (Call fc r prf) = ?protocol_rhs_1
-protocol (Rec fc r prf scope) = ?protocol_rhs_2
-protocol (Choice fc s r t prf branches) = ?protocol_rhs_3
+protocol (End fc)
+  = keyword "end"
+
+protocol (Call fc r prf)
+  = uno "call" (ref r)
+
+protocol (Rec fc r prf scope)
+  = vsep
+  [ hcat [ keyword "rec"
+         , parens (ref r)
+         ]
+  , hsep [ dot
+         , protocol scope
+         ]
+  ]
+
+protocol (Choice fc s r t prf (B1 (x::xs)))
+  = vsep
+  $ [ hsep
+      [ role s
+      , keyword "==>"
+      , role r
+      , brackets (type t)
+      , lbrace'
+      , branch x
+      ]
+    ]
+  ++ branches xs
+  ++ [ rbrace' ]
+  where branch : forall b . Branch b -> Doc KIND
+        branch (B y label ty cont)
+          = vcat
+          [ group
+            $ parens
+            $ hcat
+              [ pretty label
+              , type ty
+              ]
+          , hsep [ dot
+                 , protocol cont
+                 ]
+          ]
+
+        branches : Vect.Quantifiers.All.All Branch bs -> List (Doc KIND)
+        branches []
+          = []
+        branches (x :: y)
+          = hsep
+          [ pipe
+          , branch x]
+          ::
+          branches y
+
 
 sexpr : Sessions.Expr b -> Doc KIND
-sexpr (Seq fc x y) = ?sexpr_rhs_0
-sexpr (Hole ref prf) = ?sexpr_rhs_1
-sexpr (LetTy fc s st ty val scope) = ?sexpr_rhs_2
-sexpr (Let fc s st val scope) = ?sexpr_rhs_3
-sexpr (LetRec fc s scope) = ?sexpr_rhs_4
-sexpr (Call fc s) = ?sexpr_rhs_5
-sexpr (Split fc ss val scope) = ?sexpr_rhs_6
-sexpr (Crash fc expr) = ?sexpr_rhs_7
-sexpr (End fc expr) = ?sexpr_rhs_8
-sexpr (Cond fc cond tt ff) = ?sexpr_rhs_9
-sexpr (Match fc cond prf offs) = ?sexpr_rhs_10
-sexpr (Read fc role type prf offs onEr) = ?sexpr_rhs_11
-sexpr (Send fc role type s msg body exc) = ?sexpr_rhs_12
+sexpr (Seq fc x y)
+  = vcat
+  [ hcat [expr x, semi]
+  , sexpr y]
+
+sexpr (Hole ref prf)
+  = hole ref
+
+sexpr (LetTy fc s st ty val scope)
+  = vsep
+  [ group
+    $ hsep
+      [ stored st
+      , binder s
+      , colon
+      , type ty
+      , equals
+      , expr val
+      , semi
+      ]
+  , sexpr scope
+  ]
+
+sexpr (Let fc s st val scope)
+  = vsep
+  [ group
+    $ hsep
+      [ stored st
+      , binder s
+      , equals
+      , expr val
+      , semi
+      ]
+  , sexpr scope
+  ]
+
+sexpr (LetRec fc s scope)
+  = vsep
+  [ hcat [ keyword "loop"
+         , parens (binder s)
+         ]
+  , lbrace'
+  , hang 2 (sexpr scope)
+  , rbrace'
+  ]
+
+sexpr (Call fc s)
+  = uno "call" (binder s)
+
+sexpr (Split fc ss val scope)
+  = vsep
+  [ group
+    $ hsep
+      [ keyword "local"
+      , hcat
+        [ keyword "tuple"
+        , tupled $ map pretty ss
+        ]
+      , equals
+      , expr val
+      , semi
+      ]
+  , sexpr scope
+  ]
+
+sexpr (Crash fc e)
+  = uno "crash" (expr e)
+
+sexpr (End fc e)
+  = uno "end" (expr e)
+
+sexpr (Cond fc cond tt ff)
+  = vsep
+  [ hsep [ keyword "if"
+         , expr cond
+         ]
+  , lbrace'
+  , hang 2 (sexpr tt)
+  , hsep [ rbrace'
+         , keyword "else"
+         ]
+  , lbrace'
+  , hang 2 (sexpr ff)
+  , rbrace'
+  ]
+
+sexpr (Match fc cond prf offs)
+  = vcat
+  $
+  [ hsep [ keyword "match"
+         , expr cond
+         ]
+  , lbrace'
+  ]
+  ++
+  map (hang 2) (cases offs)
+  ++
+  [ rbrace'
+  ]
+
+  where cases : Vect.Quantifiers.All.All Offer fss -> List (Doc KIND)
+        cases []
+          = Nil
+        cases ((O x t s c)::xs)
+          = (vcat
+          [ group
+            $ hsep
+              [ keyword "when"
+              , pretty t
+              , parens (pretty s)
+              ]
+          , lbrace'
+          , hang 2 (sexpr c)
+          , rbrace'
+          ])
+          :: cases xs
+
+sexpr (Read fc r ty prf offs onEr)
+  = vcat
+  $
+  [ hsep [ keyword "recv"
+         , brackets (type ty)
+         , role r
+         ]
+  , lbrace'
+  ]
+  ++
+  map (hang 2) (cases offs)
+  ++
+  [ hsep [ rbrace'
+         , keyword "catch"]
+  , lbrace'
+  , hang 2 (sexpr onEr)
+  , rbrace'
+  ]
+
+  where cases : Vect.Quantifiers.All.All Offer fss -> List (Doc KIND)
+        cases []
+          = Nil
+        cases ((O x t s c)::xs)
+          = (vcat
+          [ group
+            $ hsep
+              [ keyword "when"
+              , pretty t
+              , parens (pretty s)
+              ]
+          , lbrace'
+          , hang 2 (sexpr c)
+          , rbrace'
+          ])
+          :: cases xs
+
+sexpr (Send fc r ty s msg body exc)
+  = vcat
+  $
+  [ hsep [ keyword "send"
+         , brackets (type ty)
+         , role r
+         , group (hcat [binder s, parens (expr msg)])
+         ]
+  , align
+    $ hang 2
+    $ vsep
+      [ (keyword "catch")
+      , lbrace'
+      , hang 2 (sexpr exc)
+      , rbrace'
+      ]
+  ]
 
 session : Session p -> Doc KIND
-session (Sesh fc prin ref x prf args ret scope) = ?session_rhs_0
+session (Sesh fc prin r x prf args ret scope)
+  = vcat
+  [ hsep [ group $ angles (hsep [ref r, keyword "as", role prin])
+         , tupled $ fargs args, keyword "->", type ret]
+  , lbrace'
+  , hang 2 (sexpr scope)
+  , rbrace'
+  ]
 
 prog : Prog p -> Doc KIND
 prog (Main fc m)
@@ -549,37 +764,42 @@ prog (Def fc ROLE s val scope)
   , prog scope
   ]
 
-prog (Def fc PROT s val scope) = ?prog_rhs_5
+prog (Def fc PROT s val scope)
+  = vsep
+  [ hsep
+    [ keyword "protocol"
+    , binder s
+    ]
+  , hang 2
+    $ hsep
+      [ equals
+      , protocol val
+      ]
+  , prog scope
+  ]
 
-prog (Def fc SESH s val scope) = ?prog_rhs_6
+prog (Def fc SESH s val scope)
+  = vsep
+  [ hsep [ keyword "session"
+         , binder s
+         , session val
+         ]
+  , prog scope
+  ]
 
 
 
-prettyProgram : (p : PROG) -> Doc KIND
-prettyProgram p = prog (toProg p)
+program : (p : PROG) -> Doc KIND
+program p = prog (toProg p)
 
-{-
-namespace Closed
-  pretty : (kctxt : Context KIND ks)
-        -> (rctxt : Context Ty.Role rs)
-        -> (ltype : Local ks rs)
-                 -> Doc ()
+export
+toString : (p : PROG) -> String
+toString
+  = (show . reAnnotate (const ()) . program)
 
-  export
-  toString : (rctxt : Context Ty.Role rs)
-          -> (ltype : Local Nil rs)
-                   -> String
-  toString r l = show (pretty Nil r l)
+export
+toLaTeX : (p : PROG) -> String
+toLaTeX
+  = (show . program)
 
-
-  namespace Open
-
-    export
-    toString : (kctxt : Context KIND ks)
-            -> (rctxt : Context Ty.Role rs)
-            -> (ltype : Local ks rs)
-                     -> String
-    toString ks r l = show (pretty ks r l)
-
--}
 -- [ EOF ]

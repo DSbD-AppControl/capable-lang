@@ -16,6 +16,7 @@ import Capable.Check
 import Capable.Terms
 import Capable.Exec
 import Capable.State
+import Capable.LaTeX
 
 import Capable.Options
 
@@ -47,6 +48,15 @@ pipeline opts
 
        when (justCheck opts)
          $ exitSuccess
+
+       when (pprint opts)
+         $ do putStrLn (toString ast)
+              exitSuccess
+
+       when (ppLaTeX opts)
+         $ do putStrLn (toLaTeX ast)
+              exitSuccess
+
 
        putStrLn "# Executing"
        putStrLn "```"

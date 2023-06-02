@@ -13,13 +13,15 @@ record Opts where
   justLex   : Bool
   showAST   : Bool
   justCheck : Bool
+  pprint    : Bool
+  ppLaTeX   : Bool
   launchREPL : Bool
   file      : Maybe String
 
 export
 Show Opts where
-  show (O l a c r f)
-    = "O \{show l} \{show a} \{show c} \{show r} \{show f}"
+  show (O l a c po p r f)
+    = "O \{show l} \{show a} \{show c} \{show po} \{show p} \{show r} \{show f}"
 
 export
 Eq Opts where
@@ -28,6 +30,8 @@ Eq Opts where
     && showAST x == showAST y
     && justCheck x == justCheck y
     && launchREPL x == launchREPL y
+    && pprint x == pprint y
+    && ppLaTeX x == ppLaTeX y
     && file x      == file y
 
 convOpts : Arg -> Opts -> Maybe Opts
@@ -48,11 +52,16 @@ convOpts (Flag x) o
         => Just $ { justLex := True} o
       "checkOnly"
         => Just $ { justCheck := True} o
+      "latex"
+        => Just $ { ppLaTeX := True} o
+      "pretty"
+        => Just $ { pprint := True} o
+
       otherwise => Nothing
 
 
 defOpts : Opts
-defOpts = O False False False False Nothing
+defOpts = O False False False False False False Nothing
 
 export
 getOpts : Capable Opts
