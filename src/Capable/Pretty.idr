@@ -17,6 +17,7 @@ import System.File
 import System.Escape
 
 import Text.PrettyPrint.Prettyprinter
+import Text.PrettyPrint.Prettyprinter.Render.String
 
 
 import Toolkit.Data.Vect.Extra
@@ -94,7 +95,7 @@ role (R s) = annotate ROLE (pretty s)
 
 hole : Ref -> Doc KIND
 hole r
-  = annotate LaTeX.HOLE
+  = annotate Pretty.HOLE
   $ pretty "?" <+> ref r
 
 kvs : (forall t . Ty t -> Doc KIND) -> Named.Args fs -> List (Doc KIND)
