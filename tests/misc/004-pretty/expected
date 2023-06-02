@@ -3,33 +3,33 @@ Running Test
 # Finished Type Checking
 ```
 \CapableBound{main} () \CapableKeyword{->} \CapableType{Unit}
-\{}
+\ensuremath{\{}
 \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{' '}));
   local \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableValue{2}) ;
   \CapableValue{unit}
-\}}
+\ensuremath{\}}
 ```
 # Finished Parsing
 # Finished Type Checking
 ```
 \CapableKeyword{func} \CapableBound{greeting} () \CapableKeyword{->} \CapableType{Unit}
-\{}
+\ensuremath{\{}
 local \CapableBound{s} = \CapableValue{"String"} ;
   local \CapableBound{t} = \CapableValue{"1"} ;
   \CapableValue{unit}
-\}}
+\ensuremath{\}}
 \CapableKeyword{func} \CapableBound{two} () \CapableKeyword{->} \CapableType{Int}
-\{}
+\ensuremath{\{}
 \CapableValue{2}
-\}}
+\ensuremath{\}}
 \CapableBound{main} () \CapableKeyword{->} \CapableType{Unit}
-\{}
+\ensuremath{\{}
 \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{' '}));
   local \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableBound{two}()) ;
   \CapableValue{unit}
-\}}
+\ensuremath{\}}
 ```
 # Finished Parsing
 # Finished Type Checking

@@ -864,6 +864,6 @@ toLaTeX
         foo TODO
           = cmd "TODO"
         foo ESCAPE
-          = "\\"
+          = "\\ensuremath{\\"
 
 -- [ EOF ]
