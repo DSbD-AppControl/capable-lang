@@ -50,11 +50,15 @@ pipeline opts
          $ exitSuccess
 
        when (pprint opts)
-         $ do putStrLn (toString ast)
+         $ do putStrLn "```"
+              putStrLn (toString ast)
+              putStrLn "```"
               exitSuccess
 
        when (ppLaTeX opts)
-         $ do putStrLn (toLaTeX ast)
+         $ do putStrLn "```"
+              putStrLn (toLaTeX ast)
+              putStrLn "```"
               exitSuccess
 
 

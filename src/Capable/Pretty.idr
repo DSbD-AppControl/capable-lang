@@ -427,8 +427,10 @@ expr (Match fc cond prf cs)
           [ group
             $ hsep
               [ keyword "when"
-              , pretty t
-              , parens (pretty s)
+              , hcat [ pretty t
+                     , parens
+                       $ pretty s
+                      ]
               ]
           , lbrace'
           , hang 2 (expr c)
@@ -670,8 +672,11 @@ sexpr (Match fc cond prf offs)
           [ group
             $ hsep
               [ keyword "when"
-              , pretty t
-              , parens (pretty s)
+              , hcat
+                [ pretty t
+                , parens
+                  $ pretty s
+                ]
               ]
           , lbrace'
           , hang 2 (sexpr c)
@@ -706,8 +711,10 @@ sexpr (Read fc r ty prf offs onEr)
           [ group
             $ hsep
               [ keyword "when"
-              , pretty t
-              , parens (pretty s)
+              , hsep [ pretty t
+                     , parens
+                       $ pretty s
+                     ]
               ]
           , lbrace'
           , hang 2 (sexpr c)
@@ -804,9 +811,59 @@ toString : (p : PROG) -> String
 toString
   = (show . reAnnotate (const ()) . program)
 
+
+renderAs : (String -> String) -> (ann -> String) -> String -> SimpleDocStream ann -> String
+
+renderAs e f g SEmpty
+  = neutral
+
+renderAs e f g (SChar c rest)
+  = singleton c <+> renderAs e f g rest
+
+renderAs e f g (SText l t rest)
+  = e t <+> renderAs e f g rest
+
+renderAs e f g (SLine l rest)
+  =   singleton '\n'
+  <+> textSpaces l
+  <+> renderAs e f g rest
+
+renderAs e f g (SAnnPush ann rest)
+  = f ann <+> renderAs e f g rest
+
+renderAs e f g (SAnnPop rest)
+  = g <+> renderAs e f g rest
+
 export
 toLaTeX : (p : PROG) -> String
 toLaTeX
-  = (show . program)
+  = (renderAs e foo "}" . layoutPretty defaultLayoutOptions . program)
+
+  where cmd : String -> String
+        cmd s = "\\Capable\{s}{"
+
+        e : String -> String
+        e = (foldr (<+>) "" . map f . unpack)
+            where f : Char -> String
+                  f '_' =  "\\_"
+                  f c   = cast c
+
+        foo : KIND -> String
+        foo KEYWORD
+          = cmd "Keyword"
+        foo BOUND
+          = cmd "Bound"
+        foo VALUE
+          = cmd "Value"
+        foo TYPE
+          = cmd "Type"
+        foo ROLE
+          = cmd "Role"
+        foo HOLE
+          = cmd "Hole"
+        foo TODO
+          = cmd "TODO"
+        foo ESCAPE
+          = "\\"
 
 -- [ EOF ]

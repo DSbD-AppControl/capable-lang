@@ -1,0 +1,21 @@
+func greeting() -> Unit
+{
+  local s = "String";
+  local t = "1"
+
+; unit
+}
+
+func two() -> Int
+{
+  2
+}
+
+main()
+{
+  print("My First Program")
+; print(toString('\n'))
+; local i = add(1,two())
+; unit
+
+}
