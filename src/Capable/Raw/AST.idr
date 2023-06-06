@@ -67,6 +67,7 @@ namespace Expr
                     | CHR
                     | STRO
                     | TOSTR
+                    | POPEN2
                     | OPEN HandleKind Mode
 
   export
@@ -81,6 +82,7 @@ namespace Expr
     show CHR   = "CHR"
     show STRO  = "STR"
     show TOSTR = "TOSTR"
+    show POPEN2 = "POPEN2"
     show (OPEN k m) = "(OPEN \{show k} MODE...)"
 
   public export

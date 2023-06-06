@@ -1,0 +1,44 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
+type SubProcess = struct { writeTo : PROC; readFrom : PROC }
+
+
+func closeFHS ( fhs : SubProcess ) -> Unit
+{
+  close(get[writeTo](fhs))
+; close(get[readFrom](fhs))
+}
+
+
+main()
+{
+  printLn("My First Program with files")
+; local mfh = popen2("python3 pingping.py")
+; match mfh
+  { when left(e) { printLn("Error opening") }
+
+    when right(fhs)
+    { local resm = write(get_writeTo(fhs),"rr")
+    ; match resm
+      { when left(err) { printLn("Error sending line.") }
+
+        when right(res)
+        { local resm = read(get_readFrom(fhs))
+        ; match resm
+          { when left(err) { printLn("Error reading line.") }
+
+            when right(res)
+            { printLn(res)
+            ; closeFHS(fhs)
+            }
+          }
+        }
+      }
+    }
+  }
+}

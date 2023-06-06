@@ -400,4 +400,10 @@ right : (rty : Base)
     -> (Value xs rty) -> Value xs (FileEither rty)
 right _ = Tag "right" (There Here)
 
+export
+fhandles : SubProcess -> Value xs POPEN2
+fhandles (MkSubProcess pid input output)
+  = Record [ F "writeTo" (H PROCESS input)
+           , F "readFrom"  (H PROCESS output)]
+
 -- [ EOF ]

@@ -91,6 +91,7 @@ uKind
    <|> gives "chr"       CHR
    <|> gives "string"    STRO
    <|> gives "toString"  TOSTR
+   <|> gives "popen2"    POPEN2
    <|> gives "print"     PRINT
 
 

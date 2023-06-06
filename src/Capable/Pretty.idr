@@ -336,6 +336,7 @@ expr (OpUn fc ORD o)        = uno "ord" (expr o)
 expr (OpUn fc CHR o)        = uno "chr" (expr o)
 expr (OpUn fc STRO o)       = uno "string" (expr o)
 expr (OpUn fc TOSTR o)      = uno "toString" (expr o)
+expr (OpUn fc POPEN2 o)      = uno "popen2" (expr o)
 expr (OpUn fc (OPEN x y) o)
   = group
   $ (handlekind x <+> tupled [prettyMode y, expr o])

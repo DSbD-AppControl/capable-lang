@@ -121,16 +121,19 @@ data Builtin : (inputs : List Base)
                                  UNIT
 
     -- ## 'Process' API
+    POpen2 : Builtin [STR]
+                     (EITHER INT POPEN2)
+
     Open : (what : HandleKind)
         -> (m    : Mode)
                 -> Builtin [STR]
-                           (UNION (("left",INT) ::: [("right",HANDLE what)]))
+                           (EITHER INT (HANDLE what))
 
     ReadLn : Builtin [HANDLE k]
-                     (UNION (("left", INT) ::: [("right",STR)]))
+                     (EITHER INT STR)
 
     WriteLn : Builtin [HANDLE k, STR]
-                      (UNION (("left", INT) ::: [("right", UNIT)]))
+                      (EITHER INT UNIT)
 
     Close : Builtin [HANDLE k]
                     UNIT

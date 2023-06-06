@@ -216,6 +216,12 @@ mutual
 
 
     -- ## Process
+    eval heap (POpen2) [S fname]
+      = do res <- embed (popen2 fname)
+           either (\err => return heap (left  POPEN2 (I (debase err))))
+                  (\fhs => return heap (right POPEN2 (fhandles fhs)))
+                  res
+
     eval heap (Open what m) [(S fname)]
       = either (\err => return heap (left  (HANDLE what) (I (debase err))))
                (\fh  => return heap (right (HANDLE what) (H what fh)))
@@ -229,12 +235,14 @@ mutual
 
     eval heap ReadLn [H k fh]
       = either (\err => return heap (left  STR (I (debase err))))
-               (\str => return heap (right STR (S str)))
+               (\str => do embed (fflush fh)
+                           return heap (right STR (S str)))
                (!(embed $ fGetLine fh))
 
     eval heap WriteLn [H k fh, (S str)]
       = either (\err => return heap (left  UNIT (I (debase err))))
-               (\str => return heap (right UNIT U))
+               (\str => do embed (fflush fh)
+                           return heap (right UNIT U))
                (!(embed $ fPutStrLn fh str))
 
     eval heap Close [H k fh]

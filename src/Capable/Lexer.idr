@@ -79,7 +79,7 @@ namespace Capable
              , "recv", "send"
              , "catch", "crash"
 
-             , "fopen", "popen"
+             , "fopen", "popen", "popen2"
              , "index"
 
              -- Types

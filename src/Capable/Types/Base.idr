@@ -72,10 +72,19 @@ namespace Ty
       UNION : (fields : (List1 (String, Base)))
                        -> Base
 
---      FUNC : (args : List Base)
---          -> (ret  : Base)
---                  -> Base
+  public export
+  EITHER : (a,b : Base) -> Base
+  EITHER a b
+    = UNION
+    $ ("left", a)
+    ::: [MkPair "right" b]
 
+  public export
+  POPEN2 : Base
+  POPEN2
+    = RECORD
+    $ ("writeTo", HANDLE PROCESS)
+    ::: [ MkPair "readFrom" (HANDLE PROCESS)]
 
 namespace Diag
   data Diag : (a,b : Base)

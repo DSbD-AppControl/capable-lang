@@ -277,6 +277,11 @@ mutual
          pure (_ ** Builtin Fetch [tm])
 
   -- ### Files
+  synth env (OpUn fc POPEN2 o)
+    = do T _ tm <- check fc env TyStr o
+
+         pure (_ ** Builtin POpen2 [tm])
+
   synth env (OpUn fc (OPEN k m) o)
     = do T _ tm <- check fc env TyStr o
 
