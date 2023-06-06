@@ -1,0 +1,12 @@
+echo "Running Test"
+
+$1 main.capable
+
+$1 --latex main.capable
+
+
+# Local Variables:
+# mode: sh
+# End:
+
+# -- [ EOF ]

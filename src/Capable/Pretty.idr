@@ -728,7 +728,8 @@ sexpr (Read fc r ty prf offs onEr)
           :: cases xs
 
 sexpr (Send fc r ty s msg body exc)
-  = vcat
+  = align
+  $ vcat
   $
   [ hsep [ keyword "send"
          , brackets (type ty)
@@ -743,6 +744,7 @@ sexpr (Send fc r ty s msg body exc)
       , indent 2 (sexpr exc)
       , rbrace'
       ]
+  , sexpr body
   ]
 
 session : Session p -> Doc KIND
