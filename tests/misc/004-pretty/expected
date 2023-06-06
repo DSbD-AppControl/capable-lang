@@ -6,7 +6,7 @@ Running Test
 \CapableBound{main} () -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableValue{"My First Program"});
-  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\n'}));
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}));
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableValue{2}) ;
   \CapableValue{unit}
 \}
@@ -30,7 +30,7 @@ Running Test
 \CapableBound{main} () -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableValue{"My First Program"});
-  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\n'}));
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}));
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableBound{two}()) ;
   \CapableValue{unit}
 \}

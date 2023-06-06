@@ -856,10 +856,8 @@ toLaTeX
         e '_' =  "\\_"
         e '{' = "\\{"
         e '}' = "\\}"
-        e c
-          = if isNL c
-            then "\\newline"
-            else cast c
+        e '\\' = "\\textbackslash{}"
+        e c   =  cast c
 
         foo : KIND -> String
         foo KEYWORD

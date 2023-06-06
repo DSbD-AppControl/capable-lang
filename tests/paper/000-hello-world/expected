@@ -17,7 +17,7 @@ Hello World
 \CapableKeyword{func} \CapableBound{printLn} (\CapableBound{str} \CapableType{String}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableBound{str});
-  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\n'}))
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
 \}
 \CapableKeyword{func} \CapableBound{setVarX} (\CapableBound{p} &\CapableType{\CapableBound{point}}, \CapableBound{x} \CapableType{Int}) -> \CapableType{Unit}
 \{
