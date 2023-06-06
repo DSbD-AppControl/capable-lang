@@ -543,7 +543,7 @@ protocol (Choice fc s r t prf (B1 (x::xs)))
           = vcat
           [ group
             $ hcat
-              [ pretty label
+              [ binder label
               , parens
                 $ type ty
               ]
