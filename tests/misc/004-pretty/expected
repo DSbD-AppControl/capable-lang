@@ -118,8 +118,8 @@ session calcutronServer <OneShotCalcutron as Server> () -> Bool
     crash(False)
   }
 }
-session calcutronClientAdder <OneShotCalcutron as Client> ( x Int
-, y Int ) -> MaybeAnswer
+session calcutronClientAdder <OneShotCalcutron as Client> ( x : Int
+, y : Int ) -> MaybeAnswer
 {
   send [command] Server adder(body(x, y))
     catch
@@ -127,7 +127,7 @@ session calcutronClientAdder <OneShotCalcutron as Client> ( x Int
       crash(crashed(unit))
     }
 }
-session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd command ) -> MaybeAnswer
+session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) -> MaybeAnswer
 {
   match cmd
   {

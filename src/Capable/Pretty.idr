@@ -103,7 +103,7 @@ kvs _ []
   = []
 
 kvs ann (Add fc s ty rest)
-  = (group $ hsep [binder s, typeDoc colon, ann ty])  :: kvs ann rest
+  = (group $ hsep [binder s, colon, ann ty])  :: kvs ann rest
 
 
 tuple : (forall t . Ty t -> Doc KIND)
@@ -185,6 +185,7 @@ farg : Arg a -> Doc KIND
 farg (A fc n ty)
   = hsep
   [ binder n
+  , colon
   , assert_total $ type ty
   ]
 
@@ -326,7 +327,7 @@ expr (OpBin fc STRCONS l r) = duo "strCons" (expr l) (expr r)
 expr (OpBin fc MUT l r)     = duo "mut" (expr l) (expr r)
 
 expr (OpUn fc PRINT o)      = uno "print" (expr o)
-expr (OpUn fc FETCH o)      = uno "!" (expr o)
+expr (OpUn fc FETCH o)      = hcat [keyword "!", expr o]
 expr (OpUn fc READ o)       = uno "read" (expr o)
 expr (OpUn fc CLOSE o)      = uno "close" (expr o)
 expr (OpUn fc NOT o)        = uno "not" (expr o)
@@ -430,9 +431,9 @@ expr (Match fc cond prf cs)
           [ group
             $ hsep
               [ keyword "when"
-              , hcat [ pretty t
+              , hcat [ binder t
                      , parens
-                       $ pretty s
+                       $ binder s
                       ]
               ]
           , lbrace'
