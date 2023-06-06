@@ -2,34 +2,40 @@ Running Test
 # Finished Parsing
 # Finished Type Checking
 ```
-\CapableBound{main} () \CapableKeyword{->} \CapableType{Unit}
+\begin{VerbatimInline}
+\CapableBound{main} () -> \CapableType{Unit}
 \{
-\CapableKeyword{print}(\CapableValue{"My First Program"});
-  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{' '}));
+  \CapableKeyword{print}(\CapableValue{"My First Program"});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\n'}));
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableValue{2}) ;
   \CapableValue{unit}
 \}
+\end{VerbatimInline}
+
 ```
 # Finished Parsing
 # Finished Type Checking
 ```
-\CapableKeyword{func} \CapableBound{greeting} () \CapableKeyword{->} \CapableType{Unit}
+\begin{VerbatimInline}
+\CapableKeyword{func} \CapableBound{greeting} () -> \CapableType{Unit}
 \{
-\CapableKeyword{local} \CapableBound{s} = \CapableValue{"String"} ;
+  \CapableKeyword{local} \CapableBound{s} = \CapableValue{"String"} ;
   \CapableKeyword{local} \CapableBound{t} = \CapableValue{"1"} ;
   \CapableValue{unit}
 \}
-\CapableKeyword{func} \CapableBound{two} () \CapableKeyword{->} \CapableType{Int}
+\CapableKeyword{func} \CapableBound{two} () -> \CapableType{Int}
 \{
-\CapableValue{2}
+  \CapableValue{2}
 \}
-\CapableBound{main} () \CapableKeyword{->} \CapableType{Unit}
+\CapableBound{main} () -> \CapableType{Unit}
 \{
-\CapableKeyword{print}(\CapableValue{"My First Program"});
-  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{' '}));
+  \CapableKeyword{print}(\CapableValue{"My First Program"});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\n'}));
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableBound{two}()) ;
   \CapableValue{unit}
 \}
+\end{VerbatimInline}
+
 ```
 # Finished Parsing
 # Finished Type Checking
@@ -42,7 +48,7 @@ type responsePure = union {answer : Int}
 type responseEffect = union {divByZero : Unit; answerE : Int}
 type MaybeAnswer = union {crashed : Unit; dz : Unit; result : Int}
 protocol OneShotCalcutron
-= Client ==> Server [command] { adder(body)
+  = Client ==> Server [command] { adder(body)
   . Server ==> Client [responsePure] { answer(Int)
   . end
   }
@@ -63,105 +69,105 @@ protocol OneShotCalcutron
   }
 session calcutronServer <OneShotCalcutron as Server> () -> Bool
 {
-recv [command] Client
+  recv [command] Client
   {
-  when adder (xy)
+    when adder (xy)
     {
-    send [responsePure] Client answer(add(get_x(xy), get_y(xy)))
-      catch
-        {
-        crash(False)
-        }
-    }
-  when suber (xy)
-    {
-    send [responsePure] Client answer(sub(get_x(xy), get_y(xy)))
-      catch
-        {
-        crash(False)
-        }
-    }
-  when diver (xy)
-    {
-    if lte(get_y(xy), 0)
-      {
-      send [responseEffect] Client divByZero(unit)
+      send [responsePure] Client answer(add(get_x(xy), get_y(xy)))
         catch
-          {
+        {
           crash(False)
+        }
+    }
+    when suber (xy)
+    {
+      send [responsePure] Client answer(sub(get_x(xy), get_y(xy)))
+        catch
+        {
+          crash(False)
+        }
+    }
+    when diver (xy)
+    {
+      if lte(get_y(xy), 0)
+      {
+        send [responseEffect] Client divByZero(unit)
+          catch
+          {
+            crash(False)
           }
       } else
       {
-      send [responseEffect] Client answerE(div(get_x(xy), get_y(xy)))
-        catch
+        send [responseEffect] Client answerE(div(get_x(xy), get_y(xy)))
+          catch
           {
-          crash(False)
+            crash(False)
           }
       }
     }
-  when muler (xy)
+    when muler (xy)
     {
-    send [responsePure] Client answer(mul(get_x(xy), get_y(xy)))
-      catch
+      send [responsePure] Client answer(mul(get_x(xy), get_y(xy)))
+        catch
         {
-        crash(False)
+          crash(False)
         }
     }
   } catch
   {
-  crash(False)
+    crash(False)
   }
 }
 session calcutronClientAdder <OneShotCalcutron as Client> ( x Int
 , y Int ) -> MaybeAnswer
 {
-send [command] Server adder(body(x, y))
-  catch
+  send [command] Server adder(body(x, y))
+    catch
     {
-    crash(crashed(unit))
+      crash(crashed(unit))
     }
 }
 session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd command ) -> MaybeAnswer
 {
-match cmd
+  match cmd
   {
-  when adder(b)
+    when adder(b)
     {
-    send [command] Server adder(b)
-      catch
+      send [command] Server adder(b)
+        catch
         {
-        crash(crashed(unit))
+          crash(crashed(unit))
         }
     }
-  when suber(b)
+    when suber(b)
     {
-    send [command] Server suber(b)
-      catch
+      send [command] Server suber(b)
+        catch
         {
-        crash(crashed(unit))
+          crash(crashed(unit))
         }
     }
-  when diver(b)
+    when diver(b)
     {
-    send [command] Server diver(b)
-      catch
+      send [command] Server diver(b)
+        catch
         {
-        crash(crashed(unit))
+          crash(crashed(unit))
         }
     }
-  when muler(b)
+    when muler(b)
     {
-    send [command] Server muler(b)
-      catch
+      send [command] Server muler(b)
+        catch
         {
-        crash(crashed(unit))
+          crash(crashed(unit))
         }
     }
   }
 }
 main () -> Unit
 {
-print("My First Program");
-  print(toString(' '))
+  print("My First Program");
+  print(toString('\n'))
 }
 ```

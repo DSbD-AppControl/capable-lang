@@ -1,0 +1,31 @@
+type point = struct { x : Int; y : Int }
+
+type either = union { left : String; right : Int}
+
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+}
+
+func setVarX ( p : &point, x : Int ) -> Unit
+{
+  mut(p, set_x(!p,x))
+}
+
+main()
+{
+
+  var p = point(1,2)
+
+; printLn(toString(get_x(!p)))
+; setVarX(p,2)
+; printLn(toString(get_x(!p)))
+
+; local x = left("Hello World")
+; match x
+  {
+    when left(x)  { printLn(x) }
+    when right(y) { printLn(toString(y)) }
+  }
+}

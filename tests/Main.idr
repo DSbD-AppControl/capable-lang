@@ -19,6 +19,7 @@ main
            , !(mkPool "examples" "Working Examples")
            , !(mkPool "sessions" "Session Types")
            , !(mkPool "benchmarks" "Programs of interest for benchmarking.")
+           , !(mkPool "paper" "Examples from the paper.")
            ]
 
   where mkPool : (dirName, poolName : String)

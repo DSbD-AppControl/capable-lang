@@ -302,7 +302,10 @@ expr (Split fc ss val scope)
   ]
 
 expr (Const fc UNIT v) = value (pretty "unit")
-expr (Const fc CHAR v) = value (squotes $ pretty v)
+expr (Const fc CHAR v) = value (squotes $ v' v)
+  where v' : Char -> Doc KIND
+        v' c = if isNL c then pretty "\\n" else pretty c
+
 expr (Const fc STR v) = value (dquotes $ pretty v)
 expr (Const fc INT v) = value (pretty v)
 expr (Const fc BOOL v) = value (pretty v)
@@ -414,7 +417,7 @@ expr (Match fc cond prf cs)
   , lbrace'
   ]
   ++
-  map (hang 2) (cases cs)
+  map (indent 2) (cases cs)
   ++
   [ rbrace'
   ]
@@ -433,7 +436,7 @@ expr (Match fc cond prf cs)
                       ]
               ]
           , lbrace'
-          , hang 2 (expr c)
+          , indent 2 (expr c)
           , rbrace'
           ])
           :: cases xs
@@ -453,10 +456,10 @@ expr (Cond fc c t f)
   = vsep
   [ hsep [ keyword "if", expr c]
   , lbrace'
-  , hang 2 (expr t)
+  , indent 2 (expr t)
   , hsep [ rbrace' , keyword "else" ]
   , lbrace'
-  , hang 2 (expr f)
+  , indent 2 (expr f)
   , rbrace'
   ]
 
@@ -467,7 +470,7 @@ expr (Loop fc scope cond)
   = vcat
   [ keyword "loop"
   , lbrace'
-  , hang 2 (expr scope)
+  , indent 2 (expr scope)
   , hcat [ rbrace', keyword "until", expr cond]
   ]
 
@@ -502,9 +505,9 @@ expr (Run fc fun prfR prfA argz prfV valz)
 function : Fun f -> Doc KIND
 function (Func fc prf as ret scope)
   = vcat
-  [ hsep [tupled $ fargs as, keyword "->", type ret]
+  [ hsep [tupled $ fargs as, pretty "->", type ret]
   , lbrace'
-  , align $ hang 2 (expr scope)
+  , align $ indent 2 (expr scope)
   , rbrace'
   ]
 
@@ -529,7 +532,7 @@ protocol (Choice fc s r t prf (B1 (x::xs)))
   = vsep
   $ [ hsep
       [ role s
-      , keyword "==>"
+      , pretty "==>"
       , role r
       , brackets (type t)
       , lbrace'
@@ -606,7 +609,7 @@ sexpr (LetRec fc s scope)
          , parens (binder s)
          ]
   , lbrace'
-  , hang 2 (sexpr scope)
+  , indent 2 (sexpr scope)
   , rbrace'
   ]
 
@@ -641,12 +644,12 @@ sexpr (Cond fc cond tt ff)
          , expr cond
          ]
   , lbrace'
-  , hang 2 (sexpr tt)
+  , indent 2 (sexpr tt)
   , hsep [ rbrace'
          , keyword "else"
          ]
   , lbrace'
-  , hang 2 (sexpr ff)
+  , indent 2 (sexpr ff)
   , rbrace'
   ]
 
@@ -659,7 +662,7 @@ sexpr (Match fc cond prf offs)
   , lbrace'
   ]
   ++
-  map (hang 2) (cases offs)
+  map (indent 2) (cases offs)
   ++
   [ rbrace'
   ]
@@ -679,7 +682,7 @@ sexpr (Match fc cond prf offs)
                 ]
               ]
           , lbrace'
-          , hang 2 (sexpr c)
+          , indent 2 (sexpr c)
           , rbrace'
           ])
           :: cases xs
@@ -694,12 +697,12 @@ sexpr (Read fc r ty prf offs onEr)
   , lbrace'
   ]
   ++
-  map (hang 2) (cases offs)
+  map (indent 2) (cases offs)
   ++
   [ hsep [ rbrace'
          , keyword "catch"]
   , lbrace'
-  , hang 2 (sexpr onEr)
+  , indent 2 (sexpr onEr)
   , rbrace'
   ]
 
@@ -717,7 +720,7 @@ sexpr (Read fc r ty prf offs onEr)
                      ]
               ]
           , lbrace'
-          , hang 2 (sexpr c)
+          , indent 2 (sexpr c)
           , rbrace'
           ])
           :: cases xs
@@ -731,11 +734,11 @@ sexpr (Send fc r ty s msg body exc)
          , group (hcat [binder s, parens (expr msg)])
          ]
   , align
-    $ hang 2
+    $ indent 2
     $ vsep
       [ (keyword "catch")
       , lbrace'
-      , hang 2 (sexpr exc)
+      , indent 2 (sexpr exc)
       , rbrace'
       ]
   ]
@@ -744,9 +747,9 @@ session : Session p -> Doc KIND
 session (Sesh fc prin r x prf args ret scope)
   = vcat
   [ hsep [ group $ angles (hsep [ref r, keyword "as", role prin])
-         , tupled $ fargs args, keyword "->", type ret]
+         , tupled $ fargs args, pretty "->", type ret]
   , lbrace'
-  , hang 2 (sexpr scope)
+  , indent 2 (sexpr scope)
   , rbrace'
   ]
 
@@ -784,7 +787,7 @@ prog (Def fc PROT s val scope)
     [ keyword "protocol"
     , binder s
     ]
-  , hang 2
+  , indent 2
     $ hsep
       [ equals
       , protocol val
@@ -812,16 +815,23 @@ toString
   = (show . reAnnotate (const ()) . program)
 
 
-renderAs : (String -> String) -> (ann -> String) -> String -> SimpleDocStream ann -> String
+renderAs : (Char -> String)
+        -> (ann -> String)
+        -> String
+        -> SimpleDocStream ann
+        -> String
 
 renderAs e f g SEmpty
   = neutral
 
 renderAs e f g (SChar c rest)
-  = (e (cast c)) <+> renderAs e f g rest
+  = (e c) <+> renderAs e f g rest
 
 renderAs e f g (SText l t rest)
-  = e t <+> renderAs e f g rest
+  = purge t <+> renderAs e f g rest
+
+  where purge : String -> String
+        purge = (foldr (<+>) "" . map e . unpack)
 
 renderAs e f g (SLine l rest)
   =   singleton '\n'
@@ -837,18 +847,19 @@ renderAs e f g (SAnnPop rest)
 export
 toLaTeX : (p : PROG) -> String
 toLaTeX
-  = (renderAs e foo "}" . layoutPretty defaultLayoutOptions . program)
+  = (env . renderAs e foo "}" . layoutPretty defaultLayoutOptions . program)
 
   where cmd : String -> String
         cmd s = "\\Capable\{s}{"
 
-        e : String -> String
-        e = (foldr (<+>) "" . map f . unpack)
-            where f : Char -> String
-                  f '_' =  "\\_"
-                  f '{' = "\\{"
-                  f '}' = "\\}"
-                  f c   = cast c
+        e : Char -> String
+        e '_' =  "\\_"
+        e '{' = "\\{"
+        e '}' = "\\}"
+        e c
+          = if isNL c
+            then "\\newline"
+            else cast c
 
         foo : KIND -> String
         foo KEYWORD
@@ -867,5 +878,13 @@ toLaTeX
           = cmd "TODO"
         foo ESCAPE
           = ""
+
+        env : String -> String
+        env d
+          = unlines
+          [ "\\begin{VerbatimInline}"
+          , d
+          , "\\end{VerbatimInline}"
+          ]
 
 -- [ EOF ]
