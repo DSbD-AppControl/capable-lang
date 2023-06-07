@@ -187,6 +187,9 @@ mutual
 
       H : (k : HandleKind) -> File -> Value store (HANDLE k)
 
+      MkList : List (Value store ty)
+            -> Value store (LIST ty)
+
       VectorEmpty : Value store (VECTOR type Z)
 
       VectorCons : Value store        type
@@ -236,6 +239,11 @@ Pretty (Value store type) where
     = group
     $ parens
     $ hsep [pretty "Handle", pretty (show k)]
+
+  pretty (MkList xs)
+    = list
+    $ assert_total
+    $ map pretty xs
 
   pretty VectorEmpty
     = pretty "{}"
@@ -321,6 +329,9 @@ mutual
   weaken prf (B x) = B x
 --  weaken prf (Clos s e) = Clos s (weaken prf e)
   weaken prf (H k h) = H k h
+  weaken prf (MkList xs)
+    = MkList
+    $ map (weaken prf) xs
   weaken prf (VectorEmpty) = VectorEmpty
   weaken prf (VectorCons x xs)
     = VectorCons (weaken prf x) (weaken prf xs)

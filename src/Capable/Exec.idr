@@ -277,6 +277,24 @@ mutual
       = do Value hf vf prfF <- Exprs.eval (weaken prf env) h tt
            pure (Value hf vf (trans prf prfF))
 
+    evalList : {ty  : Ty.Base}
+            -> {store : List Ty.Base}
+            -> (env   : Env stack_g stack_l store)
+            -> (heap  : Heap store)
+            -> (xs    : List (Expr rs types globals stack_g stack_l ty))
+                     -> Capable (List.Results store ty)
+    evalList env heap []
+      = pure
+      $ MkList heap
+               Nil
+               (noChange _)
+    evalList env heap (x :: xs)
+      = do Value h v p    <- Exprs.eval env heap x
+           MkList h vs ps <- evalList (weaken p env) h xs
+           pure
+             (MkList h
+                    ((weaken ps v) :: vs)
+                    (trans p ps))
 
     public export
     eval : {type  : Ty.Base}
@@ -326,6 +344,11 @@ mutual
     eval env heap (Cond cond tt ff)
       = do res <- eval env heap cond
            when env res tt ff
+
+    -- ### List
+    eval env heap (MkList xs)
+      = do MkList h vs p <- evalList env heap xs
+           pure (Value h (MkList vs) p)
 
     -- ### Array's & Operations
     eval env heap VectorEmpty = return heap VectorEmpty

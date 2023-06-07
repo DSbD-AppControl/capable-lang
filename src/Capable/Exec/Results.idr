@@ -81,6 +81,19 @@ namespace Args
           -> (prf   : Subset  old new )
                    -> Results old types
 
+namespace List
+
+  public export
+  data Results : (store : List Ty.Base)
+              -> (ty    : Ty.Base)
+                       -> Type
+    where
+      MkList : {new   : List Ty.Base}
+            -> (store : Heap  new)
+            -> (args  : List (Value new type))
+            -> (prf   : Subset  old new)
+                     -> Results old type
+
 namespace Fields
 
   public export

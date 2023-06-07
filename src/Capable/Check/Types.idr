@@ -200,6 +200,10 @@ mutual
     = pure TyInt
   reflect delta BOOL
     = pure TyBool
+
+  reflect delta (LIST x)
+    = pure (TyList !(reflect delta x))
+
   reflect delta (VECTOR x k)
     = pure (TyVector !(reflect delta x) k)
 

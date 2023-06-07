@@ -96,6 +96,11 @@ mutual
   toJSON U UNIT
     = JNull
 
+  toJSON (MkList xs) (LIST prf)
+    = JArray
+    $ assert_total
+    $ map (\x => toJSON x prf) xs
+
   toJSON val (VECTOR ty n)
     =    let n  = (JNumber (cast n))
       in let xs = vectorToJSON val ty
@@ -252,6 +257,10 @@ mutual
 
   fromJSON UNIT JNull
     = pure U
+
+  fromJSON (LIST prf) (JArray rs)
+    = do xs <- assert_total $ traverse (fromJSON prf) rs
+         pure (MkList xs)
 
   fromJSON (VECTOR x n) (JArray rs)
     = vectorFromJSON x n n rs

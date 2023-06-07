@@ -63,6 +63,7 @@ namespace Ty
       REF : Base -> Base
 
       VECTOR : Base -> Nat -> Base
+      LIST : Base -> Base
 
       TUPLE : (fields : Vect (S (S n)) Base) -> Base
 
@@ -106,6 +107,10 @@ namespace Diag
                   -> Diag (VECTOR a x)
                           (VECTOR b y)
 
+      LIST : (a,b : Base)
+                 -> Diag (LIST a)
+                         (LIST b)
+
       TUPLE : (xs : Vect (S (S n)) Base)
            -> (ys : Vect (S (S m)) Base)
                  -> Diag (TUPLE xs) (TUPLE ys)
@@ -131,6 +136,7 @@ namespace Diag
   diag (HANDLE x)   (HANDLE y)  = Just (HANDLE x y)
   diag (REF x)      (REF y)     = Just (REF x y)
   diag (VECTOR x k)  (VECTOR y l) = Just (VECTOR x y k l)
+  diag (LIST a)     (LIST b)      = Just (LIST a b)
   diag (TUPLE xs)   (TUPLE ys)  = Just (TUPLE xs ys)
   diag (UNION xs)   (UNION ys)  = Just (UNION xs ys)
   diag (RECORD xs)  (RECORD ys) = Just (RECORD xs ys)
@@ -147,6 +153,7 @@ namespace Diag
   diagNot (HANDLE _)  = absurd
   diagNot (REF _)     = absurd
   diagNot (VECTOR _ _) = absurd
+  diagNot (LIST _)    = absurd
   diagNot (TUPLE _)   = absurd
   diagNot (UNION _ )  = absurd
   diagNot (RECORD _ ) = absurd
@@ -173,6 +180,10 @@ namespace Diag
       _ | (Just (VECTOR x y k j))
         = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
                      Refl <- decEq k j `otherwise` (\Refl => Refl)
+                     pure Refl
+
+      _ | (Just (LIST x y))
+        = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
                      pure Refl
 
       _ | (Just (TUPLE xs ys))
@@ -238,6 +249,12 @@ type (VECTOR x k)
   , semi
   , pretty k
   ]
+
+type (LIST x)
+  = group
+  $ brackets
+  $ type x
+
 
 type (TUPLE xs)
   = tupled
@@ -307,6 +324,8 @@ mutual
 
       VECTOR : Marshable ty -> (n : Nat) -> Marshable (VECTOR ty n)
 
+      LIST : Marshable ty -> Marshable (LIST ty)
+
       TUPLE : DVect Base Marshable (S (S n)) types -> Marshable (TUPLE types)
 
       RECORD : (fields : DList (String, Base) Marshable (f::fs))
@@ -319,6 +338,8 @@ mutual
     data MarshableNot : (type : Base) -> Type where
       REF : MarshableNot (REF r)
       HANDLE : MarshableNot (HANDLE r)
+
+      LISTNot : MarshableNot ty -> MarshableNot (LIST ty)
 
       VECTORNot : (prf : MarshableNot ty )
               -> (n   : Nat)
@@ -377,6 +398,10 @@ mutual
       = case decEq y x Refl of
          Refl => Refl
 
+    decEq (LIST y) (LIST x) Refl
+      = case decEq y x Refl of
+         Refl => Refl
+
     decEq (TUPLE y) (TUPLE x) Refl
       = case decEq y x Refl Refl of
           Refl => Refl
@@ -406,6 +431,10 @@ namespace Marshall
     , pretty n
     ]
 
+  mkPretty (LIST x)
+    = group
+    $ brackets
+    $ mkPretty x
 
   mkPretty (TUPLE xs)
     = tupled
@@ -446,6 +475,9 @@ namespace Marshall
 
   prettyNot HANDLE
     = pretty "Is a handle."
+
+  prettyNot (LISTNot prf)
+    = pretty "Contains a Reference/Handle"
 
   prettyNot (VECTORNot prf n)
     = pretty "Contains a Reference/Handle"
@@ -548,6 +580,13 @@ mutual
     marshable (REF x)
       = No REF absurd
 
+    marshable (LIST ty) with (marshable ty)
+      marshable (LIST ty) | (Yes prf)
+        = Yes (LIST prf)
+      marshable (LIST ty) | (No prf no)
+        = No (LISTNot prf)
+             (\case (LIST x) => no x)
+
     marshable (VECTOR ty n) with (marshable ty)
       marshable (VECTOR ty n) | (Yes prf)
         = Yes (VECTOR prf n)
@@ -594,6 +633,8 @@ namespace IsUnion
       HANDLE : IsUnionNot (HANDLE ref)
       REF    : IsUnionNot (REF ref)
 
+      LIST : IsUnionNot (LIST ty)
+
       VECTOR : IsUnionNot (VECTOR ty n)
 
       TUPLE : IsUnionNot (TUPLE types)
@@ -625,6 +666,9 @@ namespace IsUnion
   Uninhabited (IsUnion (REF u)) where
     uninhabited (U _) impossible
 
+  Uninhabited (IsUnion (LIST x)) where
+    uninhabited (U _) impossible
+
   Uninhabited (IsUnion (VECTOR x u)) where
     uninhabited (U _) impossible
 
@@ -654,6 +698,7 @@ namespace IsUnion
   isUnion UNIT            = No UNIT   absurd
   isUnion (HANDLE x)      = No HANDLE absurd
   isUnion (REF x)         = No REF    absurd
+  isUnion (LIST x)        = No LIST   absurd
   isUnion (VECTOR x k)    = No VECTOR  absurd
   isUnion (RECORD k)      = No RECORD absurd
   isUnion (TUPLE fields)  = No TUPLE  absurd

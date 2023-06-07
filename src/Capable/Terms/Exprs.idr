@@ -100,6 +100,8 @@ mutual
           -> Expr roles types globals stack_g stack_l a
           -> Expr roles types globals stack_g stack_l a
 
+      MkList : List (Expr roles types globals stack_g stack_l ty)
+            -> Expr roles types globals stack_g stack_l (LIST ty)
 
       -- ## Arrays
 
