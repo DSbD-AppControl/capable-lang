@@ -369,29 +369,56 @@ mutual
       = do MkList h vs p <- evalList env heap xs
            pure (Value h (MkList vs) p)
 
+    eval env heap (SetL idx array value)
+      = do Value h (I i) p1 <- eval env heap idx
+           Value h (MkList xs) p2 <- eval (weaken p1 env) h array
+           Value h v p3 <- Exprs.eval (weaken p2 (weaken p1 env)) h value
+           let xs = map (weaken p3) xs
+           let s = length xs
+           if i < 0
+            then throw (OOB i s)
+            else decidable (throw (OOB (cast i) s))
+                           (\prf => pure $ Value h (Values.MkList
+                                               $ List.replaceAt {ok=prf}
+                                                                (cast i)
+                                                                v
+                                                                xs)
+                                                      (trans p1 (trans p2 p3)))
+                           (inBounds (cast i) xs)
+    eval env heap (GetL idx array)
+      = do Value h (I i) p1 <- eval env heap idx
+           Value h (MkList xs) p2 <- eval (weaken p1 env) h array
+           let s = length xs
+           if i < 0
+            then throw (OOB i s)
+            else decidable (throw (OOB (cast i) s))
+                           (\prf => pure $ Value h (List.index {ok = prf} (cast i) xs) (trans p1 p2))
+                           (inBounds (cast i) xs)
+--        = do Value h'  (I idx) p1 <- eval env heap idx
+--             Value h'' arr     p2 <- eval (weaken p1 env) h' array
+--             let Val s = size arr
+--
+--             if idx < 0
+--              then throw (OOB idx s)
+--              else maybe (throw (OOB idx s))
+--                         (\idx => pure (Value h'' (index idx arr) (trans p1 p2)))
+--                         (natToFin (cast idx) s)
+
     -- ### Array's & Operations
     eval env heap (MkVect xs)
       = do MkVect h vs p <- evalVect env heap xs
            pure (Value h (MkVect vs) p)
---    eval env heap VectorEmpty = return heap VectorEmpty
---
---    eval env heap (VectorCons x xs)
---      = do Value h'  x  p1 <- eval env heap x
---           Value h'' xs p2 <- eval (weaken p1 env) h'   xs
---
---           pure (Value h'' (VectorCons (weaken p2 x) xs) (trans p1 p2))
 
+    eval env heap (SetV idx array value)
+      = do Value h (MkVect arr) p1 <- eval env heap array
+           Value h val p2 <- eval (weaken p1 env) h value
+           let arr = MkVect $ Vect.replaceAt idx val (map (weaken p2) arr)
+           pure (Value h arr (trans p1 p2))
 
-    eval env heap (Index idx array)
-        = do Value h'  (I idx) p1 <- eval env heap idx
-             Value h'' arr     p2 <- eval (weaken p1 env) h' array
-             let Val s = size arr
+    eval env heap (GetV idx array)
+      = do Value h (MkVect arr) p <- eval env heap array
+           pure (Value h (Vect.index idx arr) p)
 
-             if idx < 0
-              then throw (OOB idx s)
-              else maybe (throw (OOB idx s))
-                         (\idx => pure (Value h'' (index idx arr) (trans p1 p2)))
-                         (natToFin (cast idx) s)
 
     -- ### Data Structures
 

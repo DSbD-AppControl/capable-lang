@@ -192,6 +192,8 @@ Show (Typing.Error) where
 
   show (SessionExpected ty)
     = "A session was expected but was given:\n\t\{show ty}"
+  show (ListExpected ty)
+    = "List expected but was given:\n\t\{show ty}"
 
   show (VectorExpected ty)
     = "Vector expected but was given:\n\t\{show ty}"

@@ -105,6 +105,15 @@ mutual
       MkList : List (Expr roles types globals stack_g stack_l ty)
             -> Expr roles types globals stack_g stack_l (LIST ty)
 
+      GetL : (idx   : Expr roles types globals stack_g stack_l INT)
+          -> (array : Expr roles types globals stack_g stack_l (LIST type))
+                   -> Expr roles types globals stack_g stack_l       type
+
+      SetL : (idx   : Expr roles types globals stack_g stack_l INT)
+          -> (array : Expr roles types globals stack_g stack_l (LIST type))
+          -> (value : Expr roles types globals stack_g stack_l (     type))
+                   -> Expr roles types globals stack_g stack_l (LIST type)
+
       -- ## Arrays
 
       -- ### Constructors
@@ -118,10 +127,16 @@ mutual
 
       -- ### Eliminators
 
-      Index : {n : Nat}
-           -> (idx   : Expr roles types globals stack_g stack_l INT)
+      GetV : {n : Nat}
+           -> (idx   : Fin n)
            -> (array : Expr roles types globals stack_g stack_l (VECTOR type n))
                     -> Expr roles types globals stack_g stack_l        type
+
+      SetV : {n     : Nat}
+          -> (idx   : Fin n)
+          -> (array : Expr roles types globals stack_g stack_l (VECTOR type n))
+          -> (value : Expr roles types globals stack_g stack_l (       type))
+                   -> Expr roles types globals stack_g stack_l (VECTOR type n)
 
       -- ## Products
 

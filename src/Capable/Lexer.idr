@@ -62,7 +62,7 @@ namespace Capable
              , "unit", "tuple", "tag"
 
              -- Operations
-             , "get", "set", "mut"
+             , "get", "set", "mut", "project", "replace"
              , "and", "not", "or"
              , "lt", "lte", "eq", "gt", "gte"
 
@@ -80,7 +80,6 @@ namespace Capable
              , "catch", "crash"
 
              , "fopen", "popen", "popen2"
-             , "index"
 
              -- Types
              , "Int", "Bool", "String", "Char"

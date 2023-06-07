@@ -45,8 +45,8 @@ func fb() -> Unit
 {
   local x = tuple("a","stre")
 ;
-  print(get[0](x))
-; print(get[1](x))
+  print(project[0](x))
+; print(project[1](x))
 
 }
 

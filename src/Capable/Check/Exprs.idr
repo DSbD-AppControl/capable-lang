@@ -331,6 +331,24 @@ mutual
 
          pure (_ ** MkList (x::xs))
 
+
+  synth env (SetL fc idx tm val)
+    = do idx <- check fc env INT idx
+
+         (ty ** val) <- synth env val
+
+         tm <- check fc env (LIST ty) tm
+
+         pure (_ ** SetL idx tm val)
+
+  synth env (GetL fc idx tm)
+    = do idx <- check fc env INT idx
+
+         (LIST ty ** tm) <- synth env tm
+           | (ty ** _) => throwAt fc (ListExpected ty)
+
+         pure (_ ** GetL idx tm)
+
   -- ## Vectors
   synth env (MkVect fc Empty [])
     = unknown fc
@@ -348,14 +366,29 @@ mutual
 
          pure (_ ** MkVect (x::xs))
 
+  synth env (SetV fc idx tm val)
+    = do (ty ** val) <- synth env val
 
-  synth env (Index fc idx tm)
-    = do T tyTm idx <- check fc env TyInt idx
-
-         (VECTOR ty m ** tm) <- synth env tm
+         (VECTOR ty' m ** tm) <- synth env tm
            | (ty ** _) => throwAt fc (VectorExpected ty)
 
-         pure (_ ** Index idx tm)
+         Refl <- compare fc ty ty'
+
+         ifThenElse (idx < 0)
+                    (throwAt fc NatExpected)
+                    (maybe (throwAt fc (OOB (cast idx) m))
+                           (\idx => pure (_ ** SetV idx tm val))
+                           (natToFin (cast idx) m))
+
+  synth env (GetV fc idx tm)
+    = do (VECTOR ty' m ** tm) <- synth env tm
+           | (ty ** _) => throwAt fc (VectorExpected ty)
+
+         ifThenElse (idx < 0)
+                    (throwAt fc NatExpected)
+                    (maybe (throwAt fc (OOB (cast idx) m))
+                           (\idx => pure (_ ** GetV idx tm))
+                           (natToFin (cast idx) m))
 
   synth env (Slice fc st ed tm)
     = do T tyTm st <- check fc env (TyInt) st

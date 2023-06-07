@@ -303,23 +303,35 @@ mutual
 
 
 
-  index : Rule EXPR
-  index
+  getV : Rule EXPR
+  getV
     = do s <- Toolkit.location
-         keyword "index"
-
+         keyword "get"
          symbol "("
-         k <- expr
+         i <- int
          symbol ","
          t <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (bin IDX (newFC s e) t k)
+         pure (un (GETV i) (newFC s e) t)
+
+  getL : Rule EXPR
+  getL
+    = do s <- Toolkit.location
+         keyword "get"
+         symbol "("
+         i <- expr
+         symbol ","
+         t <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (bin GETL (newFC s e) i t)
+
 
   getS : Rule EXPR
   getS
     = do s <- Toolkit.location
-         keyword "get"
+         keyword "project"
          symbol "["
          i <- ref
          symbol "]"
@@ -332,7 +344,7 @@ mutual
   getI : Rule EXPR
   getI
     = do s <- Toolkit.location
-         keyword "get"
+         keyword "project"
          symbol "["
          i <- int
          symbol "]"
@@ -343,12 +355,42 @@ mutual
          pure (un (GETT i) (newFC s e) k)
 
   get : Rule EXPR
-  get = getI <|> getS
+  get = getV <|> getL <|> getI <|> getS
+
+  setL : Rule EXPR
+  setL
+    = do s <- Toolkit.location
+         keyword "set"
+         symbol "["
+         i <- expr
+         symbol "]"
+         symbol "("
+         k <- expr
+         symbol ","
+         l <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (tri SETL (newFC s e) i k l)
+
+  setV : Rule EXPR
+  setV
+    = do s <- Toolkit.location
+         keyword "set"
+         symbol "["
+         i <- int
+         symbol "]"
+         symbol "("
+         k <- expr
+         symbol ","
+         l <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (bin (SETV i) (newFC s e) k l)
 
   setI : Rule EXPR
   setI
     = do s <- Toolkit.location
-         keyword "set"
+         keyword "replace"
          symbol "["
          i <- int
          symbol "]"
@@ -363,7 +405,7 @@ mutual
   setS : Rule EXPR
   setS
     = do s <- Toolkit.location
-         keyword "set"
+         keyword "replace"
          symbol "["
          i <- ref
          symbol "]"
@@ -376,7 +418,7 @@ mutual
          pure (bin (SETR (get i)) (newFC s e) k l)
 
   set : Rule EXPR
-  set = setI <|> setS
+  set = setL <|> setV <|> setI <|> setS
 
   slice : Rule EXPR
   slice
@@ -530,7 +572,6 @@ mutual
       <|> union
       <|> openE
       <|> slice
-      <|> index
       <|> fetch
       <|> mutate
 
@@ -555,7 +596,6 @@ mutual
       <|> (trace "\{show !Toolkit.location} union"     union  )
       <|> (trace "\{show !Toolkit.location} open"      openE  )
       <|> (trace "\{show !Toolkit.location} slice"     slice  )
-      <|> (trace "\{show !Toolkit.location} index"     index  )
       <|> (trace "\{show !Toolkit.location} !"         fetch  )
 
 

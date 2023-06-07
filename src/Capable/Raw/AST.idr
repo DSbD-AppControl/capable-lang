@@ -204,15 +204,18 @@ namespace Shape
 
     -- ### Data
     LIST  : Shape EXPR n (replicate n EXPR)
+    GETL : BIN Shape EXPR EXPR EXPR
+    SETL : TRI Shape EXPR EXPR EXPR EXPR
 
     -- #### Arrays
     VECT  : Shape EXPR n (replicate n EXPR)
 
-    IDX   : BIN Shape EXPR EXPR EXPR
+    GETV : Int -> UN  Shape EXPR EXPR
+    SETV : Int -> BIN Shape EXPR EXPR EXPR
 
     -- #### Products
     TUPLE : Shape EXPR  (S (S n)) (replicate (S (S n)) EXPR)
-    GETT : Int -> UN Shape EXPR EXPR
+    GETT : Int -> UN  Shape EXPR EXPR
     SETT : Int -> BIN Shape EXPR EXPR EXPR
 
     -- #### Records
@@ -361,8 +364,11 @@ namespace Shape
     show (BBIN x)        = "(BBIN \{show x})"
     show (BUN x)         = "(BUN \{show x})"
     show LIST             = "LIST"
+    show GETL             = "GETL"
+    show SETL            = "SETL"
     show VECT            = "VECT"
-    show IDX             = "IDX"
+    show (GETV i)        = "(GETV \{show i})"
+    show (SETV i)        = "(SETV \{show i})"
     show SLICE           = "SLICE"
     show TUPLE           = "TUPLE"
     show (GETT i)         = "(GETT \{show i})"

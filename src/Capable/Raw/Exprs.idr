@@ -103,6 +103,12 @@ mutual
           -> (o  : Expr a)
                 -> Expr (Branch (BUN k) fc [a])
 
+      Slice : (fc : FileContext)
+           -> (st : Expr s)
+           -> (ed : Expr e)
+           -> (tm : Expr t)
+                 -> Expr (Branch SLICE fc [s,e,t])
+
       -- ## Data
 
       MkList : {as' : Vect n Raw.AST.EXPR}
@@ -111,6 +117,17 @@ mutual
             -> (vs  : All Expr as')
                    -> Expr (Branch LIST fc as)
 
+      GetL : (fc  : FileContext)
+          -> (idx : Expr i)
+          -> (tm  : Expr t)
+                 -> Expr (Branch GETL fc [i,t])
+
+      SetL : (fc  : FileContext)
+          -> (idx : Expr i)
+          -> (tm  : Expr t)
+          -> (val : Expr v)
+                 -> Expr (Branch SETL fc [i,t,v])
+
       -- ### Vectors
       MkVect : {as' : Vect n Raw.AST.EXPR}
             -> (fc : FileContext)
@@ -118,24 +135,17 @@ mutual
             -> (vs  : All Expr as')
                    -> Expr (Branch VECT fc as)
 
---      VectorEmpty : (fc : FileContext)
---                -> Expr (Branch NIL fc Nil)
---
---      VectorCons : (fc : FileContext)
---               -> (head : Expr h)
---               -> (tail : Expr t)
---                       -> Expr (Branch CONS fc [h,t])
+      GetV : (fc  : FileContext)
+          -> (i : Int)
+          -> (tm  : Expr t)
+                 -> Expr (Branch (GETV i) fc [t])
 
-      Index : (fc  : FileContext)
-           -> (idx : Expr i)
-           -> (tm  : Expr t)
-                  -> Expr (Branch IDX fc [i,t])
+      SetV : (fc  : FileContext)
+          -> (i : Int)
+          -> (tm  : Expr t)
+          -> (val : Expr v)
+                 -> Expr (Branch (SETV i) fc [t,v])
 
-      Slice : (fc : FileContext)
-           -> (st : Expr s)
-           -> (ed : Expr e)
-           -> (tm : Expr t)
-                 -> Expr (Branch SLICE fc [s,e,t])
 
       -- ### Products
       MkTuple : {as' : Vect (S (S n)) Raw.AST.EXPR}
@@ -285,6 +295,9 @@ mutual
   toExpr (Branch (BUN k) fc [o])
     = OpUn fc k (toExpr o)
 
+  toExpr (Branch SLICE fc [s,e,a])
+    = Slice fc (toExpr s) (toExpr e) (toExpr a)
+
   toExpr (Branch VECT fc xs)
     = let (as ** prf) = asVect xs
       in MkVect fc prf (assert_total $ args as)
@@ -293,12 +306,16 @@ mutual
     = let (as ** prf) = asVect xs
       in MkList fc prf (assert_total $ args as)
 
+  toExpr (Branch GETL fc [i,f]) = GetL fc (toExpr i) (toExpr f)
+  toExpr (Branch SETL fc [i,f,e]) = SetL fc (toExpr i) (toExpr f) (toExpr e)
 
-  toExpr (Branch IDX fc [i,a])
-    = Index fc (toExpr i) (toExpr a)
 
-  toExpr (Branch SLICE fc [s,e,a])
-    = Slice fc (toExpr s) (toExpr e) (toExpr a)
+  toExpr (Branch (GETV i) fc [a])
+    = GetV fc i (toExpr a)
+
+  toExpr (Branch (SETV i) fc [a,v])
+    = SetV fc i (toExpr a) (toExpr v)
+
 
   toExpr (Branch TUPLE fc (f::s::fs))
     = let (as ** prf) = asVect (f::s::fs)

@@ -12,10 +12,10 @@ func printLn(str:String) -> Unit
 func before() -> Unit
 {
   local p = struct[point]{ x=1, y=2 }
-; printLn(toString(get[x](p)))
+; printLn(toString(project[x](p)))
 
-; local p = set[x](p,3)
-; printLn(toString(get[x](p)))
+; local p = replace[x](p,3)
+; printLn(toString(project[x](p)))
 
 ; local x : either = tag[left]("a")
 ; unit

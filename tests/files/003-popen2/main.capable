@@ -10,8 +10,8 @@ type SubProcess = struct { writeTo : PROC; readFrom : PROC }
 
 func closeFHS ( fhs : SubProcess ) -> Unit
 {
-  close(get[writeTo](fhs))
-; close(get[readFrom](fhs))
+  close(project[writeTo](fhs))
+; close(project[readFrom](fhs))
 }
 
 

@@ -48,7 +48,7 @@
                         "ord" "chr" "string" "toString"
                         "the"
                         "print"
-                        "set" "get" "mut"
+                        "set" "get" "mut" "project" "replace"
                         ))
 
 (defvar capable-constants '("true" "false" "unit"))

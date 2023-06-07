@@ -358,11 +358,20 @@ expr (MkVect fc _ xs)
         args [] = []
         args (x::xs) = expr x :: args xs
 
-expr (Index fc idx tm)
-  = duo "index" (expr idx) (expr tm)
+expr (GetV fc idx tm)
+  = duo "get" (pretty idx) (expr tm)
+
+expr (SetV fc idx tm v)
+  = tri "set" (pretty idx) (expr tm) (expr v)
 
 expr (Slice fc st ed tm)
   = tri "slice" (expr st) (expr ed) (expr tm)
+
+expr (GetL fc idx tm)
+  = duo "get" (expr idx) (expr tm)
+
+expr (SetL fc idx tm v)
+  = tri "set" (expr idx) (expr tm) (expr v)
 
 expr (MkTuple fc prf ars)
   = group
@@ -377,7 +386,7 @@ expr (MkTuple fc prf ars)
 expr (GetT fc loc tup)
   = group
   $ hcat
-  [ keyword "get"
+  [ keyword "project"
   , brackets (pretty loc)
   , parens (expr tup)
   ]
@@ -385,7 +394,7 @@ expr (GetT fc loc tup)
 expr (SetT fc loc tup v)
   = group
   $ hcat
-  [ keyword "set"
+  [ keyword "replace"
   , brackets (pretty loc)
   , tupled [expr tup, expr v]
   ]
@@ -409,7 +418,7 @@ expr (Record fc prf fs)
 expr (GetR fc loc tup)
   = group
   $ hcat
-  [ keyword "get"
+  [ keyword "project"
   , brackets (pretty loc)
   , parens (expr tup)
   ]
@@ -417,7 +426,7 @@ expr (GetR fc loc tup)
 expr (SetR fc loc tup v)
   = group
   $ hcat
-  [ keyword "set"
+  [ keyword "replace"
   , brackets (pretty loc)
   , tupled [expr tup, expr v]
   ]
