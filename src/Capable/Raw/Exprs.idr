@@ -144,16 +144,16 @@ mutual
              -> (ars : All Expr as')
                    -> Expr (Branch TUPLE fc as)
 
-      Get : (fc : FileContext)
+      GetT : (fc : FileContext)
          -> (loc : Int)
          -> (tup : Expr e)
-                -> Expr (Branch (GET loc) fc [e])
+                -> Expr (Branch (GETT loc) fc [e])
 
-      Set : (fc : FileContext)
+      SetT : (fc : FileContext)
          -> (loc : Int)
          -> (tup : Expr e)
          -> (v   : Expr ev)
-                -> Expr (Branch (SET loc) fc [e,ev])
+                -> Expr (Branch (SETT loc) fc [e,ev])
 
       -- ### Structs
 
@@ -304,8 +304,8 @@ mutual
     = let (as ** prf) = asVect (f::s::fs)
       in MkTuple fc prf (assert_total $ args as)
 
-  toExpr (Branch (GET i) fc [f]) = Get fc i (toExpr f)
-  toExpr (Branch (SET i) fc [f,e]) = Set fc i (toExpr f) (toExpr e)
+  toExpr (Branch (GETT i) fc [f]) = GetT fc i (toExpr f)
+  toExpr (Branch (SETT i) fc [f,e]) = SetT fc i (toExpr f) (toExpr e)
 
   toExpr (Branch RECORD fc fs)
     = let (as ** prf) = asVect fs

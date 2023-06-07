@@ -129,7 +129,7 @@ mutual
       Tuple : (fields : DVect Base (Expr roles types globals stack_g stack_l) (S (S n)) as)
                      -> Expr roles types globals stack_g stack_l (TUPLE as)
 
-      Set : {as    : Vect (S (S n)) Base}
+      SetT : {as    : Vect (S (S n)) Base}
          -> (tuple : Expr roles types globals stack_g stack_l (TUPLE as))
          -> (idx   : Fin (S (S n)))
          -> (value : Expr roles types globals stack_g stack_l (index idx as))
@@ -137,7 +137,7 @@ mutual
 
       -- ### Eliminators
 
-      Get : {as    : Vect (S (S n)) Base}
+      GetT : {as    : Vect (S (S n)) Base}
          -> (tuple : Expr roles types globals stack_g stack_l (TUPLE as))
          -> (idx   : Fin (S (S n)))
                   -> Expr roles types globals stack_g stack_l (index idx as)

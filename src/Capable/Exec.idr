@@ -400,12 +400,12 @@ mutual
       = do Args heap as prf <- ArgsV.eval env heap as
            pure (Value heap (Tuple as) prf)
 
-    eval env heap (Set as idx v)
+    eval env heap (SetT as idx v)
       = do Value heap (Tuple vs) prf  <- eval env heap as
            Value heap v'         prf' <- eval (weaken prf env) heap v
            pure (Value heap ((Tuple (update (weaken prf' vs) idx v'))) (trans prf prf'))
 
-    eval env heap (Get as idx)
+    eval env heap (GetT as idx)
       = do Value heap (Tuple vs) prf <- eval env heap as
            let vs' = index vs idx
            pure $ Value heap vs'

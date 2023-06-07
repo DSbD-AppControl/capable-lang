@@ -381,16 +381,16 @@ mutual
                  (n ** tys ** tms) <- args y
                  pure (S n ** ty::tys ** tm::tms)
 
-  synth env (Get fc loc tup)
+  synth env (GetT fc loc tup)
     = do if loc < 0
           then throwAt fc (NatExpected)
           else do (TUPLE ts ** tm) <- synth env tup
                     | (ty ** _) => throwAt fc (PairExpected ty)
                   maybe (throwAt fc (OOB (cast loc) (length ts)))
-                        (\idx => pure (_ ** Get tm idx))
+                        (\idx => pure (_ ** GetT tm idx))
                         (finFromVect (cast loc) ts)
 
-  synth env (Set fc loc tup v)
+  synth env (SetT fc loc tup v)
     = do if loc < 0
            then throwAt fc (NatExpected)
            else do (TUPLE ts ** tm) <- synth env tup
@@ -399,7 +399,7 @@ mutual
                    maybe (throwAt fc (OOB (cast loc) (length ts)))
                          (\idx => do (tyV ** tmV) <- synth env v
                                      Refl <- compare fc (index idx ts) tyV
-                                     pure (_ ** Set tm idx tmV))
+                                     pure (_ ** SetT tm idx tmV))
                          (finFromVect (cast loc) ts)
 
   -- ## Records

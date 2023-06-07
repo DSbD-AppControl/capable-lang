@@ -201,8 +201,8 @@ namespace Shape
             -> UN Shape EXPR EXPR
 
     -- ### Data
-    -- #### Arrays
     LIST  : Shape EXPR n (replicate n EXPR)
+    -- #### Arrays
     VECT  : Shape EXPR n (replicate n EXPR)
 
     IDX   : BIN Shape EXPR EXPR EXPR
@@ -210,8 +210,8 @@ namespace Shape
 
     -- #### Products
     TUPLE : Shape EXPR  (S (S n)) (replicate (S (S n)) EXPR)
-    GET : Int -> UN Shape EXPR EXPR
-    SET : Int -> BIN Shape EXPR EXPR EXPR
+    GETT : Int -> UN Shape EXPR EXPR
+    SETT : Int -> BIN Shape EXPR EXPR EXPR
 
     -- #### Records
     KV : String -> UN Shape FIELDV EXPR
@@ -363,8 +363,8 @@ namespace Shape
     show IDX             = "IDX"
     show SLICE           = "SLICE"
     show TUPLE           = "TUPLE"
-    show (GET i)         = "(GET \{show i})"
-    show (SET i)         = "(SET \{show i})"
+    show (GETT i)         = "(GETT \{show i})"
+    show (SETT i)         = "(SETT \{show i})"
     show (KV str)        = "(KV \{show str})"
     show RECORD          = "RECORD"
     show (GETR str)      = "(GETR \{show str})"

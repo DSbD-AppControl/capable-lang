@@ -374,7 +374,7 @@ expr (MkTuple fc prf ars)
         args [] = []
         args (x::xs) = expr x :: args xs
 
-expr (Get fc loc tup)
+expr (GetT fc loc tup)
   = group
   $ hcat
   [ keyword "get"
@@ -382,7 +382,7 @@ expr (Get fc loc tup)
   , parens (expr tup)
   ]
 
-expr (Set fc loc tup v)
+expr (SetT fc loc tup v)
   = group
   $ hcat
   [ keyword "set"

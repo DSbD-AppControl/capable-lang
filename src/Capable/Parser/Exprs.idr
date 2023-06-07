@@ -340,7 +340,7 @@ mutual
          k <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (un (GET i) (newFC s e) k)
+         pure (un (GETT i) (newFC s e) k)
 
   get : Rule EXPR
   get = getI <|> getS
@@ -358,7 +358,7 @@ mutual
          l <- expr
          symbol ")"
          e <- Toolkit.location
-         pure (bin (SET i) (newFC s e) k l)
+         pure (bin (SETT i) (newFC s e) k l)
 
   setS : Rule EXPR
   setS
