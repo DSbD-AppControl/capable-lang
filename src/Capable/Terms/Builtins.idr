@@ -66,7 +66,7 @@ cmpTy STR  = Just CS
 cmpTy INT  = Just CI
 cmpTy BOOL = Just CB
 
-cmpTy (ARRAY x k) = Nothing
+cmpTy (VECTOR x k) = Nothing
 cmpTy (TUPLE _)  = Nothing
 cmpTy (UNION _) = Nothing
 cmpTy (RECORD _) = Nothing

@@ -75,7 +75,7 @@ namespace Typing
     Uncomparable : Typing.Error
     NatExpected : Typing.Error
     PairExpected : Ty.Base -> Typing.Error
-    ArrayAppend : Ty.Base -> Ty.Base -> Typing.Error
+    VectorAppend : Ty.Base -> Ty.Base -> Typing.Error
     ArgsExpected : List Ty.Base -> Typing.Error
     RedundantArgs : Nat -> Typing.Error
 
@@ -93,7 +93,7 @@ namespace Typing
     RefExpected : Ty.Base -> Typing.Error
     NotBound : Ref -> Typing.Error
     AlreadyBound : Ref -> Typing.Error
-    ArrayExpected : Ty.Base -> Error
+    VectorExpected : Ty.Base -> Error
 
     MismatchRole : Ref -> Ref -> Typing.Error
     MismatchRoleS : String -> String -> Typing.Error

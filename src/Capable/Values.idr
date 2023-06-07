@@ -187,11 +187,11 @@ mutual
 
       H : (k : HandleKind) -> File -> Value store (HANDLE k)
 
-      ArrayEmpty : Value store (ARRAY type Z)
+      VectorEmpty : Value store (VECTOR type Z)
 
-      ArrayCons : Value store        type
-               -> Value store (ARRAY type    n)
-               -> Value store (ARRAY type (S n))
+      VectorCons : Value store        type
+               -> Value store (VECTOR type    n)
+               -> Value store (VECTOR type (S n))
 
       Tuple : {ts : _} -> DVect Ty.Base (Value store) (S (S n)) ts
            -> Value store (TUPLE ts)
@@ -237,10 +237,10 @@ Pretty (Value store type) where
     $ parens
     $ hsep [pretty "Handle", pretty (show k)]
 
-  pretty ArrayEmpty
+  pretty VectorEmpty
     = pretty "{}"
 
-  pretty (ArrayCons x y)
+  pretty (VectorCons x y)
     = group
     $ parens
     $ hsep [pretty x, pretty "::", pretty y]
@@ -283,24 +283,24 @@ Show (Value x type) where
   show = (show . annotate () . pretty)
 
 public export
-size : Value store (ARRAY type n)
+size : Value store (VECTOR type n)
     -> (Singleton n)
-size ArrayEmpty = (Val Z)
-size (ArrayCons x y) = let Val y' = (size y) in Val (S y')
+size VectorEmpty = (Val Z)
+size (VectorCons x y) = let Val y' = (size y) in Val (S y')
 
 
 ||| Best way to do it.
 public export
 index : (idx : Fin n)
-     -> (xs  : Value store (ARRAY type n))
+     -> (xs  : Value store (VECTOR type n))
             -> Value store        type
 
-index FZ ArrayEmpty impossible
-index (FS x) ArrayEmpty impossible
+index FZ VectorEmpty impossible
+index (FS x) VectorEmpty impossible
 
-index FZ (ArrayCons x y)
+index FZ (VectorCons x y)
   = x
-index (FS z) (ArrayCons x y)
+index (FS z) (VectorCons x y)
   = index z y
 
 
@@ -321,9 +321,9 @@ mutual
   weaken prf (B x) = B x
 --  weaken prf (Clos s e) = Clos s (weaken prf e)
   weaken prf (H k h) = H k h
-  weaken prf (ArrayEmpty) = ArrayEmpty
-  weaken prf (ArrayCons x xs)
-    = ArrayCons (weaken prf x) (weaken prf xs)
+  weaken prf (VectorEmpty) = VectorEmpty
+  weaken prf (VectorCons x xs)
+    = VectorCons (weaken prf x) (weaken prf xs)
 
   weaken prf (Record xs)
     = Record (weaken prf xs)

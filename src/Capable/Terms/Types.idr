@@ -37,9 +37,9 @@ data Ty : (context : List Ty.Base)
     TyInt  : Ty ctxt INT
     TyBool : Ty ctxt BOOL
 
-    TyArray : (tmType : Ty ctxt type)
-           -> (nat    : Nat)
-                     -> Ty ctxt (ARRAY type nat)
+    TyVector : (tmType : Ty ctxt type)
+            -> (nat    : Nat)
+                      -> Ty ctxt (VECTOR type nat)
 
     TyTuple : (fields : DVect
                          Ty.Base

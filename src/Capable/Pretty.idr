@@ -140,7 +140,7 @@ type (TyBool fc)
 type (TyUnit fc)
   = typeStr "Unit"
 
-type (TyArray fc n ty)
+type (TyVector fc n ty)
   = group
   $ brackets {ldelim=typeDoc lbracket} {rdelim=typeDoc rbracket}
   $ hcat
@@ -342,8 +342,8 @@ expr (OpUn fc (OPEN x y) o)
   $ (handlekind x <+> tupled [prettyMode y, expr o])
 
 -- @TODO
-expr (ArrayEmpty fc) = lbrace'
-expr (ArrayCons fc head tail)
+expr (VectorEmpty fc) = lbrace'
+expr (VectorCons fc head tail)
   = annotate TODO (expr head <+> comma <+> expr tail)
 
 expr (Index fc idx tm)

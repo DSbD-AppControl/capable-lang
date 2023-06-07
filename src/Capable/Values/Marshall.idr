@@ -57,14 +57,14 @@ mutual
 
       in (l,x)::xs
 
-  arrayToJSON : (value : Value store (ARRAY ty n) )
-             -> (prf   : Marshable ty)
-                      -> List JSON
-  arrayToJSON ArrayEmpty prf
+  vectorToJSON : (value : Value store (VECTOR ty n) )
+              -> (prf   : Marshable ty)
+                       -> List JSON
+  vectorToJSON VectorEmpty prf
     = Nil
-  arrayToJSON (ArrayCons x y) prf
+  vectorToJSON (VectorCons x y) prf
     =    let x  = toJSON x prf
-      in let xs = arrayToJSON y prf
+      in let xs = vectorToJSON y prf
       in x::xs
 
   tupleToJSON : (c     : Nat )
@@ -96,9 +96,9 @@ mutual
   toJSON U UNIT
     = JNull
 
-  toJSON val (ARRAY ty n)
+  toJSON val (VECTOR ty n)
     =    let n  = (JNumber (cast n))
-      in let xs = arrayToJSON val ty
+      in let xs = vectorToJSON val ty
 
       in JArray xs
 
@@ -154,27 +154,27 @@ isElem s (F s' x :: xs)
 
 mutual
 
-  arrayFromJSON : {ty  : _}
-               -> (prf : Marshable ty)
-               -> (x   : Nat)
-               -> (nat : Nat)
-               -> (rs  : List JSON)
-                      -> Capable (Value Nil (ARRAY ty nat))
-  arrayFromJSON prf _ 0 []
-    = pure ArrayEmpty
+  vectorFromJSON : {ty  : _}
+                -> (prf : Marshable ty)
+                -> (x   : Nat)
+                -> (nat : Nat)
+                -> (rs  : List JSON)
+                       -> Capable (Value Nil (VECTOR ty nat))
+  vectorFromJSON prf _ 0 []
+    = pure VectorEmpty
 
-  arrayFromJSON prf n (S k) []
-    = throw (MissingElems (S k) (ARRAY prf n))
+  vectorFromJSON prf n (S k) []
+    = throw (MissingElems (S k) (VECTOR prf n))
 
-  arrayFromJSON prf n 0 (x :: xs)
+  vectorFromJSON prf n 0 (x :: xs)
     = throw (RedundantElems
-                            (ARRAY prf n)
+                            (VECTOR prf n)
                             (JArray (x::xs)))
 
-  arrayFromJSON prf n (S k) (x :: xs)
+  vectorFromJSON prf n (S k) (x :: xs)
     = do x <- fromJSON prf x
-         xs <- arrayFromJSON prf n k xs
-         pure (ArrayCons x xs)
+         xs <- vectorFromJSON prf n k xs
+         pure (VectorCons x xs)
 
 
   tupleFromJSON : (prfs  : DVect Base Marshable n types)
@@ -253,8 +253,8 @@ mutual
   fromJSON UNIT JNull
     = pure U
 
-  fromJSON (ARRAY x n) (JArray rs)
-    = arrayFromJSON x n n rs
+  fromJSON (VECTOR x n) (JArray rs)
+    = vectorFromJSON x n n rs
 
   fromJSON (TUPLE x) (JObject rs)
     = do (x::y::zs) <- tupleFromJSON x 1 rs

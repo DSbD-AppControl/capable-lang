@@ -95,11 +95,11 @@ mutual
   synth ctxt (TyUnit fc)
     = pure (_ ** TyUnit)
 
-  synth ctxt (TyArray fc n ty)
+  synth ctxt (TyVector fc n ty)
     = do (ty ** tm) <- synth ctxt ty
          ifThenElse (n < 0)
                     (throwAt fc NatExpected)
-                    (pure (_ ** TyArray tm (cast n)))
+                    (pure (_ ** TyVector tm (cast n)))
 
   synth ctxt (TyTuple fc prf (a::b::fs))
     = do (_ ** _ ** (a :: b :: args)) <- synthArgs' ctxt (a::b::fs)
@@ -200,8 +200,8 @@ mutual
     = pure TyInt
   reflect delta BOOL
     = pure TyBool
-  reflect delta (ARRAY x k)
-    = pure (TyArray !(reflect delta x) k)
+  reflect delta (VECTOR x k)
+    = pure (TyVector !(reflect delta x) k)
 
   reflect delta (TUPLE xs)
     = pure (TyTuple !(reflectArgs' delta xs))

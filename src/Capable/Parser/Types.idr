@@ -33,8 +33,8 @@ baseType' =   givesWithLoc "Char"   (null CHAR)
 
 mutual
 
-  array : Rule TYPE
-  array
+  vector : Rule TYPE
+  vector
     = do s <- Toolkit.location
          symbol "["
          i <- int
@@ -42,7 +42,7 @@ mutual
          l <- type
          symbol "]"
          e <- Toolkit.location
-         pure (un (ARRAY i) (newFC s e) l)
+         pure (un (VECTOR i) (newFC s e) l)
 
   handle : Rule TYPE
   handle
@@ -104,7 +104,7 @@ mutual
   type
       =assert_total -- I know...
       $ (   handle
-      <|> array
+      <|> vector
       <|> datatype
       <|> baseType'
       <|> ref

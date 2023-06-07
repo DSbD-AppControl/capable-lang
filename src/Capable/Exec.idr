@@ -328,13 +328,13 @@ mutual
            when env res tt ff
 
     -- ### Array's & Operations
-    eval env heap ArrayEmpty = return heap ArrayEmpty
+    eval env heap VectorEmpty = return heap VectorEmpty
 
-    eval env heap (ArrayCons x xs)
+    eval env heap (VectorCons x xs)
       = do Value h'  x  p1 <- eval env heap x
            Value h'' xs p2 <- eval (weaken p1 env) h'   xs
 
-           pure (Value h'' (ArrayCons (weaken p2 x) xs) (trans p1 p2))
+           pure (Value h'' (VectorCons (weaken p2 x) xs) (trans p1 p2))
 
 
     eval env heap (Index idx array)

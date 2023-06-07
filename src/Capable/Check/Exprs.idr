@@ -313,29 +313,29 @@ mutual
     = do T _ s <- check fc env TyStr s
          pure (_ ** Builtin Print [s])
 
-  -- ## Arrays
-  synth env (ArrayEmpty fc)
+  -- ## Vectors
+  synth env (VectorEmpty fc)
     = unknown fc
 
-  synth env (ArrayCons fc head (ArrayEmpty _))
+  synth env (VectorCons fc head (VectorEmpty _))
     = do (tyH ** head) <- synth env head
          -- Could do a check but we don't need to.
-         pure (_ ** ArrayCons head ArrayEmpty)
+         pure (_ ** VectorCons head VectorEmpty)
 
-  synth env (ArrayCons fc head tail)
+  synth env (VectorCons fc head tail)
     = do (tyH ** head) <- synth env head
-         (ARRAY ty' n ** tail) <- synth env tail
-           | (ty ** _) => throwAt fc (ArrayExpected ty)
+         (VECTOR ty' n ** tail) <- synth env tail
+           | (ty ** _) => throwAt fc (VectorExpected ty)
 
          Refl <- compare fc tyH ty'
 
-         pure (_ ** ArrayCons head tail)
+         pure (_ ** VectorCons head tail)
 
   synth env (Index fc idx tm)
     = do T tyTm idx <- check fc env TyInt idx
 
-         (ARRAY ty m ** tm) <- synth env tm
-           | (ty ** _) => throwAt fc (ArrayExpected ty)
+         (VECTOR ty m ** tm) <- synth env tm
+           | (ty ** _) => throwAt fc (VectorExpected ty)
 
          pure (_ ** Index idx tm)
 
@@ -657,11 +657,11 @@ mutual
        -> (syn      : Expr e)
                    -> Capable (The rs ds ss gs ls t)
 
-  check {t = (ARRAY type 0)} fc env tyTm (ArrayEmpty fc')
-    = pure (T tyTm ArrayEmpty)
+  check {t = (VECTOR type 0)} fc env tyTm (VectorEmpty fc')
+    = pure (T tyTm VectorEmpty)
 
-  check {t = (ARRAY type (S k))} fc env tyTm (ArrayEmpty fc')
-    = mismatchAt fc (ARRAY type (S k)) (ARRAY type Z)
+  check {t = (VECTOR type (S k))} fc env tyTm (VectorEmpty fc')
+    = mismatchAt fc (VECTOR type (S k)) (VECTOR type Z)
 
   check {t = (UNION (a:::as))} fc env tyTm (Tag fc' s l)
     = do (ty ** loc) <- isElem fc fc' s (a::as)

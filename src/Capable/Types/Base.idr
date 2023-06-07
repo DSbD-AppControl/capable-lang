@@ -62,7 +62,7 @@ namespace Ty
       -- Reference
       REF : Base -> Base
 
-      ARRAY : Base -> Nat -> Base
+      VECTOR : Base -> Nat -> Base
 
       TUPLE : (fields : Vect (S (S n)) Base) -> Base
 
@@ -101,10 +101,10 @@ namespace Diag
 
       REF : (a,b : Base) -> Diag (REF a) (REF b)
 
-      ARRAY : (a,b : Base)
+      VECTOR : (a,b : Base)
            -> (x,y : Nat)
-                  -> Diag (ARRAY a x)
-                          (ARRAY b y)
+                  -> Diag (VECTOR a x)
+                          (VECTOR b y)
 
       TUPLE : (xs : Vect (S (S n)) Base)
            -> (ys : Vect (S (S m)) Base)
@@ -130,7 +130,7 @@ namespace Diag
   diag UNIT         UNIT        = Just UNIT
   diag (HANDLE x)   (HANDLE y)  = Just (HANDLE x y)
   diag (REF x)      (REF y)     = Just (REF x y)
-  diag (ARRAY x k)  (ARRAY y l) = Just (ARRAY x y k l)
+  diag (VECTOR x k)  (VECTOR y l) = Just (VECTOR x y k l)
   diag (TUPLE xs)   (TUPLE ys)  = Just (TUPLE xs ys)
   diag (UNION xs)   (UNION ys)  = Just (UNION xs ys)
   diag (RECORD xs)  (RECORD ys) = Just (RECORD xs ys)
@@ -146,7 +146,7 @@ namespace Diag
   diagNot UNIT        = absurd
   diagNot (HANDLE _)  = absurd
   diagNot (REF _)     = absurd
-  diagNot (ARRAY _ _) = absurd
+  diagNot (VECTOR _ _) = absurd
   diagNot (TUPLE _)   = absurd
   diagNot (UNION _ )  = absurd
   diagNot (RECORD _ ) = absurd
@@ -170,7 +170,7 @@ namespace Diag
         = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
                      pure Refl
 
-      _ | (Just (ARRAY x y k j))
+      _ | (Just (VECTOR x y k j))
         = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
                      Refl <- decEq k j `otherwise` (\Refl => Refl)
                      pure Refl
@@ -230,7 +230,7 @@ type (REF x)
   $ parens
   $ pretty "REF" <++> type x
 
-type (ARRAY x k)
+type (VECTOR x k)
   = group
   $ brackets
   $ hcat
@@ -305,7 +305,7 @@ mutual
       BOOL  : Marshable BOOL
       UNIT  : Marshable UNIT
 
-      ARRAY : Marshable ty -> (n : Nat) -> Marshable (ARRAY ty n)
+      VECTOR : Marshable ty -> (n : Nat) -> Marshable (VECTOR ty n)
 
       TUPLE : DVect Base Marshable (S (S n)) types -> Marshable (TUPLE types)
 
@@ -320,9 +320,9 @@ mutual
       REF : MarshableNot (REF r)
       HANDLE : MarshableNot (HANDLE r)
 
-      ARRAYNot : (prf : MarshableNot ty )
+      VECTORNot : (prf : MarshableNot ty )
               -> (n   : Nat)
-                     -> MarshableNot (ARRAY ty n)
+                     -> MarshableNot (VECTOR ty n)
 
       TUPLENot : (prf : Any MarshableNot types)
                      -> MarshableNot (TUPLE types)
@@ -373,7 +373,7 @@ mutual
     decEq BOOL BOOL Refl = Refl
     decEq UNIT UNIT Refl = Refl
 
-    decEq (ARRAY y n) (ARRAY x n) Refl
+    decEq (VECTOR y n) (VECTOR x n) Refl
       = case decEq y x Refl of
          Refl => Refl
 
@@ -397,7 +397,7 @@ namespace Marshall
   mkPretty INT  = pretty "Int"
   mkPretty BOOL = pretty "Bool"
   mkPretty UNIT = pretty "Unit"
-  mkPretty (ARRAY x n)
+  mkPretty (VECTOR x n)
     = group
     $ brackets
     $ hcat
@@ -447,7 +447,7 @@ namespace Marshall
   prettyNot HANDLE
     = pretty "Is a handle."
 
-  prettyNot (ARRAYNot prf n)
+  prettyNot (VECTORNot prf n)
     = pretty "Contains a Reference/Handle"
   prettyNot (TUPLENot prf)
     = pretty "Contains a Reference/Handle"
@@ -548,12 +548,12 @@ mutual
     marshable (REF x)
       = No REF absurd
 
-    marshable (ARRAY ty n) with (marshable ty)
-      marshable (ARRAY ty n) | (Yes prf)
-        = Yes (ARRAY prf n)
-      marshable (ARRAY ty n) | (No prf no)
-        = No (ARRAYNot prf n)
-             (\case (ARRAY x n) => no x)
+    marshable (VECTOR ty n) with (marshable ty)
+      marshable (VECTOR ty n) | (Yes prf)
+        = Yes (VECTOR prf n)
+      marshable (VECTOR ty n) | (No prf no)
+        = No (VECTORNot prf n)
+             (\case (VECTOR x n) => no x)
 
     marshable (TUPLE fields) with (marshable fields)
       marshable (TUPLE fields) | (Yes prf)
@@ -594,7 +594,7 @@ namespace IsUnion
       HANDLE : IsUnionNot (HANDLE ref)
       REF    : IsUnionNot (REF ref)
 
-      ARRAY : IsUnionNot (ARRAY ty n)
+      VECTOR : IsUnionNot (VECTOR ty n)
 
       TUPLE : IsUnionNot (TUPLE types)
 
@@ -625,7 +625,7 @@ namespace IsUnion
   Uninhabited (IsUnion (REF u)) where
     uninhabited (U _) impossible
 
-  Uninhabited (IsUnion (ARRAY x u)) where
+  Uninhabited (IsUnion (VECTOR x u)) where
     uninhabited (U _) impossible
 
   Uninhabited (IsUnion (TUPLE u)) where
@@ -654,7 +654,7 @@ namespace IsUnion
   isUnion UNIT            = No UNIT   absurd
   isUnion (HANDLE x)      = No HANDLE absurd
   isUnion (REF x)         = No REF    absurd
-  isUnion (ARRAY x k)     = No ARRAY  absurd
+  isUnion (VECTOR x k)    = No VECTOR  absurd
   isUnion (RECORD k)      = No RECORD absurd
   isUnion (TUPLE fields)  = No TUPLE  absurd
   --isUnion (FUNC args ret) = No absurd

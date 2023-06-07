@@ -121,14 +121,14 @@ mutual
          e <- Toolkit.location
          pure (un (BUN FETCH) (newFC s e) ex)
 
-  array : Rule EXPR
-  array
+  vector : Rule EXPR
+  vector
     = do s <- Toolkit.location
          symbol "{"
          xs <- sepBy1 (symbol ",") expr
          symbol "}"
          e <- Toolkit.location
-         -- Some rewriting to turn array literals into cons arrays.
+         -- Some rewriting to turn vector literals into cons vectors.
          pure (foldr (cons e) (null NIL (newFC e e)) xs)
     where
       cons : Location -> EXPR -> EXPR -> EXPR
@@ -514,7 +514,7 @@ mutual
       <|> match
       <|> loop
       <|> cond
-      <|> array
+      <|> vector
       <|> annot
       <|> pair
       <|> recor
@@ -539,7 +539,7 @@ mutual
       <|> (trace "\{show !Toolkit.location} match"     match)
       <|> (trace "\{show !Toolkit.location} loop"      loop   )
       <|> (trace "\{show !Toolkit.location} if"        cond   )
-      <|> (trace "\{show !Toolkit.location} ar"        array  )
+      <|> (trace "\{show !Toolkit.location} ar"        vector  )
       <|> (trace "\{show !Toolkit.location} the"       annot  )
       <|> (trace "\{show !Toolkit.location} pait"      pair   )
       <|> (trace "\{show !Toolkit.location} union"     union  )

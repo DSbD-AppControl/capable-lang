@@ -61,10 +61,10 @@ mutual
       TyBool : (fc : FileContext) -> Ty (Branch BOOL fc Nil)
       TyUnit : (fc : FileContext) -> Ty (Branch UNIT fc Nil)
 
-      TyArray : (fc : FileContext)
+      TyVector : (fc : FileContext)
              -> (n  : Int)
              -> (ty : Ty t)
-                   -> Ty (Branch (ARRAY n) fc [t])
+                   -> Ty (Branch (VECTOR n) fc [t])
 
       TyTuple : {0     fields' : Vect (S (S n)) Raw.AST.TYPE}
              -> (fc  : FileContext)
@@ -123,7 +123,7 @@ mutual
   toType (Branch (HANDLE x) annot Nil) = TyHandle annot x
   toType (Branch (VARTY str) annot Nil) = TyVar (MkRef annot str) R
   toType (Branch REF annot [t]) = TyRef annot (toType t)
-  toType (Branch (ARRAY i) annot [t]) = TyArray annot i (toType t)
+  toType (Branch (VECTOR i) annot [t]) = TyVector annot i (toType t)
   toType (Branch PROD fc fs)
     = let (vs ** prf) = asVect fs
       in TyTuple fc prf

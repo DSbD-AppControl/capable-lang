@@ -104,16 +104,16 @@ mutual
       -- ## Arrays
 
       -- ### Constructors
-      ArrayEmpty : Expr roles types globals stack_g stack_l (ARRAY type Z)
+      VectorEmpty : Expr roles types globals stack_g stack_l (VECTOR type Z)
 
-      ArrayCons : Expr roles types globals stack_g stack_l        type
-               -> Expr roles types globals stack_g stack_l (ARRAY type    n)
-               -> Expr roles types globals stack_g stack_l (ARRAY type (S n))
+      VectorCons : Expr roles types globals stack_g stack_l        type
+               -> Expr roles types globals stack_g stack_l (VECTOR type    n)
+               -> Expr roles types globals stack_g stack_l (VECTOR type (S n))
 
       -- ### Eliminators
       Index : {n : Nat}
            -> (idx   : Expr roles types globals stack_g stack_l INT)
-           -> (array : Expr roles types globals stack_g stack_l (ARRAY type n))
+           -> (array : Expr roles types globals stack_g stack_l (VECTOR type n))
                     -> Expr roles types globals stack_g stack_l        type
 
       -- ## Products

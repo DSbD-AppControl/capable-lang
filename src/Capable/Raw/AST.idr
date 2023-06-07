@@ -168,7 +168,7 @@ namespace Shape
     HANDLE : HandleKind -> NULL Shape TYPE
     VARTY  : String -> NULL Shape TYPE
     REF    : UN Shape TYPE TYPE
-    ARRAY  : Int -> UN Shape TYPE TYPE
+    VECTOR  : Int -> UN Shape TYPE TYPE
 
     PROD  : Shape TYPE (S (S n)) (replicate (S (S n)) TYPE)
 
@@ -342,7 +342,7 @@ namespace Shape
     show (HANDLE x)      = "(HANDLE \{show x})"
     show (VARTY str)     = "(VARTY \{show str})"
     show REF             = "REF"
-    show (ARRAY i)       = "(ARRAY \{show i})"
+    show (VECTOR i)       = "(VECTOR \{show i})"
     show PROD            = "PROD"
     show (FIELD str)     = "(FIELD \{show str})"
     show (DTYPE x)       = "(DTYPE \{show x})"

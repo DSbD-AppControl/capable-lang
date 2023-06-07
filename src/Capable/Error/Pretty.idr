@@ -153,9 +153,9 @@ Show (Typing.Error) where
   show Uncomparable
     = "Not a comparable type."
   show (NatExpected)
-    = "Array indices are natural numbers."
-  show (ArrayAppend h t)
-    = unlines ["Type Mismatch when adding to Array:"
+    = "Vector indices are natural numbers."
+  show (VectorAppend h t)
+    = unlines ["Type Mismatch when adding to Vector:"
               , "  Given:"
               , "    \{show h}"
               , "  Expected:"
@@ -193,8 +193,8 @@ Show (Typing.Error) where
   show (SessionExpected ty)
     = "A session was expected but was given:\n\t\{show ty}"
 
-  show (ArrayExpected ty)
-    = "Array expected but was given:\n\t\{show ty}"
+  show (VectorExpected ty)
+    = "Vector expected but was given:\n\t\{show ty}"
   show (NotBound ref)
     = "Not a bound identifier:\n\t\{show (get ref)}"
 

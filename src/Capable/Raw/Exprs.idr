@@ -105,11 +105,11 @@ mutual
 
       -- ## Data
 
-      -- ### Arrays
-      ArrayEmpty : (fc : FileContext)
+      -- ### Vectors
+      VectorEmpty : (fc : FileContext)
                 -> Expr (Branch NIL fc Nil)
 
-      ArrayCons : (fc : FileContext)
+      VectorCons : (fc : FileContext)
                -> (head : Expr h)
                -> (tail : Expr t)
                        -> Expr (Branch CONS fc [h,t])
@@ -274,10 +274,10 @@ mutual
     = OpUn fc k (toExpr o)
 
   toExpr (Branch NIL fc Nil)
-    = ArrayEmpty fc
+    = VectorEmpty fc
 
   toExpr (Branch CONS fc [h,t])
-    = ArrayCons fc (toExpr h) (toExpr t)
+    = VectorCons fc (toExpr h) (toExpr t)
 
   toExpr (Branch IDX fc [i,a])
     = Index fc (toExpr i) (toExpr a)
