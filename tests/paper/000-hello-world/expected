@@ -12,8 +12,8 @@ Hello World
 # Finished Type Checking
 ```
 \begin{VerbatimInline}
-\CapableKeyword{type} \CapableBound{point} = \CapableType{struct} \CapableType{\{}\CapableBound{x} : \CapableType{Int}\CapableType{; }\CapableBound{y} : \CapableType{Int}\CapableType{\}}
-\CapableKeyword{type} \CapableBound{either} = \CapableType{union} \CapableType{\{}\CapableBound{left} : \CapableType{String}\CapableType{; }\CapableBound{right} : \CapableType{Int}\CapableType{\}}
+\CapableKeyword{type} \CapableBound{point} = \CapableType{struct} \{\CapableBound{x} : \CapableType{Int}; \CapableBound{y} : \CapableType{Int}\}
+\CapableKeyword{type} \CapableBound{either} = \CapableType{union} \{\CapableBound{left} : \CapableType{String}; \CapableBound{right} : \CapableType{Int}\}
 \CapableKeyword{func} \CapableBound{printLn} (\CapableBound{str} : \CapableType{String}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableBound{str});

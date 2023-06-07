@@ -78,6 +78,7 @@ session calcutronServer <OneShotCalcutron as Server> () -> Bool
         {
           crash(False)
         }
+      end(True)
     }
     when suber (xy)
     {
@@ -86,6 +87,7 @@ session calcutronServer <OneShotCalcutron as Server> () -> Bool
         {
           crash(False)
         }
+      end(True)
     }
     when diver (xy)
     {
@@ -96,6 +98,7 @@ session calcutronServer <OneShotCalcutron as Server> () -> Bool
           {
             crash(False)
           }
+        end(False)
       } else
       {
         send [responseEffect] Client answerE(div(get_x(xy), get_y(xy)))
@@ -103,6 +106,7 @@ session calcutronServer <OneShotCalcutron as Server> () -> Bool
           {
             crash(False)
           }
+        end(True)
       }
     }
     when muler (xy)
@@ -112,6 +116,7 @@ session calcutronServer <OneShotCalcutron as Server> () -> Bool
         {
           crash(False)
         }
+      end(True)
     }
   } catch
   {
@@ -126,6 +131,16 @@ session calcutronClientAdder <OneShotCalcutron as Client> ( x : Int
     {
       crash(crashed(unit))
     }
+  recv [responsePure] Server
+  {
+    when answer (i)
+    {
+      end(result(i))
+    }
+  } catch
+  {
+    crash(crashed(unit))
+  }
 }
 session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) -> MaybeAnswer
 {
@@ -138,6 +153,16 @@ session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) ->
         {
           crash(crashed(unit))
         }
+      recv [responsePure] Server
+      {
+        when answer (i)
+        {
+          end(result(i))
+        }
+      } catch
+      {
+        crash(crashed(unit))
+      }
     }
     when suber(b)
     {
@@ -146,6 +171,16 @@ session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) ->
         {
           crash(crashed(unit))
         }
+      recv [responsePure] Server
+      {
+        when answer (i)
+        {
+          end(result(i))
+        }
+      } catch
+      {
+        crash(crashed(unit))
+      }
     }
     when diver(b)
     {
@@ -154,6 +189,20 @@ session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) ->
         {
           crash(crashed(unit))
         }
+      recv [responseEffect] Server
+      {
+        when divByZero (i)
+        {
+          end(dz(unit))
+        }
+        when answerE (i)
+        {
+          end(result(i))
+        }
+      } catch
+      {
+        crash(crashed(unit))
+      }
     }
     when muler(b)
     {
@@ -162,6 +211,16 @@ session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) ->
         {
           crash(crashed(unit))
         }
+      recv [responsePure] Server
+      {
+        when answer (i)
+        {
+          end(result(i))
+        }
+      } catch
+      {
+        crash(crashed(unit))
+      }
     }
   }
 }

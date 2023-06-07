@@ -17,7 +17,7 @@ My First Program with files
   \CapableKeyword{print}(\CapableBound{str});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
 \}
-\CapableKeyword{type} \CapableBound{SubProcess} = \CapableType{struct} \CapableType{\{}\CapableBound{writeTo} : PROC\CapableType{; }\CapableBound{readFrom} : PROC\CapableType{\}}
+\CapableKeyword{type} \CapableBound{SubProcess} = \CapableType{struct} \{\CapableBound{writeTo} : \CapableType{PROC}; \CapableBound{readFrom} : \CapableType{PROC}\}
 \CapableKeyword{func} \CapableBound{closeFHS} (\CapableBound{fhs} : \CapableType{\CapableBound{SubProcess}}) -> \CapableType{Unit}
 \{
   \CapableKeyword{close}(\CapableKeyword{get}[writeTo](\CapableBound{fhs}));

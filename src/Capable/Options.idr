@@ -69,7 +69,7 @@ Eq Opts where
 convOpts : Arg -> Opts -> Maybe Opts
 
 convOpts (File x) o
-  = Just $ { file $= (::) x} o
+  = Just $ { file := (file o) ++ [x]} o
 
 convOpts (KeyValue k v) o
   = Just o

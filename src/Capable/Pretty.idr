@@ -117,9 +117,9 @@ tuple f (ty :: rest)
 
 typeFields : List (Doc KIND) -> Doc KIND
 typeFields
-  = group . encloseSep (flatAlt (typeStr "{ ") (typeStr "{"))
-                       (flatAlt (typeStr " }") (typeStr "}"))
-                       (typeStr "; ")
+  = group . encloseSep (flatAlt ("{ ") ("{"))
+                       (flatAlt (" }") ("}"))
+                       ("; ")
 
 type : Ty t -> Doc KIND
 type (TyVar r prf)
@@ -153,9 +153,9 @@ type (TyTuple fc prf fs)
   = tupled (assert_total $ tuple type fs)
 
   where tupled : List (Doc KIND) -> Doc KIND
-        tupled = group . encloseSep (flatAlt (typeStr "( ") (typeStr "("))
-                                    (flatAlt (typeStr " )") (typeStr ")"))
-                                    (typeStr ", ")
+        tupled = group . encloseSep (flatAlt ("( ") ("("))
+                                    (flatAlt (" )") (")"))
+                                    (", ")
 
 type (TyData fc STRUCT prf fs)
   = group
@@ -177,9 +177,9 @@ type (TyRef fc ty)
   ]
 
 type (TyHandle fc FILE)
-  = pretty "FILE"
+  = typeStr "FILE"
 type (TyHandle fc PROCESS)
-  = pretty "PROC"
+  = typeStr "PROC"
 
 farg : Arg a -> Doc KIND
 farg (A fc n ty)
@@ -248,9 +248,9 @@ handlekind PROCESS = keyword "popen"
 
 structs : List (Doc KIND) -> Doc KIND
 structs
-  = group . encloseSep (flatAlt (typeStr "{ ") (typeStr "{"))
-                       (flatAlt (typeStr " }") (typeStr "}"))
-                       (typeStr ", ")
+  = group . encloseSep (flatAlt ("{ ") ("{"))
+                       (flatAlt (" }") ("}"))
+                       (", ")
 
 expr : Raw.Exprs.Expr b -> Doc KIND
 expr (Hole ref prf)
