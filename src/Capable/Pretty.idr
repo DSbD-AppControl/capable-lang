@@ -140,6 +140,11 @@ type (TyBool fc)
 type (TyUnit fc)
   = typeStr "Unit"
 
+type (TyList fc ty)
+  = group
+  $ brackets {ldelim=typeDoc lbracket} {rdelim=typeDoc rbracket}
+  $ type ty
+
 type (TyVector fc n ty)
   = group
   $ brackets {ldelim=typeDoc lbracket} {rdelim=typeDoc rbracket}
@@ -341,10 +346,17 @@ expr (OpUn fc (OPEN x y) o)
   = group
   $ (handlekind x <+> tupled [prettyMode y, expr o])
 
--- @TODO
-expr (VectorEmpty fc) = lbrace'
-expr (VectorCons fc head tail)
-  = annotate TODO (expr head <+> comma <+> expr tail)
+expr (MkList fc _ xs)
+  = list (args xs)
+  where args : Vect.Quantifiers.All.All Exprs.Expr as -> List (Doc KIND)
+        args [] = []
+        args (x::xs) = expr x :: args xs
+
+expr (MkVect fc _ xs)
+  = vect (args xs)
+  where args : Vect.Quantifiers.All.All Exprs.Expr as -> List (Doc KIND)
+        args [] = []
+        args (x::xs) = expr x :: args xs
 
 expr (Index fc idx tm)
   = duo "index" (expr idx) (expr tm)

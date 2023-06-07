@@ -169,7 +169,7 @@ namespace Shape
     VARTY  : String -> NULL Shape TYPE
     REF    : UN Shape TYPE TYPE
     VECTOR  : Int -> UN Shape TYPE TYPE
-
+    LISTY  : UN Shape TYPE TYPE
     PROD  : Shape TYPE (S (S n)) (replicate (S (S n)) TYPE)
 
     FIELD : String -> UN Shape FIELD TYPE
@@ -202,8 +202,9 @@ namespace Shape
 
     -- ### Data
     -- #### Arrays
-    NIL   : NULL Shape EXPR
-    CONS  : BIN Shape EXPR EXPR EXPR
+    LIST  : Shape EXPR n (replicate n EXPR)
+    VECT  : Shape EXPR n (replicate n EXPR)
+
     IDX   : BIN Shape EXPR EXPR EXPR
     SLICE : TRI Shape EXPR EXPR EXPR EXPR
 
@@ -343,6 +344,7 @@ namespace Shape
     show (VARTY str)     = "(VARTY \{show str})"
     show REF             = "REF"
     show (VECTOR i)       = "(VECTOR \{show i})"
+    show (LISTY)       = "(LIST)"
     show PROD            = "PROD"
     show (FIELD str)     = "(FIELD \{show str})"
     show (DTYPE x)       = "(DTYPE \{show x})"
@@ -356,8 +358,8 @@ namespace Shape
     show (CONST p v)     = "(CONST \{show p})"
     show (BBIN x)        = "(BBIN \{show x})"
     show (BUN x)         = "(BUN \{show x})"
-    show NIL             = "NIL"
-    show CONS            = "CONS"
+    show LIST             = "LIST"
+    show VECT            = "VECT"
     show IDX             = "IDX"
     show SLICE           = "SLICE"
     show TUPLE           = "TUPLE"

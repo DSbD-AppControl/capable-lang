@@ -190,11 +190,8 @@ mutual
       MkList : List (Value store ty)
             -> Value store (LIST ty)
 
-      VectorEmpty : Value store (VECTOR type Z)
-
-      VectorCons : Value store        type
-               -> Value store (VECTOR type    n)
-               -> Value store (VECTOR type (S n))
+      MkVect : Vect n (Value store ty)
+            -> Value store (VECTOR ty n)
 
       Tuple : {ts : _} -> DVect Ty.Base (Value store) (S (S n)) ts
            -> Value store (TUPLE ts)
@@ -245,13 +242,11 @@ Pretty (Value store type) where
     $ assert_total
     $ map pretty xs
 
-  pretty VectorEmpty
-    = pretty "{}"
-
-  pretty (VectorCons x y)
-    = group
-    $ parens
-    $ hsep [pretty x, pretty "::", pretty y]
+  pretty (MkVect xs)
+    = vect
+    $ Base.toList
+    $ assert_total
+    $ map pretty xs
 
   pretty (Tuple x)
     = tupled
@@ -293,24 +288,18 @@ Show (Value x type) where
 public export
 size : Value store (VECTOR type n)
     -> (Singleton n)
-size VectorEmpty = (Val Z)
-size (VectorCons x y) = let Val y' = (size y) in Val (S y')
-
+size (MkVect [])
+  = Val 0
+size (MkVect (x :: xs))
+  = let Val y' = (size (MkVect xs)) in Val (S y')
 
 ||| Best way to do it.
 public export
 index : (idx : Fin n)
      -> (xs  : Value store (VECTOR type n))
             -> Value store        type
-
-index FZ VectorEmpty impossible
-index (FS x) VectorEmpty impossible
-
-index FZ (VectorCons x y)
-  = x
-index (FS z) (VectorCons x y)
-  = index z y
-
+index idx (MkVect xs)
+  = Vect.index idx xs
 
 -- Working with intrinsically typed heaps requires us to adjust the
 -- addresses when the heap is modified. This requires we also update
@@ -332,9 +321,10 @@ mutual
   weaken prf (MkList xs)
     = MkList
     $ map (weaken prf) xs
-  weaken prf (VectorEmpty) = VectorEmpty
-  weaken prf (VectorCons x xs)
-    = VectorCons (weaken prf x) (weaken prf xs)
+
+  weaken prf (MkVect xs)
+    = MkVect
+    $ map (weaken prf) xs
 
   weaken prf (Record xs)
     = Record (weaken prf xs)

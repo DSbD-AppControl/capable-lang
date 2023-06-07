@@ -100,19 +100,24 @@ mutual
           -> Expr roles types globals stack_g stack_l a
           -> Expr roles types globals stack_g stack_l a
 
+      -- ## Lists
+      -- ### Constructors
       MkList : List (Expr roles types globals stack_g stack_l ty)
             -> Expr roles types globals stack_g stack_l (LIST ty)
 
       -- ## Arrays
 
       -- ### Constructors
-      VectorEmpty : Expr roles types globals stack_g stack_l (VECTOR type Z)
-
-      VectorCons : Expr roles types globals stack_g stack_l        type
-               -> Expr roles types globals stack_g stack_l (VECTOR type    n)
-               -> Expr roles types globals stack_g stack_l (VECTOR type (S n))
+      MkVect : Vect n (Expr roles types globals stack_g stack_l ty)
+            -> Expr roles types globals stack_g stack_l (VECTOR ty n)
+--      VectorEmpty : Expr roles types globals stack_g stack_l (VECTOR type Z)
+--
+--      VectorCons : Expr roles types globals stack_g stack_l        type
+--               -> Expr roles types globals stack_g stack_l (VECTOR type    n)
+--               -> Expr roles types globals stack_g stack_l (VECTOR type (S n))
 
       -- ### Eliminators
+
       Index : {n : Nat}
            -> (idx   : Expr roles types globals stack_g stack_l INT)
            -> (array : Expr roles types globals stack_g stack_l (VECTOR type n))

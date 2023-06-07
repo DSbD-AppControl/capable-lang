@@ -61,6 +61,10 @@ mutual
       TyBool : (fc : FileContext) -> Ty (Branch BOOL fc Nil)
       TyUnit : (fc : FileContext) -> Ty (Branch UNIT fc Nil)
 
+      TyList : (fc : FileContext)
+            -> (ty : Ty t)
+                  -> Ty (Branch LISTY fc [t])
+
       TyVector : (fc : FileContext)
              -> (n  : Int)
              -> (ty : Ty t)
@@ -123,6 +127,7 @@ mutual
   toType (Branch (HANDLE x) annot Nil) = TyHandle annot x
   toType (Branch (VARTY str) annot Nil) = TyVar (MkRef annot str) R
   toType (Branch REF annot [t]) = TyRef annot (toType t)
+  toType (Branch LISTY annot [t]) = TyList annot (toType t)
   toType (Branch (VECTOR i) annot [t]) = TyVector annot i (toType t)
   toType (Branch PROD fc fs)
     = let (vs ** prf) = asVect fs

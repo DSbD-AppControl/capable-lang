@@ -60,12 +60,12 @@ mutual
   vectorToJSON : (value : Value store (VECTOR ty n) )
               -> (prf   : Marshable ty)
                        -> List JSON
-  vectorToJSON VectorEmpty prf
+  vectorToJSON (MkVect []) prf
     = Nil
-  vectorToJSON (VectorCons x y) prf
-    =    let x  = toJSON x prf
-      in let xs = vectorToJSON y prf
-      in x::xs
+  vectorToJSON (MkVect (x :: xs)) prf
+    =  let x  = toJSON x prf
+    in let xs = assert_total $ vectorToJSON (MkVect xs) prf
+    in x::xs
 
   tupleToJSON : (c     : Nat )
              -> (value : DVect Base (Value store) n types)
@@ -166,7 +166,7 @@ mutual
                 -> (rs  : List JSON)
                        -> Capable (Value Nil (VECTOR ty nat))
   vectorFromJSON prf _ 0 []
-    = pure VectorEmpty
+    = pure (MkVect Nil)
 
   vectorFromJSON prf n (S k) []
     = throw (MissingElems (S k) (VECTOR prf n))
@@ -178,8 +178,8 @@ mutual
 
   vectorFromJSON prf n (S k) (x :: xs)
     = do x <- fromJSON prf x
-         xs <- vectorFromJSON prf n k xs
-         pure (VectorCons x xs)
+         (MkVect xs) <- vectorFromJSON prf n k xs
+         pure (MkVect (x::xs))
 
 
   tupleFromJSON : (prfs  : DVect Base Marshable n types)

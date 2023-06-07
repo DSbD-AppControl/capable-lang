@@ -124,17 +124,25 @@ mutual
   vector : Rule EXPR
   vector
     = do s <- Toolkit.location
-         symbol "{"
+         symbol "<"
          xs <- sepBy1 (symbol ",") expr
-         symbol "}"
+         symbol ">"
          e <- Toolkit.location
          -- Some rewriting to turn vector literals into cons vectors.
-         pure (foldr (cons e) (null NIL (newFC e e)) xs)
-    where
-      cons : Location -> EXPR -> EXPR -> EXPR
-      cons e x xs
-        = let fc = { end := e} (getFC x)
-          in bin CONS fc x xs
+         pure (Branch VECT (newFC s e)
+                      (DVect.fromList $ head xs :: (tail xs)))
+
+  list : Rule EXPR
+  list
+    = do s <- Toolkit.location
+         symbol "["
+         xs <- sepBy1 (symbol ",") expr
+         symbol "]"
+         e <- Toolkit.location
+         -- Some rewriting to turn vector literals into cons vectors.
+         pure (Branch LIST (newFC s e)
+                      (DVect.fromList $ head xs :: (tail xs)))
+
 
   unary : Rule EXPR
   unary
@@ -515,6 +523,7 @@ mutual
       <|> loop
       <|> cond
       <|> vector
+      <|> list
       <|> annot
       <|> pair
       <|> recor
@@ -539,7 +548,8 @@ mutual
       <|> (trace "\{show !Toolkit.location} match"     match)
       <|> (trace "\{show !Toolkit.location} loop"      loop   )
       <|> (trace "\{show !Toolkit.location} if"        cond   )
-      <|> (trace "\{show !Toolkit.location} ar"        vector  )
+      <|> (trace "\{show !Toolkit.location} vec"        vector  )
+      <|> (trace "\{show !Toolkit.location} list"        list  )
       <|> (trace "\{show !Toolkit.location} the"       annot  )
       <|> (trace "\{show !Toolkit.location} pait"      pair   )
       <|> (trace "\{show !Toolkit.location} union"     union  )

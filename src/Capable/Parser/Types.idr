@@ -33,6 +33,15 @@ baseType' =   givesWithLoc "Char"   (null CHAR)
 
 mutual
 
+  list : Rule TYPE
+  list
+    = do s <- Toolkit.location
+         symbol "["
+         l <- type
+         symbol "]"
+         e <- Toolkit.location
+         pure (un LISTY (newFC s e) l)
+
   vector : Rule TYPE
   vector
     = do s <- Toolkit.location
@@ -105,6 +114,7 @@ mutual
       =assert_total -- I know...
       $ (   handle
       <|> vector
+      <|> list
       <|> datatype
       <|> baseType'
       <|> ref

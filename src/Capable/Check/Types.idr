@@ -95,6 +95,10 @@ mutual
   synth ctxt (TyUnit fc)
     = pure (_ ** TyUnit)
 
+  synth ctxt (TyList fc ty)
+    = do (ty ** tm) <- synth ctxt ty
+         pure (_ ** TyList tm)
+
   synth ctxt (TyVector fc n ty)
     = do (ty ** tm) <- synth ctxt ty
          ifThenElse (n < 0)

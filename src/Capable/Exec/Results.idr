@@ -81,6 +81,19 @@ namespace Args
           -> (prf   : Subset  old new )
                    -> Results old types
 
+namespace Vect
+  public export
+  data Results : (store : List Ty.Base)
+              -> (n     : Nat)
+              -> (ty    : Ty.Base)
+                       -> Type
+    where
+      MkVect : {new   : List Ty.Base}
+            -> (store : Heap  new)
+            -> (args  : Vect n (Value new type))
+            -> (prf   : Subset  old new)
+                     -> Results old n type
+
 namespace List
 
   public export

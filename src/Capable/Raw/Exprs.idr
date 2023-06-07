@@ -105,14 +105,26 @@ mutual
 
       -- ## Data
 
-      -- ### Vectors
-      VectorEmpty : (fc : FileContext)
-                -> Expr (Branch NIL fc Nil)
+      MkList : {as' : Vect n Raw.AST.EXPR}
+            -> (fc : FileContext)
+            -> (prf : AsVect as as')
+            -> (vs  : All Expr as')
+                   -> Expr (Branch LIST fc as)
 
-      VectorCons : (fc : FileContext)
-               -> (head : Expr h)
-               -> (tail : Expr t)
-                       -> Expr (Branch CONS fc [h,t])
+      -- ### Vectors
+      MkVect : {as' : Vect n Raw.AST.EXPR}
+            -> (fc : FileContext)
+            -> (prf : AsVect as as')
+            -> (vs  : All Expr as')
+                   -> Expr (Branch VECT fc as)
+
+--      VectorEmpty : (fc : FileContext)
+--                -> Expr (Branch NIL fc Nil)
+--
+--      VectorCons : (fc : FileContext)
+--               -> (head : Expr h)
+--               -> (tail : Expr t)
+--                       -> Expr (Branch CONS fc [h,t])
 
       Index : (fc  : FileContext)
            -> (idx : Expr i)
@@ -273,11 +285,14 @@ mutual
   toExpr (Branch (BUN k) fc [o])
     = OpUn fc k (toExpr o)
 
-  toExpr (Branch NIL fc Nil)
-    = VectorEmpty fc
+  toExpr (Branch VECT fc xs)
+    = let (as ** prf) = asVect xs
+      in MkVect fc prf (assert_total $ args as)
 
-  toExpr (Branch CONS fc [h,t])
-    = VectorCons fc (toExpr h) (toExpr t)
+  toExpr (Branch LIST fc xs)
+    = let (as ** prf) = asVect xs
+      in MkList fc prf (assert_total $ args as)
+
 
   toExpr (Branch IDX fc [i,a])
     = Index fc (toExpr i) (toExpr a)

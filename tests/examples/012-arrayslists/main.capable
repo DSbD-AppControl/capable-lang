@@ -1,0 +1,16 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
+main()
+{
+
+  local foo : [3;Int] = <1,2,3>;
+  local bar : [Int] = [1,2,3];
+
+  unit
+
+}

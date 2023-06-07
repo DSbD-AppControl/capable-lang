@@ -313,23 +313,41 @@ mutual
     = do T _ s <- check fc env TyStr s
          pure (_ ** Builtin Print [s])
 
-  -- ## Vectors
-  synth env (VectorEmpty fc)
+  -- ## Lists
+
+  synth env (MkList fc Empty [])
     = unknown fc
 
-  synth env (VectorCons fc head (VectorEmpty _))
-    = do (tyH ** head) <- synth env head
-         -- Could do a check but we don't need to.
-         pure (_ ** VectorCons head VectorEmpty)
+  synth env (MkList fc (Next Empty) (x :: []))
+    = do (ty ** x) <- synth env x
+         pure (_ ** MkList [x])
 
-  synth env (VectorCons fc head tail)
-    = do (tyH ** head) <- synth env head
-         (VECTOR ty' n ** tail) <- synth env tail
+  synth env (MkList fc (Next (Next z)) (x :: (y :: w)))
+    = do (ty ** x) <- synth env x
+         (LIST ty' ** MkList xs) <- synth env (MkList fc (Next z) (y::w))
+           | (ty' ** _) => mismatch (LIST ty) ty'
+
+         Refl <- compare fc ty ty'
+
+         pure (_ ** MkList (x::xs))
+
+  -- ## Vectors
+  synth env (MkVect fc Empty [])
+    = unknown fc
+
+  synth env (MkVect fc (Next Empty) (x :: []))
+    = do (ty ** x) <- synth env x
+         pure (_ ** MkVect [x])
+
+  synth env (MkVect fc (Next (Next z)) (x :: (y :: w)))
+    = do (ty ** x) <- synth env x
+         (VECTOR m ty' ** MkVect xs) <- synth env (MkVect fc (Next z) (y::w))
            | (ty ** _) => throwAt fc (VectorExpected ty)
 
-         Refl <- compare fc tyH ty'
+         Refl <- compare fc ty m
 
-         pure (_ ** VectorCons head tail)
+         pure (_ ** MkVect (x::xs))
+
 
   synth env (Index fc idx tm)
     = do T tyTm idx <- check fc env TyInt idx
@@ -657,10 +675,13 @@ mutual
        -> (syn      : Expr e)
                    -> Capable (The rs ds ss gs ls t)
 
-  check {t = (VECTOR type 0)} fc env tyTm (VectorEmpty fc')
-    = pure (T tyTm VectorEmpty)
+  check {t = (LIST type)} fc env tyTm (MkList fc' prf [])
+    = pure (T tyTm (MkList Nil))
 
-  check {t = (VECTOR type (S k))} fc env tyTm (VectorEmpty fc')
+  check {t = (VECTOR type 0)} fc env tyTm (MkVect fc' prf [])
+    = pure (T tyTm (MkVect Nil))
+
+  check {t = (VECTOR type (S k))} fc env tyTm (MkVect fc' prf [])
     = mismatchAt fc (VECTOR type (S k)) (VECTOR type Z)
 
   check {t = (UNION (a:::as))} fc env tyTm (Tag fc' s l)

@@ -17,6 +17,12 @@ import Text.PrettyPrint.Prettyprinter
 %default total
 
 export
+vect : List (Doc ann) -> Doc ann
+vect = group . encloseSep (flatAlt (pretty "< ") (pretty "<"))
+                          (flatAlt (pretty " >") (pretty ">"))
+                          (pretty ", ")
+
+export
 reflect : (ctxt  : Context a rs)
        -> (loc   : IsVar rs l)
                 -> String

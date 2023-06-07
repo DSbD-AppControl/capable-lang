@@ -277,6 +277,25 @@ mutual
       = do Value hf vf prfF <- Exprs.eval (weaken prf env) h tt
            pure (Value hf vf (trans prf prfF))
 
+    evalVect : {ty  : Ty.Base}
+            -> {store : List Ty.Base}
+            -> (env   : Env stack_g stack_l store)
+            -> (heap  : Heap store)
+            -> (xs    : Vect n (Expr rs types globals stack_g stack_l ty))
+                     -> Capable (Vect.Results store n ty)
+    evalVect env heap []
+      = pure
+      $ MkVect heap
+               Nil
+               (noChange _)
+    evalVect env heap (x :: xs)
+      = do Value h v p    <- Exprs.eval env heap x
+           MkVect h vs ps <- evalVect (weaken p env) h xs
+           pure
+             (MkVect h
+                    ((weaken ps v) :: vs)
+                    (trans p ps))
+
     evalList : {ty  : Ty.Base}
             -> {store : List Ty.Base}
             -> (env   : Env stack_g stack_l store)
@@ -351,13 +370,16 @@ mutual
            pure (Value h (MkList vs) p)
 
     -- ### Array's & Operations
-    eval env heap VectorEmpty = return heap VectorEmpty
-
-    eval env heap (VectorCons x xs)
-      = do Value h'  x  p1 <- eval env heap x
-           Value h'' xs p2 <- eval (weaken p1 env) h'   xs
-
-           pure (Value h'' (VectorCons (weaken p2 x) xs) (trans p1 p2))
+    eval env heap (MkVect xs)
+      = do MkVect h vs p <- evalVect env heap xs
+           pure (Value h (MkVect vs) p)
+--    eval env heap VectorEmpty = return heap VectorEmpty
+--
+--    eval env heap (VectorCons x xs)
+--      = do Value h'  x  p1 <- eval env heap x
+--           Value h'' xs p2 <- eval (weaken p1 env) h'   xs
+--
+--           pure (Value h'' (VectorCons (weaken p2 x) xs) (trans p1 p2))
 
 
     eval env heap (Index idx array)
