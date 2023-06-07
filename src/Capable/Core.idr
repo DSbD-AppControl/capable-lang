@@ -22,6 +22,25 @@ import public Capable.Error.Pretty
 
 %default total
 
+|||
+||| Generated with `figlet -f slant Capable` and the '\' manually escaped.
+export
+banner : String
+banner
+  = """
+        ______                  __    __
+       / ____/___ _____  ____ _/ /_  / /__
+      / /   / __ `/ __ \\/ __ `/ __ \\/ / _ \\
+     / /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+     \\____/\\__,_/ .___/\\__,_/_.___/_/\\___/
+               /_/
+
+       Version 0.0.0-unversioned
+       https://github.com/DSbD-AppControl/capable-lang
+     """
+
+
+
 public export
 %inline
 Capable : Type -> Type

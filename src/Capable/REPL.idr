@@ -29,6 +29,7 @@ import Capable.REPL.Commands
 import Capable.REPL.Load
 import Capable.State
 
+import Capable.Options
 import Capable.Pretty
 
 %default total
@@ -51,22 +52,22 @@ roleCheck' ctxt str
            in pure (r ** (V loc prfN))
 
 export
-process : State -> Cmd -> Capable State
-process st Quit
+process : Opts -> State -> Cmd -> Capable State
+process o st Quit
   = do putStrLn "Exiting the REPL"
        exitSuccess
 
-process st (Load str)
+process o st (Load str)
   = load st str
 
-process st (AskTy str)
+process o st (AskTy str)
   = todo st
 
-process st Help
-  = do putStrLn helpStr
+process o st Help
+  = do putStrLn Commands.helpStr
        pure st
 
-process st Run
+process o st Run
   = maybe (do putStrLn "Need to load a program first."
               pure st)
           (\p => do v <- exec p
@@ -74,7 +75,7 @@ process st Run
                     pure st)
           (prog st)
 
-process st (Project str str1)
+process _ st (Project str str1)
   = do Just (P r g p) <- getProtocol st str
          | Nothing => do putStrLn "Not a bound protocol: \{str}"
                          pure st
@@ -91,7 +92,7 @@ process st (Project str str1)
                             pure st
              Yes (R l _) => do putStrLn (toString r l)
                                pure st
-process st (Roles str)
+process _ st (Roles str)
   = do Just (P r g p) <- getProtocol st str
          | Nothing => do putStrLn "Not a bound protocol: \{str}"
                          pure st
@@ -103,10 +104,14 @@ process st (Roles str)
 
 
 export covering
-repl : Capable ()
-repl = repl "Capable>"
-            commands
-            defaultState
-            process
-            printLn
+repl : Opts -> Capable ()
+repl o
+  = do putStrLn banner
+       putStrLn "\n  Type :? for help.\n"
+       repl "Capable>"
+             commands
+             defaultState
+             (process o)
+             printLn
+
 -- [ EOF ]

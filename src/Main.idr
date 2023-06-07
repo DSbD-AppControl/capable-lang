@@ -13,7 +13,7 @@ mainRug
   = do opts <- getOpts
 
        if (launchREPL opts)
-         then repl
+         then repl opts
          else pipeline opts
 
        exitSuccess

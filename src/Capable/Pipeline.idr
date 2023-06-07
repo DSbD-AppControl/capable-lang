@@ -25,12 +25,20 @@ import Capable.Options
 showToks : (List (WithBounds Token)) -> List String
 showToks = map (\(MkBounded t _ _) => show t)
 
+process : Opts -> Capable (String, List String)
+process o
+  = case (file o) of
+      (x::xs) => pure (x,xs)
+      _       => throw (Generic Options.helpStr)
+
 export
 pipeline : Opts -> Capable ()
 pipeline opts
-  = do fname <- embed
-                  (Generic "File expected.")
-                  (file opts)
+  = do when (help opts)
+         $ do putStrLn helpStr
+              exitSuccess
+
+       (fname,fargs) <- process opts
 
        when (justLex opts)
          $ do toks <- lexFile fname

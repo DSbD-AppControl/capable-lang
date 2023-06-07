@@ -295,7 +295,7 @@ Show (Marshall.Error) where
 export
 Show (Capable.Error) where
   show (Generic err)
-    = show err
+    = err
 
   show (Marsh err)
     = "Marsh Error\n" ++ show err
