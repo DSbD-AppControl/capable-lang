@@ -200,13 +200,15 @@ namespace Shape
     BUN : (k : BuiltinUnOps)
             -> UN Shape EXPR EXPR
 
+    SLICE : TRI Shape EXPR EXPR EXPR EXPR
+
     -- ### Data
     LIST  : Shape EXPR n (replicate n EXPR)
+
     -- #### Arrays
     VECT  : Shape EXPR n (replicate n EXPR)
 
     IDX   : BIN Shape EXPR EXPR EXPR
-    SLICE : TRI Shape EXPR EXPR EXPR EXPR
 
     -- #### Products
     TUPLE : Shape EXPR  (S (S n)) (replicate (S (S n)) EXPR)
