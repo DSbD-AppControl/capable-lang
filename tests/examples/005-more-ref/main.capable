@@ -26,7 +26,7 @@ func bump(p : &String) -> Unit
   mut(p,"Bump!")
 }
 
-main()
+main (args : [String])
 {
   local b = factory(true)
 ; local c = factory(false)

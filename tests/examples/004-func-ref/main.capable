@@ -29,7 +29,7 @@ func foo(a : either) -> &String
 ; x
 }
 
-main()
+main (args : [String])
 {
   local bar : either = tag[left]("AA")
 ; printLn(!foo(bar))

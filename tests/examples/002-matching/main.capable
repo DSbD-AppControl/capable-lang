@@ -22,7 +22,7 @@ func extract(x : uo ) -> String
   }
 }
 
-main()
+main (args : [String])
 {
   local foo : union { urgh:String ; oops:Int } = tag[urgh]("Ola")
 ; printLn(extract(foo))

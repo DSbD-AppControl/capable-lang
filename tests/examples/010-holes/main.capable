@@ -3,7 +3,7 @@ type point = struct { x : Int; y : Int }
 type either = union { left : String; right : Int}
 
 
-main()
+main (args : [String])
 {
 
    local y = 42

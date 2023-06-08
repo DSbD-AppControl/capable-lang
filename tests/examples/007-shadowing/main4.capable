@@ -1,5 +1,5 @@
 type foo = union { this : Int ; this : String }
-main()
+main (args : [String])
 {
   unit
 }

@@ -23,7 +23,7 @@ Hello World
 \{
   \CapableKeyword{mut}(\CapableBound{p}, \CapableBound{set\_x}(\CapableKeyword{!}\CapableBound{p}, \CapableBound{x}))
 \}
-\CapableBound{main} () -> \CapableType{Unit}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{val} \CapableBound{p} = \CapableBound{point}(\CapableValue{1}, \CapableValue{2}) ;
   \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{get\_x}(\CapableKeyword{!}\CapableBound{p})));

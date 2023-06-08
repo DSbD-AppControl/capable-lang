@@ -13,7 +13,7 @@ func setVarX ( p : &point, x : Int ) -> Unit
   mut(p, set_x(!p,x))
 }
 
-main()
+main (args : [String])
 {
 
   var p = point(1,2)

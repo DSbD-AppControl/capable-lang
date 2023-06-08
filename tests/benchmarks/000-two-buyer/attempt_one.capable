@@ -122,7 +122,7 @@ session twoBuyerSeller <twoBuyer as Seller>() -> MaybeSale
   } catch { crash(noutS(unit)) }
 }
 
-main()
+main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))

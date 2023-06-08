@@ -161,7 +161,7 @@ session calcutronClientGeneral
 --    }
 --  } catch { crash(crashed(unit)) }
 }
-main()
+main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))

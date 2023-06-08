@@ -1,0 +1,8 @@
+main (args : [String])
+{
+
+  foreach arg in args
+  {
+    print(arg); print(toString('\n'))
+  }
+}

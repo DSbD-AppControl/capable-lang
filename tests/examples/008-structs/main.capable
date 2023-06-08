@@ -9,7 +9,7 @@ func printLn(str:String) -> Unit
 
 }
 
-main()
+main (args : [String])
 {
 
   local p = struct[point]{ x=1, y=2 }

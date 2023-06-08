@@ -3,7 +3,7 @@ Running Test
 # Finished Type Checking
 ```
 \begin{VerbatimInline}
-\CapableBound{main} () -> \CapableType{Unit}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}));
@@ -27,7 +27,7 @@ Running Test
 \{
   \CapableValue{2}
 \}
-\CapableBound{main} () -> \CapableType{Unit}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}));
@@ -224,7 +224,7 @@ session calcutronClientGeneral <OneShotCalcutron as Client> ( cmd : command ) ->
     }
   }
 }
-main () -> Unit
+main (args : [String]) -> Unit
 {
   print("My First Program");
   print(toString('\n'))

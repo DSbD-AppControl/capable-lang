@@ -66,7 +66,7 @@ session echoClient <Echo as Client>(i : Int) -> MaybeInt
 }
 
 -- ### Program Entry Point
-main()
+main (args : [String])
 {
   printLn("My First Session-Typed Interaction");
 

@@ -12,7 +12,7 @@ func printLn(str:String) -> Unit
 
 }
 
-main()
+main (args : [String])
 {
   printLn("My First Program");
 

@@ -72,7 +72,7 @@ pipeline opts
 
        putStrLn "# Executing"
        putStrLn "```"
-       v <- exec tm
+       v <- exec fargs tm
        putStrLn "```"
        putStrLn "# Finished"
        pure ()

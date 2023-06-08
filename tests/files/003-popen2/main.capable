@@ -15,7 +15,7 @@ func closeFHS ( fhs : SubProcess ) -> Unit
 }
 
 
-main()
+main (args : [String])
 {
   printLn("My First Program with files")
 ; local mfh = popen2("python3 pingping.py")

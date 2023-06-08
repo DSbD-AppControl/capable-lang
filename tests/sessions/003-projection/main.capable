@@ -26,7 +26,7 @@ protocol forever
                                                                     | restart(Unit).call(x)
           }}
 
-main()
+main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))

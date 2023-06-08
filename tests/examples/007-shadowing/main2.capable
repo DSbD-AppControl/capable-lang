@@ -7,7 +7,7 @@ protocol oneshot = A ==> B [msg] { this(Int) . end }
 
 protocol oneshot = A ==> B [msg] { this(Int) . end }
 
-main()
+main (args : [String])
 {
   unit
 }

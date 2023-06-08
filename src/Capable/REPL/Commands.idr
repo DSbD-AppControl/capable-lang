@@ -15,7 +15,7 @@ public export
 data Cmd = Quit
          | Help
          | Load String
-         | Run
+         | Run String
          | AskTy String
          | Project String String
          | Roles String
@@ -34,8 +34,9 @@ commands
                  "Show the list of available commands."
 
     , newCommand (names ["r", "run"])
+                 (options [REQ "args"])
                  Run
-                 "Show the current list of holes."
+                 "Run the loaded program, where `args` is a quoted list of args."
 
     , newCommand (names ["load", "l"])
                  (options [REQ "file"])

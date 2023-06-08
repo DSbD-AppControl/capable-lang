@@ -34,7 +34,7 @@ func after() -> Unit
 ; unit
 }
 
-main()
+main (args : [String])
 {
 
   before()

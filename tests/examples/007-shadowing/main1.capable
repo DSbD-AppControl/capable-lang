@@ -1,7 +1,7 @@
 role A
 role A
 
-main()
+main (args : [String])
 {
   unit
 }

@@ -18,7 +18,7 @@ protocol handshakeRec
   . Ponger ==> Pinger [pongR] { stop(Int).end | cont(Int).call(X)
   }}
 
-main()
+main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))

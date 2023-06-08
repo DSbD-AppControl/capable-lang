@@ -18,7 +18,7 @@ func greeting() -> foo
   "Hello World!"
 }
 
-main()
+main (args : [String])
 {
   printLn("My First Program")
 

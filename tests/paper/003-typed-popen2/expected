@@ -44,7 +44,7 @@ Running Test
     \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
   \}
 \}
-\CapableBound{main} () -> \CapableType{Unit}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{local} \CapableBound{val} = \CapableValue{2} ;
   \CapableKeyword{match} \CapableKeyword{run} \CapableBound{echoClient}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]

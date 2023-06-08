@@ -1,7 +1,7 @@
 func printLn() -> Unit { unit }
 func printLn() -> Unit { unit }
 
-main()
+main (args : [String])
 {
   unit
 }

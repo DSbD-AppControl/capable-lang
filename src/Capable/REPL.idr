@@ -67,10 +67,10 @@ process o st Help
   = do putStrLn Commands.helpStr
        pure st
 
-process o st Run
+process o st (Run args)
   = maybe (do putStrLn "Need to load a program first."
               pure st)
-          (\p => do v <- exec p
+          (\p => do v <- exec (words args) p
                     printLn v
                     pure st)
           (prog st)

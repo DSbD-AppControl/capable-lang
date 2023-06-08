@@ -5,7 +5,7 @@ func printLn(str:String) -> Unit
 
 }
 
-main()
+main (args : [String])
 {
 
   local foo : [3;Int] = <1,2,3>;

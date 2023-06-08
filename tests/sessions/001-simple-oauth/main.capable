@@ -24,7 +24,7 @@ protocol oauthSimple
       . Client ==> Auth [quit] { quit(Unit).end}
     }
 
-main()
+main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))

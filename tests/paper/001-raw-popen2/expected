@@ -23,7 +23,7 @@ My First Program with files
   \CapableKeyword{close}(\CapableKeyword{project}[writeTo](\CapableBound{fhs}));
   \CapableKeyword{close}(\CapableKeyword{project}[readFrom](\CapableBound{fhs}))
 \}
-\CapableBound{main} () -> \CapableType{Unit}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableBound{printLn}(\CapableValue{"My First Program with files"});
   \CapableKeyword{local} \CapableBound{mfh} = \CapableKeyword{popen2}(\CapableValue{"python3 pingping.py"}) ;

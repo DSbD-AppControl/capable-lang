@@ -12,7 +12,7 @@ func greeting() -> Int
   add(1,2)
 }
 
-main()
+main (args : [String])
 {
   printLn("My First Program")
 ; local str1 = greeting()

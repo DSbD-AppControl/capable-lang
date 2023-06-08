@@ -68,7 +68,7 @@ func bf() -> Unit
 }
 
 
-main()
+main (args : [String])
 {
   local b = tuple(1,2)
 --  local a = index(b,1);

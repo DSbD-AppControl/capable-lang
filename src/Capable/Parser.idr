@@ -82,15 +82,19 @@ main
   = do s <- Toolkit.location
        keyword "main"
        symbol "("
+       a <- arg
        symbol ")"
+       t <- optional (symbol "->" *> keyword "Unit")
        b <- block
        e <- Toolkit.location
        pure (un MAIN (newFC s e)
-                     $ (tri FUN (newFC s e)
-                                (Branch ARGS emptyFC Nil)
-                                (null UNIT emptyFC)
-                                b
-                                 ))
+                     (tri FUN (newFC s e)
+                              (Branch ARGS (newFC s e) [a])
+                              (null UNIT emptyFC)
+                              b
+                              )
+
+            )
 
 export
 program : Rule PROG

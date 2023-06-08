@@ -802,61 +802,67 @@ mutual
 ||| Run a programme.
 public export
 run : {type : Ty.Base}
-    -> {store : List Ty.Base}
-    -> (envR  : Env roles)
-    -> (envT  : Env types)
-    -> (env   : DList Ty.Method (Closure) stack)
-    -> (heap  : Heap store)
-    -> (expr  : Prog roles types globals stack type)
-             -> Capable (Expr.Result store type)
+   -> {store : List Ty.Base}
+   -> (envR  : Env roles)
+   -> (envT  : Env types)
+   -> (env   : DList Ty.Method (Closure) stack)
+   -> (heap  : Heap store)
+   -> (args  : List String)
+   -> (expr  : Prog roles types globals stack type)
+            -> Capable (Expr.Result store type)
 
-run er et env heap (DefProt s _ scope)
-  = run er et env heap scope
+run er et env heap args (DefProt s _ scope)
+  = run er et env heap args scope
 
-run er et env heap (DefRole r rest)
+run er et env heap args (DefRole r rest)
   = run (Val r::er)
         et
         env
         heap
+        args
         rest
 
 
 -- Typedefs need resolving.
-run er et env heap (DefType tyRef rest)
+run er et env heap args (DefType tyRef rest)
   = run er
         (Val _::et)
         env
         heap
+        args
         rest
 
 
 -- Functions store their environment at time of definition.
-run er et env heap (DefFunc func rest)
+run er et env heap args (DefFunc func rest)
   = run er
         et
         (ClosFunc func env er :: env)
         heap
+        args
         rest
 
-run er et env heap (DefSesh s rest)
+run er et env heap args (DefSesh s rest)
   = run er
         et
         (ClosSesh _ s env :: env)
         heap
+        args
         rest
 
 -- The main sh-bang
-run er _ env heap (Main x)
-  = eval env heap x Nil
-
+run er _ env heap args (Main f)
+  = do let as = MkList $ map S args
+       eval env heap f [as]
 
 ||| Only run closed programmes.
 export
-exec : (prog : Program)
+exec : (args : List String)
+    -> (prog : Program)
             -> Capable ()
 
-exec p
-  = do ignore (run Nil Nil Nil Nil p)
+exec args p
+  = do ignore (run Nil Nil Nil Nil args p)
        pure ()
 
 -- [ EOF ]

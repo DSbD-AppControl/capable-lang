@@ -211,9 +211,9 @@ check : {p     : PROG}
      -> (prog  : Prog p)
               -> Capable (Prog rs ds ss gs UNIT, State)
 check env state (Main fc m)
-  = do (FUNC Nil UNIT ** m) <- synth env m
+  = do (FUNC [LIST STR] UNIT ** m) <- synth env m
          | (ty ** _)
-             => throwAt fc (MismatchM ty (FUNC Nil UNIT))
+             => throwAt fc (MismatchM ty (FUNC [LIST STR] UNIT))
 
        pure (Main m, state)
 

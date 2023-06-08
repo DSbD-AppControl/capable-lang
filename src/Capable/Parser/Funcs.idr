@@ -19,7 +19,7 @@ import Capable.Parser.Exprs
 
 %default partial -- @TODO Make func parsing total.
 
-total
+export
 arg : Rule ARG
 arg
   = do s <- Toolkit.location

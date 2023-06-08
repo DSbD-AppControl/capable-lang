@@ -11,7 +11,7 @@ func two() -> Int
   2
 }
 
-main()
+main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))

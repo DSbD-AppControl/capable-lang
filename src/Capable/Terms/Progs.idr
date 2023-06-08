@@ -72,8 +72,8 @@ data Prog : (roles   : List Ty.Role)
 
     ||| The top-level function.
     ||| @TODO change return to INT...
-    Main : Func roles types globals stack (FUNC Nil UNIT)
-        -> Prog roles types globals stack           UNIT
+    Main : Func roles types globals stack (FUNC [LIST STR] UNIT)
+        -> Prog roles types globals stack                  UNIT
 
 
 ||| A Closed program.
