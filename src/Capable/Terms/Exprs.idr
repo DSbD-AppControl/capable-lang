@@ -201,6 +201,13 @@ mutual
                  -> Expr roles types globals stack_g stack_l type
 
       -- ## Loops
+      ||| ForEach!
+      ForEach : {typeI : Base}
+             -> (cond : Expr roles types globals stack_g         stack_l  typeO)
+             -> (prf  : Iterable typeO typeI)
+             -> (body : Expr roles types globals stack_g (typeI::stack_l) UNIT)
+                     -> Expr roles types globals stack_g         stack_l  UNIT
+
       ||| A general do-until loop construct.
       |||
       Loop : (body : Expr roles types globals stack_g stack_l return)

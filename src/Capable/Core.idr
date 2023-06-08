@@ -12,6 +12,7 @@ module Capable.Core
 import        System
 
 import        Data.String
+import        Data.Vect
 
 import public Toolkit.TheRug
 import        Toolkit.System
@@ -73,26 +74,49 @@ foldl f x [] = pure x
 foldl f x (elem :: rest)
   = foldl f (!(f x elem)) rest
 
+namespace Vect
+  export
+  traverse_ : (f  : a -> Capable ())
+           -> (xs : Vect n a)
+                 -> Capable ()
+  traverse_ f []
+    = pure ()
+  traverse_ f (x :: xs)
+    = do f x
+         traverse_ f xs
 
-export
-traverse : (f  : forall a . e a -> Capable (e a))
-        -> (xs : DList ty e ts)
-              -> Capable (DList ty e ts)
-traverse f []
-  = pure []
-traverse f (elem :: rest)
-  = do x <- f elem
-       xs <- traverse f rest
-       pure (x::xs)
-export
-traverse_ : (f  : forall a . e a -> Capable ())
-         -> (xs : DList ty e ts)
-               -> Capable ()
-traverse_ f []
-  = pure ()
-traverse_ f (elem :: rest)
-  = do f elem
-       traverse_ f rest
+namespace List
+  export
+  traverse_ : (f  : a -> Capable ())
+           -> (xs : List a)
+                 -> Capable ()
+  traverse_ f []
+    = pure ()
+  traverse_ f (x :: xs)
+    = do f x
+         traverse_ f xs
+
+
+namespace DList
+  export
+  traverse : (f  : forall a . e a -> Capable (e a))
+          -> (xs : DList ty e ts)
+                -> Capable (DList ty e ts)
+  traverse f []
+    = pure []
+  traverse f (elem :: rest)
+    = do x <- f elem
+         xs <- traverse f rest
+         pure (x::xs)
+  export
+  traverse_ : (f  : forall a . e a -> Capable ())
+           -> (xs : DList ty e ts)
+                 -> Capable ()
+  traverse_ f []
+    = pure ()
+  traverse_ f (elem :: rest)
+    = do f elem
+         traverse_ f rest
 
 namespace Capable
 

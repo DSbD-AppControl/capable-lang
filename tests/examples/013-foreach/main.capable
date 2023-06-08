@@ -1,0 +1,35 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
+main()
+{
+
+  local foo : [3;Int] = <1,2,3>;
+  local bar : [Int] = [1,2,3];
+
+  foreach i in bar
+  {
+    printLn(toString(i))
+  }
+  ;
+  foreach i in foo
+  {
+    printLn(toString(i))
+  };
+
+
+  var i = 0;
+  loop
+  {
+    printLn(toString(!i))
+
+  ; mut(i,add(!i,1))
+
+  } until gt(!i,3);
+  unit
+
+}

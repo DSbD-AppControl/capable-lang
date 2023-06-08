@@ -197,6 +197,10 @@ Show (Typing.Error) where
 
   show (VectorExpected ty)
     = "Vector expected but was given:\n\t\{show ty}"
+
+  show (IterableExpected ty)
+    = "Iterable (Vector or List) was expected but was given:\n\t\{show ty}"
+
   show (NotBound ref)
     = "Not a bound identifier:\n\t\{show (get ref)}"
 

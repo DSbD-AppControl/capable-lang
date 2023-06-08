@@ -95,6 +95,7 @@ namespace Typing
     AlreadyBound : Ref -> Typing.Error
     VectorExpected : Ty.Base -> Error
     ListExpected : Ty.Base -> Error
+    IterableExpected : Ty.Base -> Error
 
     MismatchRole : Ref -> Ref -> Typing.Error
     MismatchRoleS : String -> String -> Typing.Error

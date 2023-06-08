@@ -87,6 +87,52 @@ namespace Ty
     $ ("writeTo", HANDLE PROCESS)
     ::: [ MkPair "readFrom" (HANDLE PROCESS)]
 
+  public export
+  data Iterable : Base -> Base -> Type where
+    L : Iterable (LIST ty)     ty
+    V : {s : _} -> Iterable (VECTOR ty s) ty
+
+
+  Uninhabited (DPair Base (Iterable CHAR       )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable STR        )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable INT        )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable BOOL       )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable UNIT       )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable (HANDLE k) )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable (REF f)    )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable (RECORD fs))) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable (UNION fs) )) where uninhabited (typw ** L) impossible
+  Uninhabited (DPair Base (Iterable (TUPLE fs) )) where uninhabited (typw ** L) impossible
+
+  export
+  isIterable : (ty : Base)
+                  -> Dec (DPair Base (Iterable ty))
+  isIterable (VECTOR x k)
+    = Yes (x ** V)
+  isIterable (LIST x)
+    = Yes (x ** L)
+
+  isIterable CHAR
+    = No absurd
+  isIterable STR
+    = No absurd
+  isIterable INT
+    = No absurd
+  isIterable BOOL
+    = No absurd
+  isIterable UNIT
+    = No absurd
+  isIterable (HANDLE x)
+    = No absurd
+  isIterable (REF x)
+    = No absurd
+  isIterable (TUPLE fields)
+    = No absurd
+  isIterable (RECORD fields)
+    = No absurd
+  isIterable (UNION fields)
+    = No absurd
+
 namespace Diag
   data Diag : (a,b : Base)
                   -> Type

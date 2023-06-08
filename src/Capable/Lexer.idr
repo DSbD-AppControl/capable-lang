@@ -49,7 +49,7 @@ namespace Capable
 
              , "local", "var", "let"
 
-             , "loop", "until"
+             , "loop", "until", "foreach", "in"
 
              , "match", "when"
 

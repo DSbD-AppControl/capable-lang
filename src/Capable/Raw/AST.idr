@@ -238,6 +238,7 @@ namespace Shape
     COND : TRI Shape EXPR EXPR EXPR EXPR
     SEQ  : BIN Shape EXPR EXPR EXPR
     LOOP : BIN Shape EXPR EXPR EXPR
+    FOR  : String -> BIN Shape EXPR EXPR EXPR
 
     -- ### Application
     CALL : String -> Shape EXPR n (replicate n EXPR)
@@ -384,6 +385,7 @@ namespace Shape
     show COND            = "COND"
     show SEQ             = "SEQ"
     show LOOP            = "LOOP"
+    show (FOR x)            = "(FOR \{show x}}"
     show (CALL s)        = "(CALL \{show s})"
     show (ARG str)       = "(ARG \{show str})"
     show ARGS            = "ARGS"

@@ -489,6 +489,19 @@ expr (Cond fc c t f)
 expr (Seq fc this that)
   = vcat [ hcat [expr this, semi], expr that]
 
+expr (ForEach fc (MkRef fc s) R cond scope)
+  = vcat
+  [ hsep
+    [ keyword "for"
+    , binder s
+    , keyword "in"
+    , expr cond
+    ]
+  , lbrace'
+  , indent 2 (expr scope)
+  , rbrace'
+  ]
+
 expr (Loop fc scope cond)
   = vcat
   [ keyword "loop"

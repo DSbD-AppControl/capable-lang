@@ -217,6 +217,13 @@ mutual
          -> (that : Expr b)
                  -> Expr (Branch SEQ fc [a,b])
 
+      ForEach : (fc : FileContext)
+             -> (r  : Ref)
+             -> (p  : AsRef s fc r)
+             -> (cond  : Expr i)
+             -> (scope : Expr b)
+                      -> Expr (Branch (FOR s) fc [i,b])
+
       Loop : (fc    : FileContext)
           -> (scope : Expr a)
           -> (cond  : Expr b)
@@ -225,8 +232,8 @@ mutual
       Call : {as   : Vect n Raw.AST.EXPR}
           -> (fc   : FileContext)
           -> (fun  : Ref)
-          -> (prf  : AsRef s fc fun)
-          -> (prf  : AsVect args as)
+          -> (prfR  : AsRef s fc fun)
+          -> (prfV  : AsVect args as)
           -> (argz : All Expr as)
                   -> Expr (Branch (CALL s) fc args)
 
@@ -352,6 +359,14 @@ mutual
   toExpr (Branch SEQ fc [f,s])
     = Seq fc (toExpr f)
              (toExpr s)
+
+  toExpr (Branch (FOR s) fc [t,b])
+    = ForEach
+        fc
+        (MkRef fc s)
+        R
+        (toExpr t)
+        (toExpr b)
 
   toExpr (Branch LOOP fc [s,c])
     = Loop fc (toExpr s)

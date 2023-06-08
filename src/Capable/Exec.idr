@@ -187,7 +187,7 @@ mutual
     eval heap (Cmp CC GTE) [C a, C b] = return heap (B $ (>=) a b)
 
     eval heap (Cmp CS LT)  [S a, S b] = return heap (B $ (<)  a b)
-    eval heap (Cmp CS LTE) [S a, S b] = return heap (B $ (<)  a b)
+    eval heap (Cmp CS LTE) [S a, S b] = return heap (B $ (<=)  a b)
     eval heap (Cmp CS EQ)  [S a, S b] = return heap (B $ (==) a b)
     eval heap (Cmp CS GT)  [S a, S b] = return heap (B $ (>)  a b)
     eval heap (Cmp CS GTE) [S a, S b] = return heap (B $ (>=) a b)
@@ -486,19 +486,70 @@ mutual
     eval env heap (The _ expr)
       = eval env heap expr
 
+    -- ### Loops
+    eval env heap (ForEach cond prf body)
+        = case prf of
+            L => do Value h (MkList xs) p0 <- eval env heap cond
+                    Value h U p1 <- whenList (weaken p0 env) h body xs
+                    pure (Value h U (trans p0 p1))
+
+            V => do Value h (MkVect xs) p0 <- eval env heap cond
+                    Value h U p1 <- whenVect (weaken p0 env) h body xs
+                    pure (Value h U (trans p0 p1))
+
+      where whenList : {ty   : Base}
+                    -> {st   : List Base}
+                    -> (env  : Env stack_g stack_l st)
+                    -> (heap : Heap st)
+                    -> (body : Expr roles types globals stack_g (ty::stack_l) UNIT)
+                    -> (xs   : List (Value st ty))
+                            -> Capable (Expr.Result st UNIT)
+            whenList _ h body []
+              = pure (Value h U (noChange _))
+
+            whenList env h body (x :: xs)
+              = do Value h U p1 <- Exprs.eval (extend_l x env) h body
+                   Value h U p2 <- assert_total
+                                   $ whenList (weaken p1 env)
+                                              h
+                                              body
+                                              (map (weaken p1) xs)
+                   pure (Value h U (trans p1 p2))
+
+            whenVect : {ty   : Base}
+                    -> {st   : List Base}
+                    -> (env  : Env stack_g stack_l st)
+                    -> (heap : Heap st)
+                    -> (body : Expr roles types globals stack_g (ty::stack_l) UNIT)
+                    -> (xs   : Vect n
+                                    (Value st ty))
+                            -> Capable (Expr.Result st UNIT)
+            whenVect _ h body []
+              = pure (Value h U (noChange _))
+
+            whenVect env h body (x :: xs)
+              = do Value h U p1 <- Exprs.eval (extend_l x env) h body
+                   Value h U p2 <- assert_total
+                                   $ whenVect (weaken p1 env)
+                                              h
+                                              body
+                                              (map (weaken p1) xs)
+                   pure (Value h U (trans p1 p2))
+
 
     eval env heap (Loop body expr)
       = do Value h' res  p  <- eval env heap body
            Value h  cres p2 <- eval (weaken p env) h' expr
            case cres of
-             B True -- Loop
+             B True -- Return
+               => pure (Value h (weaken p2 res) (trans p p2))
+
+             B False -- Loop
                => do r <- eval (weaken p2 (weaken p env))
                                h
                                (Loop body expr)
                      return2 p p2 r
 
-             B False -- Return
-               => pure (Value h (weaken p2 res) (trans p p2))
 
     -- ### Function Calls
 

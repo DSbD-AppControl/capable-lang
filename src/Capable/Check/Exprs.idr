@@ -559,6 +559,18 @@ mutual
 
          pure (_ ** Seq this that)
 
+  synth env (ForEach fc (MkRef fc s) R cond scope)
+    = case !(synth env cond) of
+        (VECTOR ty sl ** c)
+          => do scope <- check fc (Lambda.extend env s ty) UNIT scope
+                pure (_ ** ForEach c V scope)
+
+        (LIST ty ** c)
+          => do scope <- check fc (Lambda.extend env s ty) UNIT scope
+                pure (_ ** ForEach c L scope)
+
+        (ty ** _) => throwAt fc (IterableExpected ty)
+
   synth env (Loop fc scope cond)
     = do (ty ** scope) <- synth env scope
          T _ cond <- check fc env TyBool cond

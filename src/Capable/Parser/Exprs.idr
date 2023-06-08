@@ -460,6 +460,19 @@ mutual
          e <- Toolkit.location
          pure (tri COND (newFC s e) c lb rb)
 
+  forEach : Rule EXPR
+  forEach
+    = do s <- Toolkit.location
+         keyword "foreach"
+         commit
+         v <- Capable.ref
+         keyword "in"
+         c <- expr
+         b <- block
+         e <- Toolkit.location
+         pure (bin (FOR (get v)) (newFC s e) c b)
+
+
   loop : Rule EXPR
   loop
     = do s <- Toolkit.location
@@ -563,6 +576,7 @@ mutual
       <|> set
       <|> match
       <|> loop
+      <|> forEach
       <|> cond
       <|> vector
       <|> list

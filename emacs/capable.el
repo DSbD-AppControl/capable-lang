@@ -17,6 +17,8 @@
                        "let"
                        "type"
                        "loop"
+                       "foreach"
+                       "in"
                        "role"
                        "session"
                        "protocol"
