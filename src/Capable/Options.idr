@@ -11,6 +11,17 @@ import Capable.Core
 %default total
 
 public export
+data Target = RUST
+
+export
+Show Target where
+  show RUST = "RUST"
+
+export
+Eq Target where
+  (==) RUST RUST = True
+
+public export
 record Opts where
   constructor O
   justLex   : Bool
@@ -20,6 +31,7 @@ record Opts where
   ppLaTeX   : Bool
   launchREPL : Bool
   help       : Bool
+  codegen   : Maybe Target
   file     : List String
 
 
@@ -43,6 +55,11 @@ Options:
   --latex  type check and pretty print LaTeX
   --pretty type check and pretty print
 
+  --codegen=[target] Generate code for given target language
+                     Currently supported target is RUST
+
+  --codegen-rust Generate code for RUST
+
   --lex Dump the tokens from lexing
   --ast Dump parsed AST
 """
@@ -51,8 +68,8 @@ Options:
 
 export
 Show Opts where
-  show (O l a c po p r f q)
-    = "O \{show l} \{show a} \{show c} \{show po} \{show p} \{show r} \{show f} \{show q}"
+  show (O l a c po p r f cg q)
+    = "O \{show l} \{show a} \{show c} \{show po} \{show p} \{show r} \{show f} \{show cg} \{show q}"
 
 export
 Eq Opts where
@@ -65,6 +82,7 @@ Eq Opts where
     && ppLaTeX x == ppLaTeX y
     && file x      == file y
     && help x == help y
+    && codegen x == codegen y
 
 convOpts : Arg -> Opts -> Maybe Opts
 
@@ -72,7 +90,10 @@ convOpts (File x) o
   = Just $ { file := (file o) ++ [x]} o
 
 convOpts (KeyValue k v) o
-  = Just o
+  = case (k,v) of
+      ("codegen","rust")
+        => Just $ { codegen := Just RUST} o
+      _ => Nothing
 
 convOpts (Flag x) o
   = case x of
@@ -95,11 +116,14 @@ convOpts (Flag x) o
         => Just $ { pprint := True} o
       "help"
         => Just $ { help := True} o
+
+      "codegen-rust"
+        => Just $ { codegen := Just RUST} o
       otherwise => Nothing
 
 
 defOpts : Opts
-defOpts = O False False False False False False False Nil
+defOpts = O False False False False False False False Nothing Nil
 
 export
 getOpts : Capable Opts

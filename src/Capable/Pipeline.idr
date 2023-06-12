@@ -18,6 +18,7 @@ import Capable.Exec
 import Capable.State
 import Capable.Pretty
 
+import Capable.Codegen.Rust
 import Capable.Options
 
 %default total
@@ -30,6 +31,13 @@ process o
   = case (file o) of
       (x::xs) => pure (x,xs)
       _       => throw (Generic Options.helpStr)
+
+
+codegen : Target -> Prog p -> Capable ()
+codegen RUST et
+  = do putStrLn "```"
+       putStrLn (Rust.codegen et)
+       putStrLn "```"
 
 export
 pipeline : Opts -> Capable ()
@@ -51,7 +59,7 @@ pipeline opts
 
        putStrLn "# Finished Parsing"
 
-       (tm,_) <- check ast
+       (tm, _, (_ ** et)) <- check ast
        putStrLn "# Finished Type Checking"
 
        when (justCheck opts)
@@ -69,12 +77,14 @@ pipeline opts
               putStrLn "```"
               exitSuccess
 
-
-       putStrLn "# Executing"
-       putStrLn "```"
-       v <- exec fargs tm
-       putStrLn "```"
-       putStrLn "# Finished"
-       pure ()
+       case codegen opts of
+         Just t => codegen t et
+         Nothing
+           => do putStrLn "# Executing"
+                 putStrLn "```"
+                 v <- exec fargs tm
+                 putStrLn "```"
+                 putStrLn "# Finished"
+                 exitSuccess
 
 -- [ EOF ]

@@ -26,7 +26,7 @@ load st fname
   = tryCatch (do ast <- fromFile fname
                  putStrLn "# Finished Parsing"
 
-                 (_,st) <- check ast
+                 (_,st,et) <- check ast
                  putStrLn "# Finished Type Checking"
 
                  pure st

@@ -47,6 +47,20 @@ import Capable.State
 %default total
 %hide fields
 
+public export
+data Result : (rs    : List Ty.Role)
+           -> (ds    : List Ty.Base)
+           -> (ss    : List Ty.Session)
+           -> (gs    : List Ty.Method)
+                    -> Type
+  where
+    R : (tm   : Prog rs ds ss gs UNIT)
+     -> (st   : State)
+     -> (p    : PROG)
+     -> (eAST : Prog p)
+             -> Result rs ds ss gs
+
+
 
 check : {p     : PROG}
      -> {rs    : List Ty.Role}
@@ -56,13 +70,17 @@ check : {p     : PROG}
      -> (env   : Env rs ds ss gs Nil)
      -> (state : State)
      -> (prog  : Prog p)
-              -> Capable (Prog rs ds ss gs UNIT, State)
-check env state (Main fc m)
-  = do (FUNC [LIST STR] UNIT ** m) <- synth env m
+              -> Capable (Result rs ds ss gs)
+check env state (Main fc mo)
+  = do (FUNC [LIST STR] UNIT ** m) <- synth env mo
          | (ty ** _)
              => throwAt fc (MismatchM ty (FUNC [LIST STR] UNIT))
 
-       pure (Main m, state)
+       pure (R (Main m)
+               state
+               _
+               (Main fc mo)
+            )
 
 -- [ NOTE ]
 --
@@ -72,34 +90,43 @@ check env state (Main fc m)
 --
 -- Well maybe gallais can get it working, but I cannot...
 
-check env state (Def fc DTYPE n val@(TyData fc' UNION _ args) scope)
+check env state (Def fc DTYPE n val@(TyData fc' UNION _ args) scopeo)
   = do exists fc (delta env) n
        (ty ** tm) <- synth (delta env) val
 
-       let val = TyVar (MkRef fc' n) R
+       let ref = TyVar (MkRef fc' n) R
 
-       let (p ** scope) = generateTags val args scope
+       let (p ** scope) = generateTags ref args scopeo
 
-       let env   = { delta $= \c => extend c n ty} env
+       let env   : Env rs (ty::ds) ss gs Nil = { delta $= \c => extend c n ty} env
        let state = { types $= insert n (T tm)} state
 
-       (scope, state) <- assert_total $ check env state scope
+       (R scopeTm state _ scope) <- assert_total $ check env state scope
 
-       pure (DefType tm scope, state)
+       pure (R (DefType tm scopeTm)
+               state
+               _
+               (Def fc DTYPE n val scope)
+            )
 
 check env state (Def fc DTYPE n val@(TyData fc' STRUCT _ (Add a b c d)) scope)
   = do exists fc (delta env) n
        (ty ** tm) <- synth (delta env) val
 
-       let val = TyVar (MkRef fc' n) R
-       let (p ** scope) = generateProjections fc n val (Add a b c d) scope
+       let ref = TyVar (MkRef fc' n) R
+
+       let (p ** scope) = generateProjections fc n ref (Add a b c d) scope
 
        let env   = { delta $= \c => extend c n ty} env
        let state = { types $= insert n (T tm)} state
 
-       (scope, state) <- assert_total $ check env state scope
+       R scopeTm state _ scope <- assert_total $ check env state scope
 
-       pure (DefType tm scope, state)
+       pure (R (DefType tm scopeTm)
+               state
+               _
+               (Def fc DTYPE n val scope)
+            )
 
 check env state (Def fc TYPE n val {rest} scope)
   = do exists fc (delta env) n
@@ -108,9 +135,13 @@ check env state (Def fc TYPE n val {rest} scope)
        let env   = { delta $= \c => extend c n ty} env
        let state = { types $= insert n (T tm)} state
 
-       (scope, state) <- check env state scope
+       R scopeTm state _ scope <- check env state scope
 
-       pure (DefType tm scope, state)
+       pure (R (DefType tm scopeTm)
+               state
+               _
+               (Def fc TYPE n val scope)
+            )
 
 check env state (Def fc FUNC n val scope)
   = do exists fc (gamma env) n
@@ -121,9 +152,13 @@ check env state (Def fc FUNC n val scope)
        let env   = Gamma.extend env n (FUNC as r)
        let state = { funcs $= insert n (F tm)} state
 
-       (scope, state) <- check env state scope
+       R scopeTm state _ scope <- check env state scope
 
-       pure (DefFunc tm scope, state)
+       pure (R (DefFunc tm scopeTm)
+               state
+               _
+               (Def fc FUNC n val scope)
+            )
 
 check env state (Def fc ROLE n val scope)
 
@@ -134,9 +169,13 @@ check env state (Def fc ROLE n val scope)
 
        let state = {roles $= insert n (MkRole n)} state
 
-       (scope, state) <- check env state scope
+       R scopeTm state _ scope <- check env state scope
 
-       pure (DefRole (MkRole n) scope, state)
+       pure (R (DefRole (MkRole n) scopeTm)
+               state
+               _
+               (Def fc ROLE n val scope)
+            )
 
 
 check env state (Def fc PROT n val scope)
@@ -153,9 +192,13 @@ check env state (Def fc PROT n val scope)
 
        let state = {protocols $= insert n (P (rho env) g tm)} state
 
-       (scope, state) <- check env state scope
+       R scopeTm state _ scope <- check env state scope
 
-       pure (DefProt tm prf scope, state)
+       pure (R (DefProt tm prf scopeTm)
+               state
+               _
+               (Def fc PROT n val scope)
+            )
 
 check env state (Def fc SESH n val scope)
   = do exists fc (gamma env) n
@@ -166,14 +209,19 @@ check env state (Def fc SESH n val scope)
        let env = Gamma.extend env n (SESH ctzt whom l as r)
        -- @ TODO add sessions to state
 
-       (scope, state) <- check env state scope
-       pure (DefSesh tm scope, state)
+       R scopeTm state _ scope <- check env state scope
+       pure (R (DefSesh tm scopeTm)
+               state
+               _
+               (Def fc SESH n val scope)
+            )
 
 namespace Raw
   export
-  check : (r : PROG) -> Capable (Program,State)
+  check : (r : PROG) -> Capable (Program,State,DPair PROG Prog)
   check p
-    = check empty defaultState (toProg p)
+    = do R p s p' ast <- check empty defaultState (toProg p)
+         pure (p,s,(p'**ast))
 
 
 
