@@ -25,15 +25,16 @@ import Capable.Parser.Sessions
 
 %default partial
 
-data Decl = DeclT    FileContext String TYPE
-          | DeclF    FileContext String FUNC
-          | DeclR    FileContext String
-          | DeclP    FileContext String PROT
-          | DeclS    FileContext String (AST SESH)
+data Decl = DeclT FileContext String TYPE
+          | DeclD FileContext String DTYPE
+          | DeclF FileContext String FUNC
+          | DeclR FileContext String
+          | DeclP FileContext String PROT
+          | DeclS FileContext String (AST SESH)
 
 decls : RuleEmpty (List Decl)
 decls
-    = many (declSesh <|> declTy <|> declFunc <|> declRole <|> declProt)
+    = many (declSesh <|> declTy <|> declFunc <|> declRole <|> declProt <|> declDTy)
   where
     declProt : Rule Decl
     declProt
@@ -52,6 +53,13 @@ decls
            r <- ref
            e <- Toolkit.location
            pure (DeclR (newFC s e) (get r))
+
+    declDTy : Rule Decl
+    declDTy
+      = do urgh <- datatype
+           pure (DeclD (fst urgh)
+                       (fst (snd urgh))
+                       (snd (snd urgh)))
 
     declTy : Rule Decl
     declTy
@@ -116,6 +124,9 @@ program
 
     fold (DeclT fc r ty)
       = bin (DEF r TYPE) fc ty
+
+    fold (DeclD fc r ty)
+      = bin (DEF r DTYPE) fc ty
 
     fold (DeclF fc r f)
       = bin (DEF r FUNC) fc f

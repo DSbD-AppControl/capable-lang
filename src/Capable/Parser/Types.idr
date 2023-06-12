@@ -24,12 +24,12 @@ varType
   = do r <- Capable.ref
        pure (null (VARTY (get r)) (span r))
 
-baseType' : Rule TYPE
-baseType' =   givesWithLoc "Char"   (null CHAR)
-          <|> givesWithLoc "String" (null STR)
-          <|> givesWithLoc "Int"    (null INT)
-          <|> givesWithLoc "Unit"   (null UNIT)
-          <|> givesWithLoc "Bool"   (null BOOL)
+baseType : Rule TYPE
+baseType =   givesWithLoc "Char"   (null CHAR)
+         <|> givesWithLoc "String" (null STR)
+         <|> givesWithLoc "Int"    (null INT)
+         <|> givesWithLoc "Unit"   (null UNIT)
+         <|> givesWithLoc "Bool"   (null BOOL)
 
 mutual
 
@@ -72,31 +72,6 @@ mutual
          e <- Toolkit.location
          pure (Branch PROD (newFC s e) (fromList $ f::head fs::tail fs))
 
-  datatype' : Rule TYPE
-  datatype'
-    = do s <- Toolkit.location
-         k <- (gives "union" UNION <|> gives "struct" STRUCT)
-         commit
-         symbol "{"
-         fs <- sepBy1 (symbol ";") field
-         symbol "}"
-         e <- Toolkit.location
-         pure (Branch (DTYPE k) (newFC s e) (fromList $ head fs :: tail fs))
-
-    where field : Rule FIELD
-          field
-            = do s <- Toolkit.location
-                 l <- ref
-                 symbol ":"
-                 t <- type
-                 e <- Toolkit.location
-                 pure (Branch (FIELD (get l)) (newFC s e)[t])
-
-  datatype : Rule TYPE
-  datatype
-      =  datatype'
-     <|> tuple
-
   ref : Rule TYPE
   ref
     = do s <- Toolkit.location
@@ -109,15 +84,43 @@ mutual
   ||| Parser types aside from Function types.
   export
   type : Rule TYPE
-
   type
       =assert_total -- I know...
-      $ (   handle
+      $ (   baseType
+      <|> handle
       <|> vector
       <|> list
-      <|> datatype
-      <|> baseType'
+      <|> tuple
       <|> ref
       <|> varType)
+
+
+export
+datatype : Rule (FileContext, String, DTYPE)
+datatype
+  = do s <- Toolkit.location
+       k <- (gives "union" UNION <|> gives "struct" STRUCT)
+       commit
+       r <- Capable.ref
+       symbol "{"
+       fs <- sepBy1 (symbol ";") field
+       symbol "}"
+       e <- Toolkit.location
+       let fs = DVect.fromList
+              $ head fs :: tail fs
+
+       pure ( newFC s e
+            , get r
+            , Branch (DTYPE k) (newFC s e) fs
+            )
+
+  where field : Rule FIELD
+        field
+          = do s <- Toolkit.location
+               l <- ref
+               symbol ":"
+               t <- type
+               e <- Toolkit.location
+               pure (Branch (FIELD (get l)) (newFC s e) [t])
 
 -- [ EOF ]

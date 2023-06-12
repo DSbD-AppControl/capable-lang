@@ -1,6 +1,6 @@
 type foo = Int
 
-type point = struct { x : Int; y : Int }
+struct point { x : Int; y : Int }
 
 func printLn(str:String) -> Unit
 {

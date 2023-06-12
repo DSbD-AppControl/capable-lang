@@ -8,7 +8,7 @@
 -- So we have some utilities for making writing program's better.
 --
 
-type MaybeInt = union { nout : Unit; this : Int}
+union MaybeInt { nout : Unit; this : Int}
 
 func printLn(msg : String) -> Unit
 {
@@ -35,7 +35,7 @@ role Server
 -- message labels.
 --
 
-type msg = union { msg : Int }
+union msg { msg : Int }
 
 -- ### Actions
 --

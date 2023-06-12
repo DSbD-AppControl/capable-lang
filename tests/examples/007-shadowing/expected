@@ -25,7 +25,7 @@ Already bound:
 
 # Finished Parsing
 Type Checking Error
-main4.capable:0:32-46:
+main4.capable:0:25-39:
 Already bound:
 	"this"
 

@@ -5,7 +5,7 @@ func printLn(str:String) -> Unit
 
 }
 
-type either = union { left : String; right : Int }
+union either { left : String; right : Int }
 
 func foo(a : either) -> &String
 {
@@ -33,7 +33,7 @@ main (args : [String])
 {
   local bar : either = tag[left]("AA")
 ; printLn(!foo(bar))
-; local bar : union { left : String; right : Int } = tag[right](1)
+; local bar : either = tag[right](1)
 ; printLn(!foo(bar))
 
 }

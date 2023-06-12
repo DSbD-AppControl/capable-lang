@@ -5,7 +5,7 @@ func printLn(str:String) -> Unit
 
 }
 
-type SubProcess = struct { writeTo : PROC; readFrom : PROC }
+struct SubProcess { writeTo : PROC; readFrom : PROC }
 
 
 func closeFHS ( fhs : SubProcess ) -> Unit

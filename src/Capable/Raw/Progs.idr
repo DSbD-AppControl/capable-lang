@@ -16,6 +16,7 @@ import Capable.Raw.AST
 import Capable.Raw.Role
 import Capable.Raw.Protocols
 import Capable.Raw.Types
+import Capable.Raw.DTypes
 import Capable.Raw.Exprs
 import Capable.Raw.Funcs
 import Capable.Raw.Sessions
@@ -24,6 +25,7 @@ import Capable.Raw.Sessions
 
 public export
 CalcDef : (kind : DefKind l) -> (AST l -> Type)
+CalcDef DTYPE = DTy
 CalcDef TYPE = Ty
 CalcDef FUNC = Fun
 CalcDef ROLE = Role
@@ -31,6 +33,7 @@ CalcDef PROT = Protocol
 CalcDef SESH = Session
 
 toDef : (x : DefKind k) -> (p : AST k) -> CalcDef x p
+toDef DTYPE = toDType
 toDef TYPE = toType
 toDef FUNC = toFun
 toDef ROLE = toRole

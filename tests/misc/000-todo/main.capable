@@ -10,10 +10,11 @@ type fb = PROC
 type g = [3;Bool]
 type ga = [3;[5;Bool]]
 
-type h = union { left:Bool; goo:Int}
+union h { left:Bool; goo:Int}
+
 type i = (Bool,Int)
 
-type k = union {this:[3;Bool]; that:[5;String]}
+union k {this:[3;Bool]; that:[5;String]}
 
 func foo() -> Int
 {
@@ -50,13 +51,14 @@ func fb() -> Unit
 
 }
 
+union arghhh { leftA : String; right : Int }
 
 func bf() -> Unit
 {
-  local x : union { left:String; right:Int } = tag[left]("String")
+  local x : arghhh = tag[leftA]("String")
 ; match x
   {
-    when left(y)
+    when leftA(y)
     {
        print("aa")
     }

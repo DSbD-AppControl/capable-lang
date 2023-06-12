@@ -17,14 +17,16 @@ import Capable.Types.Protocol.Global.WellFormed
 
 import Capable.Raw.AST
 import Capable.Raw.Types
+import Capable.Raw.DTypes
 import Capable.Raw.Exprs
-
 import Capable.Raw.Funcs
 import Capable.Raw.Role
 import Capable.Raw.Progs
+
 import Capable.Check.Common
 import Capable.Check.Elab
 import Capable.Check.Types
+import Capable.Check.DataTypes
 import Capable.Check.Roles
 import Capable.Check.Protocols
 import Capable.Check.Exprs
@@ -69,9 +71,12 @@ check env state (Main fc m)
 -- projections.
 --
 -- Well maybe gallais can get it working, but I cannot...
-check env state (Def fc TYPE n val@(TyData fc' UNION _ args) scope)
+
+check env state (Def fc DTYPE n val@(TyData fc' UNION _ args) scope)
   = do exists fc (delta env) n
        (ty ** tm) <- synth (delta env) val
+
+       let val = TyVar (MkRef fc' n) R
 
        let (p ** scope) = generateTags val args scope
 
@@ -82,10 +87,11 @@ check env state (Def fc TYPE n val@(TyData fc' UNION _ args) scope)
 
        pure (DefType tm scope, state)
 
-check env state (Def fc TYPE n val@(TyData fc' STRUCT _ (Add a b c d)) scope)
+check env state (Def fc DTYPE n val@(TyData fc' STRUCT _ (Add a b c d)) scope)
   = do exists fc (delta env) n
        (ty ** tm) <- synth (delta env) val
 
+       let val = TyVar (MkRef fc' n) R
        let (p ** scope) = generateProjections fc n val (Add a b c d) scope
 
        let env   = { delta $= \c => extend c n ty} env

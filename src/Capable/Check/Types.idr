@@ -55,21 +55,6 @@ mutual
          (_ ** as ** tys) <- synthArgs' ctxt rest
          pure (_ ** _ ** ty :: tys)
 
-  synthFields : {types : List Ty.Base}
-             -> (ctxt  : Context Ty.Base types)
-             -> (args  : Named.Args as)
-                      -> Capable (DPair (List  (String, Ty.Base))
-                                    (DList (String, Ty.Base)
-                                           (Ty types . Builtin.snd)
-                                           ))
-  synthFields ctxt []
-    = pure (_ ** Nil)
-
-  synthFields ctxt (Add fc s ty rest)
-    = do (a ** ty) <- synth ctxt ty
-         (as ** tys) <- synthFields ctxt rest
-         pure ((s,a)::as ** (ty::tys))
-
   export
   synth : {types : List Ty.Base}
        -> (ctxt : Context Ty.Base types)
@@ -110,34 +95,12 @@ mutual
                | _ => throwAt fc Unknown
          pure (_ ** TyTuple (a::b::args))
 
-  synth ctxt (TyData fc k prf (Add fc' s x fs))
-    = do checkLabels Nil (Add fc' s x fs)
-
-         (_ ** (a::tmF)) <- synthFields ctxt (Add fc' s x fs)
-               | _ => throwAt fc Unknown
-
-         case k of
-           UNION => pure (_ ** TyUnion (a::tmF))
-           STRUCT => pure (_ ** TyRecord (a::tmF))
-
-    where checkLabels : List String -> Named.Args awes -> Capable ()
-          checkLabels _ Nil = pure ()
-          checkLabels ss (Add fc s _ fs)
-            = case isElem s ss of
-                No _ => checkLabels (s::ss) fs
-                Yes _ => throwAt fc (AlreadyBound (MkRef fc s))
-
   synth ctxt (TyRef fc ty)
     = do (ty ** tm) <- synth ctxt ty
          pure (_ ** TyRef tm)
 
   synth ctxt (TyHandle fc k)
     = pure (_ ** TyHandle k)
-
---  synth ctxt (TyFunc fc prf args retty)
---    = do (tyAS ** args) <- synthArgs ctxt args
---         (tyR  ** ret)  <- synth     ctxt retty
---         pure (_ ** TyFunc args ret)
 
 namespace Raw
   export
@@ -229,9 +192,5 @@ mutual
 
   reflect delta (HANDLE x)
     = pure (TyHandle x)
-
---  reflect delta (FUNC xs x)
---    = pure (TyFunc !(reflectArgs delta xs)
---                   !(reflect     delta x))
 
 -- [ EOF ]

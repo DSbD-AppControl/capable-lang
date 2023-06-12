@@ -1,6 +1,6 @@
 func printLn(str:String) -> Unit { print(str) ; print(toString('\n')) }
 
-type SubProcess = struct { writeTo : PROC; readFrom : PROC }
+struct SubProcess { writeTo : PROC; readFrom : PROC }
 
 
 func closeFHS ( fhs : SubProcess ) -> Unit

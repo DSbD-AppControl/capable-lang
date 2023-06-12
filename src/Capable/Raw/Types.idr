@@ -20,22 +20,6 @@ import Capable.Raw.AST
 %hide fields
 
 mutual
-
-  namespace Named
-    public export
-    data Args : (rs : Vect n Raw.AST.FIELD)
-                   -> Type
-      where
-
-        Nil : Args Nil
-
-        Add : {r , rs : _}
-           -> (fc   : FileContext)
-            -> (s    : String)
-            -> (ty   : Ty   r)
-            -> (rest : Named.Args rs)
-                    -> Named.Args (Branch (FIELD s) fc [r] :: rs)
-
   public export
   data Args : (rs : Vect n (Raw.AST.TYPE))
                  -> Type
@@ -76,12 +60,12 @@ mutual
              -> (fs  : Args fields')
                    -> Ty (Branch PROD fc fields)
 
-      TyData : {  fields' : Vect (S n) Raw.AST.FIELD}
-            -> (fc  : FileContext)
-            -> (k   : DKind)
-            -> (prf : AsVect fields fields')
-            -> (fs  : Args fields')
-                  -> Ty (Branch (DTYPE k) fc fields)
+--      TyData : {  fields' : Vect (S n) Raw.AST.FIELD}
+--            -> (fc  : FileContext)
+--            -> (k   : DKind)
+--            -> (prf : AsVect fields fields')
+--            -> (fs  : Args fields')
+--                  -> Ty (Branch (DTYPE k) fc fields)
 
       TyRef : (fc : FileContext)
            -> (ty : Ty           type)
@@ -101,16 +85,8 @@ mutual
 
 mutual
 
-
-  toFields : (rs : Vect n Raw.AST.FIELD)
-                -> Args rs
-  toFields []
-    = []
-  toFields (Branch (FIELD s) fc [x]::xs)
-    = Add fc s (toType x) (toFields xs)
-
   toTypeArgs : (rs : Vect n Raw.AST.TYPE)
-                -> Args rs
+                 -> Args rs
   toTypeArgs []
     = []
   toTypeArgs (x :: xs)
@@ -134,12 +110,12 @@ mutual
       in TyTuple fc prf
                     (assert_total $ toTypeArgs vs)
 
-  toType (Branch (DTYPE k) fc fs)
-    = let (vs ** prf) = asVect fs
-      in TyData fc
-                k
-                prf
-                (assert_total $ toFields vs)
+--  toType (Branch (DTYPE k) fc fs)
+--    = let (vs ** prf) = asVect fs
+--      in TyData fc
+--                k
+--                prf
+--                (assert_total $ toFields vs)
 
 --  toType (Branch ARROW fc nodes)
 --    = let (vs ** prf) = asVect nodes

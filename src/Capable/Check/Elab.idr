@@ -1,5 +1,7 @@
-||| Elaborator to transform concrete syntax into core terms.
+||| Elaborator to datatypes into core terms.
 |||
+||| 1. Structs get turned into 'newtypes', and have accessor methods created.
+||| 2. Unions have methods generated to create instances.
 |||
 ||| Copyright : see COPYRIGHT
 ||| License   : see LICENSE
@@ -16,15 +18,50 @@ import Capable.Core
 
 import Capable.Raw.AST
 import Capable.Raw.Types
+import Capable.Raw.DTypes
 import Capable.Raw.Exprs
-
 import Capable.Raw.Funcs
 import Capable.Raw.Role
 import Capable.Raw.Progs
 
 %default total
 
--- # First we elaboration some functions for projecting records
+-- # Higher ORder Functions to generate projections of fields in a datatype.
+
+||| Higher ORder Function to generate user defined projections of fields in a datatype.
+projs : {t, fields' : _}
+     -> (f : {t,t' : _}
+          -> FileContext
+          -> Ty t
+          -> String
+          -> Ty t'
+          -> (DPair FUNC (\f => (FileContext, String, Fun f))))
+     -> Ty t
+     -> Named.Args fields'
+     -> List (DPair FUNC (\f => (FileContext, String, Fun f)))
+projs f atype Nil = Nil
+projs f atype (Add fc' s t xs)
+  = f fc' atype s t :: projs f atype xs
+
+||| Fold a set of projections into a given scope.
+foldFun : (DPair FUNC (\f => (FileContext, String, Fun f)))
+        -> DPair PROG Prog
+        -> DPair PROG Prog
+foldFun (f' ** (fc,label,fn)) (p' ** scope)
+  = (_ ** Def fc FUNC label fn scope)
+
+-- # Elaboration of Recoreds
+
+||| Generate a getter to access a valid element of the record.
+|||
+|||
+|||
+||| In concrete syntax this is:
+|||
+||| ```
+||| func get_x(label : struct { x : t; ...}) -> t { get[x](label) }
+||| ```
+|||
 projGet : {t,t' : _}
        -> FileContext
        -> Ty t
@@ -41,6 +78,16 @@ projGet fc atype str rtype
                rtype
                (GetR fc str (Var (MkRef fc "label") R))))
 
+||| Generate a setter to set a valid element of the record.
+|||
+|||
+|||
+||| In concrete syntax this is:
+|||
+||| ```
+||| func set_x(rec : struct { x : t; ...}, val : t) -> struct { x : t; ...} { set[x](rec, val) }
+||| ```
+|||
 projSet : {t,t' : _}
        -> FileContext
        -> Ty t
@@ -60,6 +107,8 @@ projSet fc atype str rtype
                      (Var (MkRef fc "rec") R)
                      (Var (MkRef fc "val") R))))
 
+-- ## Utilities to generate arguments and references when projecting records.
+
 data PArgs : Vect n FIELD -> Type where
   PA : {fs : Vect n FIELD}
     -> {as : _}
@@ -68,6 +117,7 @@ data PArgs : Vect n FIELD -> Type where
     -> (val : All Arg vs)
            -> PArgs fs
 
+||| Generate arguments used within a record construction function
 projArgs : {f : _}
         -> {fields : Vect n FIELD}
         -> Named.Args (f::fields)
@@ -90,6 +140,7 @@ data PRefs : Vect n FIELD -> Type where
     -> (val : All Field vs)
            -> PRefs fs
 
+||| Generate references used within a record construction function.
 projRefs : {f : _}
         -> {fields : Vect n FIELD}
         -> Named.Args (f :: fields)
@@ -104,6 +155,25 @@ projRefs (Add fc s _ (Add fc' s' ty' rest))
     in  PR (Next prf)
            (F fc s (Var (MkRef fc s) R) :: tms)
 
+||| Generate a record constructor as a function.
+|||
+||| Assuming:
+|||
+||| ```
+||| struct Foo { x : t; ...}
+||| ```
+|||
+||| and
+|||
+||| ```
+||| let Foo = struct { x : t; ...}
+||| ```
+|||
+||| then
+|||
+||| ```
+||| func Foo(x : t, ...) { MkRecord { x, ...} }
+||| ```
 projCtor : {t, f,fields' : _}
         -> FileContext
         -> String
@@ -123,26 +193,31 @@ projCtor fc n rtype argso
                    (Record fc pr (refs))
                ))
 
-projs : {t, fields' : _}
-     -> (f : {t,t' : _}
-          -> FileContext
-          -> Ty t
-          -> String
-          -> Ty t'
-          -> (DPair FUNC (\f => (FileContext, String, Fun f))))
-     -> Ty t
-     -> Named.Args fields'
-     -> List (DPair FUNC (\f => (FileContext, String, Fun f)))
-projs f atype Nil = Nil
-projs f atype (Add fc' s t xs)
-  = f fc' atype s t :: projs f atype xs
-
-foldFun : (DPair FUNC (\f => (FileContext, String, Fun f)))
-        -> DPair PROG Prog
-        -> DPair PROG Prog
-foldFun (f' ** (fc,label,fn)) (p' ** scope)
-  = (_ ** Def fc FUNC label fn scope)
-
+||| Generate accessors and encapsulate records.
+|||
+||| Thus we are transforming:
+|||
+||| ```
+||| struct foo { x : t ; ... ; y : s}
+|||
+||| body
+||| ```
+|||
+||| assuming:
+|||
+||| ```
+||| let foo = struct {x : t ; ... } in body
+||| ```
+|||
+||| into
+|||
+||| ```
+||| func x(value : t) -> foo { the foo tag[x](value) }
+|||
+||| ...
+|||
+||| body
+||| ```
 export
 generateProjections : {t,f,fields,p : _ }
                    -> FileContext
@@ -157,7 +232,18 @@ generateProjections fc n rtype fs scope
     let ctor = projCtor fc n rtype fs
     in foldr foldFun (_ ** scope) (ctor :: gs ++ ss)
 
--- # We do the same for unions
+-- ## Unions
+
+||| Generate a method to construct a valid element of the union.
+|||
+|||
+|||
+||| In concrete syntax this is:
+|||
+||| ```
+||| func x(value : t) -> union { x : t; ...} { the (union { x : t; ...}) tag[x](value) }
+||| ```
+|||
 projTag : {t,t' : _}
        -> FileContext
        -> Ty t
@@ -176,6 +262,31 @@ projTag fc atype str rtype
 
                ))
 
+||| Generate ctors for each tag in a union.
+|||
+||| Thus we are transforming:
+|||
+||| ```
+||| union foo { x : t ; ... }
+|||
+||| body
+||| ```
+|||
+||| assuming:
+|||
+||| ```
+||| let foo = union {x : t ; ... ; y : s} in body
+||| ```
+|||
+||| into
+|||
+||| ```
+||| func x(value : t) -> foo { the foo tag[x](value) }
+|||
+||| ...
+|||
+||| body
+||| ```
 export
 generateTags : {t,fields,p : _ } -> Ty t -> Named.Args fields -> Prog p -> DPair PROG Prog
 generateTags rtype fs scope

@@ -32,6 +32,7 @@ import Capable.Raw.AST
 import Capable.Raw.Role
 import Capable.Raw.Protocols
 import Capable.Raw.Types
+import Capable.Raw.DTypes
 import Capable.Raw.Exprs
 import Capable.Raw.Funcs
 import Capable.Raw.Sessions
@@ -162,18 +163,6 @@ type (TyTuple fc prf fs)
                                     (flatAlt (" )") (")"))
                                     (", ")
 
-type (TyData fc STRUCT prf fs)
-  = group
-  $ hsep
-  [ typeStr "struct"
-  , typeFields $ assert_total $ kvs type fs]
-
-type (TyData fc UNION prf fs)
-  = group
-  $ hsep
-  [ typeStr "union"
-  , typeFields $ assert_total $ kvs type fs]
-
 type (TyRef fc ty)
   = group
   $ hcat
@@ -185,6 +174,22 @@ type (TyHandle fc FILE)
   = typeStr "FILE"
 type (TyHandle fc PROCESS)
   = typeStr "PROC"
+
+datatype : String -> DTy t -> Doc KIND
+datatype n (TyData fc STRUCT prf fs)
+  = group
+  $ hsep
+  [ keyword "struct"
+  , binder n
+  , typeFields $ assert_total $ kvs type fs]
+
+datatype n (TyData fc UNION prf fs)
+  = group
+  $ hsep
+  [ keyword "union"
+  , binder n
+  , typeFields $ assert_total $ kvs type fs]
+
 
 farg : Arg a -> Doc KIND
 farg (A fc n ty)
@@ -797,6 +802,11 @@ prog (Main fc m)
   [ binder "main"
   , function m
   ]
+
+prog (Def fc DTYPE s val scope)
+  = vsep
+  [ datatype s val
+  , prog scope]
 
 prog (Def fc TYPE s val scope)
   = vsep

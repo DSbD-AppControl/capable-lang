@@ -3,12 +3,12 @@ role Bob
 
 type foo = String
 
-type ping = union { ping : String }
-type pong = union { pong : String }
+union ping { ping : String }
+union pong { pong : String }
 
-type pongR = union { pongR : String
-                   ; quit  : String
-                   }
+union pongR { pongR : String
+            ; quit  : String
+            }
 
 
 

@@ -1,4 +1,4 @@
-type MaybeInt = union { nout : Unit; this : Int}
+union MaybeInt { nout : Unit; this : Int}
 
 func printLn(msg : String) -> Unit
 {
@@ -9,7 +9,7 @@ func printLn(msg : String) -> Unit
 role Client
 role Server
 
-type msg = union { msg : Int }
+union msg { msg : Int }
 
 protocol Echo
   = Client ==> Server [msg] { msg(Int)

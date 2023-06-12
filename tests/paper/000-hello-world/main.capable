@@ -1,6 +1,6 @@
-type point = struct { x : Int; y : Int }
+struct point { x : Int; y : Int }
 
-type either = union { left : String; right : Int}
+union either { left : String; right : Int}
 
 func printLn(str:String) -> Unit
 {

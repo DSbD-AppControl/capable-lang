@@ -2,17 +2,16 @@ role Service
 role Client
 role Auth
 
-type logon
-  = union
+union logon
     { login  : Unit
     ; cancel : Unit
     }
 
-type quit = union { quit : Unit }
+union quit { quit : Unit }
 
-type pword = union { pword : String }
+union pword { pword : String }
 
-type auth = union { auth : Bool }
+union auth { auth : Bool }
 
 protocol oauthSimple
   = Service ==> Client [logon]

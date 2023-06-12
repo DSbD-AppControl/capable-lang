@@ -13,7 +13,7 @@ Running Test
 
 Capable> # Finished Parsing
 Type Checking Error
-main.capable:16:0-0:
+main.capable:15:0-0:
 Protocol is not well-formed:
 	Auth causes:
 Error merging:

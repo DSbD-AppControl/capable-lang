@@ -20,6 +20,7 @@ namespace Kind
             | PROT
             | BRANCH
             | TYPE
+            | DTYPE
             | METH
             | FIELD
             | FIELDV
@@ -127,14 +128,16 @@ namespace Expr
 
   public export
   data DefKind : Kind.Kind -> Type where
-    TYPE : DefKind TYPE
-    FUNC : DefKind FUNC
-    ROLE : DefKind ROLE
-    PROT : DefKind PROT
-    SESH : DefKind SESH
+    DTYPE : DefKind DTYPE
+    TYPE  : DefKind TYPE
+    FUNC  : DefKind FUNC
+    ROLE  : DefKind ROLE
+    PROT  : DefKind PROT
+    SESH  : DefKind SESH
 
   export
   Show (DefKind k) where
+    show DTYPE = "DTYPE"
     show TYPE = "TYPE"
     show FUNC = "FUNC"
     show ROLE = "ROLE"
@@ -173,10 +176,9 @@ namespace Shape
     PROD  : Shape TYPE (S (S n)) (replicate (S (S n)) TYPE)
 
     FIELD : String -> UN Shape FIELD TYPE
-    DTYPE : DKind -> Shape TYPE (S n)  (replicate (S n)  FIELD)
+    DTYPE : DKind -> Shape DTYPE (S n)  (replicate (S n)  FIELD)
 
     ARROW : Shape METH (S n) (replicate (S n) TYPE)
-    SQUIG : Shape METH (S n) (replicate (S n) TYPE)
     -- @TODO Add other information
 
     -- ## Expressions
@@ -355,7 +357,6 @@ namespace Shape
     show (FIELD str)     = "(FIELD \{show str})"
     show (DTYPE x)       = "(DTYPE \{show x})"
     show ARROW           = "ARROW"
-    show SQUIG           = "SQUIG"
     show (HOLE str)      = "(HOLE \{show str}}"
     show (VAR str)       = "(VAR \{show str})"
     show (LETTY x str)   = "(LETTY \{show x} \{show str})"
@@ -423,6 +424,10 @@ namespace FileContext
 
   namespace Raw
     namespace AST
+
+      public export
+      DTYPE : Type
+      DTYPE = AST DTYPE
 
       public export
       BRANCH : Type

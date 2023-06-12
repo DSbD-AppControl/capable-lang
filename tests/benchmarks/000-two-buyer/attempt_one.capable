@@ -20,17 +20,17 @@ role Bob
 role Seller
 role Alice
 
-type request = union { title : String }
-type quote   = union { quote : Int}
-type address = union { addr  : String}
-type date    = union { date  : String}
+union request { title : String }
+union quote   { quote : Int}
+union address { addr  : String}
+union date    { date  : String}
 
-type steps = union { quit   : Unit
-                   ; accept : Unit
-                   }
+union steps { quit   : Unit
+            ; accept : Unit
+            }
 
-type MaybeDate = union { nout : Unit; cancelled : Unit; mdate : String}
-type MaybeSale = union { noutS : Unit; sale : String; cancelledS : Unit}
+union MaybeDate { nout : Unit; cancelled : Unit; mdate : String}
+union MaybeSale { noutS : Unit; sale : String; cancelledS : Unit}
 
 protocol twoBuyer
   = Alice  ==> Seller [ request ] { title(String)

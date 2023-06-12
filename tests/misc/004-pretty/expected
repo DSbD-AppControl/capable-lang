@@ -42,11 +42,11 @@ Running Test
 ```
 role Client
 role Server
-type body = struct {x : Int; y : Int}
-type command = union {adder : body; suber : body; diver : body; muler : body}
-type responsePure = union {answer : Int}
-type responseEffect = union {divByZero : Unit; answerE : Int}
-type MaybeAnswer = union {crashed : Unit; dz : Unit; result : Int}
+struct body {x : Int; y : Int}
+union command {adder : body; suber : body; diver : body; muler : body}
+union responsePure {answer : Int}
+union responseEffect {divByZero : Unit; answerE : Int}
+union MaybeAnswer {crashed : Unit; dz : Unit; result : Int}
 protocol OneShotCalcutron
   = Client ==> Server [command] { adder(body)
   . Server ==> Client [responsePure] { answer(Int)

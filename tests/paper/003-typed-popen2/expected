@@ -5,7 +5,7 @@ Running Test
 # Finished Type Checking
 ```
 \begin{VerbatimInline}
-\CapableKeyword{type} \CapableBound{MaybeInt} = \CapableType{union} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{this} : \CapableType{Int}\}
+\CapableKeyword{union} \CapableBound{MaybeInt} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{this} : \CapableType{Int}\}
 \CapableKeyword{func} \CapableBound{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableBound{msg});
@@ -13,7 +13,7 @@ Running Test
 \}
 \CapableKeyword{role} \CapableRole{Client}
 \CapableKeyword{role} \CapableRole{Server}
-\CapableKeyword{type} \CapableBound{msg} = \CapableType{union} \{\CapableBound{msg} : \CapableType{Int}\}
+\CapableKeyword{union} \CapableBound{msg} \{\CapableBound{msg} : \CapableType{Int}\}
 \CapableKeyword{protocol} \CapableBound{Echo}
   = \CapableRole{Client} ==> \CapableRole{Server} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
   . \CapableRole{Server} ==> \CapableRole{Client} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})

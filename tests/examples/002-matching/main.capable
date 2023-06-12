@@ -5,7 +5,7 @@ func printLn(str:String) -> Unit
 
 }
 
-type uo = union { urgh:String; oops:Int}
+union uo { urgh:String; oops:Int}
 
 func extract(x : uo ) -> String
 {
@@ -24,9 +24,9 @@ func extract(x : uo ) -> String
 
 main (args : [String])
 {
-  local foo : union { urgh:String ; oops:Int } = tag[urgh]("Ola")
+  local foo : uo = tag[urgh]("Ola")
 ; printLn(extract(foo))
 
-; local foo : union { urgh:String ; oops:Int } = urgh("Ola") -- works because of binding on L8
+; local foo : uo = urgh("Ola") -- works because of binding on L8
 ; printLn(extract(foo))
 }
