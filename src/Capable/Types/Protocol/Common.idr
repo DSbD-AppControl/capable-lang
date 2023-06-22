@@ -109,8 +109,8 @@ namespace Protocol
 
 export
 choices : List (Doc ann) -> Doc ann
-choices = group . encloseSep (flatAlt (pretty "[ ") (pretty "["))
-                             (flatAlt (pretty "]")  (pretty "]"))
+choices = group . encloseSep (flatAlt (pretty "{ ") (pretty "{"))
+                             (flatAlt (pretty " }")  (pretty "}"))
                              (flatAlt (pretty "| ") (pretty " | "))
 
 branch : (Context Kind ks -> Context Ty.Role rs -> c ks rs -> Doc ())
@@ -139,10 +139,5 @@ branches g kctxt rctxt xs
     in assert_total
     $ choices prettyXS
 
---export
---showAcc : Nat -> String
---showAcc n
---    = if lt n 26
---           then singleton (chr (cast (plus 97 n)))
---           else (singleton (chr (cast (plus 97 (mod n 26))))) <+> (assert_total $ showAcc  (minus n 26))
+
 -- [ EOF ]

@@ -306,7 +306,12 @@ namespace Closed
 
   pretty kctxt rctxt (Call x)
     = group
-    $ parens (hsep [pretty "Call", pretty (reflect kctxt x)])
+    $ hcat
+      [ pretty "Call"
+      , parens
+        $ pretty
+          $ reflect kctxt x
+      ]
 
   pretty kctxt rctxt (Rec (R v) x)
     = let cont = pretty (extend kctxt v (R v)) rctxt x
@@ -319,30 +324,41 @@ namespace Closed
     = group
     $ parens
     $ hsep
-    [ pretty "selects from"
-    , pretty (reflect rctxt whom)
-    , pretty l
-    , parens (pretty t)
-    , pretty "."
-    , indent 2 (pretty kctxt rctxt k)
-    ]
+      [ hcat
+        [ pretty "sendTo"
+        , brackets
+          $ pretty
+            $ reflect rctxt whom
+        ]
+      , hcat
+        [ pretty l
+        , parens
+          $ pretty t
+        ]
+      , pretty "."
+      , indent 2 (pretty kctxt rctxt k)
+      ]
 
   pretty kctxt rctxt (Offer whom (Val (UNION (f:::fs))) _ cs)
 
     = group
     $ parens
     $ hsep
-    [ pretty "offers to"
-    , pretty (reflect rctxt whom)
-    , pretty (show (UNION (f:::fs)))
-    , hang 2 (assert_total $ branches pretty kctxt rctxt cs) ]
+      [ hcat
+        [ pretty "recvFrom"
+        , brackets
+          $ pretty
+            $ reflect rctxt whom
+        ]
+    , indent 2 (assert_total $ branches pretty kctxt rctxt cs)
+    ]
 
   pretty kctxt rctxt (Choices cs)
     = group
     $ parens
     $ hsep
     [ pretty "Choices"
-    , hang 2 (assert_total $ branches pretty kctxt rctxt cs) ]
+    , indent 2 (assert_total $ branches pretty kctxt rctxt cs) ]
 
   export
   toString : (rctxt : Context Ty.Role rs)

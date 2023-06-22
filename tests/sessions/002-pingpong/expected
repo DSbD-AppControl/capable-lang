@@ -13,22 +13,12 @@ Running Test
 
 Capable> # Finished Parsing
 # Finished Type Checking
-Capable> (selects from Ponger union {ping : Int} [ ping(Int)
-                                          .(offers to Ponger union {pong : Int} [ pong(Int)
-                                                                                  .End])])
-Capable> (offers to Pinger union {ping : Int} [ ping(Int)
-                                       .(selects from Pinger union {pong : Int} [ pong(Int)
-                                                                                  .End])])
+Capable> (sendTo[Ponger] {ping(Int).(recvFrom[Ponger] {pong(Int).End})})
+Capable> (recvFrom[Pinger] {ping(Int).(sendTo[Pinger] {pong(Int).End})})
 Capable> rec(X).
-  (selects from Ponger union {ping : Int} [ ping(Int)
-                                            .(offers to Ponger union {stop : Int; cont : Int} [ stop(Int)
-                                                                                                .End
-                                                                                                | cont(Int)
-                                                                                                  .(Call X)])])
+  (sendTo[Ponger] { ping(Int)
+                    .(recvFrom[Ponger] {stop(Int).End | cont(Int).Call (X)}) })
 Capable> rec(X).
-  (offers to Pinger union {ping : Int} [ ping(Int)
-                                         .(selects from Pinger union {stop : Int; cont : Int} [ stop(Int)
-                                                                                                .End
-                                                                                                | cont(Int)
-                                                                                                  .(Call X)])])
+  (recvFrom[Pinger] { ping(Int)
+                      .(sendTo[Pinger] {stop(Int).End | cont(Int).Call (X)}) })
 Capable> Exiting the REPL

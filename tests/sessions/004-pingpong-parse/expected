@@ -7,9 +7,7 @@ maindeux.capable
 Type Checking Error
 maindeux.capable:61:2-0:
 Session is ill-typed, expecting an expression of type:
-	(selects from Server union {msg : Int} [ msg(Int)
-                                         .(offers to Server union {msg : Int} [ msg(Int)
-                                                                                .End])])
+	(sendTo[Server] {msg(Int).(recvFrom[Server] {msg(Int).End})})
 but given:
 	End
 
@@ -19,7 +17,7 @@ mainerr.capable
 Type Checking Error
 mainerr.capable:62:2-0:
 Session is ill-typed, expecting an expression of type:
-	(offers to Server union {msg : Int} [msg(Int).End])
+	(recvFrom[Server] {msg(Int).End})
 but could not synthesis given type.
 
 
@@ -34,7 +32,7 @@ i : Int
 ## Roles
 ["Server", "Client"]
 ---
-aa : (offers to Server union {msg : Int} [msg(Int).End])
+aa : (recvFrom[Server] {msg(Int).End})
 mainun.capable
 # Finished Parsing
 Type Checking Error

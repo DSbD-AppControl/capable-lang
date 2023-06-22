@@ -13,26 +13,24 @@ Running Test
 
 Capable> # Finished Parsing
 # Finished Type Checking
-Capable> (selects from Seller union {title : String} [ title(String)
-                                              .(offers to Seller union {quote : Int} [ quote(Int)
-                                                                                       .(selects from Bob union {quote : Int} [ quote(Int)
-                                                                                                                                .End])])])
-Capable> (offers to Seller union {quote : Int} [ quote(Int)
-                                        .(offers to Alice union {quote : Int} [ quote(Int)
-                                                                                .(selects from Seller union {quit : Unit; accept : Unit} [ quit(Unit)
-                                                                                                                                           .End
-                                                                                                                                           | accept(Unit)
-                                                                                                                                             .(selects from Seller union {addr : String} [ addr(String)
-                                                                                                                                                                                           .(offers to Seller union {date : String} [ date(String)
-                                                                                                                                                                                                                                      .End])])])])])
-Capable> (offers to Alice union {title : String} [ title(String)
-                                          .(selects from Alice union {quote : Int} [ quote(Int)
-                                                                                     .(selects from Bob union {quote : Int} [ quote(Int)
-                                                                                                                              .(offers to Bob union {quit : Unit; accept : Unit} [ quit(Unit)
-                                                                                                                                                                                   .End
-                                                                                                                                                                                   | accept(Unit)
-                                                                                                                                                                                     .(offers to Bob union {addr : String} [ addr(String)
-                                                                                                                                                                                                                             .(selects from Bob union {date : String} [ date(String)
-                                                                                                                                                                                                                                                                        .End])])])])])])
+Capable> (sendTo[Seller] { title(String)
+                  .(recvFrom[Seller] { quote(Int)
+                                       .(sendTo[Bob] {quote(Int).End}) }) })
+Capable> (recvFrom[Seller] { quote(Int)
+                    .(recvFrom[Alice] { quote(Int)
+                                        .(sendTo[Seller] { quit(Unit).End
+                                        | accept(Unit)
+                                          .(sendTo[Seller] { addr(String)
+                                                             .(recvFrom[Seller] { date(String)
+                                                                                  .End }) }) }) }) })
+Capable> (recvFrom[Alice] { title(String)
+                   .(sendTo[Alice] { quote(Int)
+                                     .(sendTo[Bob] { quote(Int)
+                                                     .(recvFrom[Bob] { quit(Unit)
+                                                                       .End
+                                                     | accept(Unit)
+                                                       .(recvFrom[Bob] { addr(String)
+                                                                         .(sendTo[Bob] { date(String)
+                                                                                         .End }) }) }) }) }) })
 Capable> Need to load a program first.
 Capable> Exiting the REPL
