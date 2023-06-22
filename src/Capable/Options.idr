@@ -21,8 +21,7 @@ export
 Eq Target where
   (==) RUST RUST = True
 
-public export
-record Opts where
+record IOpts where
   constructor O
   justLex   : Bool
   showAST   : Bool
@@ -67,12 +66,12 @@ Options:
 
 
 export
-Show Opts where
+Show IOpts where
   show (O l a c po p r f cg q)
     = "O \{show l} \{show a} \{show c} \{show po} \{show p} \{show r} \{show f} \{show cg} \{show q}"
 
 export
-Eq Opts where
+Eq IOpts where
   (==) x y
     =  justLex x   == justLex y
     && showAST x == showAST y
@@ -84,7 +83,7 @@ Eq Opts where
     && help x == help y
     && codegen x == codegen y
 
-convOpts : Arg -> Opts -> Maybe Opts
+convOpts : Arg -> IOpts -> Maybe IOpts
 
 convOpts (File x) o
   = Just $ { file := (file o) ++ [x]} o
@@ -122,14 +121,40 @@ convOpts (Flag x) o
       otherwise => Nothing
 
 
-defOpts : Opts
+defOpts : IOpts
 defOpts = O False False False False False False False Nothing Nil
+
+
+namespace Options
+  public export
+  record Opts where
+    constructor O
+    justLex   : Bool
+    showAST   : Bool
+    justCheck : Bool
+    pprint    : Bool
+    ppLaTeX   : Bool
+    launchREPL : Bool
+    help       : Bool
+    codegen   : Maybe Target
+    file     : Maybe String
+    args    : List String
+
+populate : IOpts -> Maybe String -> List String -> Opts
+populate (O l a c po p r f cg _)
+        = O l a c po p r f cg
+
+process : IOpts -> Capable Opts
+process o
+  = case (file o) of
+      (x::xs) => pure (populate o (Just x) xs)
+      _       => pure (populate o Nothing  Nil)
 
 export
 getOpts : Capable Opts
 getOpts
-  = parseArgs (Opts . OError)
-              defOpts
-              convOpts
+  = process !(parseArgs (Opts . OError)
+                         defOpts
+                         convOpts)
 
 -- [ EOF ]

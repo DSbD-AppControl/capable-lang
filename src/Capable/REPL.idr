@@ -101,17 +101,30 @@ process _ st (Roles str)
        traverse_ (\o => putStrLn $ (reflect r o)) os
        pure st
 
+covering
+capableREPL : State
+           -> (process : State -> Cmd -> Capable State)
+           -> Capable ()
+capableREPL st p
+  = repl "Capable>"
+         commands
+         st
+         p
+         printLn
 
+
+covering
+runREPL : Opts -> State -> Capable ()
+runREPL o st
+  = do putStrLn banner
+       putStrLn "\n  Type :? for help.\n"
+       capableREPL st (process o)
 
 export covering
 repl : Opts -> Capable ()
 repl o
-  = do putStrLn banner
-       putStrLn "\n  Type :? for help.\n"
-       repl "Capable>"
-             commands
-             defaultState
-             (process o)
-             printLn
+  = maybe (runREPL o defaultState)
+          (\fname => runREPL o !(process o defaultState (Load fname)))
+          (file o)
 
 -- [ EOF ]

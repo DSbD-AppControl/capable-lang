@@ -26,18 +26,18 @@ import Capable.Options
 showToks : (List (WithBounds Token)) -> List String
 showToks = map (\(MkBounded t _ _) => show t)
 
-process : Opts -> Capable (String, List String)
-process o
-  = case (file o) of
-      (x::xs) => pure (x,xs)
-      _       => throw (Generic Options.helpStr)
-
 
 codegen : Target -> Prog p -> Capable ()
 codegen RUST et
   = do putStrLn "```"
        putStrLn (Rust.codegen et)
        putStrLn "```"
+
+getFile : Opts -> Capable String
+getFile o
+  = maybe (throw $ Generic Options.helpStr)
+          pure
+          (file o)
 
 export
 pipeline : Opts -> Capable ()
@@ -46,7 +46,8 @@ pipeline opts
          $ do putStrLn helpStr
               exitSuccess
 
-       (fname,fargs) <- process opts
+       fname <- getFile opts
+       let fargs = args opts
 
        when (justLex opts)
          $ do toks <- lexFile fname
