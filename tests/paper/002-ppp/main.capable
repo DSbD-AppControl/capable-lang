@@ -1,0 +1,55 @@
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+union MaybeInt { nout : Unit; this : Int}
+union msg { msg : Int }
+
+role A
+role B
+role C
+
+protocol Echo
+  = A ==> B [msg] { msg(Int)
+  . B ==> C [msg] { msg(Int)
+  . C ==> B [msg] { msg(Int)
+  . B ==> A [msg] { msg(Int)
+  . end
+  }}}}
+
+session clientA <Echo as A>(i : Int) -> MaybeInt
+{ send[msg] B msg(i) catch { crash(nout(unit)) }
+  recv[msg] B { when msg(i) { end(this(i)) } }
+    catch { crash(nout(unit)) }}
+
+session clientB <Echo as B>() -> Bool
+{ recv[msg] A
+  { when msg(i)
+    { send[msg] C msg(i) catch { crash(false) }
+      recv[msg] C
+      { when msg(i)
+        { send[msg] A msg(i) catch { crash(false) }
+          end(true)
+        }
+      } catch { crash(false) }
+
+    }
+  } catch { crash(false) }
+}
+
+session clientC <Echo as C>() -> Bool
+{ recv[msg] B
+  { when msg(i)
+    { send[msg] B msg(i) catch { crash(false) }
+      end(true) }}
+  catch { crash(false) }}
+
+-- ### Program Entry Point
+main (args : [String])
+{
+  unit
+}
+
+-- [ EOF ]

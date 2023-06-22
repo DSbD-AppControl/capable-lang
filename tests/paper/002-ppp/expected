@@ -1,0 +1,106 @@
+Running Test
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+```
+# Finished
+# Finished Parsing
+# Finished Type Checking
+```
+\begin{VerbatimInline}
+\CapableKeyword{func} \CapableBound{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{print}(\CapableBound{msg});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
+\}
+\CapableKeyword{union} \CapableBound{MaybeInt} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{this} : \CapableType{Int}\}
+\CapableKeyword{union} \CapableBound{msg} \{\CapableBound{msg} : \CapableType{Int}\}
+\CapableKeyword{role} \CapableRole{A}
+\CapableKeyword{role} \CapableRole{B}
+\CapableKeyword{role} \CapableRole{C}
+\CapableKeyword{protocol} \CapableBound{Echo}
+  = \CapableRole{A} ==> \CapableRole{B} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
+  . \CapableRole{B} ==> \CapableRole{C} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
+  . \CapableRole{C} ==> \CapableRole{B} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
+  . \CapableRole{B} ==> \CapableRole{A} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
+  . \CapableKeyword{end}
+  \}
+  \}
+  \}
+  \}
+\CapableKeyword{session} \CapableBound{clientA} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{A}> (\CapableBound{i} : \CapableType{Int}) -> \CapableType{\CapableBound{MaybeInt}}
+\{
+  \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{B} \CapableBound{msg}(\CapableBound{i})
+    \CapableKeyword{catch}
+    \{
+      \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
+    \}
+  \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{B}
+  \{
+    \CapableKeyword{when} msg (i)
+    \{
+      \CapableKeyword{end}(\CapableBound{this}(\CapableBound{i}))
+    \}
+  \} \CapableKeyword{catch}
+  \{
+    \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
+  \}
+\}
+\CapableKeyword{session} \CapableBound{clientB} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{B}> () -> \CapableType{Bool}
+\{
+  \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{A}
+  \{
+    \CapableKeyword{when} msg (i)
+    \{
+      \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{C} \CapableBound{msg}(\CapableBound{i})
+        \CapableKeyword{catch}
+        \{
+          \CapableKeyword{crash}(\CapableValue{False})
+        \}
+      \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{C}
+      \{
+        \CapableKeyword{when} msg (i)
+        \{
+          \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{A} \CapableBound{msg}(\CapableBound{i})
+            \CapableKeyword{catch}
+            \{
+              \CapableKeyword{crash}(\CapableValue{False})
+            \}
+          \CapableKeyword{end}(\CapableValue{True})
+        \}
+      \} \CapableKeyword{catch}
+      \{
+        \CapableKeyword{crash}(\CapableValue{False})
+      \}
+    \}
+  \} \CapableKeyword{catch}
+  \{
+    \CapableKeyword{crash}(\CapableValue{False})
+  \}
+\}
+\CapableKeyword{session} \CapableBound{clientC} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{C}> () -> \CapableType{Bool}
+\{
+  \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{B}
+  \{
+    \CapableKeyword{when} msg (i)
+    \{
+      \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{B} \CapableBound{msg}(\CapableBound{i})
+        \CapableKeyword{catch}
+        \{
+          \CapableKeyword{crash}(\CapableValue{False})
+        \}
+      \CapableKeyword{end}(\CapableValue{True})
+    \}
+  \} \CapableKeyword{catch}
+  \{
+    \CapableKeyword{crash}(\CapableValue{False})
+  \}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableValue{unit}
+\}
+\end{VerbatimInline}
+
+```
