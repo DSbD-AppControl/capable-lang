@@ -1,0 +1,43 @@
+union MaybeInt { nout : Unit; this : Int}
+
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+role Client
+role Server
+
+union msg { msg : Int }
+
+protocol Echo
+  = Client ==> Server [msg] { msg(Int)
+  . Server ==> Client [msg] { msg(Int)
+  . end
+  }}
+
+session echoClient <Echo as Client>(i : Int) -> MaybeInt
+{
+  printLn(toString(i));
+
+  send[msg] Server msg(i) catch { printLn("Crashing on Send"); crash(nout(unit)) }
+
+  ?next
+
+}
+
+-- ### Program Entry Point
+main (args : [String])
+{
+  local val = 2;
+
+  -- Run a session, assigning processes to roles.
+  match run echoClient(val) with [Server as "python3 pingping.py" ]
+  {
+    when nout(i) { printLn("Oops we crashed!") }
+    when this(i) { print("We echoed this, successfully: "); printLn(toString(i)) }
+  }
+}
+
+-- [ EOF ]

@@ -825,8 +825,8 @@ namespace Expr
     check e er ec p ret type term
       = do R syn tm <- tryCatch (synth e er ec p ret term)
 
-                                (const $ throwAt (getFC term) (IllTypedSession (unlines [toString ec er type
-                          , "but could not synthesis given type."])))
+                                (\eer => throwAt (getFC term) (IllTypedSession (unlines [toString ec er type
+                          , "but could not synthesis given type because of\n\n\{show eer}."])))
 
            let msg = unlines [ toString ec er type
                              , "but given:\n\t\{toString ec er syn}"]

@@ -18,7 +18,12 @@ Type Checking Error
 mainerr.capable:62:2-0:
 Session is ill-typed, expecting an expression of type:
 	(recvFrom[Server] {msg(Int).End})
-but could not synthesis given type.
+but could not synthesis given type because of
+
+Type Checking Error
+mainerr.capable:63:3-0:
+Not enough information to type term.
+.
 
 
 mainhole.capable

@@ -1,0 +1,36 @@
+union MaybeInt { nout : Unit; this : Int}
+
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+role Client
+role Server
+
+union msg { msg : Int }
+
+protocol Echo
+  = Client ==> Server [msg] { msg(Int)
+  . Server ==> Client [msg] { msg(Int)
+  . end
+  }}
+
+session echoServer <Echo as Server>(i : Int) -> MaybeInt
+{
+  printLn(toString(i));
+
+  send[msg] Client msg(i) catch { printLn("Crashing on Send"); crash(nout(unit)) }
+
+  end(nout(unit))
+
+}
+
+-- ### Program Entry Point
+main (args : [String])
+{
+  unit
+}
+
+-- [ EOF ]
