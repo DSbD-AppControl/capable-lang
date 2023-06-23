@@ -27,27 +27,57 @@ import        Toolkit.Data.Vect.Extra
 
 %default total
 
-public export
-data HandleKind = FILE | PROCESS
+namespace HandleKind
+  public export
+  data HandleKind = FILE | PROCESS | PIPE
 
-export
-Show HandleKind where
-  show FILE    = "FILE"
-  show PROCESS = "PROCESS"
+  export
+  Show HandleKind where
+    show FILE    = "FILE"
+    show PROCESS = "PROCESS"
+    show PIPE    = "PIPE"
 
-Uninhabited (FILE = PROCESS) where
-  uninhabited Refl impossible
+  Uninhabited (FILE = PROCESS) where
+    uninhabited Refl impossible
 
-export
-DecEq HandleKind where
-  decEq FILE FILE
-    = Yes Refl
-  decEq FILE PROCESS
-    = No absurd
-  decEq PROCESS FILE
-    = No (negEqSym absurd)
-  decEq PROCESS PROCESS
-    = Yes Refl
+  Uninhabited (FILE = PIPE) where
+    uninhabited Refl impossible
+
+  Uninhabited (PIPE = PROCESS) where
+    uninhabited Refl impossible
+
+  data Diag : (a,b : HandleKind)
+                  -> Type
+    where
+      F  : Diag FILE FILE
+      PR : Diag PROCESS PROCESS
+      PI : Diag PIPE    PIPE
+
+
+  diag : (a,b : HandleKind) -> Maybe (Diag a b)
+  diag FILE    FILE    = Just F
+  diag PROCESS PROCESS = Just PR
+  diag PIPE    PIPE = Just PI
+
+  diag _ _ = Nothing
+
+  diagNot : (s : HandleKind)
+              -> Not (diag s s === Nothing)
+  diagNot FILE    = absurd
+  diagNot PROCESS = absurd
+  diagNot PIPE    = absurd
+
+
+  export
+  DecEq HandleKind where
+
+    decEq a@_ b@_ with (diag a b) proof eq
+
+      _ | (Just F) = Yes Refl
+      _ | (Just PR) = Yes Refl
+      _ | (Just PI) = Yes Refl
+
+      _ | Nothing = No (\Refl => diagNot _ eq)
 
 namespace Ty
 
@@ -82,10 +112,7 @@ namespace Ty
 
   public export
   POPEN2 : Base
-  POPEN2
-    = RECORD
-    $ ("writeTo", HANDLE PROCESS)
-    ::: [ MkPair "readFrom" (HANDLE PROCESS)]
+  POPEN2 = HANDLE PROCESS
 
   public export
   data Iterable : Base -> Base -> Type where
@@ -169,10 +196,6 @@ namespace Diag
            -> (ys : List1 (String, Base))
                  -> Diag (UNION xs) (UNION ys)
 
---      FUNC : (xs, ys : List Base)
---          -> (x , y  :      Base) -> Diag (FUNC xs x) (FUNC ys y)
-
-
   diag : (a,b : Base) -> Maybe (Diag a b)
   diag CHAR         CHAR        = Just CHAR
   diag STR          STR         = Just STR
@@ -186,7 +209,6 @@ namespace Diag
   diag (TUPLE xs)   (TUPLE ys)  = Just (TUPLE xs ys)
   diag (UNION xs)   (UNION ys)  = Just (UNION xs ys)
   diag (RECORD xs)  (RECORD ys) = Just (RECORD xs ys)
---  diag (FUNC xs x)  (FUNC ys y) = Just (FUNC xs ys x y)
   diag _ _ = Nothing
 
   diagNot : (s : Base)
@@ -203,7 +225,6 @@ namespace Diag
   diagNot (TUPLE _)   = absurd
   diagNot (UNION _ )  = absurd
   diagNot (RECORD _ ) = absurd
---  diagNot (FUNC _ _)  = absurd
 
   public export
   DecEq Base where
@@ -281,6 +302,8 @@ type (HANDLE FILE)
   = pretty "File"
 type (HANDLE PROCESS)
   = pretty "Process"
+type (HANDLE PIPE)
+  = pretty "Pipe"
 
 type (REF x)
   = group

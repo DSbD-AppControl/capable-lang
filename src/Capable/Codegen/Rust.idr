@@ -116,6 +116,9 @@ type (TyHandle fc FILE)
 type (TyHandle fc PROCESS)
   = pretty "Child"
 
+type (TyHandle fc PIPE)
+  = pretty "Child"
+
 
 kvs : (forall t . Ty t -> Doc ()) -> Named.Args fs -> List (Doc ())
 kvs _ []

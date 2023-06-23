@@ -159,6 +159,12 @@ data Closure : Ty.Method
             -> (env_g : DList Ty.Method (Closure)   stack_g)
                      -> Closure (SESH ctzt whom l args ret)
 
+public export
+resolve : HandleKind -> Type
+resolve FILE = File
+resolve PIPE = File
+resolve PROCESS = SubProcess
+
 mutual
   public export
   data Field : List Base -> (String, Base) -> Type
@@ -185,7 +191,7 @@ mutual
 --          -> (env_g : DList Ty.Base (Value store) ctxt)
 --                   -> Value store (FUNC a b)
 
-      H : (k : HandleKind) -> File -> Value store (HANDLE k)
+      H : (k : HandleKind) -> resolve k -> Value store (HANDLE k)
 
       MkList : List (Value store ty)
             -> Value store (LIST ty)
@@ -231,7 +237,7 @@ Pretty (Value store type) where
 
   pretty (I i) = pretty i
   pretty (B x) = pretty x
---  pretty (Clos scope env) = parens $ pretty "Closure..."
+
   pretty (H k x)
     = group
     $ parens
@@ -401,10 +407,10 @@ right : (rty : Base)
     -> (Value xs rty) -> Value xs (FileEither rty)
 right _ = Tag "right" (There Here)
 
-export
-fhandles : SubProcess -> Value xs POPEN2
-fhandles (MkSubProcess pid input output)
-  = Record [ F "writeTo" (H PROCESS input)
-           , F "readFrom"  (H PROCESS output)]
+--export
+--fhandles : SubProcess -> Value xs POPEN2
+--fhandles (MkSubProcess pid input output)
+--  = Record [ F "writeTo" (H PROCESS input)
+--           , F "readFrom"  (H PROCESS output)]
 
 -- [ EOF ]

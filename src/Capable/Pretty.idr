@@ -188,6 +188,8 @@ type (TyRef fc ty)
 
 type (TyHandle fc FILE)
   = typeStr "FILE"
+type (TyHandle fc PIPE)
+  = typeStr "PIPE"
 type (TyHandle fc PROCESS)
   = typeStr "PROC"
 
@@ -269,8 +271,9 @@ prettyMode ReadWriteTruncate = "w+"
 prettyMode ReadAppend        = "a+"
 
 handlekind : HandleKind -> Doc KIND
-handlekind FILE = keyword "fopen"
-handlekind PROCESS = keyword "popen"
+handlekind FILE    = keyword "fopen"
+handlekind PIPE    = keyword "popen"
+handlekind PROCESS = keyword "popen2"
 
 structs : List (Doc KIND) -> Doc KIND
 structs

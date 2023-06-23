@@ -1,15 +1,5 @@
 func printLn(str:String) -> Unit { print(str) ; print(toString('\n')) }
 
-struct SubProcess { writeTo : PROC; readFrom : PROC }
-
-
-func closeFHS ( fhs : SubProcess ) -> Unit
-{
-  close(project[writeTo](fhs))
-; close(project[readFrom](fhs))
-}
-
-
 main (args : [String])
 {
   printLn("My First Program with files")
@@ -18,18 +8,16 @@ main (args : [String])
   { when left(e) { printLn("Error opening") }
 
     when right(fhs)
-    { match write(project[writeTo](fhs),"rr")
+    { match write(fhs,"rr")
       { when left(err) { printLn("Error sending line.") }
 
         when right(res)
-        { match read(project[readFrom](fhs))
+        { match read(fhs)
           { when left(err) { printLn("Error reading line.") }
 
             when right(res)
             { printLn(res)
-            ; close(project[writeTo](fhs))
-            ; close(project[readFrom](fhs))
-
+            ; close(fhs)
             }
           }
         }

@@ -17,12 +17,6 @@ My First Program with files
   \CapableKeyword{print}(\CapableBound{str});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
 \}
-\CapableKeyword{struct} \CapableBound{SubProcess} \{\CapableBound{writeTo} : \CapableType{PROC}; \CapableBound{readFrom} : \CapableType{PROC}\}
-\CapableKeyword{func} \CapableFunction{closeFHS} (\CapableBound{fhs} : \CapableType{\CapableBound{SubProcess}}) -> \CapableType{Unit}
-\{
-  \CapableKeyword{close}(\CapableKeyword{project}[writeTo](\CapableBound{fhs}));
-  \CapableKeyword{close}(\CapableKeyword{project}[readFrom](\CapableBound{fhs}))
-\}
 \CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableFunction{\CapableBound{printLn}}(\CapableValue{"My First Program with files"});
@@ -35,7 +29,7 @@ My First Program with files
     \}
     \CapableKeyword{when} \CapableBound{right}(\CapableBound{fhs})
     \{
-      \CapableKeyword{match} \CapableKeyword{write}(\CapableKeyword{project}[writeTo](\CapableBound{fhs}), \CapableValue{"rr"})
+      \CapableKeyword{match} \CapableKeyword{write}(\CapableBound{fhs}, \CapableValue{"rr"})
       \{
         \CapableKeyword{when} \CapableBound{left}(\CapableBound{err})
         \{
@@ -43,7 +37,7 @@ My First Program with files
         \}
         \CapableKeyword{when} \CapableBound{right}(\CapableBound{res})
         \{
-          \CapableKeyword{match} \CapableKeyword{read}(\CapableKeyword{project}[readFrom](\CapableBound{fhs}))
+          \CapableKeyword{match} \CapableKeyword{read}(\CapableBound{fhs})
           \{
             \CapableKeyword{when} \CapableBound{left}(\CapableBound{err})
             \{
@@ -52,8 +46,7 @@ My First Program with files
             \CapableKeyword{when} \CapableBound{right}(\CapableBound{res})
             \{
               \CapableFunction{\CapableBound{printLn}}(\CapableBound{res});
-              \CapableKeyword{close}(\CapableKeyword{project}[writeTo](\CapableBound{fhs}));
-              \CapableKeyword{close}(\CapableKeyword{project}[readFrom](\CapableBound{fhs}))
+              \CapableKeyword{close}(\CapableBound{fhs})
             \}
           \}
         \}

@@ -33,7 +33,7 @@
                        "union"
                        "tuple"))
 
-(defvar capable-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role"))
+(defvar capable-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role" "PIPE"))
 
 (defvar capable-operators '("?" "!" "+" "|" "&" "."))
 
@@ -50,6 +50,7 @@
                         "ord" "chr" "string" "toString"
                         "the"
                         "print"
+                        "open" "read" "write" "popen" "popen2"
                         "set" "get" "mut" "project" "replace"
                         ))
 

@@ -56,7 +56,7 @@ mutual
   handle : Rule TYPE
   handle
     = do s <- Toolkit.location
-         k <- (keyword "FILE" *> pure FILE <|> keyword "PROC" *> pure PROCESS)
+         k <- (keyword "FILE" *> pure FILE <|> keyword "PROC" *> pure PROCESS <|> keyword "PIPE" *> pure PIPE)
          e <- Toolkit.location
          pure (null (HANDLE k) (newFC s e))
 

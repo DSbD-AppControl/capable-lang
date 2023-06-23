@@ -219,7 +219,7 @@ mutual
     eval heap (POpen2) [S fname]
       = do res <- embed (popen2 fname)
            either (\err => return heap (left  POPEN2 (I (debase err))))
-                  (\fhs => return heap (right POPEN2 (fhandles fhs)))
+                  (\fhs => return heap (right POPEN2 (H PROCESS fhs)))
                   res
 
     eval heap (Open what m) [(S fname)]
@@ -229,31 +229,61 @@ mutual
 
 
       where getHandle : (k : HandleKind)
-                     -> Capable (Either FileError File)
+                     -> Capable (Either FileError (resolve k))
             getHandle FILE    = embed (openFile fname m)
-            getHandle PROCESS = embed (popen    fname m)
+            getHandle PIPE    = embed (popen    fname m)
+            getHandle PROCESS = embed (popen2   fname)
 
-    eval heap ReadLn [H k fh]
+
+    eval heap ReadLn [H FILE fh]
       = either (\err => return heap (left  STR (I (debase err))))
                (\str => do embed (fflush fh)
                            return heap (right STR (S str)))
                (!(embed $ fGetLine fh))
 
-    eval heap WriteLn [H k fh, (S str)]
+    eval heap ReadLn [H PIPE fh]
+      = either (\err => return heap (left  STR (I (debase err))))
+               (\str => do embed (fflush fh)
+                           return heap (right STR (S str)))
+               (!(embed $ fGetLine fh))
+
+    eval heap ReadLn [H PROCESS fh]
+      = either (\err => return heap (left  STR (I (debase err))))
+               (\str => do embed (fflush (output fh))
+                           return heap (right STR (S str)))
+               (!(embed $ fGetLine (output fh)))
+
+    eval heap WriteLn [H FILE fh, (S str)]
       = either (\err => return heap (left  UNIT (I (debase err))))
                (\str => do embed (fflush fh)
                            return heap (right UNIT U))
                (!(embed $ fPutStrLn fh str))
 
-    eval heap Close [H k fh]
-      = case k of
-           FILE
-             => do embed (closeFile fh)
-                   return heap U
-           PROCESS
-             => do v <- embed (pclose fh)
-                   return heap U
+    eval heap WriteLn [H PIPE fh, (S str)]
+      = either (\err => return heap (left  UNIT (I (debase err))))
+               (\str => do embed (fflush fh)
+                           return heap (right UNIT U))
+               (!(embed $ fPutStrLn fh str))
 
+    eval heap WriteLn [H PROCESS fh, (S str)]
+      = either (\err => return heap (left  UNIT (I (debase err))))
+               (\str => do embed (fflush (input fh))
+                           return heap (right UNIT U))
+               (!(embed $ fPutStrLn (input fh) str))
+
+    eval heap Close [H FILE fh]
+      = do embed (closeFile fh)
+           return heap U
+
+    eval heap Close [H PIPE fh]
+      = do embed (closeFile fh)
+           return heap U
+
+    eval heap Close [H PROCESS fh]
+      = do v <- embed (pclose (input fh))
+           v <- embed (pclose (output fh))
+           return heap U
+ --
     -- ## Misc
     eval heap Print [S s]
       = do putStr s
