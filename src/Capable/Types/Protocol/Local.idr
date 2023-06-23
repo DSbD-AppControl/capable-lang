@@ -230,6 +230,7 @@ branchesEQ b (x :: xs) with (branchEQ b x)
     = No () (\(h::t) => no h)
 
 namespace Closed
+  export
   pretty : (kctxt : Context Kind ks)
         -> (rctxt : Context Ty.Role rs)
         -> (ltype : Local ks rs)

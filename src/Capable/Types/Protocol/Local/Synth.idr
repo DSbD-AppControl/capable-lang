@@ -293,7 +293,7 @@ mutual
 
 
 namespace Closed
-
+  export
   pretty : (kctxt : Context Kind ks)
         -> (rctxt : Context Ty.Role rs)
         -> (ltype : Local ks rs)
@@ -360,6 +360,7 @@ namespace Closed
     [ pretty "Choices"
     , indent 2 (assert_total $ branches pretty kctxt rctxt cs) ]
 
+
   export
   toString : (rctxt : Context Ty.Role rs)
           -> (ltype : Local Nil rs)
@@ -368,7 +369,6 @@ namespace Closed
 
 
   namespace Open
-
     export
     toString : (kctxt : Context Kind ks)
             -> (rctxt : Context Ty.Role rs)

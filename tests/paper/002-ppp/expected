@@ -8,8 +8,8 @@ Running Test
 # Finished Parsing
 # Finished Type Checking
 ```
-\begin{VerbatimInline}
-\CapableKeyword{func} \CapableBound{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\begin{Verbatim}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableBound{msg});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
@@ -19,7 +19,7 @@ Running Test
 \CapableKeyword{role} \CapableRole{A}
 \CapableKeyword{role} \CapableRole{B}
 \CapableKeyword{role} \CapableRole{C}
-\CapableKeyword{protocol} \CapableBound{Echo}
+\CapableKeyword{protocol} \CapableProtocol{Echo}
   = \CapableRole{A} ==> \CapableRole{B} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
   . \CapableRole{B} ==> \CapableRole{C} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
   . \CapableRole{C} ==> \CapableRole{B} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
@@ -29,25 +29,25 @@ Running Test
   \}
   \}
   \}
-\CapableKeyword{session} \CapableBound{clientA} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{A}> (\CapableBound{i} : \CapableType{Int}) -> \CapableType{\CapableBound{MaybeInt}}
+\CapableKeyword{session} \CapableBound{clientA} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{A}> (\CapableBound{i} : \CapableType{Int}) -> \CapableType{\CapableBound{MaybeInt}}
 \{
   \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{B} \CapableBound{msg}(\CapableBound{i})
     \CapableKeyword{catch}
     \{
-      \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
+      \CapableKeyword{crash}(\CapableFunction{\CapableBound{nout}}(\CapableValue{unit}))
     \}
   \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{B}
   \{
     \CapableKeyword{when} msg (i)
     \{
-      \CapableKeyword{end}(\CapableBound{this}(\CapableBound{i}))
+      \CapableKeyword{end}(\CapableFunction{\CapableBound{this}}(\CapableBound{i}))
     \}
   \} \CapableKeyword{catch}
   \{
-    \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
+    \CapableKeyword{crash}(\CapableFunction{\CapableBound{nout}}(\CapableValue{unit}))
   \}
 \}
-\CapableKeyword{session} \CapableBound{clientB} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{B}> () -> \CapableType{Bool}
+\CapableKeyword{session} \CapableBound{clientB} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{B}> () -> \CapableType{Bool}
 \{
   \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{A}
   \{
@@ -79,7 +79,7 @@ Running Test
     \CapableKeyword{crash}(\CapableValue{False})
   \}
 \}
-\CapableKeyword{session} \CapableBound{clientC} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{C}> () -> \CapableType{Bool}
+\CapableKeyword{session} \CapableBound{clientC} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{C}> () -> \CapableType{Bool}
 \{
   \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{B}
   \{
@@ -101,6 +101,6 @@ Running Test
 \{
   \CapableValue{unit}
 \}
-\end{VerbatimInline}
+\end{Verbatim}
 
 ```

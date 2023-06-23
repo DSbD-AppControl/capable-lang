@@ -42,6 +42,8 @@ import Capable.Raw.Progs
 
 
 data KIND = KEYWORD
+          | FUNCTION
+          | PROTOCOL
           | BOUND
           | VALUE
           | TYPE
@@ -68,6 +70,7 @@ lbrace' = escape lbrace
 rbrace' : Doc KIND
 rbrace' = escape rbrace
 
+
 keyword : String -> Doc KIND
 keyword
   = (annotate KEYWORD . pretty)
@@ -90,6 +93,19 @@ typeDoc
 
 ref : Ref -> Doc KIND
 ref = binder . get
+
+func : Ref -> Doc KIND
+func = (annotate FUNCTION . ref)
+
+func' : String -> Doc KIND
+func' = (annotate FUNCTION . pretty)
+
+proto : Ref -> Doc KIND
+proto = (annotate PROTOCOL . ref)
+
+proto' : String -> Doc KIND
+proto' = (annotate PROTOCOL . pretty)
+
 
 role : Role r -> Doc KIND
 role (R s) = annotate ROLE (pretty s)
@@ -518,7 +534,7 @@ expr (Loop fc scope cond)
 expr (Call fc fun prf x argz)
   = group
   $ hcat
-  [ ref fun
+  [ func fun
   , tupled (args argz)
   ]
   where args : Vect.Quantifiers.All.All Exprs.Expr as -> List (Doc KIND)
@@ -529,7 +545,7 @@ expr (Run fc fun prfR prfA argz prfV valz)
   = group
   $ hsep
   [ keyword "run"
-  , hcat [ref fun, tupled $ args argz]
+  , hcat [func fun, tupled $ args argz]
   , keyword "with"
   , list (vals valz)]
   where args : Vect.Quantifiers.All.All Exprs.Expr as -> List (Doc KIND)
@@ -789,7 +805,7 @@ sexpr (Send fc r ty s msg body exc)
 session : Session p -> Doc KIND
 session (Sesh fc prin r x prf args ret scope)
   = vcat
-  [ hsep [ group $ angles (hsep [ref r, keyword "as", role prin])
+  [ hsep [ group $ angles (hsep [proto r, keyword "as", role prin])
          , tupled $ fargs args, pretty "->", type ret]
   , lbrace'
   , indent 2 (sexpr scope)
@@ -818,7 +834,7 @@ prog (Def fc TYPE s val scope)
 
 prog (Def fc FUNC s val scope)
   = vsep
-  [ hsep [keyword "func", binder s, function val]
+  [ hsep [keyword "func", func' s, function val]
   , prog scope]
 
 prog (Def fc ROLE s val scope)
@@ -833,7 +849,7 @@ prog (Def fc PROT s val scope)
   = vsep
   [ hsep
     [ keyword "protocol"
-    , binder s
+    , proto' s
     ]
   , indent 2
     $ hsep
@@ -922,15 +938,19 @@ toLaTeX
           = cmd "Hole"
         foo TODO
           = cmd "TODO"
+        foo PROTOCOL
+          = cmd "Protocol"
+        foo FUNCTION
+          = cmd "Function"
         foo ESCAPE
           = ""
 
         env : String -> String
         env d
           = unlines
-          [ "\\begin{VerbatimInline}"
+          [ "\\begin{Verbatim}"
           , d
-          , "\\end{VerbatimInline}"
+          , "\\end{Verbatim}"
           ]
 
 -- [ EOF ]

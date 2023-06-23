@@ -4,9 +4,9 @@ Running Test
 # Finished Parsing
 # Finished Type Checking
 ```
-\begin{VerbatimInline}
+\begin{Verbatim}
 \CapableKeyword{union} \CapableBound{MaybeInt} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{this} : \CapableType{Int}\}
-\CapableKeyword{func} \CapableBound{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableBound{msg});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
@@ -14,52 +14,52 @@ Running Test
 \CapableKeyword{role} \CapableRole{Client}
 \CapableKeyword{role} \CapableRole{Server}
 \CapableKeyword{union} \CapableBound{msg} \{\CapableBound{msg} : \CapableType{Int}\}
-\CapableKeyword{protocol} \CapableBound{Echo}
+\CapableKeyword{protocol} \CapableProtocol{Echo}
   = \CapableRole{Client} ==> \CapableRole{Server} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
   . \CapableRole{Server} ==> \CapableRole{Client} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
   . \CapableKeyword{end}
   \}
   \}
-\CapableKeyword{session} \CapableBound{echoClient} <\CapableBound{Echo} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{Int}) -> \CapableType{\CapableBound{MaybeInt}}
+\CapableKeyword{session} \CapableBound{echoClient} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{Int}) -> \CapableType{\CapableBound{MaybeInt}}
 \{
   \CapableKeyword{print}(\CapableValue{"Sending message: "});
-  \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{i}));
+  \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableBound{i}));
   \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{Server} \CapableBound{msg}(\CapableBound{i})
     \CapableKeyword{catch}
     \{
-      \CapableBound{printLn}(\CapableValue{"Crashing on Send"});
-      \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
+      \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Crashing on Send"});
+      \CapableKeyword{crash}(\CapableFunction{\CapableBound{nout}}(\CapableValue{unit}))
     \}
   \CapableKeyword{recv} [\CapableType{\CapableBound{msg}}] \CapableRole{Server}
   \{
     \CapableKeyword{when} msg (i)
     \{
       \CapableKeyword{print}(\CapableValue{"Received message: "});
-      \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{i}));
-      \CapableKeyword{end}(\CapableBound{this}(\CapableBound{i}))
+      \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableBound{i}));
+      \CapableKeyword{end}(\CapableFunction{\CapableBound{this}}(\CapableBound{i}))
     \}
   \} \CapableKeyword{catch}
   \{
-    \CapableBound{printLn}(\CapableValue{"Crashing on Recv"});
-    \CapableKeyword{crash}(\CapableBound{nout}(\CapableValue{unit}))
+    \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Crashing on Recv"});
+    \CapableKeyword{crash}(\CapableFunction{\CapableBound{nout}}(\CapableValue{unit}))
   \}
 \}
 \CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{local} \CapableBound{val} = \CapableValue{2} ;
-  \CapableKeyword{match} \CapableKeyword{run} \CapableBound{echoClient}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]
+  \CapableKeyword{match} \CapableKeyword{run} \CapableFunction{\CapableBound{echoClient}}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]
   \{
     \CapableKeyword{when} \CapableBound{nout}(\CapableBound{i})
     \{
-      \CapableBound{printLn}(\CapableValue{"Oops we crashed!"})
+      \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Oops we crashed!"})
     \}
     \CapableKeyword{when} \CapableBound{this}(\CapableBound{i})
     \{
       \CapableKeyword{print}(\CapableValue{"We echoed this, successfully: "});
-      \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{i}))
+      \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableBound{i}))
     \}
   \}
 \}
-\end{VerbatimInline}
+\end{Verbatim}
 
 ```

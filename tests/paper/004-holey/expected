@@ -1,23 +1,23 @@
 Running Test
 # Finished Parsing
 Showing first available hole.
-Need to collect them...
 ## Typing Context
 i : Int
 ## Recursion Vars
-[]
+
 ## Roles
-["Server", "Client"]
++ Server
++ Client
 ---
 next : (recvFrom[Server] {msg(Int).End})
 # Finished Parsing
 Showing first available hole.
-Need to collect them...
 ## Typing Context
 i : Int
 ## Recursion Vars
-[]
+
 ## Roles
-["Server", "Client"]
++ Server
++ Client
 ---
 next : (recvFrom[Server] {msg(Int).End})

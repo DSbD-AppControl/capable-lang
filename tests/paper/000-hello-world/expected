@@ -11,37 +11,37 @@ Hello World
 # Finished Parsing
 # Finished Type Checking
 ```
-\begin{VerbatimInline}
+\begin{Verbatim}
 \CapableKeyword{struct} \CapableBound{point} \{\CapableBound{x} : \CapableType{Int}; \CapableBound{y} : \CapableType{Int}\}
 \CapableKeyword{union} \CapableBound{either} \{\CapableBound{left} : \CapableType{String}; \CapableBound{right} : \CapableType{Int}\}
-\CapableKeyword{func} \CapableBound{printLn} (\CapableBound{str} : \CapableType{String}) -> \CapableType{Unit}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{str} : \CapableType{String}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableBound{str});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
 \}
-\CapableKeyword{func} \CapableBound{setVarX} (\CapableBound{p} : &\CapableType{\CapableBound{point}}, \CapableBound{x} : \CapableType{Int}) -> \CapableType{Unit}
+\CapableKeyword{func} \CapableFunction{setVarX} (\CapableBound{p} : &\CapableType{\CapableBound{point}}, \CapableBound{x} : \CapableType{Int}) -> \CapableType{Unit}
 \{
-  \CapableKeyword{mut}(\CapableBound{p}, \CapableBound{set\_x}(\CapableKeyword{!}\CapableBound{p}, \CapableBound{x}))
+  \CapableKeyword{mut}(\CapableBound{p}, \CapableFunction{\CapableBound{set\_x}}(\CapableKeyword{!}\CapableBound{p}, \CapableBound{x}))
 \}
 \CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
-  \CapableKeyword{val} \CapableBound{p} = \CapableBound{point}(\CapableValue{1}, \CapableValue{2}) ;
-  \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{get\_x}(\CapableKeyword{!}\CapableBound{p})));
-  \CapableBound{setVarX}(\CapableBound{p}, \CapableValue{2});
-  \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{get\_x}(\CapableKeyword{!}\CapableBound{p})));
-  \CapableKeyword{local} \CapableBound{x} = \CapableBound{left}(\CapableValue{"Hello World"}) ;
+  \CapableKeyword{val} \CapableBound{p} = \CapableFunction{\CapableBound{point}}(\CapableValue{1}, \CapableValue{2}) ;
+  \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableFunction{\CapableBound{get\_x}}(\CapableKeyword{!}\CapableBound{p})));
+  \CapableFunction{\CapableBound{setVarX}}(\CapableBound{p}, \CapableValue{2});
+  \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableFunction{\CapableBound{get\_x}}(\CapableKeyword{!}\CapableBound{p})));
+  \CapableKeyword{local} \CapableBound{x} = \CapableFunction{\CapableBound{left}}(\CapableValue{"Hello World"}) ;
   \CapableKeyword{match} \CapableBound{x}
   \{
     \CapableKeyword{when} \CapableBound{left}(\CapableBound{x})
     \{
-      \CapableBound{printLn}(\CapableBound{x})
+      \CapableFunction{\CapableBound{printLn}}(\CapableBound{x})
     \}
     \CapableKeyword{when} \CapableBound{right}(\CapableBound{y})
     \{
-      \CapableBound{printLn}(\CapableKeyword{toString}(\CapableBound{y}))
+      \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableBound{y}))
     \}
   \}
 \}
-\end{VerbatimInline}
+\end{Verbatim}
 
 ```

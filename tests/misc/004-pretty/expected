@@ -2,7 +2,7 @@ Running Test
 # Finished Parsing
 # Finished Type Checking
 ```
-\begin{VerbatimInline}
+\begin{Verbatim}
 \CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{print}(\CapableValue{"My First Program"});
@@ -10,20 +10,20 @@ Running Test
   \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableValue{2}) ;
   \CapableValue{unit}
 \}
-\end{VerbatimInline}
+\end{Verbatim}
 
 ```
 # Finished Parsing
 # Finished Type Checking
 ```
-\begin{VerbatimInline}
-\CapableKeyword{func} \CapableBound{greeting} () -> \CapableType{Unit}
+\begin{Verbatim}
+\CapableKeyword{func} \CapableFunction{greeting} () -> \CapableType{Unit}
 \{
   \CapableKeyword{local} \CapableBound{s} = \CapableValue{"String"} ;
   \CapableKeyword{local} \CapableBound{t} = \CapableValue{"1"} ;
   \CapableValue{unit}
 \}
-\CapableKeyword{func} \CapableBound{two} () -> \CapableType{Int}
+\CapableKeyword{func} \CapableFunction{two} () -> \CapableType{Int}
 \{
   \CapableValue{2}
 \}
@@ -31,10 +31,10 @@ Running Test
 \{
   \CapableKeyword{print}(\CapableValue{"My First Program"});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}));
-  \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableBound{two}()) ;
+  \CapableKeyword{local} \CapableBound{i} = \CapableKeyword{add}(\CapableValue{1}, \CapableFunction{\CapableBound{two}}()) ;
   \CapableValue{unit}
 \}
-\end{VerbatimInline}
+\end{Verbatim}
 
 ```
 # Finished Parsing

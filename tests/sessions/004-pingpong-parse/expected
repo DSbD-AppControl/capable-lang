@@ -29,13 +29,13 @@ Not enough information to type term.
 mainhole.capable
 # Finished Parsing
 Showing first available hole.
-Need to collect them...
 ## Typing Context
 i : Int
 ## Recursion Vars
-[]
+
 ## Roles
-["Server", "Client"]
++ Server
++ Client
 ---
 aa : (recvFrom[Server] {msg(Int).End})
 mainun.capable

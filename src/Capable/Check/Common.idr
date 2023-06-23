@@ -8,10 +8,10 @@ module Capable.Check.Common
 import public Decidable.Equality
 import public Data.Singleton
 import public Data.Fin
+import        Data.String
+import        Text.PrettyPrint.Prettyprinter
 
-import Text.PrettyPrint.Prettyprinter
-
-import Data.SortedMap
+import        Data.SortedMap
 
 import public Toolkit.Decidable.Informative
 import public Toolkit.Data.Location
@@ -285,27 +285,28 @@ showHoleExit : Context Ty.Base ls
             -> Base
             -> Capable e
 showHoleExit g n t
-    = do putStrLn "Showing first available hole."
-         putStrLn "Need to collect them..."
-         let pc = prettyHole g n t
-         putStrLn $ (show . annotate ()) pc
+    = do let pc = prettyHole g n t
+         putStrLn $ (show pc)
          exitSuccess
 
     where
       prettyHole : Context Ty.Base ls
                 -> String
                 -> Base
-                -> Doc ann
+                -> Doc ()
       prettyHole x str y
-        = vcat
-        $ prettyCtxt x Nil
-        ++ [ pretty "---"
-           , group
-           $ hsep
-           [ pretty str
-           , colon
-           , pretty y]
-           ]
+        = vsep
+        $ [ pretty "Showing first available hole."
+          , vcat
+           $ prettyCtxt x Nil
+           ++ [ pretty "---"
+              , group
+              $ hsep
+              [ pretty str
+              , colon
+              , pretty y]
+              ]
+          ]
 
 export
 showHoleSessionExit : Context Ty.Base ls
@@ -315,15 +316,21 @@ showHoleSessionExit : Context Ty.Base ls
                    -> String
                    -> Capable e
 showHoleSessionExit g r k t x
-  = do putStrLn "Showing first available hole."
-       putStrLn "Need to collect them..."
-       putStrLn "## Typing Context"
-       putStrLn $ (show . annotate ()) (vcat $ prettyCtxt g Nil)
-       putStrLn "## Recursion Vars"
-       printLn  $ keys k
-       putStrLn "## Roles"
-       printLn $ keys r
-       putStrLn "---"
-       putStrLn "\{x} : \{toString k r t}"
+  = do putStrLn (show prettyThings)
        exitSuccess
+
+  where prettyThings : Doc ()
+        prettyThings
+          = vsep
+            [ pretty "Showing first available hole."
+            , pretty "## Typing Context"
+            , vcat
+              $ prettyCtxt g Nil
+            , pretty "## Recursion Vars"
+            , vcat $ map (\k => pretty "+ \{k}") (keys k)
+            , pretty "## Roles"
+            , vcat $ map (\k => pretty "+ \{k}") (keys r)
+            , pretty "---"
+            , hsep [ pretty x, colon, pretty k r t]
+            ]
 -- [ EOF ]
