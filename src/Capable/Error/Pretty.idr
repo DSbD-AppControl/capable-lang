@@ -80,9 +80,9 @@ urg ctxtk ctxtr (B label type c)
   $ align
   $ vcat
   [ pretty label <+> parens (pretty (show type))
-  , pretty "." <+> pretty (Open.toString ctxtk
-                                          ctxtr
-                                  c)
+  , pretty "." <+> pretty (toString ctxtk
+                                    ctxtr
+                                    c)
   ]
 
 urgh : {rs, ks : _} -> Local.Branches ks rs ls -> Doc ()

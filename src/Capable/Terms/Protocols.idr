@@ -78,12 +78,12 @@ namespace Global
               -> (prfM     : Marshable (UNION (f:::fs)))
               -> (choices  : Branches ks ts rs (b::bs))
                           -> Global ks ts rs
-                                    (Choice sender
-                                            receiver
-                                            (Val (UNION (f:::fs)))
-                                                 prfM
-                                            prf
-                                            (b::bs))
+                                    (ChoiceG sender
+                                             receiver
+                                             (Val (UNION (f:::fs)))
+                                                  prfM
+                                             prf
+                                             (b::bs))
 
 
 export

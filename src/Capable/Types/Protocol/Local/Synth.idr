@@ -31,6 +31,10 @@ import public Capable.Types.Protocol.Common
 %default total
 
 public export
+Local : List Kind -> List Role -> Type
+Local = Protocol SYNTH
+{-
+public export
 data Local : List Kind -> List Role -> Type where
   Crash : Local ks rs
   End : Local ks rs
@@ -60,7 +64,7 @@ data Local : List Kind -> List Role -> Type where
                         (Branch Local ks rs)
                         (field::fs))
                -> Local ks rs
-
+-}
 
 public export
 Branches : List Kind -> List Role -> List (String, Base)-> Type
@@ -68,7 +72,7 @@ Branches ks rs
   = DList (String, Base)
           (Branch Local ks rs)
 
-
+{-
 Uninhabited (Synth.Crash = Synth.End) where
   uninhabited Refl impossible
 
@@ -290,90 +294,6 @@ mutual
   public export
   DecEq (Local ks rs) where
     decEq = Synth.decEq
-
-
-namespace Closed
-  export
-  pretty : (kctxt : Context Kind ks)
-        -> (rctxt : Context Ty.Role rs)
-        -> (ltype : Local ks rs)
-                 -> Doc ()
-  pretty _ _ Crash
-    = pretty "Crash"
-
-  pretty _ _ End
-    = pretty "End"
-
-  pretty kctxt rctxt (Call x)
-    = group
-    $ hcat
-      [ pretty "Call"
-      , parens
-        $ pretty
-          $ reflect kctxt x
-      ]
-
-  pretty kctxt rctxt (Rec (R v) x)
-    = let cont = pretty (extend kctxt v (R v)) rctxt x
-      in group
-      $  align
-      $  vsep [ group (pretty "rec" <+> parens (pretty v) <+> pretty ".")
-              , indent 2 cont]
-
-  pretty kctxt rctxt (Select whom l t _ k)
-    = group
-    $ parens
-    $ hsep
-      [ hcat
-        [ pretty "sendTo"
-        , brackets
-          $ pretty
-            $ reflect rctxt whom
-        ]
-      , hcat
-        [ pretty l
-        , parens
-          $ pretty t
-        ]
-      , pretty "."
-      , indent 2 (pretty kctxt rctxt k)
-      ]
-
-  pretty kctxt rctxt (Offer whom (Val (UNION (f:::fs))) _ cs)
-
-    = group
-    $ parens
-    $ hsep
-      [ hcat
-        [ pretty "recvFrom"
-        , brackets
-          $ pretty
-            $ reflect rctxt whom
-        ]
-    , indent 2 (assert_total $ branches pretty kctxt rctxt cs)
-    ]
-
-  pretty kctxt rctxt (Choices cs)
-    = group
-    $ parens
-    $ hsep
-    [ pretty "Choices"
-    , indent 2 (assert_total $ branches pretty kctxt rctxt cs) ]
-
-
-  export
-  toString : (rctxt : Context Ty.Role rs)
-          -> (ltype : Local Nil rs)
-                   -> String
-  toString r l = show (pretty Nil r l)
-
-
-  namespace Open
-    export
-    toString : (kctxt : Context Kind ks)
-            -> (rctxt : Context Ty.Role rs)
-            -> (ltype : Local ks rs)
-                     -> String
-    toString ks r l = show (pretty ks r l)
+-}
 
 -- [ EOF ]

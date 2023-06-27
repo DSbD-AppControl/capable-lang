@@ -53,7 +53,7 @@ mutual
 
         Choice : Branches.HasRoles rs bs os
               -> Union [s,r]             os os' prf
-              -> Protocol.HasRoles rs (Choice s r ty prfm notsr bs)
+              -> Protocol.HasRoles rs (ChoiceG s r ty prfm notsr bs)
                                       os'
 
     public export
@@ -122,7 +122,7 @@ mutual
       = case hasRoles x of
         R _ r => R _ (Rec r)
 
-    hasRoles (Choice s r type prfM prfR opties)
+    hasRoles (ChoiceG s r type prfM prfR opties)
       = case hasRoles opties of
           R os pO =>
             case DList.union [s,r] os of

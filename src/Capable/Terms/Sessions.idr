@@ -170,7 +170,7 @@ mutual
                -> Expr roles rs types globals stack_g stack_l stack_r whom (Call x) type
 
       Crash : Expr       rs types globals stack_g stack_l type
-           -> Expr roles rs types globals stack_g stack_l stack_r whom Crash type
+           -> Expr roles rs types globals stack_g stack_l stack_r whom (Crash IsSyn) type
 
       End : Expr       rs types globals stack_g stack_l                  type
          -> Expr roles rs types globals stack_g stack_l stack_r whom End type
@@ -181,7 +181,7 @@ mutual
           -> {os     : Synth.Branches stack_r roles ms}
           -> (prf    : Marshable (UNION (m:::ms)))
           -> (offers : Offers roles rs types globals stack_g stack_l stack_r type whom (o::os))
-          -> (onErr  : Expr   roles rs types globals stack_g stack_l stack_r whom Crash type)
+          -> (onErr  : Expr   roles rs types globals stack_g stack_l stack_r whom (Crash IsSyn) type)
                     -> Expr   roles rs types globals stack_g stack_l stack_r whom
                               (Offer from (Val (UNION (m:::ms)))
                                           prf
@@ -194,7 +194,7 @@ mutual
           -> (payload : Expr    rs types globals stack_g stack_l mtype)
           -> (mprf    : Marshable mtype)
           -> (rest    : Expr roles rs types globals stack_g stack_l stack_r whom cont  type)
-          -> (onErr   : Expr roles rs types globals stack_g stack_l stack_r whom Crash type)
+          -> (onErr   : Expr roles rs types globals stack_g stack_l stack_r whom (Crash IsSyn) type)
                      -> Expr roles rs types globals stack_g stack_l stack_r whom
                                 (Select toWhom label mtype mprf cont)
 

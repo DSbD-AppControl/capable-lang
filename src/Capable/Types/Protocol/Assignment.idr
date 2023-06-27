@@ -104,7 +104,7 @@ namespace HasRoles
     namespace Protocol
       export
       hasRoles : (p : Local ks rs) -> Protocol.Result rs p
-      hasRoles Crash = R [] Crash
+      hasRoles (Crash _) = R [] Crash
       hasRoles End = R [] End
       hasRoles (Call x) = R [] Call
       hasRoles (Rec v x)
@@ -205,7 +205,7 @@ namespace UsesRole
                -> Branches.UsesRole rs (B m t l  ::bs) role
 
 namespace UsesRole
-  Uninhabited (UsesRole rs Crash role) where
+  Uninhabited (UsesRole rs (Crash p) role) where
     uninhabited (Rec x) impossible
 
   Uninhabited (UsesRole rs End role) where
@@ -226,7 +226,7 @@ namespace UsesRole
               -> (lp : Synth.Local ks rs)
               -> (r  : Role rs r')
                     -> Dec (UsesRole rs lp r)
-      usesRole Crash _
+      usesRole (Crash _) _
         = No absurd
 
       usesRole End _

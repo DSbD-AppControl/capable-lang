@@ -30,6 +30,7 @@ import public Capable.Types.Protocol.Common
 
 %default total
 
+{-
 public export
 data Global : List Kind -> List Role -> Type where
   End : Global ks rs
@@ -51,7 +52,11 @@ data Global : List Kind -> List Role -> Type where
                            (field::fs))
                   -> Global ks rs
 
+-}
 
+public export
+Global : List Kind -> List Role -> Type
+Global = Protocol GLOBAL
 
 public export
 Branches : List Kind -> List Role -> List (String, Base) -> Type

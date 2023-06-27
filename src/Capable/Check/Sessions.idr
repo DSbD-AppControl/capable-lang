@@ -254,7 +254,7 @@ namespace Expr
 
     synth env er ec p ret (Crash fc expr)
       = do tm <- check fc env ret expr
-           pure (R Crash (Crash tm))
+           pure (R (Crash IsSyn) (Crash tm))
 
     synth env er ec p ret (End fc expr)
 
@@ -331,7 +331,7 @@ namespace Expr
              O  b  o    <- offer  fc ret es et ofs
              OS bs offs <- offers fc ret   fs  offs
 
-             R Crash err  <- synth env er ec p ret onEr
+             R (Crash IsSyn) err  <- synth env er ec p ret onEr
                 | R type _ => throwAt fc (IllTypedSession "\{toString ec er type}")
 
              pure (R (Offer target
@@ -397,7 +397,7 @@ namespace Expr
 
            (R lsytn rest) <- synth env er ec p ret scope
 
-           R Crash err  <- synth env er ec p ret onErr
+           R (Crash IsSyn) err  <- synth env er ec p ret onErr
               | R type _ => throwAt fc (IllTypedSession "TODO")
 
            pure (R (Select target
@@ -510,9 +510,9 @@ namespace Expr
            pure (R End End (End tm))
 
     --
-    check e er ec p ret Crash (Crash fc expr)
+    check e er ec p ret (Crash IsProj) (Crash fc expr)
       = do tm <- check fc e ret expr
-           pure (R Crash Crash (Crash tm))
+           pure (R (Crash IsSyn) Crash (Crash tm))
 
     --
     check e er ec princ ret (Call x) (Call fc ref)
@@ -540,9 +540,9 @@ namespace Expr
 
 
     --
-    check e er ec p ret (Choice BRANCH whom (Val (UNION ((l,t):::fs)))
-                                                 (UNION (m::ms))
-                                                        (B l t c::cs))
+    check e er ec p ret (ChoiceL BRANCH whom (Val (UNION ((l,t):::fs)))
+                                                  (UNION (m::ms))
+                                                         (B l t c::cs))
                         (Read fc role tyTm _ (o::os) onErr)
 
       = do -- 1. Check the type of the annotation
@@ -570,7 +570,7 @@ namespace Expr
            OS synOS prfOS os <- offers fc ret          cs os
 
            -- 4. check the error branch
-           R Crash Crash onErr <- check e er ec p ret Crash onErr
+           R (Crash IsSyn) Crash onErr <- check e er ec p ret (Crash IsProj) onErr
 
            -- 5. Return Evidence
            pure (R
@@ -629,9 +629,9 @@ namespace Expr
                               (o::os))
 
     --
-    check e er ec p ret (Choice SELECT whom (Val (UNION (f:::fs)))
-                                                 (UNION (m::ms))
-                                                        (c::cs))
+    check e er ec p ret (ChoiceL SELECT whom (Val (UNION (f:::fs)))
+                                                  (UNION (m::ms))
+                                                         (c::cs))
                         (Send fc role tyTm label msg scope onErr)
 
       = do -- 1. Check the type of the annotation
@@ -660,7 +660,7 @@ namespace Expr
            -- 4. Check the remainder of the protocol
            R tySyn pU scope <- check e er ec p ret tyC scope
 
-           R Crash Crash onErr <- check e er ec p ret Crash onErr
+           R (Crash IsSyn) Crash onErr <- check e er ec p ret (Crash IsProj) onErr
 
            -- 5. Return Evidence
 

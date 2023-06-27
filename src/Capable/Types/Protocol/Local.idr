@@ -31,20 +31,11 @@ import public Capable.Types.Protocol.Common
 %default total
 
 public export
-data ChoiceTy = BRANCH | SELECT
-
-notBS : BRANCH = SELECT -> Void
-notBS Refl impossible
-
-export
-DecEq ChoiceTy where
-  decEq BRANCH BRANCH = Yes Refl
-  decEq BRANCH SELECT = No notBS
-  decEq SELECT BRANCH = No (negEqSym notBS)
-  decEq SELECT SELECT = Yes Refl
+Local : List Kind -> List Role -> Type
+Local = Protocol LOCAL
 
 ||| The result of projection.
-
+{-
 public export
 data Local : List Kind -> List Role -> Type where
   Crash : Local ks rs -- @TODO no longer needed
@@ -60,6 +51,8 @@ data Local : List Kind -> List Role -> Type where
                             (Branch Local ks rs)
                             (field::fs))
                    -> Local ks rs
+-}
+
 
 public export
 Branches : List Kind -> List Role -> List (String, Base)-> Type
@@ -67,125 +60,101 @@ Branches ks rs
   = DList (String, Base)
           (Branch Local ks rs)
 
-Uninhabited (Local.Crash = Local.End) where
-  uninhabited Refl impossible
 
-Uninhabited (Local.Crash = (Local.Call x)) where
-  uninhabited Refl impossible
+data Diag : (l,r : Local ks rs) -> Type
+  where
+    Crash : Diag (Crash IsProj) (Crash IsProj)
+    End : Diag End End
+    Call : (prfA, prfB : _) -> Diag (Call prfA) (Call prfB)
+    Rec : (a,b : Kind)
+       -> (kA : Local (a::ks) rs)
+       -> (kB : Local (b::ks) rs)
+             -> Diag (Rec a kA) (Rec b kB)
+    Choice : (kA,kB : ChoiceTy)
+          -> (wA    : Role rs ra)
+          -> (wB    : Role rs rb)
+          -> (typeA, typeB : _)
+          -> (prfA, prfB : _)
+          -> (cas : _)
+          -> (cbs : _)
+          -> Diag (ChoiceL kA wA typeA prfA cas)
+                  (ChoiceL kB wB typeB prfB cbs)
 
-Uninhabited (Local.Crash = (Local.Rec v x)) where
-  uninhabited Refl impossible
+diag : (l,r : Local ks rs) -> Maybe (Diag l r)
+diag End End
+  = Just End
 
-Uninhabited (Local.Crash = (Local.Choice a b c d e)) where
-  uninhabited Refl impossible
+diag (Call x) (Call y)
+  = Just (Call x y)
 
-Uninhabited (Local.End = (Local.Call x)) where
-  uninhabited Refl impossible
+diag (Rec a ka) (Rec b kb)
+  = Just (Rec a b ka kb)
 
-Uninhabited (Local.End = (Local.Rec v x)) where
-  uninhabited Refl impossible
+diag (ChoiceL ka wA tA pA ca)
+     (ChoiceL kb wB tB pB cb)
+       = Just (Choice ka kb
+                      wA wB
+                      tA tB
+                      pA pB
+                      ca cb)
 
-Uninhabited (Local.End = (Local.Choice a b c d e)) where
-  uninhabited Refl impossible
+diag (Crash IsProj) (Crash IsProj)
+  = Just Crash
+diag _ _ = Nothing
 
-Uninhabited (Local.Call x = (Local.Rec v y)) where
-  uninhabited Refl impossible
-
-Uninhabited (Local.Call x = (Local.Choice a b c d e)) where
-  uninhabited Refl impossible
-
-Uninhabited (Local.Rec v x = (Local.Choice a b c d e)) where
-  uninhabited Refl impossible
-
-
-
-
-public export
-decEq : (a,b : Local ks rs) -> Dec (Equal a b)
-decEq Crash Crash
-  = Yes Refl
-decEq Crash End
-  = No absurd
-decEq Crash (Call x)
-  = No absurd
-decEq Crash (Rec _ x)
-  = No absurd
-decEq Crash (Choice kind whom ty prf choices)
-  = No absurd
-
-
-decEq End Crash
-  = No (negEqSym absurd)
-decEq End End
-  = Yes Refl
-decEq End (Call x)
-  = No absurd
-decEq End (Rec _ x)
-  = No absurd
-decEq End (Choice kind whom ty prf choices)
-  = No absurd
-
-decEq (Call x) Crash
-  = No (negEqSym absurd)
-
-decEq (Call x) End
-  = No (negEqSym absurd)
-
-decEq (Call x) (Call y)
-  = case Index.decEq x y of
-         No no => No (\Refl => no (Same Refl Refl))
-         Yes (Same Refl Refl) => Yes Refl
-
-decEq (Call x) (Rec _ y)
-  = No absurd
-decEq (Call x) (Choice kind whom ty prf choices)
-  = No absurd
-
-decEq (Rec _ x) Crash
-  = No (negEqSym absurd)
-decEq (Rec _ x) End
-  = No (negEqSym absurd)
-decEq (Rec _ x) (Call y)
-  = No (negEqSym absurd)
-
-decEq (Rec a x) (Rec b y)
-  = decDo $ do Refl <- decEq a b `otherwise` (\Refl => Refl)
-               Refl <- Local.decEq x y `otherwise` (\Refl => Refl)
-               pure Refl
-
-decEq (Rec _ x) (Choice kind whom ty prf choices) = No absurd
-
-decEq (Choice kind whom t p choices) Crash
-  = No (negEqSym absurd)
-decEq (Choice kind whom t p choices) End
-  = No (negEqSym absurd)
-decEq (Choice kind whom t p choices) (Call x)
-  = No (negEqSym absurd)
-decEq (Choice kind whom t p choices) (Rec _ x)
-  = No (negEqSym absurd)
-decEq (Choice a b (Val (UNION (f:::fs))) (UNION (h::hs)) cs)
-      (Choice x y (Val (UNION (g:::gs))) (UNION (i::is)) zs)
-  = case decEq a x of
-      (No contra) => No (\case Refl => contra Refl)
-      (Yes Refl)
-        => case Index.decEq b y of
-            (No contra) => No (\case Refl => contra (Same Refl Refl))
-            (Yes (Same Refl Refl))
-              => case decEq (UNION (f:::fs)) (UNION (g:::gs)) of
-                   (No contra) => No (\case Refl => contra Refl)
-                   (Yes Refl)
-                     => case decEq (UNION (h::hs)) (UNION (i::is)) Refl of
-                          Refl => decDo $ do Refl <- assert_total
-                                                      $ Branches.decEq Local.decEq cs zs `otherwise` (\Refl => Refl)
-                                             pure Refl
+diagNot : (s : Local ks rs)
+            -> Not (diag s s === Nothing)
+diagNot End                                   = absurd
+diagNot (Call x)                              = absurd
+diagNot (Rec v x)                             = absurd
+diagNot (ChoiceL kind whom type prfM choices) = absurd
+diagNot (Crash IsProj)                        = absurd
 
 public export
 DecEq (Local ks rs) where
-  decEq = Local.decEq
+  decEq a@_ b@_ with (diag a b) proof eq
+
+    _ | (Just Crash)
+          = Yes Refl
+
+    _ | (Just End)
+          = Yes Refl
+
+    _ | (Just (Call prfA prfB))
+
+          = case Index.decEq prfA prfB of
+              No no => No (\Refl => no (Same Refl Refl))
+              Yes (Same Refl Refl) => Yes Refl
+
+    _ | (Just (Rec x y kA kB))
+
+          = decDo $ do Refl <- decEq x y `otherwise` (\Refl => Refl)
+                       Refl <- decEq kA kB `otherwise` (\Refl => Refl)
+                       pure Refl
+    _ | (Just (Choice kA kB
+                      wA wB
+                      (Val (UNION (f:::fs))) (Val (UNION (g:::gs)))
+                      prfA prfB
+                      cas cbs))
+          = case decEq kA kB of
+              (No contra) => No (\case Refl => contra Refl)
+              (Yes Refl)
+                => case Index.decEq wA wB of
+                    (No contra) => No (\case Refl => contra (Same Refl Refl))
+                    (Yes (Same Refl Refl))
+                      => case decEq (UNION (f:::fs)) (UNION (g:::gs)) of
+                           (No contra) => No (\case Refl => contra Refl)
+                           (Yes Refl)
+                             => case decEq prfA prfB Refl of
+                                  Refl => case assert_total $ Branches.decEq decEq cas cbs of
+                                            No contra => No (\case Refl => contra Refl)
+                                            Yes Refl => Yes Refl
+
+    _ | Nothing = No (\Refl => diagNot _ eq)
 
 public export
-data BranchEQ : (a : Branch Local ks rs nt)
-             -> (b : Branch Local ks rs mt)
+data BranchEQ : (a : Branch (Protocol LOCAL) ks rs nt)
+             -> (b : Branch (Protocol LOCAL) ks rs mt)
                   -> Type where
   BEQ : x === y
      -> a === b
@@ -194,25 +163,25 @@ data BranchEQ : (a : Branch Local ks rs nt)
 
 
 export
-branchEQ : (a : Branch Local ks rs nt)
-        -> (b : Branch Local ks rs mt)
+branchEQ : (a : Branch (Protocol LOCAL) ks rs nt)
+        -> (b : Branch (Protocol LOCAL) ks rs mt)
              -> Dec (BranchEQ a b)
 branchEQ (B l x a) (B m y b)
   = case decEq x y of
       No no => No (\(BEQ g h) => no g)
       Yes Refl
-        => case Local.decEq a b of
+        => case decEq a b of
              No no => No (\(BEQ g h) => no h)
              Yes Refl => Yes (BEQ Refl Refl)
 
 export
-branchesEQ : (b  : Branch Local ks rs (l,t))
+branchesEQ : (b  : Branch (Protocol LOCAL) ks rs (l,t))
           -> (bs : DList (String, Base)
-                         (Branch Local ks rs)
+                         (Branch (Protocol LOCAL) ks rs)
                          ls)
                 -> DecInfo ()
                            (All (String,Base)
-                                (Branch Local ks rs)
+                                (Branch (Protocol LOCAL) ks rs)
                                 (BranchEQ b)
                                 ls
                                 bs)
@@ -228,77 +197,5 @@ branchesEQ b (x :: xs) with (branchEQ b x)
 
   branchesEQ b (x :: xs) | (No no)
     = No () (\(h::t) => no h)
-
-namespace Closed
-  export
-  pretty : (kctxt : Context Kind ks)
-        -> (rctxt : Context Ty.Role rs)
-        -> (ltype : Local ks rs)
-                 -> Doc ()
-  pretty _ _ Crash
-    = pretty "Crash"
-
-  pretty _ _ End
-    = pretty "End"
-
-  pretty kctxt rctxt (Call x)
-    = group
-    $ hsep
-      [ pretty "Call"
-      , parens
-        $ pretty
-          $ reflect kctxt x
-      ]
-
-  pretty kctxt rctxt (Rec (R v) x)
-    = let cont = pretty (extend kctxt v (R v)) rctxt x
-      in group
-      $  align
-      $  vsep [ group (pretty "rec" <+> parens (pretty v) <+> pretty ".")
-              , indent 2 cont]
-
-  pretty kctxt rctxt (Choice BRANCH whom (Val (UNION (f:::fs))) _ cs)
-    = group
-    $ parens
-    $ hsep
-    [ hcat
-      [ pretty "recvFrom"
-      , brackets
-        $ pretty
-          $ reflect rctxt whom
-      ]
---    , pretty (show (UNION (f:::fs)))
-    , (assert_total $ branches pretty kctxt rctxt cs) ]
-
-
-  pretty kctxt rctxt (Choice SELECT whom (Val (UNION (f:::fs))) _ cs)
-    = group
-    $ parens
-    $ hsep
-    [ hcat
-      [ pretty "sendTo"
-      , brackets
-        $ pretty
-          $ reflect rctxt whom
-       ]
---    , pretty (show (UNION (f:::fs)))
-    , (assert_total branches pretty kctxt rctxt cs)
-    ]
-
-  export
-  toString : (rctxt : Context Ty.Role rs)
-          -> (ltype : Local Nil rs)
-                   -> String
-  toString r l = show (pretty Nil r l)
-
-
-  namespace Open
-
-    export
-    toString : (kctxt : Context Kind ks)
-            -> (rctxt : Context Ty.Role rs)
-            -> (ltype : Local ks rs)
-                     -> String
-    toString ks r l = show (pretty ks r l)
 
 -- [ EOF ]

@@ -48,12 +48,12 @@ mutual
         RLater : UsesRole rs        lp  o
               -> UsesRole rs (Rec v lp) o
 
-        Sender : Protocol.UsesRole rs (Choice s r ty p nsr bs) s
+        Sender : Protocol.UsesRole rs (ChoiceG s r ty p nsr bs) s
 
-        Receiver : Protocol.UsesRole rs (Choice s r ty p nsr bs) r
+        Receiver : Protocol.UsesRole rs (ChoiceG s r ty p nsr bs) r
 
         CLater : Branches.UsesRole rs                           bs  o
-              -> Protocol.UsesRole rs (Choice s r ty prfm notsr bs) o
+              -> Protocol.UsesRole rs (ChoiceG s r ty prfm notsr bs) o
 
 
   namespace Branch

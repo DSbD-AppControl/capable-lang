@@ -54,19 +54,19 @@ mutual
                   -> Project ks rs whom (Rec k x) (Rec k y)
 
         Select : (prf : Equals Role (IsVar rs) whom s)
-              -> (bs  : Branches.Project ks rs whom                              (x::xs) (y::ys))
-                     -> Protocol.Project ks rs whom (Choice        s r t p notsr (x::xs))
-                                                    (Choice SELECT   r t p               (y::ys))
+              -> (bs  : Branches.Project ks rs whom                               (x::xs) (y::ys))
+                     -> Protocol.Project ks rs whom (ChoiceG        s r t p notsr (x::xs))
+                                                    (ChoiceL SELECT   r t p               (y::ys))
 
         Offer : (prf : Equals Role (IsVar rs) whom r)
              -> (bs  : Branches.Project ks rs whom                               (x::xs) (y::ys))
-                    -> Protocol.Project ks rs whom (Choice        s r t p notstr (x::xs))
-                                                   (Choice BRANCH s   t p                (y::ys))
+                    -> Protocol.Project ks rs whom (ChoiceG         s r t p notstr (x::xs))
+                                                   (ChoiceL  BRANCH s   t p                (y::ys))
 
         Merge : (prfS  : Not (Equals Role (IsVar rs) whom s))
              -> (prfR  : Not (Equals Role (IsVar rs) whom r))
              -> (prf   : Same ks rs whom (g::gs) (B l t' c))
-                      -> Project ks rs whom (Choice s r t p notsr (g::gs))
+                      -> Project ks rs whom (ChoiceG s r t p notsr (g::gs))
                                              c
 
   namespace Branch
@@ -138,7 +138,7 @@ mutual
 
     funProject (Select {ys = ys1} (Same Refl Refl) ps)
                (Select {ys = ys2} (Same Refl Refl) qs)
-      = cong (Choice SELECT _ _ _)
+      = cong (ChoiceL SELECT _ _ _)
              (funProject ps qs)
 
     funProject (Select {notsr} (Same Refl Refl) bs)
@@ -154,7 +154,7 @@ mutual
       = void (notsr (Same Refl Refl))
 
     funProject (Offer _ p) (Offer _ q)
-      = cong (Choice BRANCH _ _ _)
+      = cong (ChoiceL BRANCH _ _ _)
              (funProject p q)
 
     funProject (Offer (Same Refl Refl) bs)
@@ -225,36 +225,36 @@ mutual
         = No (Rec msgWhyNot)
              (\case (Rec v y ** Rec rec) => prfWhyNot (y ** rec))
 
-    project whom (Choice s x type prfM prfR opties) with (involved whom s x prfR)
+    project whom (ChoiceG s x type prfM prfR opties) with (involved whom s x prfR)
 
       -- [ NOTE ] Sender
-      project s (Choice s x type prfM prfR (b :: bs)) | (Sends Refl) with (Branches.project s (b::bs))
-        project s (Choice s x type prfM prfR (b :: bs)) | (Sends Refl) | (Yes (((y :: ys) ** (z :: zs))))
+      project s (ChoiceG s x type prfM prfR (b :: bs)) | (Sends Refl) with (Branches.project s (b::bs))
+        project s (ChoiceG s x type prfM prfR (b :: bs)) | (Sends Refl) | (Yes (((y :: ys) ** (z :: zs))))
           = Yes (_ ** Select (Same Refl Refl) (z::zs))
 
-        project s (Choice s x type prfM prfR (b :: bs)) | (Sends Refl) | (No msg no)
+        project s (ChoiceG s x type prfM prfR (b :: bs)) | (Sends Refl) | (No msg no)
           = No (Select msg)
                (\case (_ ** Select prf x) => no (_ ** x)
                       (_ ** Offer  prf x) => no (_ ** x)
                       (_ ** Merge f prfR prf) => f (Same Refl Refl))
 
       -- [ NOTE ] Receiving
-      project x (Choice s x type prfM prfR (b :: bs)) | (Recvs Refl) with (Branches.project x (b::bs))
-        project x (Choice s x type prfM prfR (b :: bs)) | (Recvs Refl) | (Yes ((y::ys) ** (z::zs)))
+      project x (ChoiceG s x type prfM prfR (b :: bs)) | (Recvs Refl) with (Branches.project x (b::bs))
+        project x (ChoiceG s x type prfM prfR (b :: bs)) | (Recvs Refl) | (Yes ((y::ys) ** (z::zs)))
           = Yes (_ ** Offer (Same Refl Refl) (z::zs))
 
-        project x (Choice s x type prfM prfR (b :: bs)) | (Recvs Refl) | (No msg no)
+        project x (ChoiceG s x type prfM prfR (b :: bs)) | (Recvs Refl) | (No msg no)
           = No (Offer msg)
                (\case (_ ** (Select prf x)) => no (_ ** x)
                       (_ ** (Offer prf x)) => no (_ ** x)
                       (_ ** (Merge prfS prfR prf)) => prfR (Same Refl Refl))
 
       -- [ NOTE ] Not involved
-      project whom (Choice s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) with (same whom (B l b cont :: bs))
-        project whom (Choice s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) | (Yes (((B l b z) ** (S projs prf))))
+      project whom (ChoiceG s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) with (same whom (B l b cont :: bs))
+        project whom (ChoiceG s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) | (Yes (((B l b z) ** (S projs prf))))
           = Yes (_ ** Merge prfSNot prfRNot (S projs prf))
 
-        project whom (Choice s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
+        project whom (ChoiceG s x type prfM prfR ((B l b cont) :: bs)) | (Skips prfSNot prfRNot) | (No msg no)
           = No (Skip msg)
                (\case (_ ** (Select prf y)) => prfSNot prf
                       (_ ** (Offer prf y)) => prfRNot prf
