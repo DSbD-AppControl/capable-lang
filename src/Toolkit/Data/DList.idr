@@ -151,6 +151,4 @@ public export
 isRightHeavy : DList.Nil = DList.(::) x_0 xs_0 -> Void
 isRightHeavy Refl impossible
 
-
-
 -- --------------------------------------------------------------------- [ EOF ]

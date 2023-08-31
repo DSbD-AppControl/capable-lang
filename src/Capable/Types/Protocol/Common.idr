@@ -18,6 +18,7 @@ import Toolkit.Data.List.Quantifiers
 
 import public Toolkit.Data.DList
 import Toolkit.Data.DList.All
+import public Toolkit.Data.DList.Any
 
 import public Toolkit.DeBruijn.Renaming
 
@@ -30,7 +31,7 @@ import Capable.Types.Base
 
 namespace Protocol
   public export
-  data View = GLOBAL | LOCAL | SYNTH
+  data View = GLOBAL | LOCAL
 
   public export
   data Kind = R String -- To capture recursion variables
@@ -124,10 +125,9 @@ namespace Protocol
       decEq SELECT BRANCH = No (negEqSym notBS)
       decEq SELECT SELECT = Yes Refl
 
-  public export
-  data CanCrash : View -> Type where
-    IsProj : CanCrash LOCAL
-    IsSyn  : CanCrash SYNTH
+  -- public export                      --
+  -- data CanCrash : View -> Type where --
+  --   IsLocal : CanCrash LOCAL         --
 
   public export
   data Protocol : View -> List Kind -> List Role -> Type where
@@ -160,33 +160,80 @@ namespace Protocol
                                (field::fs))
                       -> Protocol LOCAL ks rs
 
-    Crash : CanCrash v -> Protocol v ks rs
+    Crash : Protocol LOCAL ks rs
 
-    Select : {w     : _}
-          -> {rs,ks : _}
-          -> (whom  : Role rs w)
-          -> (label : String)
-          -> (type  : Base)
-          -> (prf   : Marshable type)
-          -> (cont  : Protocol SYNTH ks rs)
-                   -> Protocol SYNTH ks rs
+--    Select : {w     : _}
+--          -> {rs,ks : _}
+--          -> (whom  : Role rs w)
+--          -> (label : String)
+--          -> (type  : Base)
+--          -> (prf   : Marshable type)
+--          -> (cont  : Protocol SYNTH ks rs)
+--                   -> Protocol SYNTH ks rs
+--
+--    -- @TODO merge with ChoiceL
+--    Offer : {o       : _}
+--         -> {rs,ks   : _}
+--         -> (whom    : Role rs o)
+--         -> (type    : Singleton (UNION (field:::fs)))
+--         -> (prfM    : Marshable (UNION (field:::fs)))
+--         -> (choices : DList (String,Base)
+--                             (Branch (Protocol SYNTH) ks rs)
+--                             (field::fs))
+--                    -> Protocol SYNTH ks rs
+--
+--    Choices : {rs,ks:_}
+--           -> (cs : DList (String, Base)
+--                          (Branch (Protocol SYNTH) ks rs)
+--                          (field::fs))
 
-    -- @TODO merge with ChoiceL
-    Offer : {o       : _}
-         -> {rs,ks   : _}
-         -> (whom    : Role rs o)
-         -> (type    : Singleton (UNION (field:::fs)))
-         -> (prfM    : Marshable (UNION (field:::fs)))
-         -> (choices : DList (String,Base)
-                             (Branch (Protocol SYNTH) ks rs)
-                             (field::fs))
-                    -> Protocol SYNTH ks rs
+--                 -> Protocol SYNTH ks rs
 
-    Choices : {rs,ks:_}
-           -> (cs : DList (String, Base)
-                          (Branch (Protocol SYNTH) ks rs)
-                          (field::fs))
-                 -> Protocol SYNTH ks rs
+namespace Branch
+
+  public export
+  data ShareLabel : (x : Branch (Protocol k) ks rs a)
+                 -> (y : Branch (Protocol k) ks rs b)
+                      -> Type
+    where
+      IsShared : ShareLabel (B l tx cx) (B l ty cy)
+
+  export
+  isShared : (x : Branch (Protocol k) ks rs a)
+          -> (y : Branch (Protocol k) ks rs b)
+               -> DecInfo () (ShareLabel x y)
+  isShared (B x tx cx) (B y ty cy) with (decEq x y)
+    isShared (B x tx cx) (B x ty cy) | (Yes Refl)
+      = Yes IsShared
+    isShared (B x tx cx) (B y ty cy) | (No contra)
+      = No () (\IsShared => contra Refl)
+
+  public export
+  SharedLabel : {lts : _}
+            -> (ks : List Kind)
+            -> (rs : List Role)
+            -> (  x  : Branch (Protocol k) ks rs ltx)
+            -> (  xs : DList (String, Base)
+                             (Branch (Protocol k) ks rs)
+                             lts)
+                    -> Type
+  SharedLabel ks rs x
+    = DList.Any.Any (String, Base)
+          (Branch (Protocol k) ks rs)
+          (ShareLabel x)
+
+  export
+  sharedLabel : (  x  : Branch (Protocol k) ks rs ltx)
+             -> (  xs : DList (String, Base)
+                              (Branch (Protocol k) ks rs)
+                              lts)
+                     -> Dec (SharedLabel ks rs x xs)
+  sharedLabel x xs with (DList.Any.any (isShared x) xs)
+    sharedLabel x xs | (Yes prf)
+      = Yes prf
+    sharedLabel x xs | (No contra)
+      = No contra
+
 
 namespace Pretty
 
@@ -274,47 +321,47 @@ namespace Pretty
         ]
 
 
-  pretty kctxt rctxt (Crash _)
+  pretty kctxt rctxt Crash
     = pretty "Crash"
 
-  pretty kctxt rctxt (Select whom label type prf cont)
-    = group
-    $ parens
-    $ hsep
-      [ hcat
-        [ pretty "sendTo"
-        , brackets
-          $ pretty
-            $ reflect rctxt whom
-        ]
-      , hcat
-        [ pretty label
-        , parens
-          $ pretty type
-        ]
-      , pretty "."
-      , indent 2 (pretty kctxt rctxt cont)
-      ]
-
-  pretty kctxt rctxt (Offer whom type prfM choices)
-    = group
-      $ parens
-        $ hsep
-        [ hcat
-          [ pretty "recvFrom"
-          , brackets
-            $ pretty
-              $ reflect rctxt whom
-          ]
-        , (assert_total $ branches pretty kctxt rctxt choices)
-        ]
-
-  pretty kctxt rctxt (Choices cs)
-    = group
-    $ parens
-    $ hsep
-    [ pretty "Choices"
-    , indent 2 (assert_total $ branches pretty kctxt rctxt cs) ]
+--  pretty kctxt rctxt (Select whom label type prf cont)
+--    = group
+--    $ parens
+--    $ hsep
+--      [ hcat
+--        [ pretty "sendTo"
+--        , brackets
+--          $ pretty
+--            $ reflect rctxt whom
+--        ]
+--      , hcat
+--        [ pretty label
+--        , parens
+--          $ pretty type
+--        ]
+--      , pretty "."
+--      , indent 2 (pretty kctxt rctxt cont)
+--      ]
+--
+--  pretty kctxt rctxt (Offer whom type prfM choices)
+--    = group
+--      $ parens
+--        $ hsep
+--        [ hcat
+--          [ pretty "recvFrom"
+--          , brackets
+--            $ pretty
+--              $ reflect rctxt whom
+--          ]
+--        , (assert_total $ branches pretty kctxt rctxt choices)
+--        ]
+--
+--  pretty kctxt rctxt (Choices cs)
+--    = group
+--    $ parens
+--    $ hsep
+--    [ pretty "Choices"
+--    , indent 2 (assert_total $ branches pretty kctxt rctxt cs) ]
 
 
   export

@@ -30,9 +30,9 @@ import public Capable.Types.Protocol.Common
 
 %default total
 
-public export
-Local : List Kind -> List Role -> Type
-Local = Protocol SYNTH
+--public export
+--Local : List Kind -> List Role -> Type
+--Local = Protocol SYNTH
 {-
 public export
 data Local : List Kind -> List Role -> Type where
@@ -66,11 +66,11 @@ data Local : List Kind -> List Role -> Type where
                -> Local ks rs
 -}
 
-public export
-Branches : List Kind -> List Role -> List (String, Base)-> Type
-Branches ks rs
-  = DList (String, Base)
-          (Branch Local ks rs)
+--public export
+--Branches : List Kind -> List Role -> List (String, Base)-> Type
+--Branches ks rs
+--  = DList (String, Base)
+--          (Branch Local ks rs)
 
 {-
 Uninhabited (Synth.Crash = Synth.End) where

@@ -12,6 +12,7 @@ import Toolkit.Decidable.Informative
 import public Capable.Types.Base
 import public Capable.Types.Role
 import public Capable.Types.Protocol
+
 import public Capable.Types.Methods
 
 %default total

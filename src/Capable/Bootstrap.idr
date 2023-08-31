@@ -1,5 +1,8 @@
 module Capable.Bootstrap
 
+import Control.WellFounded
+import Data.Nat
+
 import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 import Toolkit.Data.DList.All
@@ -193,5 +196,90 @@ namespace Context
   keys [] = []
   keys ((I name x) :: rest) = name :: keys rest
 
+namespace DList
+  public export
+  data IsSucc : (xs : DList idx ty is) -> Type where
+    ItIsSucc : IsSucc (x::xs)
+
+
+  isEmpty : {xs : DList idx ty Nil} -> IsSucc xs -> Void
+  isEmpty ItIsSucc impossible
+
+  export
+  isSucc : (xs : DList idx ty is) -> Dec (IsSucc xs)
+  isSucc []
+    = No isEmpty
+  isSucc (_ :: _)
+    = Yes ItIsSucc
+
+  public export
+  (++) : DList i e xs
+      -> DList i e ys -> DList i e (xs ++ ys)
+  (++) Nil ys = ys
+  (++) (x::xs) ys = x :: append xs ys
+
+  public export
+  data Split : (0 idx : Type)
+            -> (0 ty  : idx -> Type)
+            -> {0 is  : List idx}
+            -> (  xs  : DList idx ty is) -> Type where
+    SNil : Split idx e Nil
+    SOne : (x : e i) -> Split idx e [x]
+    SPair : (x : e i) -> (xs : DList idx e is)
+         -> (y : e j) -> (ys : DList idx e js)
+         -> Split idx e ((x::xs) ++ (y::ys))
+
+  splitHelp : (h : e i)
+           -> (t : DList idx e is)
+           -> (c : DList idx e js)
+                -> Split idx e (h::t)
+  splitHelp h [] c
+    = SOne h
+
+  splitHelp h (x :: xs) []
+    = SPair h Nil x xs
+
+  splitHelp h (x :: xs) [y]
+    = SPair h Nil x xs
+
+  splitHelp h (x :: xs) (_ :: _ :: ys)
+    = case splitHelp h xs ys of
+        (SOne h) => SPair h [] _ []
+        (SPair h' xs y' ys) => SPair h' (x::xs) y' ys
+
+  -- linear
+  export
+  split : (xs : DList idx e is) -> Split idx e xs
+  split []
+    = SNil
+  split (x :: xs) = splitHelp x xs xs
+
+
+  public export
+  data SplitRec : (0 idx : Type)
+               -> (0 e   : idx -> Type)
+               -> {0 is  : List idx}
+               -> (  xs  : DList idx e is)
+                        -> Type
+    where
+      SNilRec : SplitRec idx e Nil
+      SOneRec : (x : e i) -> SplitRec idx e [x]
+      SPairRec : (ls : DList idx e is)
+              -> (rs : DList idx e js)
+              -> (lr : Lazy (SplitRec idx e ls))
+              -> (rr : Lazy (SplitRec idx e rs))
+                    -> SplitRec idx e (ls ++ rs)
+
+  public export
+  Sized (DList idx e is) where
+    size = DList.size
+
+--  public export
+--  splitRec : (xs : DList idx e is) -> SplitRec idx e xs
+--  splitRec xs with (sizeAccessible xs)
+--    splitRec xs | acc  with (split xs)
+--      splitRec [] | acc  | SNil = ?splitRec_rhs_rhs_rhs_0
+--      splitRec [x] | acc  | (SOne x) = ?splitRec_rhs_rhs_rhs_1
+--      splitRec ((x :: y) ++ (z :: ys)) | acc  | (SPair x y z ys) = ?splitRec_rhs_rhs_rhs_2
 
 -- [ EOF ]

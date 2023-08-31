@@ -10,8 +10,6 @@ import Toolkit.Data.Location
 
 import Capable.Types
 import Capable.Types.Protocol.Projection
-import Capable.Types.Protocol.Selection
-import Capable.Types.Protocol.Unification
 import Capable.Core
 
 import Capable.Raw.AST
@@ -42,24 +40,10 @@ import Capable.Terms.Funcs
 
 %default total
 
+
+{-
 namespace Expr
   namespace Check
-    public export
-    data Result : (roles, rs : List Ty.Role)
-               -> (ds   : List Ty.Base)
-               -> (ss   : List Ty.Session)
-               -> (gs   : List Ty.Method)
-               -> (ks   : List Protocol.Kind)
-               -> (ls   : List Ty.Base)
-               -> (p    : DeBruijn.Role roles p')
-               -> (l    : Local.Local ks roles)
-               -> (ret  : Base)
-                       -> Type
-      where
-        R : (syn  : Synth.Local ks roles)
-         -> (prf  : Unify chk syn)
-         -> (expr : Expr   roles rs ds ss gs ls ks p syn ret)
-                 -> Result roles rs ds ss gs ks ls p chk ret
 
 
     namespace Case
@@ -140,8 +124,25 @@ namespace Expr
             -> (prf  : Unify chk syn)
             -> (expr : Offers roles rs ds ss gs ls ks ret p syn)
                     -> Result roles rs ds ss gs ks ls p chk ret
+-}
 
-  namespace Synth
+namespace Synth
+  public export
+  data Result : (roles, rs : List Ty.Role)
+             -> (ds   : List Ty.Base)
+             -> (ss   : List Ty.Session)
+             -> (gs   : List Ty.Method)
+             -> (ks   : List Protocol.Kind)
+             -> (ls   : List Ty.Base)
+             -> (p    : DeBruijn.Role roles p')
+             -> (ret  : Base)
+                     -> Type
+    where
+      R : (l    : Local ks roles)
+       -> (expr : Expr   roles rs ds ss gs ls ks p l ret)
+               -> Result roles rs ds ss gs ks ls p ret
+
+  namespace Case
     public export
     data Result : (roles, rs : List Ty.Role)
                -> (ds   : List Ty.Base)
@@ -150,84 +151,88 @@ namespace Expr
                -> (ks   : List Protocol.Kind)
                -> (ls   : List Ty.Base)
                -> (p    : DeBruijn.Role roles p')
+               -> (s    : (String,Base))
                -> (ret  : Base)
                        -> Type
       where
-        R : (l    : Synth.Local ks roles)
-         -> (expr : Expr   roles rs ds ss gs ls ks p l ret)
-                 -> Result roles rs ds ss gs ks ls p ret
+        C : (b    : Branch Local ks roles (s,t))
+         -> (expr : Case roles rs ds ss gs ls ks ret p (s,t) b)
+                -> Result roles rs ds ss gs ks ls p (s,t) ret
 
-    namespace Case
-      public export
-      data Result : (roles, rs : List Ty.Role)
-                 -> (ds   : List Ty.Base)
-                 -> (ss   : List Ty.Session)
-                 -> (gs   : List Ty.Method)
-                 -> (ks   : List Protocol.Kind)
-                 -> (ls   : List Ty.Base)
-                 -> (p    : DeBruijn.Role roles p')
-                 -> (s    : (String,Base))
-                 -> (ret  : Base)
-                         -> Type
-        where
-          C : (b    : Branch Synth.Local ks roles (s,t))
-           -> (expr : Case roles rs ds ss gs ls ks ret p (s,t) b)
-                  -> Result roles rs ds ss gs ks ls p (s,t) ret
+  namespace Cases
+    public export
+    data Result : (roles, rs : List Ty.Role)
+               -> (ds   : List Ty.Base)
+               -> (ss   : List Ty.Session)
+               -> (gs   : List Ty.Method)
+               -> (ks   : List Protocol.Kind)
+               -> (ls   : List Ty.Base)
+               -> (p    : DeBruijn.Role roles p')
+               -> (lts  : List (String,Base))
+               -> (ret  : Base)
+                       -> Type
+      where
+        CS : {lts : _}
+         -> (bs   : Local.Branches ks roles lts)
+         -> (expr : Cases roles rs ds ss gs ls ks ret p lts bs)
+                 -> Result roles rs ds ss gs ks ls p lts ret
+  namespace Offer
+    public export
+    data Result : (roles, rs : List Ty.Role)
+               -> (ds   : List Ty.Base)
+               -> (ss   : List Ty.Session)
+               -> (gs   : List Ty.Method)
+               -> (ks   : List Protocol.Kind)
+               -> (ls   : List Ty.Base)
+               -> (p    : DeBruijn.Role roles p')
+               -> (s    : (String,Base))
+               -> (ret  : Base)
+                       -> Type
+      where
+        O : (b    : Branch Local ks roles (s,t))
+         -> (expr : Offer roles rs ds ss gs ls ks ret p b)
+                -> Result roles rs ds ss gs ks ls p (s,t) ret
 
-    namespace Cases
-      public export
-      data Result : (roles, rs : List Ty.Role)
-                 -> (ds   : List Ty.Base)
-                 -> (ss   : List Ty.Session)
-                 -> (gs   : List Ty.Method)
-                 -> (ks   : List Protocol.Kind)
-                 -> (ls   : List Ty.Base)
-                 -> (p    : DeBruijn.Role roles p')
-                 -> (lts  : List (String,Base))
-                 -> (ret  : Base)
-                         -> Type
-        where
-          CS : {lts : _}
-           -> (bs   : Synth.Branches ks roles lts)
-           -> (expr : Cases roles rs ds ss gs ls ks ret p lts bs)
-                   -> Result roles rs ds ss gs ks ls p lts ret
-    namespace Offer
-      public export
-      data Result : (roles, rs : List Ty.Role)
-                 -> (ds   : List Ty.Base)
-                 -> (ss   : List Ty.Session)
-                 -> (gs   : List Ty.Method)
-                 -> (ks   : List Protocol.Kind)
-                 -> (ls   : List Ty.Base)
-                 -> (p    : DeBruijn.Role roles p')
-                 -> (s    : (String,Base))
-                 -> (ret  : Base)
-                         -> Type
-        where
-          O : (b    : Branch Synth.Local ks roles (s,t))
-           -> (expr : Offer roles rs ds ss gs ls ks ret p b)
-                  -> Result roles rs ds ss gs ks ls p (s,t) ret
+  namespace Offers
+    public export
+    data Result : (roles, rs : List Ty.Role)
+               -> (ds   : List Ty.Base)
+               -> (ss   : List Ty.Session)
+               -> (gs   : List Ty.Method)
+               -> (ks   : List Protocol.Kind)
+               -> (ls   : List Ty.Base)
+               -> (p    : DeBruijn.Role roles p')
+               -> (lts  : List (String,Base))
+               -> (ret  : Base)
+                       -> Type
+      where
+        OS : {lts : _}
+         -> (bs   : Local.Branches ks roles lts)
+         -> (expr : Offers roles rs ds ss gs ls ks ret p bs)
+                 -> Result roles rs ds ss gs ks ls p lts ret
 
-    namespace Offers
-      public export
-      data Result : (roles, rs : List Ty.Role)
-                 -> (ds   : List Ty.Base)
-                 -> (ss   : List Ty.Session)
-                 -> (gs   : List Ty.Method)
-                 -> (ks   : List Protocol.Kind)
-                 -> (ls   : List Ty.Base)
-                 -> (p    : DeBruijn.Role roles p')
-                 -> (lts  : List (String,Base))
-                 -> (ret  : Base)
-                         -> Type
-        where
-          OS : {lts : _}
-           -> (bs   : Synth.Branches ks roles lts)
-           -> (expr : Offers roles rs ds ss gs ls ks ret p bs)
-                   -> Result roles rs ds ss gs ks ls p lts ret
+  namespace Check
+    public export
+    data Result : (roles, rs : List Ty.Role)
+               -> (ds   : List Ty.Base)
+               -> (ss   : List Ty.Session)
+               -> (gs   : List Ty.Method)
+               -> (ks   : List Protocol.Kind)
+               -> (ls   : List Ty.Base)
+               -> (p    : DeBruijn.Role roles p')
+               -> (l    : Local.Local ks roles)
+               -> (ret  : Base)
+                       -> Type
+      where
+        R : (syn  : Local ks roles)
+         -> (prf  : Subset syn chk)
+         -> (expr : Expr   roles rs ds ss gs ls ks p syn ret)
+                 -> Result roles rs ds ss gs ks ls p chk ret
 
-  namespace Exprs
+namespace Expr
 
+  namespace Synth
+    export
     synth : {e, roles, ls, ks : _}
          -> {rs    : List Ty.Role}
          -> {ds    : List Ty.Base}
@@ -241,8 +246,27 @@ namespace Expr
          -> (expr  : Sessions.Expr e)
                   -> Capable (Synth.Result roles rs ds ss gs ks ls princ ret)
 
+  namespace Check
+    partial export
+    check : {e, roles, ls,ks : _}
+         -> {rs   : List Ty.Role}
+         -> {ds   : List Ty.Base}
+         -> {gs   : List Ty.Method}
+         -> {ss   : List Ty.Session}
+         -> (env  : Env rs ds ss gs ls)
+         -> (enr  : Context Role roles)
+         -> (enc  : Context Protocol.Kind ks)
+         -> (princ : DeBruijn.Role roles p)
+         -> (ret  : Base)
+         -> (type : Local.Local ks roles)
+         -> (expr : Sessions.Expr e)
+                 -> Capable (Check.Result roles rs ds ss gs ks ls princ type ret)
+
+
+
     -- [ NOTE ] Session Typed Terms
 
+  namespace Synth
     synth env er ec p ret (Hole ref prf)
       = unknown (span ref)
 
@@ -254,7 +278,7 @@ namespace Expr
 
     synth env er ec p ret (Crash fc expr)
       = do tm <- check fc env ret expr
-           pure (R (Crash IsSyn) (Crash tm))
+           pure (R Crash (Crash tm))
 
     synth env er ec p ret (End fc expr)
 
@@ -266,7 +290,11 @@ namespace Expr
            R tyT tmT <- synth env er ec p ret tt
            R tyF tmF <- synth env er ec p ret ff
 
-           pure (R (Choices [B "true" UNIT tyT, B "false" UNIT tyF]) (Cond tm tmT tmF))
+           (lty ** prfMerge) <- Informative.embedAt fc
+                                        (IllTypedSession "Merge Cond @TODO better error")
+                                        (merge tyT tyF)
+
+           pure (R lty (Cond tm tmT tmF prfMerge))
 
     synth env er ec p ret (Match fc cond prf (c::cs))
       = do (UNION ((es,et) ::: fs) ** tm) <- synth env cond
@@ -275,8 +303,12 @@ namespace Expr
            C  b  a  <- case' fc ret es et c
            CS bs as <- cases fc ret  fs   cs
 
-           pure (R (Choices (b::bs))
-                   (Match tm (a::as))
+           (lty ** prfMerge) <- Informative.embedAt fc
+                                        (IllTypedSession "Merge Case @TODO better error")
+                                        (Many.merge (b::bs))
+
+           pure (R lty
+                   (Match tm (a::as) prfMerge)
                          -- (Match tm (a::as))
                    )
 
@@ -331,13 +363,14 @@ namespace Expr
              O  b  o    <- offer  fc ret es et ofs
              OS bs offs <- offers fc ret   fs  offs
 
-             R (Crash IsSyn) err  <- synth env er ec p ret onEr
+             R Crash err  <- synth env er ec p ret onEr
                 | R type _ => throwAt fc (IllTypedSession "\{toString ec er type}")
 
-             pure (R (Offer target
-                            (Val (UNION ((es,et) ::: fs)))
-                            prfM
-                            (b::bs)
+             pure (R (ChoiceL BRANCH
+                              target
+                              (Val (UNION ((es,et) ::: fs)))
+                              prfM
+                              (b::bs)
                                            )
                      (Read target prfM (o::offs) err))
 
@@ -397,14 +430,14 @@ namespace Expr
 
            (R lsytn rest) <- synth env er ec p ret scope
 
-           R (Crash IsSyn) err  <- synth env er ec p ret onErr
+           R Crash err  <- synth env er ec p ret onErr
               | R type _ => throwAt fc (IllTypedSession "TODO")
 
-           pure (R (Select target
-                           label
-                           tyM'
-                           prfM
-                           lsytn)
+           pure (R (ChoiceL SELECT
+                            target
+                            (Val (UNION ((label,tyM'):::Nil)))
+                            (UNION [F label prfM])
+                            ([B label tyM' lsytn]))
                    (Send target label tmM prfM rest err))
 
     -- [ NOTE ] Non-Session-Typed Terms
@@ -486,7 +519,8 @@ namespace Expr
                      pure (Lambda.extend rest x y)
 
 
-    partial export
+{-
+
     check : {e, roles, ls,ks : _}
          -> {rs   : List Ty.Role}
          -> {ds   : List Ty.Base}
@@ -832,6 +866,34 @@ namespace Expr
                              , "but given:\n\t\{toString ec er syn}"]
            throwAt (getFC term) (IllTypedSession msg)
 
+-}
+
+namespace Expr
+
+  namespace Check
+    -- [ NOTE ] Holes are only checkable terms as they inherit the checked types.
+    check env er ec princ ret type (Hole ref prf)
+      = showHoleSessionExit (lambda env)
+                                  er
+                                  ec
+                                  type
+                                  (get ref)
+
+    check e er ec p ret type term
+
+      = do R syn tm <- tryCatch (synth e er ec p ret term)
+
+                                (\eer => throwAt (getFC term) (IllTypedSession (unlines [toString ec er type
+                          , "but could not synthesis given type because of\n\n\{show eer}."])))
+
+           let msg = unlines [ toString ec er type
+                             , "but given:\n\t\{toString ec er syn}"]
+
+           prf <- embedAt (getFC term)
+                          (IllTypedSession msg)
+                          (subset syn type)
+
+           pure (R syn prf tm)
 
 export
 synth : {rs   : List Ty.Role}

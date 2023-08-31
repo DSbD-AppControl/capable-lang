@@ -20,7 +20,8 @@ import public Toolkit.Data.Vect.Extra
 import public Toolkit.DeBruijn.Context
 import public Toolkit.DeBruijn.Context.Item
 
-import public Capable.Types.Protocol.Local.Synth
+import public Capable.Types.Protocol.Local
+
 import public Capable.Types.Protocol.Assignment
 
 import Capable.Terms.Types
@@ -275,7 +276,7 @@ mutual
     -> (globals  : List Ty.Session)
     -> (stack_g  : List Ty.Method)
     -> (stack_l  : List Ty.Base)
-    -> (proto    : Synth.Local ks roles)
+    -> (proto    : Local ks roles)
     -> (ps       : Roles roles ss)
                 -> Type
 

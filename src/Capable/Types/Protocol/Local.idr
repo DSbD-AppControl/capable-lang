@@ -60,10 +60,10 @@ Branches ks rs
   = DList (String, Base)
           (Branch Local ks rs)
 
-
+public export
 data Diag : (l,r : Local ks rs) -> Type
   where
-    Crash : Diag (Crash IsProj) (Crash IsProj)
+    Crash : Diag Crash Crash
     End : Diag End End
     Call : (prfA, prfB : _) -> Diag (Call prfA) (Call prfB)
     Rec : (a,b : Kind)
@@ -80,6 +80,7 @@ data Diag : (l,r : Local ks rs) -> Type
           -> Diag (ChoiceL kA wA typeA prfA cas)
                   (ChoiceL kB wB typeB prfB cbs)
 
+export
 diag : (l,r : Local ks rs) -> Maybe (Diag l r)
 diag End End
   = Just End
@@ -98,7 +99,7 @@ diag (ChoiceL ka wA tA pA ca)
                       pA pB
                       ca cb)
 
-diag (Crash IsProj) (Crash IsProj)
+diag Crash Crash
   = Just Crash
 diag _ _ = Nothing
 
@@ -108,7 +109,8 @@ diagNot End                                   = absurd
 diagNot (Call x)                              = absurd
 diagNot (Rec v x)                             = absurd
 diagNot (ChoiceL kind whom type prfM choices) = absurd
-diagNot (Crash IsProj)                        = absurd
+diagNot Crash                                 = absurd
+
 
 public export
 DecEq (Local ks rs) where
@@ -197,5 +199,52 @@ branchesEQ b (x :: xs) with (branchEQ b x)
 
   branchesEQ b (x :: xs) | (No no)
     = No () (\(h::t) => no h)
+
+
+namespace Shape
+  public export
+  data Shape : (l,r : Local ks rs) -> Type
+    where
+      Crash : Shape Crash Crash
+      End : Shape End End
+      Call : Shape (Call prfA) (Call prfB)
+      Rec : Shape (Rec a kA) (Rec b kB)
+      Offer : Shape (ChoiceL BRANCH wB typeB prfB cbs) (ChoiceL BRANCH wA typeA prfA cas)
+      Select : Shape (ChoiceL SELECT wB typeB prfB cbs) (ChoiceL SELECT wA typeA prfA cas)
+
+
+  export
+  shape : (l,r : Local ks rs) -> Maybe (Shape l r)
+  shape End End = Just End
+  shape (Call x) (Call y) = Just Call
+  shape (Rec v x) (Rec w y) = Just Rec
+  shape (ChoiceL BRANCH _ _ _ _) (ChoiceL BRANCH _ _ _ _) = Just Offer
+  shape (ChoiceL SELECT _ _ _ _) (ChoiceL SELECT _ _ _ _) = Just Select
+
+  shape Crash Crash = Just Crash
+  shape _ _ = Nothing
+
+  urgh : shape x y = Nothing -> Shape x y -> Void
+  urgh Refl Crash impossible
+  urgh Refl End    impossible
+  urgh Refl Call   impossible
+  urgh Refl Rec    impossible
+  urgh Refl Offer  impossible
+  urgh Refl Select impossible
+
+
+  public export
+  data SameShapedHead : (x,y : Local ks rs) -> Type where
+    SS : {x,y : Local ks rs} -> Shape x y -> SameShapedHead x y
+
+
+
+  export
+  sameShapedHead : (x,y : Local ks rs) -> Dec (SameShapedHead x y)
+  sameShapedHead x y with (shape x y) proof evi
+    sameShapedHead x y | Nothing
+      = No (\case (SS prf) => urgh evi prf)
+    sameShapedHead x y | (Just z)
+      = Yes (SS z)
 
 -- [ EOF ]

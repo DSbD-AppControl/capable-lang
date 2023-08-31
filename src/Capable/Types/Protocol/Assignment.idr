@@ -31,7 +31,7 @@ import Capable.Types.Role
 import Capable.Types.Base
 
 import Capable.Types.Protocol.Global
-import Capable.Types.Protocol.Local.Synth
+import Capable.Types.Protocol.Local
 import Capable.Types.Protocol.Projection
 
 %default total
@@ -45,22 +45,22 @@ namespace HasRoles
                    -> (os : Roles rs ss)
                          -> Type
         where
-          Crash : HasRoles rs lp Nil
-          End   : HasRoles rs lp Nil
-          Call  : HasRoles rs lp Nil
+          Crash : HasRoles rs Crash      Nil
+          End   : HasRoles rs End        Nil
+          Call  : HasRoles rs (Call idx) Nil
           Rec   : HasRoles rs lp os
                -> HasRoles rs (Rec v lp) os
 
-          Select : HasRoles rs cont os
-                -> Union [whom] os os' prf
-                -> HasRoles rs (Select whom label ty prfm cont) os'
-
+--          Select : HasRoles rs cont os
+--                -> Union [whom] os os' prf
+--                -> HasRoles rs (Select whom label ty prfm cont) os'
+--
           Choice : Branches.HasRoles rs bs os
                 -> Union [whom] os os' prf
-                -> Protocol.HasRoles rs (Offer whom ty prfm bs) os'
-
-          Choices : Branches.HasRoles rs cs ls
-                 -> Protocol.HasRoles rs (Choices cs) ls
+                -> Protocol.HasRoles rs (ChoiceL k whom ty prfm bs) os'
+--
+--          Choices : Branches.HasRoles rs cs ls
+--                 -> Protocol.HasRoles rs (Choices cs) ls
 
       public export
       data Result : (rs : List Role) -> (p : Local ks rs) -> Type where
@@ -83,7 +83,7 @@ namespace HasRoles
     namespace Branches
       public export
       data HasRoles : (rs : List Role)
-                   -> (lp : Synth.Branches ks rs lts)
+                   -> (lp : Local.Branches ks rs lts)
                    -> (os : Roles rs ss)
                          -> Type
         where
@@ -95,7 +95,7 @@ namespace HasRoles
              -> Branches.HasRoles rs (b::bs) os''
 
       public export
-      data Result : (rs : List Role) -> (p : Synth.Branches ks rs l) -> Type where
+      data Result : (rs : List Role) -> (p : Local.Branches ks rs l) -> Type where
         R : {ss : _} -> (os : Roles rs ss) -> Branches.HasRoles rs lp os -> Result rs lp
 
 
@@ -104,24 +104,24 @@ namespace HasRoles
     namespace Protocol
       export
       hasRoles : (p : Local ks rs) -> Protocol.Result rs p
-      hasRoles (Crash _) = R [] Crash
+      hasRoles Crash = R [] Crash
       hasRoles End = R [] End
       hasRoles (Call x) = R [] Call
       hasRoles (Rec v x)
         = case hasRoles x of
             R _ r => R _ (Rec r)
-      hasRoles (Select whom label ty prfM cont)
-        = case hasRoles cont of
-            R as res => case DList.union [whom] as of
-                          (ps ** zs ** prfTy ** prf) => R _ (Select res prf)
-      hasRoles (Offer whom type prfM choices)
+--      hasRoles (Select whom label ty prfM cont)
+--        = case hasRoles cont of
+--            R as res => case DList.union [whom] as of
+--                          (ps ** zs ** prfTy ** prf) => R _ (Select res prf)
+      hasRoles (ChoiceL k whom type prfM choices)
         = case hasRoles choices of
             R as res => case DList.union [whom] as of
                           (ps ** zs ** prfTy ** prf) => R _ (Choice res prf)
 
-      hasRoles (Choices ls)
-        = case hasRoles ls of
-            (R os x) => R os (Choices x)
+--      hasRoles (Choices ls)
+--        = case hasRoles ls of
+--            (R os x) => R os (Choices x)
 
 
     namespace Branch
@@ -133,7 +133,7 @@ namespace HasRoles
 
     namespace Branches
       export
-      hasRoles : (p : Synth.Branches ks rs l) -> Branches.Result rs p
+      hasRoles : (p : Local.Branches ks rs l) -> Branches.Result rs p
       hasRoles []
         = R _ []
       hasRoles (elem :: rest)
@@ -158,27 +158,27 @@ namespace UsesRole
           CHere : (whom : Role rs r)
                -> (prf  : REquals rs whom role)
                        -> Protocol.UsesRole rs
-                                            (Offer whom ty prfm bs)
-                                                   role
+                                            (ChoiceL k whom ty prfm bs)
+                                                     role
 
-          SHere : (whom : Role rs r)
-               -> (prf  : REquals rs whom role)
-                       -> Protocol.UsesRole rs (Select whom label ty prfM cont)
-                                                       role
-
-
-          SThere : (whom : Role rs r)
-                -> (prf  : Not (REquals rs whom role))
-                        -> Protocol.UsesRole rs                            cont  role
-                        -> Protocol.UsesRole rs (Select whom label ty prfM cont) role
+--          SHere : (whom : Role rs r)
+--               -> (prf  : REquals rs whom role)
+--                       -> Protocol.UsesRole rs (Select whom label ty prfM cont)
+--                                                       role
+--
+--
+--          SThere : (whom : Role rs r)
+--                -> (prf  : Not (REquals rs whom role))
+--                        -> Protocol.UsesRole rs                            cont  role
+--                        -> Protocol.UsesRole rs (Select whom label ty prfM cont) role
 
           CThere : (whom : Role rs r)
                 -> (prf  : Not (REquals rs whom role))
                 -> Branches.UsesRole rs                     bs  role
-                -> Protocol.UsesRole rs (Offer whom ty prfm bs) role
+                -> Protocol.UsesRole rs (ChoiceL k whom ty prfm bs) role
 
-          BThere : Branches.UsesRole rs bs  role
-                -> Protocol.UsesRole rs (Choices bs) role
+--          BThere : Branches.UsesRole rs bs  role
+--                -> Protocol.UsesRole rs (Choices bs) role
 
 
     namespace Branch
@@ -194,7 +194,7 @@ namespace UsesRole
     namespace Branches
       public export
       data UsesRole : (rs : List Role)
-                   -> (lp : Synth.Branches ks rs lts)
+                   -> (lp : Local.Branches ks rs lts)
                    -> (r  : Role rs r')
                           -> Type
         where
@@ -205,7 +205,7 @@ namespace UsesRole
                -> Branches.UsesRole rs (B m t l  ::bs) role
 
 namespace UsesRole
-  Uninhabited (UsesRole rs (Crash p) role) where
+  Uninhabited (UsesRole rs (Crash) role) where
     uninhabited (Rec x) impossible
 
   Uninhabited (UsesRole rs End role) where
@@ -223,10 +223,10 @@ namespace UsesRole
     namespace Protocol
       export
       usesRole : {r' : _}
-              -> (lp : Synth.Local ks rs)
+              -> (lp : Local.Local ks rs)
               -> (r  : Role rs r')
                     -> Dec (UsesRole rs lp r)
-      usesRole (Crash _) _
+      usesRole (Crash) _
         = No absurd
 
       usesRole End _
@@ -241,31 +241,31 @@ namespace UsesRole
         usesRole (Rec v x) r | (No contra)
           = No $ \case (Rec y) => contra y
 
-      usesRole (Select whom label type p cont) r with (Index.decEq whom r)
-        usesRole (Select whom label type p cont) r | (Yes prf)
-          = Yes (SHere whom prf)
-        usesRole (Select whom label type p cont) r | (No contra) with (usesRole cont r)
-          usesRole (Select whom label type p cont) r | (No contra) | (Yes prf)
-            = Yes (SThere whom contra prf)
-          usesRole (Select whom label type p cont) r | (No contra) | (No f)
-            = No $ \case (SHere whom prf) => contra prf
-                         (SThere whom prf y) => f y
+--      usesRole (Select whom label type p cont) r with (Index.decEq whom r)
+--        usesRole (Select whom label type p cont) r | (Yes prf)
+--          = Yes (SHere whom prf)
+--        usesRole (Select whom label type p cont) r | (No contra) with (usesRole cont r)
+--          usesRole (Select whom label type p cont) r | (No contra) | (Yes prf)
+--            = Yes (SThere whom contra prf)
+--          usesRole (Select whom label type p cont) r | (No contra) | (No f)
+--            = No $ \case (SHere whom prf) => contra prf
+--                         (SThere whom prf y) => f y
 
-      usesRole (Offer whom type p choices) r with (Index.decEq whom r)
-        usesRole (Offer whom type p choices) r | (Yes prf)
+      usesRole (ChoiceL k whom type p choices) r with (Index.decEq whom r)
+        usesRole (ChoiceL k whom type p choices) r | (Yes prf)
            = Yes (CHere whom prf)
-        usesRole (Offer whom type p choices) r | (No contra) with (usesRole choices r)
-          usesRole (Offer whom type p choices) r | (No contra) | (Yes prf)
+        usesRole (ChoiceL k whom type p choices) r | (No contra) with (usesRole choices r)
+          usesRole (ChoiceL k whom type p choices) r | (No contra) | (Yes prf)
             = Yes (CThere whom contra prf)
-          usesRole (Offer whom type p choices) r | (No contra) | (No f)
+          usesRole (ChoiceL k whom type p choices) r | (No contra) | (No f)
             = No $ \case (CHere whom prf) => contra prf
                          (CThere whom prf y) => f y
 
-      usesRole (Choices ls) p with (usesRole ls p)
-        usesRole (Choices ls) p | (Yes prf)
-          = Yes (BThere prf)
-        usesRole (Choices ls) p | (No contra)
-          = No $ \case (BThere x) => contra x
+--      usesRole (Choices ls) p with (usesRole ls p)
+--        usesRole (Choices ls) p | (Yes prf)
+--          = Yes (BThere prf)
+--        usesRole (Choices ls) p | (No contra)
+--          = No $ \case (BThere x) => contra x
 
     namespace Branch
       export
@@ -282,7 +282,7 @@ namespace UsesRole
     namespace Branches
       export
       usesRole : {r' : _}
-              -> (lp : Synth.Branches ks rs lts)
+              -> (lp : Local.Branches ks rs lts)
               -> (r  : Role rs r')
                     -> Dec (UsesRole rs lp r)
       usesRole [] r

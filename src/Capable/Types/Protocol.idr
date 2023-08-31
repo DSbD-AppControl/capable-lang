@@ -32,7 +32,6 @@ import Capable.Types.Base
 
 import public Capable.Types.Protocol.Global
 import public Capable.Types.Protocol.Local
-import public Capable.Types.Protocol.Local.Synth
 
 %default total
 
