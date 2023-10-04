@@ -58,6 +58,8 @@ import Capable.Types.Protocol.Merge.Meet
 import Capable.Types.Protocol.Merge.Concat
 import Capable.Types.Protocol.Merge.Diff
 
+import Debug.Trace
+
 %default total
 
 
@@ -118,14 +120,15 @@ namespace Offer
   export
   merge : (f : (x : Local ks rs)
             -> (y : Local ks rs)
-                 -> Either () (DPair (Local ks rs) (p x y)))
+                 -> Either Merge.Error
+                           (DPair (Local ks rs) (p x y)))
 
        -> (px : DList (String,Base) Marshable lxs)
        -> (xs : Local.Branches ks rs lxs)
        -> (py : DList (String,Base) Marshable lys)
        -> (ys : Local.Branches ks rs lys)
 
-             -> Either ()
+             -> Either Merge.Error
                        (Offer.Result ks rs p px xs py ys)
 
 
@@ -134,11 +137,11 @@ namespace Offer
       = Right (R [] [])
 
     merge f (px::pxs) (x :: xs) [] [] | LH
-      = Left ()
+      = Left (UnBalancedOffers True)
 --             (\case (R zs prf) => isLeftHeavy prf)
 
     merge f [] [] (px::pxs) (x :: xs) | RH
-      = Left ()
+      = Left (UnBalancedOffers False)
 --             (\case (R zs prf) => isRightHeavy prf)
 
     merge f (px::pxs) (x :: xs) (py :: pys) (y :: ys) | Same
@@ -147,24 +150,24 @@ namespace Offer
                => case merge f pxs xs pys ys of
                        (Right (R zs prf)) => Right (R (B la ta cc :: zs) (Y Refl Refl z :: prf))
                        (Left msg {-no-})
-                         => Left ()
+                         => Left (MeetFailCont la msg)
 --                               (\(R zs prf) => case prf of
 --                                                 (_ :: ltr) => no $ R _ ltr)
              (NoMeet ** snd)
                => case snd of
                        (N pL)
-                         => Left ()
+                         => Left (MeetFail (MkPair x y))
 --                               (\(R zs prf) => case prf of
 --                                                       ((Y Refl Refl pM) :: pT) => pL Refl)
              (Fail ** snd)
                => case snd of
                     (FT pL pT)
-                      => Left ()
+                      => Left (MeetFail (MkPair x y))
 --                            (\(R zs prf)
 --                               => case prf of
 --                                       ((Y Refl Refl pM) :: z) => pT Refl)
                     (FM Refl Refl {-pM-})
-                      => Left ()
+                      => Left (MeetFail (MkPair x y))
 --                            (\(R zs prf)
 --                              => case prf of
 --                                      ((Y Refl Refl z) :: pT) => pM z)
@@ -193,8 +196,8 @@ namespace Protocol
             -> Append xs pmL lefts
                       ys pmR rights
                       zs pmZ leftrights
-            -> Append ws pmC shared
-                      zs pmZ leftrights
+            -> Append zs pmZ leftrights
+                      ws pmC shared
                       (lr::lrs) (pr::prs) (br::brs)
             -> Merge (ChoiceL SELECT w tyA (UNION pmA) these)
                      (ChoiceL SELECT w tyB (UNION pmB) those)
@@ -211,7 +214,7 @@ namespace Protocol
 
   export
   merge : (this, that : Local ks rs)
-                     -> Either ()
+                     -> Either Merge.Error
                                 (DPair (Local ks rs)
                                        (Merge this that))
   merge this that with (sameShapedHead this that)
@@ -227,7 +230,7 @@ namespace Protocol
             (Yes (Same Refl Refl))
               => Right (Call prfB ** Call)
             (No no)
-              => Left ()
+              => Left WrongRecVar
 --                    (\(_ ** Call) => no (Same Refl Refl))
 
       merge (Rec a kA) (Rec b kB) | (Yes (SS ss)) | Rec
@@ -237,10 +240,10 @@ namespace Protocol
                    (Right (z ** prf))
                      => Right (Rec b z ** Rec prf)
                    (Left msg {-no-})
-                     => Left ()
+                     => Left (InRec msg)
 --                           (\(Rec _ ltr ** Rec prf) => no (ltr ** prf))
             (No no)
-              => Left ()
+              => Left WrongRecVar
 --                    (\(_ ** Rec ltr) => no Refl)
 
       merge (ChoiceL BRANCH wB (Val (UNION (f:::fs))) (UNION prfB) cbs)
@@ -254,14 +257,14 @@ namespace Protocol
                           case assert_total $ Offer.merge Protocol.merge prfB cbs prfA cas of
                                (Right (R zs prf)) => Right (ChoiceL BRANCH wA (Val (UNION (g ::: gs))) (UNION prfA) zs ** Offer prf)
                                (Left msg {-no-})
-                                 => Left ()
+                                 => Left (OffersFail msg)
 --                                       (\(ChoiceL BRANCH w (Val (UNION (f:::fs))) (UNION (g::gs)) result ** Offer prf) => no $ R result prf )
 
                   (No no)
-                    => Left ()
+                    => Left (TypeMismatch (UNION (f:::fs)) (UNION (g:::gs)))
 --                          (\(_ ** Offer _) => no Refl)
             (No no)
-              => Left ()
+              => Left (RoleMismatch)
 --                    (\(_ ** Offer _) => no (Same Refl Refl))
 
       merge (ChoiceL SELECT wB typeB (UNION prfB) cbs)
@@ -272,13 +275,17 @@ namespace Protocol
                  let R pr rs prfR = diff prfA cas prfB cbs in
                    case assert_total $ meeting Protocol.merge prfB cbs prfA cas of
                      (Right (R ps ss prfS))
-                       => let R plrs blrs prfLR = append pl ls pr   rs   in
-                          let R pzs  bzs  prfZ  = append ps ss plrs blrs in
-                            case prfZ of
-                              Empty => Left ()
-                              (Extend x)
-                                => Right (ChoiceL SELECT wA (Val (UNION _)) (UNION pzs) bzs ** Select prfL prfR prfS prfLR prfZ)
---                       case concat ps ss pl ls pr rs of
+                       => case append pl ls pr rs of
+                            R plrs blrs prfLR =>
+                              case append plrs blrs ps ss of
+                                R pzs  bzs  prfZ =>
+                                  case prfZ of
+                                    Empty => Left EmptySelect
+                                    (Last _)
+                                      => Right (ChoiceL SELECT wA (Val (UNION _)) (UNION (pzs)) (bzs) ** Select prfL prfR prfS prfLR prfZ)
+                                    (Extend _)
+                                      => Right (ChoiceL SELECT wA (Val (UNION _)) (UNION (pzs)) (bzs) ** Select prfL prfR prfS prfLR prfZ)
+      --                       case concat ps ss pl ls pr rs of
 --                            (R [] [] [] pf) => Left ()
 --                            (R (x :: xs) (p::ps) (elem :: rest) pf)
 --                                => Right (ChoiceL SELECT wA (Val (UNION (x:::xs))) (UNION (p::ps)) (elem::rest) ** Select prfL prfR prfS pf)
@@ -293,16 +300,16 @@ namespace Protocol
 ----                                        (\(_ ** Select _ _ _ p (One )) => contra ?one)
 
                      (Left msg {-no-})
-                       => Left ()
+                       => Left (Meeting msg)
 --                             (\(ChoiceL SELECT wA (Val (UNION (f:::fs))) (UNION (p::zs)) (r::res) ** Select a b m pc (One)) => no (R _ _ m))
 
             (No no)
-              => Left ()
+              => Left (RoleMismatch)
 --                    (\(_ ** Select _ _ _ _ _) => no (Same Refl Refl))
 
 
     merge this that | (No contra)
-      = Left ()
+      = Left NotMergable
 --           (\(z ** prf) => diffHeads contra prf)
 
 namespace Many
@@ -314,6 +321,9 @@ namespace Many
                      -> Type
     where
       Singleton : Many.Merge [B la ta c] c
+
+      Twain : Merge x y fi
+           -> Many.Merge (B la ta x::(B lb tb y::Nil)) fi
 
       Split : {result : Local ks rs}
            -> {this : _}
@@ -327,30 +337,55 @@ namespace Many
 
   export
   merge : (these : Local.Branches ks rs lxs)
-                -> Either ()
+                -> Either Merge.Error
                            (DPair (Local ks rs)
                                   (Merge these))
   merge []
-    = Left ()
---           (\(_ ** prf) => absurd prf)
+    = Left EmptyFold
 
-  merge (B _ _ c::[])
-    = Right (c ** Singleton)
+  merge (B _ _ x :: [])
+    = Right (x ** Singleton)
 
-  merge (B _ _ x::(B _ _ y :: ys)) with (merge x y)
-    merge (B _ _ x::(B _ _ y :: ys)) | (Right (intr ** pH)) with (merge ys)
-      merge (B _ _ x::(B _ _ y :: ys)) | (Right (intr ** pH)) | (Right (ltr ** pltr))
-        = case merge intr ltr of
-            (Right (l ** pR))
-              => Right (l ** Split pltr pH pR)
-            (Left msg {-no-})
-              => Left ()
---                    (\case (fst ** (Split z w v)) => no ?manyMerge)
+  merge (B _ _ x :: (B _ _ y :: [])) with (merge x y)
+    merge (B _ _ x :: (B _ _ y :: [])) | (Left err)
+      = Left err
 
-      merge (B _ _ x::(B _ _ y :: ys)) | (Right (intr ** pH)) | (Left msg {-no-})
-        = Left ()
---             (\(_ ** Split pltr _ _) => no (_ ** pltr))
-    merge (B _ _ x::(B _ _ y :: ys)) | (Left msg {-no-})
-      = Left ()
---           (\(_ ** Split _ ph pt) => no (_ ** ph))
+    merge (B _ _ x :: (B _ _ y :: [])) | (Right (z ** prf))
+      = Right (z ** Twain prf)
+
+  merge (B _ _ x :: (B _ _ y :: (z :: zs))) with (merge x y)
+    merge (B _ _ x :: (B _ _ y :: (z :: zs))) | (Left err)
+      = Left err
+
+    merge (B _ _ x :: (B _ _ y :: (z :: zs))) | (Right (h ** pH)) with (assert_total $ merge (z::zs))
+      merge (B _ _ x :: (B _ _ y :: (z :: zs))) | (Right (h ** pH)) | (Left err)
+        = Left err
+      merge (B _ _ x :: (B _ _ y :: (z :: zs))) | (Right (h ** pH)) | (Right (t ** pT)) with (merge h t)
+        merge (B _ _ x :: (B _ _ y :: (z :: zs))) | (Right (h ** pH)) | (Right (t ** pT)) | (Left err)
+          = Left err
+        merge (B _ _ x :: (B _ _ y :: (z :: zs))) | (Right (h ** pH)) | (Right (t ** pT)) | (Right (q ** pQ))
+          = Right (q ** Split pT pH pQ)
+--  merge []
+--    = Left EmptyFold
+----           (\(_ ** prf) => absurd prf)
+--
+--  merge (B _ _ c::[])
+--    = Right (c ** Singleton)
+--
+--  merge (B _ _ x::(B _ _ y :: ys)) with (merge x y)
+--    merge (B _ _ x::(B _ _ y :: ys)) | (Right (intr ** pH)) with (merge ys)
+--      merge (B _ _ x::(B _ _ y :: ys)) | (Right (intr ** pH)) | (Right (ltr ** pltr))
+--        = case merge intr ltr of
+--            (Right (l ** pR))
+--              => Right (l ** Split pltr pH pR)
+--            (Left msg {-no-})
+--              => Left msg
+----                    (\case (fst ** (Split z w v)) => no ?manyMerge)
+--
+--      merge (B _ _ x::(B _ _ y :: ys)) | (Right (intr ** pH)) | (Left msg {-no-})
+--        = Left msg
+----             (\(_ ** Split pltr _ _) => no (_ ** pltr))
+--    merge (B _ _ x::(B _ _ y :: ys)) | (Left msg {-no-})
+--      = Left msg
+----           (\(_ ** Split _ ph pt) => no (_ ** ph))
 -- [ EOF ]

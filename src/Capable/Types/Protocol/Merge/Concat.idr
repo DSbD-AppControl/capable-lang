@@ -52,8 +52,16 @@ data Append : (lxs : List (String,Base))
            -> Type
   where
     Empty : Append Nil Nil Nil
+                   Nil Nil Nil
+                   Nil Nil Nil
+
+    Last : Append Nil Nil Nil
                    lys pys bys
-                   lys pys bys
+                   lzs pzs bzs
+        -> Append Nil Nil Nil
+                   (l::lys) (p::pys) (b::bys)
+                   (l::lzs) (p::pzs) (b::bzs)
+
     Extend : Append lxs pxs bxs
                     lys pys bys
                     lzs pzs bzs
@@ -90,8 +98,11 @@ append : {lys : _}
              -> Result lxs pxs bxs
                        lys pys bys
 
-append [] [] pys bys
-  = R pys bys Empty
+append [] [] [] [] = R [] [] Empty
+append [] [] (elem :: rest) (b::bys) with (append [] [] rest bys)
+  append [] [] (elem :: rest) (b::bys) | (R pzs bzs prf)
+    = R (elem :: pzs) (b :: bzs) (Last prf)
+--  = R pys bys Last
 
 append (px :: pxs) (bx::bxs) pys bys with (append pxs bxs pys bys)
   append (px :: pxs) (bx::bxs) pys bys | (R pzs bzs prf)

@@ -58,6 +58,22 @@ namespace Projection
     Select : Projection.Error -> Projection.Error
     Rec : Projection.Error -> Projection.Error
 
+namespace Merge
+  public export
+  data Error : Type where
+    MeetFailCont : String -> Merge.Error -> Merge.Error
+    MeetFail : (Branch (Protocol LOCAL) ks rs lx, Branch (Protocol LOCAL) ks rs ly) -> Merge.Error
+    WrongRecVar : Error
+    InRec : Merge.Error -> Merge.Error
+    UnBalancedOffers : Bool -> Merge.Error
+    OffersFail : Merge.Error -> Merge.Error
+    RoleMismatch : Merge.Error
+    TypeMismatch : Base -> Base -> Merge.Error
+    EmptySelect : Merge.Error
+    Meeting : Merge.Error -> Merge.Error
+    NotMergable : Merge.Error
+    EmptyFold : Merge.Error
+
 namespace Typing
   public export
   data Error : Type where
@@ -83,6 +99,7 @@ namespace Typing
     RedundantRoles : List String -> Typing.Error
 
     ProjectionError : Typing.Error
+    MergeError : String -> Merge.Error -> Typing.Error
     LabelMismatch : String -> List String -> Typing.Error
     SessionExpected : Ty.Method -> Typing.Error
     FunctionExpected : Ty.Method -> Typing.Error

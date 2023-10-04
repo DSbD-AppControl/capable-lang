@@ -1,21 +1,30 @@
 Running Test
-   ______                  __    __
-  / ____/___ _____  ____ _/ /_  / /__
- / /   / __ `/ __ \/ __ `/ __ \/ / _ \
-/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
-\____/\__,_/ .___/\__,_/_.___/_/\___/
-          /_/
+# Finished Parsing
+Type Checking Error
+main.capable:46:2-0:
+Session is ill-typed, expecting an expression of type:
+	(sendTo[Server] { adder(struct {x : Int; y : Int})
+                  .(recvFrom[Server] {answer(Int).End})
+| suber(struct {x : Int; y : Int}).(recvFrom[Server] {answer(Int).End})
+| diver(struct {x : Int; y : Int})
+  .(recvFrom[Server] {divByZero(Unit).End | answerE(Int).End})
+| muler(struct {x : Int; y : Int}).(recvFrom[Server] {answer(Int).End}) })
+but could not synthesis given type because of
 
-  Version 0.0.0-unversioned
-  https://github.com/DSbD-AppControl/capable-lang
+Type Checking Error
+main.capable:46:2-0:
+Error merging local types: 
+ (sendTo[Server] { adder(struct {x : Int; y : Int})
+                  .(recvFrom[Server] {answer(Int).End}) })
+(recvFrom[Server] {answer(Int).End})
+(sendTo[Server] { diver(struct {x : Int; y : Int})
+                  .(recvFrom[Server] { divByZero(Unit).End
+                  | answerE(Int).End }) })
+(sendTo[Server] { muler(struct {x : Int; y : Int})
+                  .(recvFrom[Server] {answer(Int).End}) })
+ 
+ errors where:
+Types are wildly different.
+.
 
-  Type :? for help.
 
-Capable> Parsing Error
-File Error: 
-File Not Found
-Capable> Not a bound protocol: twoBuyer
-Capable> Not a bound protocol: twoBuyer
-Capable> Not a bound protocol: twoBuyer
-Capable> Need to load a program first.
-Capable> Exiting the REPL

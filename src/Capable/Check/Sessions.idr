@@ -292,7 +292,7 @@ namespace Expr
            R tyF tmF <- synth env er ec p ret ff
 
            (lty ** prfMerge) <- embedAt fc
-                                        (const $ IllTypedSession "Merge Cond @TODO better error")
+                                        (MergeError (unlines [toString ec er tyT, toString ec er tyF]))
                                         (Protocol.merge tyT tyF)
 
            pure (R lty (Cond tm tmT tmF prfMerge))
@@ -305,7 +305,7 @@ namespace Expr
            CS bs as <- cases fc ret  fs   cs
 
            (lty ** prfMerge) <- embedAt fc
-                                        (const $ IllTypedSession "Merge Case @TODO better error")
+                                        (MergeError (unlines $ mapToList (\(B _ _ c) => toString ec er c) (b::bs)))
                                         (Many.merge (b::bs))
 
            pure (R lty

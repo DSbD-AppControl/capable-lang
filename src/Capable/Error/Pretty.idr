@@ -117,6 +117,39 @@ Show (Projection.Error) where
   show (Rec x)
     = "Error generating Rec:\n\t\{show x}"
 
+Show (Merge.Error) where
+  show (MeetFailCont l err)
+    = "The continuation for label \{l}, failed to merge: \n\{show err}"
+  show (MeetFail (B lx tx cx,B ly ty cyr))
+    = "Branches differ: \n\t Left branch: \n\{show (lx,tx)}\n\t Right branch: \n\{show (ly,ty)}"
+  show (WrongRecVar)
+    = "Wrong RecVars where given."
+  show (InRec err)
+    = "Error is in recursive step:\n\{show err}"
+  show (UnBalancedOffers True)
+    = "Offers are unbalanced to the left."
+  show (UnBalancedOffers False)
+    = "Offers are unbalanced to the right."
+  show (OffersFail err)
+    = "Error merging offers:\n\{show err}"
+
+  show (RoleMismatch)
+    = "The roles differ."
+  show (TypeMismatch a b)
+    = "Types differ:\n\t\{show a}\n and:\n\t\{show b}"
+
+  show EmptySelect
+    = "The merge selection was empty."
+
+  show (Meeting err)
+    = "During merging of a selection:\n\{show err}"
+
+  show NotMergable
+    = "Types are wildly different."
+
+  show EmptyFold
+    = "The fold was empty."
+
 Show (Typing.Error) where
   show (WellFormed g)
     = "Protocol is not well-formed:\n\t\{g}"
@@ -126,6 +159,9 @@ Show (Typing.Error) where
     = "Session is ill-typed, expecting an expression of type:\n\t\{p}"
   show (ProjectionError)
     = "Error projecting global typing, Error message yet to be realised..."
+
+  show (MergeError str err)
+    = "Error merging local types: \n \{str} \n errors where:\n\{show err}"
 
   show (OOB e g)
     = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."

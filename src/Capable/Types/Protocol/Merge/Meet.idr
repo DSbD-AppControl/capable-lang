@@ -108,7 +108,7 @@ data Meet : (ks : List Kind)
 export
 meet : (f : (x : Local ks rs)
          -> (y : Local ks rs)
-              -> Either () (DPair (Local ks rs) (p x y)))
+              -> Either Merge.Error  (DPair (Local ks rs) (p x y)))
 
     -> (px : Marshable lx) -> (x : Branch Local ks rs lx)
     -> (py : Marshable ly) -> (y : Branch Local ks rs ly)
@@ -189,13 +189,13 @@ namespace Meets
   export
   meets : (f : (x : Local ks rs)
             -> (y : Local ks rs)
-                 -> Either () (DPair (Local ks rs) (p x y)))
+                 -> Either Merge.Error (DPair (Local ks rs) (p x y)))
       -> (px  : Marshable lx)
       -> (x   : Branch Local ks rs lx)
       -> (pys : DList (String,Base) Marshable lys)
       -> (ys  : Local.Branches ks rs lys)
-             -> Either ()
-                        (MeetsResult ks rs p px x pys ys)
+             -> Either Merge.Error
+                       (MeetsResult ks rs p px x pys ys)
 
   meets f px x [] []
     = Right (R [] [] Empty)
@@ -208,7 +208,7 @@ namespace Meets
                  => Right (R (F la px' :: pzs) (B la ta cc :: zs) (MeetXY (Y pL pT y) pf))
 
                (Left msg {-no-})
-                 => Left ()
+                 => Left (MeetFailCont la msg)
 --                       (\(R pzs zs pf)
 --                           => case pf of
 --                                (MeetXY z w) => no $ R _ _ w
@@ -219,14 +219,14 @@ namespace Meets
                (Right (R pzs zs pf))
                  => Right (R pzs zs (MeetNo (N pL) pf))
                (Left msg {-no-})
-                 => Left ()
+                 => Left msg
 --                       (\(R pzs zs pf)
 --                           => case pf of
 --                                   (MeetXY y z) => no $ R _ _ z
 --                                   (MeetNo y z) => no $ R _ _ z)
 
         (Fail ** (FT pL pT))
-          => Left ()
+          => Left (MeetFail (MkPair x h))
 --                (\(R pzs zs pf)
 --                    => case pf of
 --                         (MeetXY y z)
@@ -237,7 +237,7 @@ namespace Meets
 --                                   (N g) => g pL)
 
         (Fail ** (FM pL pT {-pM-}))
-          => Left ()
+          => Left (MeetFail (MkPair x h))
 --                (\(R pzs zs pf) =>
 --                    case pf of
 --                      (MeetXY y z) => case y of
@@ -297,12 +297,12 @@ namespace Meeting
   export
   meeting : (f : (x : Local ks rs)
               -> (y : Local ks rs)
-                   -> Either () (DPair (Local ks rs) (p x y)))
+                   -> Either Merge.Error (DPair (Local ks rs) (p x y)))
          -> (px : DList (String,Base) Marshable lxs)
          -> (xs : Local.Branches ks rs lxs)
          -> (py : DList (String,Base) Marshable lys)
          -> (ys : Local.Branches ks rs lys)
-               -> Either()
+               -> Either Merge.Error
                           (Result ks rs p px xs py ys)
   meeting f [] [] py ys
     = Right (R _ _ Nil)
@@ -313,13 +313,13 @@ namespace Meeting
         = Right (R (append pzs pz) (append zs x) (pf :: prf))
 
       meeting f (ph :: pt) (h :: t) py ys | (Right (R pzs zs pf)) | (Left msg {-no-})
-        = Left ()
+        = Left msg
 --             (\(R pzs zs prf)
 --               => case prf of
 --                    (pM :: ltr) => no $ R _ _ ltr)
 
     meeting f (ph :: pt) (h :: t) py ys | (Left msg {-no-})
-      = Left ()
+      = Left (msg)
 --           (\(R pzs zs prf)
 --             => case prf of
 --                  (pM :: ltr) => no $ R _ _ pM)
