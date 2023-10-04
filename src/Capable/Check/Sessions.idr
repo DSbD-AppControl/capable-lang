@@ -10,6 +10,7 @@ import Toolkit.Data.Location
 
 import Capable.Types
 import Capable.Types.Protocol.Projection
+import Capable.Types.Protocol.Merge
 import Capable.Core
 
 import Capable.Raw.AST
@@ -290,9 +291,9 @@ namespace Expr
            R tyT tmT <- synth env er ec p ret tt
            R tyF tmF <- synth env er ec p ret ff
 
-           (lty ** prfMerge) <- Informative.embedAt fc
-                                        (IllTypedSession "Merge Cond @TODO better error")
-                                        (merge tyT tyF)
+           (lty ** prfMerge) <- embedAt fc
+                                        (const $ IllTypedSession "Merge Cond @TODO better error")
+                                        (Protocol.merge tyT tyF)
 
            pure (R lty (Cond tm tmT tmF prfMerge))
 
@@ -303,8 +304,8 @@ namespace Expr
            C  b  a  <- case' fc ret es et c
            CS bs as <- cases fc ret  fs   cs
 
-           (lty ** prfMerge) <- Informative.embedAt fc
-                                        (IllTypedSession "Merge Case @TODO better error")
+           (lty ** prfMerge) <- embedAt fc
+                                        (const $ IllTypedSession "Merge Case @TODO better error")
                                         (Many.merge (b::bs))
 
            pure (R lty

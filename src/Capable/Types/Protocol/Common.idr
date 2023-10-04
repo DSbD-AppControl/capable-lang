@@ -151,6 +151,7 @@ namespace Protocol
                      -> Protocol GLOBAL ks rs
 
     ChoiceL : {w,rs : _}
+           -> {field, fs : _}
            -> (kind : ChoiceTy)
            -> (whom : Role rs w)
            -> (type : Singleton (UNION (field:::fs)))
