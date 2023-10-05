@@ -1,0 +1,101 @@
+{-
+
+Modelling and Realisation of a Calculator.
+
+-}
+
+
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+role Client
+role Server
+role Alice
+
+union cmd { stop : Int ; cont : Int; surprise : Int }
+union rsp { msg  : Int }
+
+-- ### Actions
+--
+-- We now define our global multiparty session types.
+--
+
+protocol Echo
+  = rec(X)
+  . Client ==> Server [cmd] { stop(Int)
+                              . Server ==> Client [rsp] { msg(Int)
+                              . end
+                              }
+                            | cont(Int)
+                              . Server ==> Client [rsp] { msg(Int)
+                              . call(X)
+                              }
+                            | surprise(Int)
+                              . end
+
+  }
+
+union MaybeInt { nout : Unit; this : Int}
+
+session echoClient <Echo as Client>(s : Int, e : Int) -> MaybeInt
+{
+   printLn("Entering Session, initialising store.");
+   var cnt = s;
+   loop(X)
+   {
+
+      printLn("Checking if counter is less than 10");
+      if gt(!cnt,e)
+      {
+        print("Sending value to echo: ");
+        printLn(toString(!cnt));
+
+        send[cmd] Server stop(!cnt) catch { printLn("Crashing on Send"); crash(nout(unit)) }
+
+        printLn("Incrementing counter");
+        mut(cnt,add(!cnt,1));
+
+        printLn("Receiving response from server");
+        recv[rsp] Server
+        {
+          when msg(x)
+          {
+            print("Received: ");
+            printLn(toString(x));
+            end(this(x))
+          }
+        } catch { printLn("Crashing on Rec Recv"); crash(nout(unit)) }
+
+      } else
+      {
+        print("Sending value to echo: ");
+        printLn(toString(!cnt));
+
+        send[cmd] Server cont(!cnt) catch { printLn("Crashing on Send"); crash(nout(unit)) }
+
+        printLn("Incrementing counter");
+        mut(cnt,add(!cnt,1));
+
+        printLn("Receiving response from server");
+        recv[rsp] Server
+        {
+          when msg(x)
+          {
+            print("Received: ");
+            printLn(toString(x));
+            printLn("Recursion");
+            call(X)
+          }
+        } catch { printLn("Crashing on Rec Recv"); crash(nout(unit)) }
+
+      }
+   }
+}
+
+main (args : [String])
+{
+  unit
+}

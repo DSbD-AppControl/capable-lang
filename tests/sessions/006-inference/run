@@ -2,6 +2,8 @@ echo "Running Test"
 
 $1 --checkOnly main.capable
 
+$1 --checkOnly main2.capable
+
 # Local Variables:
 # mode: sh
 # End:
