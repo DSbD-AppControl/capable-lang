@@ -282,4 +282,25 @@ namespace DList
 --      splitRec [x] | acc  | (SOne x) = ?splitRec_rhs_rhs_rhs_1
 --      splitRec ((x :: y) ++ (z :: ys)) | acc  | (SPair x y z ys) = ?splitRec_rhs_rhs_rhs_2
 
+
+namespace DList.All.Informative
+
+  export
+  all : {0 p : {i : kind} -> (x : type i) -> Type}
+     -> (  f : {i : kind} -> (x : type i) -> DecInfo e (p x))
+     -> ( xs : DList kind type is)
+            -> DecInfo e (All kind type p is xs)
+  all f []
+    = Yes []
+  all f (elem :: rest) with (f elem)
+    all f (elem :: rest) | (Yes prf) with (all f rest)
+      all f (elem :: rest) | (Yes prf) | (Yes prfs)
+        = Yes (prf :: prfs)
+
+      all f (elem :: rest) | (Yes prf) | (No msg no)
+        = No msg (\case (x :: later) => no later)
+
+    all f (elem :: rest) | (No msg no)
+      = No msg (\case (x::later) => no x)
+
 -- [ EOF ]

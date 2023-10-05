@@ -300,4 +300,30 @@ namespace Protocol
           diffHeads f q | (Select z) = f (SS Select)
 
 
+namespace Cases
+  public export
+  Subset : {lbs : _}
+        -> {ks : List Kind}
+             -> {rs : List Role}
+             -> (these : Local.Branches ks rs lbs)
+             -> (that  : Local.Local ks rs)
+                      -> Type
+  Subset these that
+    = DList.All.All (String,Base)
+                    (Branch Local.Local ks rs)
+                    (\(B l t c) => Subset c that)
+                    lbs
+                    these
+
+  export
+  subset : {ks, rs : _}
+        -> (ys : Local.Branches ks rs lys)
+        -> (x  : Local.Local ks rs)
+               -> DecInfo ()
+                          (Cases.Subset ys x)
+  subset ys x
+    = case DList.All.Informative.all (\(B _ _ y) => Protocol.subset y x) ys of
+        No () no => No () (\prf => no prf)
+        Yes prf => Yes prf
+
 -- [ EOF ]
