@@ -305,7 +305,6 @@ namespace Expr
 
            pure (R lty
                    (Match tm (a::as) prfMerge)
-                         -- (Match tm (a::as))
                    )
 
       where case' : (fc   : FileContext)
@@ -683,12 +682,8 @@ namespace Expr
                                                       (select label (m::ms) (c::cs))
 
            tmM <- check fc e tyM msg
---           prfM <- embedAt fc (NotMarshable tyM)
---                              (marshable tyM)
 
            -- 4. Get the type(s) for the remainder of the protocol
-
---           R tySyn tmC <- synth e er ec p ret scope
 
            R tySyn pU scope <- check e er ec p ret tyC scope
 
@@ -965,11 +960,7 @@ synth env (Sesh fc prin ref p prf as ret scope)
                                   (ProjectionError) -- @TODO Error messages.
                                   (Projection.Closed.project principle tyGlobal)
 
-       R tyLocal' prf tm <- -- @TODO this is bad, but the
-                                         -- totality hcecker is
-                                         -- throwing an error where
-                                         -- there _should not_ be one.
-                              checkHoles
+       R tyLocal' prf tm <- checkHoles
                                     ({ lambda := expand as} env)
                                     rh
                                     Nil

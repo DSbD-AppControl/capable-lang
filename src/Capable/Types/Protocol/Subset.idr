@@ -31,7 +31,6 @@ import Capable.Types.Role
 import Capable.Types.Base
 
 import Capable.Types.Protocol.Local
-import Capable.Types.Protocol.Local.Synth
 import Capable.Types.Protocol.Selection
 
 %default total

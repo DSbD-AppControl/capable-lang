@@ -99,7 +99,6 @@ data Meet : (ks : List Kind)
 
     FM : (pL : Equal la lb)
       -> (pT : Equal ta tb)
---      -> (pM : {cc : _} -> p ca cb cc -> Void)
             -> Meet ks rs p (F la px) (B la ta ca)
                             (F lb py) (B lb tb cb)
                             Fail
@@ -124,8 +123,8 @@ meet f (F lx px) (B lx tx cx) (F ly py) (B ly ty cy)
                     (Right (cz ** prf))
                       => (YesMeet (F ly px) (B ly ty cz) ** Y Refl Refl prf)
 
-                    (Left msg {-no-})
-                      => (Fail ** FM Refl Refl {-(\x => no (_ ** x))-})
+                    (Left msg )
+                      => (Fail ** FM Refl Refl)
 
              (No no)
                => (Fail ** FT Refl no)
@@ -205,45 +204,25 @@ namespace Meets
         (YesMeet (F la px') (B la ta cc) ** (Y pL pT y))
           => case meets f px x pt t of
                (Right (R pzs zs pf))
-                 => Right (R (F la px' :: pzs) (B la ta cc :: zs) (MeetXY (Y pL pT y) pf))
+                 => Right (R (F la px' :: pzs)
+                             (B la ta cc :: zs)
+                             (MeetXY (Y pL pT y) pf))
 
-               (Left msg {-no-})
+               (Left msg )
                  => Left (MeetFailCont la msg)
---                       (\(R pzs zs pf)
---                           => case pf of
---                                (MeetXY z w) => no $ R _ _ w
---                                (MeetNo z w) => no $ R _ _ w)
 
         (NoMeet ** (N pL))
           => case meets f px x pt t of
                (Right (R pzs zs pf))
                  => Right (R pzs zs (MeetNo (N pL) pf))
-               (Left msg {-no-})
+               (Left msg )
                  => Left msg
---                       (\(R pzs zs pf)
---                           => case pf of
---                                   (MeetXY y z) => no $ R _ _ z
---                                   (MeetNo y z) => no $ R _ _ z)
 
         (Fail ** (FT pL pT))
           => Left (MeetFail (MkPair x h))
---                (\(R pzs zs pf)
---                    => case pf of
---                         (MeetXY y z)
---                           => case y of
---                                   (Y prf pT1 pM) => pT pT1
---                         (MeetNo y z)
---                           => case y of
---                                   (N g) => g pL)
 
-        (Fail ** (FM pL pT {-pM-}))
+        (Fail ** (FM pL pT))
           => Left (MeetFail (MkPair x h))
---                (\(R pzs zs pf) =>
---                    case pf of
---                      (MeetXY y z) => case y of
---                                        (Y prf pT1 w) => pM w
---                      (MeetNo y z) => case y of
---                                           (N g) => g pL)
 
 ||| A meeting between two list of branches is a collection of
 ||| successful ‘meets’. We use this proposition to record branch
@@ -312,16 +291,10 @@ namespace Meeting
       meeting f (ph :: pt) (h :: t) py ys | (Right (R pzs zs pf)) | (Right (R pz x prf))
         = Right (R (append pzs pz) (append zs x) (pf :: prf))
 
-      meeting f (ph :: pt) (h :: t) py ys | (Right (R pzs zs pf)) | (Left msg {-no-})
+      meeting f (ph :: pt) (h :: t) py ys | (Right (R pzs zs pf)) | (Left msg )
         = Left msg
---             (\(R pzs zs prf)
---               => case prf of
---                    (pM :: ltr) => no $ R _ _ ltr)
 
-    meeting f (ph :: pt) (h :: t) py ys | (Left msg {-no-})
+    meeting f (ph :: pt) (h :: t) py ys | (Left msg )
       = Left (msg)
---           (\(R pzs zs prf)
---             => case prf of
---                  (pM :: ltr) => no $ R _ _ pM)
 
 -- [ EOF ]

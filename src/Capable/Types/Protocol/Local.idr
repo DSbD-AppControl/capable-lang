@@ -30,29 +30,10 @@ import public Capable.Types.Protocol.Common
 
 %default total
 
+||| The result of projection.
 public export
 Local : List Kind -> List Role -> Type
 Local = Protocol LOCAL
-
-||| The result of projection.
-{-
-public export
-data Local : List Kind -> List Role -> Type where
-  Crash : Local ks rs -- @TODO no longer needed
-  End : Local ks rs
-  Call : {v, vs : _} -> RecVar vs v -> Local vs rs
-  Rec : (v : Kind) -> Local (v::vs) rs -> Local vs rs
-  Choice : {w,rs : _}
-        -> (kind : ChoiceTy)
-        -> (whom : Role rs w)
-        -> (type : Singleton (UNION (field:::fs)))
-        -> (prfM   : Marshable (UNION (field:::fs)))
-        -> (choices : DList (String,Base)
-                            (Branch Local ks rs)
-                            (field::fs))
-                   -> Local ks rs
--}
-
 
 public export
 Branches : List Kind -> List Role -> List (String, Base)-> Type
@@ -60,6 +41,7 @@ Branches ks rs
   = DList (String, Base)
           (Branch Local ks rs)
 
+-- @TODO move to common and make generic.
 public export
 data Diag : (l,r : Local ks rs) -> Type
   where
