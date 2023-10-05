@@ -54,24 +54,26 @@ namespace Branch
                  (B lb tb that)
 
   export
-  subset : (f : (x,y : Local ks rs) -> DecInfo () (s x y))
+  subset : (f : (x,y : Local ks rs) -> DecInfo (Subset.Error) (s x y))
         -> (x : Branch Local.Local ks rs lx)
         -> (y : Branch Local.Local ks rs ly)
-             -> DecInfo ()
+             -> DecInfo Subset.Error
                         (Subset ks rs s x y)
   subset f (B lx tx cx) (B ly ty cy)
     = case decEq lx ly of
         No no
-          => No () (\(B Refl _ _) => no Refl)
+          => No (LabelMismatch (MkPair lx ly))
+                (\(B Refl _ _) => no Refl)
 
         Yes Refl
           => case decEq tx ty of
                No no
-                 => No () (\(B _ Refl _) => no Refl)
+                 => No (TypeMismatch (MkPair tx ty))
+                       (\(B _ Refl _) => no Refl)
                Yes Refl
                  => case f cx cy of
                       No msg no
-                        => No () (\(B _ _ prf) => no prf)
+                        => No (BranchErr lx msg) (\(B _ _ prf) => no prf)
                       Yes prf
                         => Yes (B Refl Refl prf)
 namespace Exists
@@ -93,14 +95,15 @@ namespace Exists
   export
   subset : {ks, rs : _}
         -> {0 s : (x,y : Local ks rs) -> Type}
-        -> (f : (x,y : Local ks rs) -> DecInfo () (s x y))
+        -> (f : (x,y : Local ks rs) -> DecInfo (Subset.Error) (s x y))
         -> (x  : Branch Local.Local ks rs lx)
         -> (ys : Local.Branches ks rs lys)
-               -> DecInfo ()
+               -> DecInfo (Subset.Error)
                           (Subset s x ys)
   subset f x ys
     = case DList.Any.any (subset f x) ys of
-        No no => No () (\prf => no prf)
+        No no => No (NotExists)
+                    (\prf => no prf)
         Yes prf => Yes prf
 
 namespace Offer
@@ -129,24 +132,24 @@ namespace Offer
 
   export
   subset : {0 s : (x,y : Local ks rs) -> Type}
-        -> (f : (x,y : Local ks rs) -> DecInfo () (s x y))
+        -> (f : (x,y : Local ks rs) -> DecInfo (Subset.Error) (s x y))
         -> (xs : Local.Branches ks rs lxs)
         -> (ys : Local.Branches ks rs lys)
-               -> DecInfo ()
+               -> DecInfo (Subset.Error)
                           (Offer.Subset ks rs s xs ys)
   subset f xs ys with (shape xs ys)
     subset f [] [] | Empty
       = Yes Empty
 
-    subset f (x :: xs) [] | LH = No () absurd
-    subset f [] (x :: xs) | RH = No () absurd
+    subset f (x :: xs) [] | LH = No (Unbalanced) absurd
+    subset f [] (x :: xs) | RH = No (Unbalanced) absurd
 
     subset f (x :: xs) (y :: ys) | Same
       = case subset f x y of
-         No msg no => No () (\(Next px _) => no px)
+         No msg no => No (msg) (\(Next px _) => no px)
          Yes px
            => case subset f xs ys of
-                No msg no => No () (\(Next _ pxs) => no pxs)
+                No msg no => No (msg) (\(Next _ pxs) => no pxs)
                 Yes pxs => Yes (Next px pxs)
 
 namespace Select
@@ -169,10 +172,10 @@ namespace Select
   export
   subset : {ks,rs : _}
         -> {0 s : (x,y : Local ks rs) -> Type}
-        -> (f : (x,y : Local ks rs) -> DecInfo () (s x y))
+        -> (f : (x,y : Local ks rs) -> DecInfo (Subset.Error) (s x y))
         -> (xs : Local.Branches ks rs lxs)
         -> (ys : Local.Branches ks rs lys)
-               -> DecInfo ()
+               -> DecInfo (Subset.Error)
                           (Select.Subset ks rs s xs ys)
   subset f [] ys
     = Yes Empty
@@ -183,11 +186,11 @@ namespace Select
         = Yes (Next pfX pfXS)
 
       subset f (x :: xs) ys | (Yes pfX) | (No pfXS no)
-        = No ()
+        = No (pfXS)
              (\(Next _ pxs) => no pxs)
 
     subset f (x :: xs) ys | (No msg no)
-      = No ()
+      = No (msg)
            (\(Next px _) => no px)
 
 
@@ -218,7 +221,7 @@ namespace Protocol
   export
   subset : {ks,rs : _}
         -> (x,y : Local.Local ks rs)
-               -> DecInfo () (Subset x y)
+               -> DecInfo (Subset.Error) (Subset x y)
   subset x y with (sameShapedHead x y)
     subset x y | (Yes (SS shape)) with (shape)
       subset Crash Crash | (Yes (SS shape)) | Crash
@@ -229,7 +232,7 @@ namespace Protocol
 
       subset (Call prfA) (Call prfB) | (Yes (SS shape)) | Call
         = case Index.decEq prfA prfB of
-            No no => No ()
+            No no => No (WrongRecVar)
                         (\Call => no (Same Refl Refl))
             Yes (Same Refl Refl)
               => Yes Call
@@ -237,14 +240,14 @@ namespace Protocol
       subset (Rec a kA) (Rec b kB) | (Yes (SS shape)) | Rec
         = case decEq a b of
             (No no)
-              => No ()
+              => No (WrongRecVar)
                     (\(Rec ltr) => no Refl)
             (Yes Refl)
               => case subset kA kB of
                    (Yes prf)
                      => Yes (Rec prf)
                    (No msg no)
-                     => No ()
+                     => No (InRec msg)
                            (\(Rec prf) => no prf)
 
 
@@ -252,12 +255,12 @@ namespace Protocol
              (ChoiceL BRANCH wA tyB prfB cas) | (Yes (SS shape)) | Offer
         = case Index.decEq wB wA of
             No no
-              => No ()
+              => No (RoleMismatch)
                     (\(Offer _) => no (Same Refl Refl))
             Yes (Same Refl Refl)
               => case assert_total $ Offer.subset Protocol.subset cbs cas of
                    No msg no
-                     => No ()
+                     => No (OffersFail msg)
                            (\(Offer prf) => no prf)
 
                    Yes prf
@@ -269,12 +272,12 @@ namespace Protocol
              (ChoiceL SELECT wA typeA prfA cas) | (Yes (SS shape)) | Select
         = case Index.decEq wB wA of
             No no
-              => No ()
+              => No (RoleMismatch)
                     (\(Select _) => no (Same Refl Refl))
             Yes (Same Refl Refl)
               => case assert_total $ Select.subset Protocol.subset cbs cas of
                    No msg no
-                     => No ()
+                     => No (SelectError msg)
                            (\(Select prf) => no prf)
 
                    Yes prf
@@ -282,7 +285,7 @@ namespace Protocol
 
 
     subset x y | (No contra)
-      = No ()
+      = No (NotSubset)
            (\pf => diffHeads contra pf)
 
       where
@@ -297,32 +300,5 @@ namespace Protocol
           diffHeads f q | (Rec z) = f (SS Rec)
           diffHeads f q | (Offer z) = f (SS Offer)
           diffHeads f q | (Select z) = f (SS Select)
-
-
-namespace Cases
-  public export
-  Subset : {lbs : _}
-        -> {ks : List Kind}
-             -> {rs : List Role}
-             -> (these : Local.Branches ks rs lbs)
-             -> (that  : Local.Local ks rs)
-                      -> Type
-  Subset these that
-    = DList.All.All (String,Base)
-                    (Branch Local.Local ks rs)
-                    (\(B l t c) => Subset c that)
-                    lbs
-                    these
-
-  export
-  subset : {ks, rs : _}
-        -> (ys : Local.Branches ks rs lys)
-        -> (x  : Local.Local ks rs)
-               -> DecInfo ()
-                          (Cases.Subset ys x)
-  subset ys x
-    = case DList.All.Informative.all (\(B _ _ y) => Protocol.subset y x) ys of
-        No () no => No () (\prf => no prf)
-        Yes prf => Yes prf
 
 -- [ EOF ]

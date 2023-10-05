@@ -359,7 +359,7 @@ namespace Expr
              OS bs offs <- offers fc ret   fs  offs
 
              R Crash err  <- synth env er ec p ret onEr
-                | R type _ => throwAt fc (IllTypedSession "\{toString ec er type}")
+                | R type _ => throwAt fc (IllTypedSession ("Crash") (toString ec er type))
 
              pure (R (ChoiceL BRANCH
                               target
@@ -426,7 +426,7 @@ namespace Expr
            (R lsytn rest) <- synth env er ec p ret scope
 
            R Crash err  <- synth env er ec p ret onErr
-              | R type _ => throwAt fc (IllTypedSession "TODO")
+              | R type _ => throwAt fc (IllTypedSession "Crash" (toString ec er type))
 
            pure (R (ChoiceL SELECT
                             target
@@ -692,9 +692,12 @@ namespace Expr
            -- 5. Is it a valid selection?
 
            -- @TODO merge into Selection stuff
-           prfS <- embedAtInfo
+           prfS <- embedAt
                      fc
-                     (IllTypedSession "Subset error for seelction")
+                     (SubsetError (toString ec er $ [B label tyM tySyn])
+                                  (toString ec er $ (c::cs))
+                                  )
+
                      (Select.subset subset
                                     [B label tyM tySyn]
                                     (c::cs))
@@ -807,9 +810,10 @@ namespace Expr
                                         (Protocol.merge tyL tyR)
 
 
-           prfS <- embedAtInfo
+           prfS <- embedAt
                      fc
-                     (IllTypedSession "Subset error for seelction")
+                     (SubsetError (toString ec er lty)
+                                  (toString ec er type))
                      (subset lty type)
 
 
@@ -833,9 +837,10 @@ namespace Expr
                                                  (tyC::tyCS)))
                                   (Many.merge (tyC::tyCS))
 
-           prfS <- embedAtInfo
+           prfS <- embedAt
                      fc
-                     (IllTypedSession "Subset error for seelction")
+                     (SubsetError (toString ec er lty)
+                                  (toString ec er ptype))
                      (subset lty ptype)
 
            pure (Check.R
@@ -895,14 +900,13 @@ namespace Expr
 
       = do R syn tm <- tryCatch (synth e er ec p ret term)
 
-                                (\eer => throwAt (getFC term) (IllTypedSession (unlines [toString ec er type
-                          , "but could not synthesis given type because of\n\n\{show eer}."])))
-
-           let msg = unlines [ toString ec er type
-                             , "but given:\n\t\{toString ec er syn}"]
+                                (\eer => throwAt (getFC term)
+                                          (IllTypedSession (toString ec er type)
+                                                           (show eer)))
 
            prf <- embedAt (getFC term)
-                          (IllTypedSession msg)
+                          (SubsetError (toString ec er type)
+                                       (toString ec er syn))
                           (subset syn type)
 
            pure (R syn prf tm)
@@ -925,11 +929,10 @@ checkHoles : {e, roles, ls,ks : _}
 checkHoles e er ec p ret type term
 
   = tryCatch (do R syn tm <- synth e er ec p ret term
-                 let msg = unlines [ toString ec er type
-                                   , "but given:\n\t\{toString ec er syn}"]
 
                  prf <- embedAt (getFC term)
-                                (IllTypedSession msg)
+                                (SubsetError (toString ec er type)
+                                             (toString ec er syn))
                                 (subset syn type)
 
                  pure (R syn prf tm))

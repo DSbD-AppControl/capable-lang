@@ -6,24 +6,31 @@ maindeux.capable
 # Finished Parsing
 Type Checking Error
 maindeux.capable:61:2-0:
-Session is ill-typed, expecting an expression of type:
-	(sendTo[Server] {msg(Int).(recvFrom[Server] {msg(Int).End})})
-but given:
-	End
+Error comparing local types: 
 
+ (sendTo[Server] {msg(Int).(recvFrom[Server] {msg(Int).End})}) 
+
+ and 
+
+ End 
+
+ because:
+
+Types are wildly different.
 
 mainerr.capable
 # Finished Parsing
 Type Checking Error
 mainerr.capable:62:2-0:
 Session is ill-typed, expecting an expression of type:
-	(recvFrom[Server] {msg(Int).End})
-but could not synthesis given type because of
+
+(recvFrom[Server] {msg(Int).End})
+
+ but given:
 
 Type Checking Error
 mainerr.capable:63:3-0:
 Not enough information to type term.
-.
 
 
 mainhole.capable

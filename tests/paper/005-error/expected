@@ -2,18 +2,30 @@ Running Test
 # Finished Parsing
 Type Checking Error
 main.capable:23:2-0:
-Session is ill-typed, expecting an expression of type:
-	(recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})})
-but given:
-	(sendTo[Client] {msg(Int).End})
+Error comparing local types: 
 
+ (recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})}) 
+
+ and 
+
+ (sendTo[Client] {msg(Int).End}) 
+
+ because:
+
+Types are wildly different.
 
 # Finished Parsing
 Type Checking Error
 main.capable:23:2-0:
-Session is ill-typed, expecting an expression of type:
-	(recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})})
-but given:
-	(sendTo[Client] {msg(Int).End})
+Error comparing local types: 
 
+ (recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})}) 
+
+ and 
+
+ (sendTo[Client] {msg(Int).End}) 
+
+ because:
+
+Types are wildly different.
 

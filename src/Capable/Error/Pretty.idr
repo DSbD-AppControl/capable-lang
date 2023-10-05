@@ -117,6 +117,39 @@ Show (Projection.Error) where
   show (Rec x)
     = "Error generating Rec:\n\t\{show x}"
 
+Show (Subset.Error) where
+  show (BranchErr s e)
+    = "Branch error on label \{s}: \{show e}"
+
+  show (SelectError e)
+    = "Selection error: \{show e}"
+
+
+  show (LabelMismatch (x,y))
+    = "Labels mismatch. Given \{x} and \{y}."
+
+  show (TypeMismatch (x,y))
+    = "Types mismatch. Given \{show x} and \{show y}."
+
+  show (NotExists)
+    = "Cannot subset."
+
+  show (WrongRecVar)
+    = "Wrong RecVars where given."
+  show (InRec err)
+    = "Error is in recursive step:\n\{show err}"
+  show (Unbalanced)
+    = "Offers are unbalanced."
+  show (OffersFail err)
+    = "Error merging offers:\n\{show err}"
+
+  show (RoleMismatch)
+    = "The roles differ."
+
+  show NotSubset
+    = "Types are wildly different."
+
+
 Show (Merge.Error) where
   show (MeetFailCont l err)
     = "The continuation for label \{l}, failed to merge: \n\{show err}"
@@ -155,13 +188,18 @@ Show (Typing.Error) where
     = "Protocol is not well-formed:\n\t\{g}"
   show (MismatchK e g)
     = "Recursion variable mismatch:\n\t Expected: \{e}\n\t Given: \{g}"
-  show (IllTypedSession p)
-    = "Session is ill-typed, expecting an expression of type:\n\t\{p}"
+
+  show (IllTypedSession p r)
+    = "Session is ill-typed, expecting an expression of type:\n\n\{p}\n\n but given:\n\n\{r}"
+
   show (ProjectionError)
     = "Error projecting global typing, Error message yet to be realised..."
 
   show (MergeError str err)
     = "Error merging local types: \n \{str} \n errors where:\n\{show err}"
+
+  show (SubsetError a b err)
+    = "Error comparing local types: \n\n \{a} \n\n and \n\n \{b} \n\n because:\n\n\{show err}"
 
   show (OOB e g)
     = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."

@@ -74,6 +74,21 @@ namespace Merge
     NotMergable : Merge.Error
     EmptyFold : Merge.Error
 
+namespace Subset
+  public export
+  data Error : Type where
+    LabelMismatch : (String, String) -> Subset.Error
+    TypeMismatch : (Base, Base) -> Subset.Error
+    BranchErr : String -> Subset.Error -> Subset.Error
+    NotExists : Subset.Error
+    Unbalanced : Subset.Error
+    WrongRecVar : Subset.Error
+    InRec : Subset.Error -> Subset.Error
+    OffersFail : Subset.Error -> Subset.Error
+    RoleMismatch : Subset.Error
+    SelectError : Subset.Error -> Subset.Error
+    NotSubset : Subset.Error
+
 namespace Typing
   public export
   data Error : Type where
@@ -100,6 +115,7 @@ namespace Typing
 
     ProjectionError : Typing.Error
     MergeError : String -> Merge.Error -> Typing.Error
+    SubsetError : String -> String -> Subset.Error -> Typing.Error
     LabelMismatch : String -> List String -> Typing.Error
     SessionExpected : Ty.Method -> Typing.Error
     FunctionExpected : Ty.Method -> Typing.Error
@@ -123,8 +139,10 @@ namespace Typing
     Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error
 
-    IllTypedSession : String -> Typing.Error
+    IllTypedSession : String -> String -> Typing.Error
+
     MismatchK : String -> String -> Typing.Error
+
 namespace Marshall
 
   public export

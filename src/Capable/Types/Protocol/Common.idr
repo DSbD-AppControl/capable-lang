@@ -269,7 +269,6 @@ namespace Pretty
     , pretty "." <+> g kctxt rctxt c
     ]
 
-
   branches : (pretty : Context Kind ks
                     -> Context Ty.Role rs
                     -> Protocol v ks rs
@@ -357,5 +356,15 @@ namespace Pretty
                      -> String
     toString = toString Nil
 
+
+  namespace Branches
+    export
+    toString : (kctxt : Context Kind ks)
+            -> (rctxt : Context Ty.Role rs)
+            -> (bs    : DList (String,Base)
+                              (Branch (Protocol v) ks rs)
+                              ls)
+                     -> String
+    toString ks rs bs = show (branches pretty ks rs bs)
 
 -- [ EOF ]
