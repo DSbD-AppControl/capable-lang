@@ -243,7 +243,7 @@ namespace Expr
                   -> Capable (Synth.Result roles rs ds ss gs ks ls princ ret)
 
   namespace Check
-    partial export
+    export
     check : {e, roles, ls,ks : _}
          -> {rs   : List Ty.Role}
          -> {ds   : List Ty.Base}
@@ -636,19 +636,23 @@ namespace Expr
               offers fc _ Nil Nil Nil
                 = pure (OS Nil Empty Offers.Nil)
 
-              offers fc _ Nil as os
+              offers fc _ Nil _ os
                 = throwAt fc (RedundantCases (flattern os))
 
-              offers fc _ bs as Nil
+              offers fc _ bs _ Nil
                 = do let Val bs = getLTs bs
                      throwAt fc (CasesMissing bs)
 
-              offers fc ret ((B l t b)::bs) (a::as)(o::os)
+              offers fc ret ((B l t b)::bs) (a::as) (o::os)
                 = do O  lSyn  pU  o  <- offer  fc ret (B l t b) a  o
                      OS lSyns pUs os <- offers fc ret bs        as os
                      pure (OS (lSyn::lSyns)
                               (Next pU pUs)
                               (o::os))
+
+              offers fc _ (b::bs) Nil (o::os)
+                = do let Val bs = getLTs bs
+                     throwAt fc (CasesMissing bs)
 
     --
     check e er ec p ret (ChoiceL SELECT whom (Val (UNION (f:::fs)))
@@ -908,6 +912,38 @@ namespace Expr
 
            pure (R syn prf tm)
 
+
+
+checkHoles : {e, roles, ls,ks : _}
+          -> {rs   : List Ty.Role}
+          -> {ds   : List Ty.Base}
+          -> {gs   : List Ty.Method}
+          -> {ss   : List Ty.Session}
+          -> (env  : Env rs ds ss gs ls)
+          -> (enr  : Context Role roles)
+          -> (enc  : Context Protocol.Kind ks)
+          -> (princ : DeBruijn.Role roles p)
+          -> (ret  : Base)
+          -> (type : Local.Local ks roles)
+          -> (expr : Sessions.Expr e)
+                  -> Capable (Check.Result roles rs ds ss gs ks ls princ type ret)
+checkHoles e er ec p ret type term
+
+  = tryCatch (do R syn tm <- synth e er ec p ret term
+                 let msg = unlines [ toString ec er type
+                                   , "but given:\n\t\{toString ec er syn}"]
+
+                 prf <- embedAt (getFC term)
+                                (IllTypedSession msg)
+                                (subset syn type)
+
+                 pure (R syn prf tm))
+
+             (const $ check e er ec p ret type term)
+
+
+
+
 export
 synth : {rs   : List Ty.Role}
      -> {ds   : List Ty.Base}
@@ -929,11 +965,12 @@ synth env (Sesh fc prin ref p prf as ret scope)
                                   (ProjectionError) -- @TODO Error messages.
                                   (Projection.Closed.project principle tyGlobal)
 
-       R tyLocal' prf tm <- assert_total -- @TODO this is bad, but the
+       R tyLocal' prf tm <- -- @TODO this is bad, but the
                                          -- totality hcecker is
                                          -- throwing an error where
                                          -- there _should not_ be one.
-                            $ check ({ lambda := expand as} env)
+                              checkHoles
+                                    ({ lambda := expand as} env)
                                     rh
                                     Nil
                                     principle

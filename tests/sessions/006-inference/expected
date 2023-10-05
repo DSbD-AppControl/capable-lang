@@ -1,7 +1,7 @@
 Running Test
 # Finished Parsing
 Type Checking Error
-main.capable:46:2-0:
+main.capable:62:6-4:
 Session is ill-typed, expecting an expression of type:
 	(sendTo[Server] { adder(struct {x : Int; y : Int})
                   .(recvFrom[Server] {answer(Int).End})
@@ -9,22 +9,7 @@ Session is ill-typed, expecting an expression of type:
 | diver(struct {x : Int; y : Int})
   .(recvFrom[Server] {divByZero(Unit).End | answerE(Int).End})
 | muler(struct {x : Int; y : Int}).(recvFrom[Server] {answer(Int).End}) })
-but could not synthesis given type because of
-
-Type Checking Error
-main.capable:46:2-0:
-Error merging local types: 
- (sendTo[Server] { adder(struct {x : Int; y : Int})
-                  .(recvFrom[Server] {answer(Int).End}) })
-(recvFrom[Server] {answer(Int).End})
-(sendTo[Server] { diver(struct {x : Int; y : Int})
-                  .(recvFrom[Server] { divByZero(Unit).End
-                  | answerE(Int).End }) })
-(sendTo[Server] { muler(struct {x : Int; y : Int})
-                  .(recvFrom[Server] {answer(Int).End}) })
- 
- errors where:
-Types are wildly different.
-.
+but given:
+	(recvFrom[Server] {answer(Int).End})
 
 
