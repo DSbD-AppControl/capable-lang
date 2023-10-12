@@ -58,6 +58,37 @@ namespace Projection
     Select : Projection.Error -> Projection.Error
     Rec : Projection.Error -> Projection.Error
 
+namespace Merge
+  public export
+  data Error : Type where
+    MeetFailCont : String -> Merge.Error -> Merge.Error
+    MeetFail : (Branch (Protocol LOCAL) ks rs lx, Branch (Protocol LOCAL) ks rs ly) -> Merge.Error
+    WrongRecVar : Error
+    InRec : Merge.Error -> Merge.Error
+    UnBalancedOffers : Bool -> Merge.Error
+    OffersFail : Merge.Error -> Merge.Error
+    RoleMismatch : Merge.Error
+    TypeMismatch : Base -> Base -> Merge.Error
+    EmptySelect : Merge.Error
+    Meeting : Merge.Error -> Merge.Error
+    NotMergable : Merge.Error
+    EmptyFold : Merge.Error
+
+namespace Subset
+  public export
+  data Error : Type where
+    LabelMismatch : (String, String) -> Subset.Error
+    TypeMismatch : (Base, Base) -> Subset.Error
+    BranchErr : String -> Subset.Error -> Subset.Error
+    NotExists : Subset.Error
+    Unbalanced : Subset.Error
+    WrongRecVar : Subset.Error
+    InRec : Subset.Error -> Subset.Error
+    OffersFail : Subset.Error -> Subset.Error
+    RoleMismatch : Subset.Error
+    SelectError : Subset.Error -> Subset.Error
+    NotSubset : Subset.Error
+
 namespace Typing
   public export
   data Error : Type where
@@ -83,6 +114,8 @@ namespace Typing
     RedundantRoles : List String -> Typing.Error
 
     ProjectionError : Typing.Error
+    MergeError : String -> Merge.Error -> Typing.Error
+    SubsetError : String -> String -> Subset.Error -> Typing.Error
     LabelMismatch : String -> List String -> Typing.Error
     SessionExpected : Ty.Method -> Typing.Error
     FunctionExpected : Ty.Method -> Typing.Error
@@ -106,8 +139,10 @@ namespace Typing
     Mismatch : (given,expected : Ty.Base)
                               -> Typing.Error
 
-    IllTypedSession : String -> Typing.Error
+    IllTypedSession : String -> String -> Typing.Error
+
     MismatchK : String -> String -> Typing.Error
+
 namespace Marshall
 
   public export

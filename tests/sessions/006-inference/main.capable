@@ -1,0 +1,119 @@
+{-
+
+Modelling and Realisation of a Calculator.
+
+-}
+
+role Client
+role Server
+
+struct body { x : Int; y : Int }
+
+union command
+{ adder : body
+; suber : body
+; diver : body
+; muler : body
+}
+
+union responsePure
+  { answer : Int}
+
+union responseEffect -- this is bad as not all commands cause div by zero
+  { divByZero : Unit; answerE : Int}
+
+union MaybeAnswer { crashed : Unit; dz : Unit; result : Int }
+
+protocol OneShotCalcutron
+  = Client ==> Server [ command ]
+    { adder(body)
+        . Server ==> Client [ responsePure ] { answer(Int) . end}
+    | suber(body)
+        . Server ==> Client [ responsePure ] { answer(Int) . end}
+    | diver(body)
+       . Server ==> Client [ responseEffect ]
+                   { divByZero(Unit) . end
+                   | answerE(Int)    . end
+                   }
+    | muler(body)
+       . Server ==> Client [ responsePure ] { answer(Int) . end}
+    }
+
+
+session calcutronClientGeneral
+        <OneShotCalcutron as Client>
+        (cmd : command) -> MaybeAnswer
+{
+  match cmd
+  {
+    when adder(b)
+    {
+      send [ command ] Server adder(b) catch { crash(crashed(unit)) }
+      recv [ responsePure ] Server
+      {
+        when answer(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+    when suber(b)
+    {
+--      send [ command ] Server suber(b) catch { crash(crashed(unit)) }
+      recv [ responsePure ] Server
+      {
+        when answer(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+    when diver(b)
+    {
+      send [ command ] Server diver(b) catch { crash(crashed(unit)) }
+      recv [ responseEffect ] Server
+      {
+        when divByZero(i)
+        {
+          end(dz(unit))
+        }
+        when answerE(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+
+    when muler(b)
+    {
+      send [ command ] Server muler(b) catch { crash(crashed(unit)) }
+      recv [ responsePure ] Server
+      {
+        when answer(i)
+        {
+          end(result(i))
+        }
+      } catch { crash(crashed(unit)) }
+    }
+
+  }
+--
+--  send [ command ] Server adder(body(x,y))
+--    catch { crash(crashed(unit)) }
+--
+--
+--  recv [ responsePure ] Server
+--  {
+--    when answer(i)
+--    {
+--      end(result(i))
+--    }
+--  } catch { crash(crashed(unit)) }
+}
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

@@ -121,10 +121,6 @@ mutual
       = do (ty ** idx) <- Lambda.lookup env ref
            pure (ty ** Var idx)
 
---    = case !(lookup env ref) of
---        (_ ** IsLocal  idx) => pure (_ ** VarL idx)
---        (_ ** IsGlobal idx) => pure (_ ** VarG idx)
-
 
   synth env (LetTy fc ref st ty val scope)
     = do (tyVal ** T tyTmVal val) <- check fc env ty val
@@ -579,7 +575,6 @@ mutual
 
   synth env (Call fc (MkRef fc s) R prf argz)
     = do (FUNC argTys _ ** idx) <- Gamma.lookup env (MkRef fc s)
-         --(FUNC argTys _ ** fun) <- synth env fun
            | (ty ** _) => throwAt fc (FunctionExpected ty)
          args' <- args fc argTys argz
 
@@ -619,7 +614,6 @@ mutual
 
   synth env (Run fc (MkRef fc s) R pA argz pV vs)
     = do (SESH ctxt whom prot argTys _ ** idx) <- Gamma.lookup env (MkRef fc s)
-         --(FUNC argTys _ ** fun) <- synth env fun
            | (ty ** _) => throwAt fc (SessionExpected ty)
 
          let (R pz proles) = hasRoles prot
@@ -738,7 +732,6 @@ mutual
 
   check {t = t} fc env ty (Hole (MkRef fc' s) R)
     = showHoleExit (lambda env) s t
-         -- pure (T ty (Hole fc ref))
          -- @TODO add infrastructure to collect all the holes, and then report.
 
   check {t = t} fc env ty expr

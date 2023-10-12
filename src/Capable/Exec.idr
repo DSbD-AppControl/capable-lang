@@ -642,7 +642,7 @@ mutual
     eval : {store : List Ty.Base}
         -> {as    : List Ty.Base}
         -> {ret   : Ty.Base}
-        -> {l     : Synth.Local Nil rz}
+        -> {l     : Local Nil rz}
         -> {ctzt  : Context Role rz}
         -> (env   : DList Ty.Method (Closure) stack_g)
         -> (heap  : Heap store)
@@ -659,7 +659,7 @@ mutual
       public export
       eval : {store : List Ty.Base}
           -> {stack_r : _}
-          -> {l     : Synth.Local stack_r rs}
+          -> {l     : Local stack_r rs}
           -> {ret   : Ty.Base}
           -> (env   : Env stack_g stack_l store)
           -> (heap  : Heap store)
@@ -710,7 +710,7 @@ mutual
                              pure (Value h cs v prf)
 
       -- [ NOTE ]
-      eval env heap rvars cs (Cond test tt ff)
+      eval env heap rvars cs (Cond test tt ff _)
         = do Value h (B b) prf0 <- Exprs.eval env heap test
              if b
                then do Value h cs v prf1 <- eval (weaken prf0 env) h rvars cs tt
@@ -722,7 +722,7 @@ mutual
 
       -- [ NOTE ] Matching
       -- ### Matching
-      eval env heap rvars cs (Match expr cases)
+      eval env heap rvars cs (Match expr cases _)
         = do Value heap (Tag s pos v) prf <- Exprs.eval env heap expr
              let (_ ** kase) = lookup pos cases
 
@@ -738,7 +738,7 @@ mutual
                     -> {ret : Base}
                     -> (pos : Elem (s,x) xs)
                     -> (qq  : Cases rs roles types globals sg sl sr ret whom xs us)
-                           -> DPair (Synth.Local sr rs)
+                           -> DPair (Local sr rs)
                                     (\l => Expr rs roles types globals sg (x::sl) sr whom l ret)
               lookup Here ((::) {c = B _ _ g} (C s body) _)
                 = (g ** body)

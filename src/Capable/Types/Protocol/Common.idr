@@ -1,3 +1,6 @@
+||| Session Types and common actions on them.
+|||
+|||
 module Capable.Types.Protocol.Common
 
 import Decidable.Equality
@@ -18,9 +21,9 @@ import Toolkit.Data.List.Quantifiers
 
 import public Toolkit.Data.DList
 import Toolkit.Data.DList.All
+import public Toolkit.Data.DList.Any
 
 import public Toolkit.DeBruijn.Renaming
-
 
 import Capable.Bootstrap
 import Capable.Types.Role
@@ -28,10 +31,13 @@ import Capable.Types.Base
 
 %default total
 
-namespace Protocol
-  public export
-  data View = GLOBAL | LOCAL | SYNTH
 
+namespace Protocol
+  ||| Protocols are either global or local.
+  public export
+  data View = GLOBAL | LOCAL
+
+  ||| Recursion variables are stringly defined, but also nameless.
   public export
   data Kind = R String -- To capture recursion variables
 
@@ -41,6 +47,9 @@ namespace Protocol
       = decDo $ do Refl <- decEq a b `otherwise` (\Refl => Refl)
                    pure Refl
 
+  ||| A labelled choice.
+  |||
+  ||| Made higher-order to support better reasoning about branches.
   public export
   data Branch : (0 contType : List Kind -> List Role -> Type)
              -> (  ks       : List Kind)
@@ -54,51 +63,13 @@ namespace Protocol
        -> (cont : contType ks rs)
                -> Branch contType ks rs (l,b)
 
-  namespace Branch
-    public export
-    data IsLabelled : (s : String)
-                   -> (b : Branch c ks rs (s,t))
-                        -> Type
-      where
-        HasLabel : IsLabelled s (B s b c)
-
-
-  namespace Branch
-    export
-    decEq : (g : (i,j : c ks rs) -> Dec (Equal i j))
-         -> (a : Branch c ks rs (f,s))
-         -> (b : Branch c ks rs (x,y))
-              -> Dec (Equal a b)
-    decEq g (B f s contA) (B x y contB)
-      = decDo $ do Refl <- decEq f x `otherwise` (\Refl => Refl)
-                   Refl <- decEq s y `otherwise` (\Refl => Refl)
-                   Refl <- g contA contB `otherwise` (\Refl => Refl)
-                   pure Refl
-
-  namespace Branches
-    export
-    decEq : (g : (i,j : c ks rs) -> Dec (Equal i j))
-         -> (as : DList (String,Base)
-                        (Branch c ks rs)
-                        (fs))
-         -> (bs : DList (String,Base)
-                        (Branch c ks rs)
-                        (gs))
-              -> Dec (Equal as bs)
-    decEq g as bs with (shape as bs)
-      decEq g [] [] | Empty = Yes Refl
-      decEq g (x :: xs) [] | LH = No isLeftHeavy
-      decEq g [] (x :: xs) | RH = No isRightHeavy
-      decEq g (B xl xt cx :: xs) (B yl yt cy :: ys) | Same
-        = decDo $ do Refl <- decEq xl yl `otherwise` (\Refl => Refl)
-                     Refl <- decEq xt yt `otherwise` (\Refl => Refl)
-                     Refl <- g cx cy `otherwise` (\Refl => Refl)
-                     Refl <- Branches.decEq g xs ys `otherwise` (\Refl => Refl)
-                     pure Refl
+  ||| Recursion variables are nameless.
   public export
   RecVar : List Kind -> Kind  -> Type
   RecVar = IsVar
 
+  ||| A helper (for pretty printing) to get the set of labels in a
+  ||| collection of branches.
   export
   getLTs : DList (String, Base)
                  (Branch t ks rs)
@@ -110,6 +81,8 @@ namespace Protocol
     getLTs ((B l b cont) :: rest) | (Val xs)
       = Val ((l, b) :: xs)
 
+  ||| To support singular representation of local actions on branch
+  ||| collections.
   namespace Choice
     public export
     data ChoiceTy = BRANCH | SELECT
@@ -124,70 +97,154 @@ namespace Protocol
       decEq SELECT BRANCH = No (negEqSym notBS)
       decEq SELECT SELECT = Yes Refl
 
+  ||| A unified datatype for representing 'Session Types'.
+  |||
+  ||| Protocols must be well-scoped over recusrion variables and
+  ||| roles.
   public export
-  data CanCrash : View -> Type where
-    IsProj : CanCrash LOCAL
-    IsSyn  : CanCrash SYNTH
+  data Protocol : (viewpoint  : View)
+               -> (ctxt_rvars : List Kind)
+               -> (ctxt_roles : List Role)
+                             -> Type
+    where
+      ||| End of the protocol.
+      End : Protocol a ks rs
+
+      ||| Recursive call.
+      Call : {v,vs : _} -> RecVar vs v -> Protocol a vs rs
+
+      ||| Define a fixed point.
+      Rec : (v : Kind)
+         -> Protocol a (v::vs) rs
+         -> Protocol a     vs  rs
+
+      ||| Global choice.
+      ChoiceG : {x,y, fs : _}
+             -> (s : Role rs x)
+             -> (r : Role rs y)
+             -> (type   : Singleton (UNION (field:::fs)))
+             -> (prfM   : Marshable (UNION (field:::fs)))
+             -> (prfR   : Not (REquals rs s r))
+             -> (opties : DList (String,Base)
+                                (Branch (Protocol GLOBAL) ks rs)
+                                (field::fs))
+                       -> Protocol GLOBAL ks rs
+
+      ||| Local choice.
+      ChoiceL : {w,rs : _}
+             -> {field, fs : _}
+             -> (kind : ChoiceTy)
+             -> (whom : Role rs w)
+             -> (type : Singleton (UNION (field:::fs)))
+             -> (prfM   : Marshable (UNION (field:::fs)))
+             -> (choices : DList (String,Base)
+                                 (Branch (Protocol LOCAL) ks rs)
+                                 (field::fs))
+                        -> Protocol LOCAL ks rs
+
+      ||| Only local types can crash.
+      Crash : Protocol LOCAL ks rs
+
+
+||| Predicates on Branches.
+namespace Branch
+  ||| Does the branch have the given label.
+  public export
+  data IsLabelled : (s : String)
+                 -> (b : Branch c ks rs (s,t))
+                      -> Type
+    where
+      HasLabel : IsLabelled s (B s b c)
+
+  ||| Are two branches equal.
+  export
+  decEq : (g : (i,j : c ks rs) -> Dec (Equal i j))
+       -> (a : Branch c ks rs (f,s))
+       -> (b : Branch c ks rs (x,y))
+            -> Dec (Equal a b)
+  decEq g (B f s contA) (B x y contB)
+    = decDo $ do Refl <- decEq f x `otherwise` (\Refl => Refl)
+                 Refl <- decEq s y `otherwise` (\Refl => Refl)
+                 Refl <- g contA contB `otherwise` (\Refl => Refl)
+                 pure Refl
+
+  ||| Do the two branches share a label.
+  public export
+  data ShareLabel : (x : Branch (Protocol k) ks rs a)
+                 -> (y : Branch (Protocol k) ks rs b)
+                      -> Type
+    where
+      IsShared : ShareLabel (B l tx cx) (B l ty cy)
+
+  ||| Do the two branches share a label.
+  export
+  isShared : (x : Branch (Protocol k) ks rs a)
+          -> (y : Branch (Protocol k) ks rs b)
+               -> DecInfo () (ShareLabel x y)
+  isShared (B x tx cx) (B y ty cy) with (decEq x y)
+    isShared (B x tx cx) (B x ty cy) | (Yes Refl)
+      = Yes IsShared
+    isShared (B x tx cx) (B y ty cy) | (No contra)
+      = No () (\IsShared => contra Refl)
 
   public export
-  data Protocol : View -> List Kind -> List Role -> Type where
-    End : Protocol a ks rs
+  SharedLabel : {lts : _}
+            -> (ks : List Kind)
+            -> (rs : List Role)
+            -> (  x  : Branch (Protocol k) ks rs ltx)
+            -> (  xs : DList (String, Base)
+                             (Branch (Protocol k) ks rs)
+                             lts)
+                    -> Type
+  SharedLabel ks rs x
+    = DList.Any.Any (String, Base)
+          (Branch (Protocol k) ks rs)
+          (ShareLabel x)
 
-    Call : {v,vs : _} -> RecVar vs v -> Protocol a vs rs
+  ||| Is there a common label between the given branch, and set of
+  ||| branches?
+  export
+  sharedLabel : (  x  : Branch (Protocol k) ks rs ltx)
+             -> (  xs : DList (String, Base)
+                              (Branch (Protocol k) ks rs)
+                              lts)
+                     -> Dec (SharedLabel ks rs x xs)
+  sharedLabel x xs with (DList.Any.any (isShared x) xs)
+    sharedLabel x xs | (Yes prf)
+      = Yes prf
+    sharedLabel x xs | (No contra)
+      = No contra
 
-    Rec : (v : Kind)
-       -> Protocol a (v::vs) rs
-       -> Protocol a     vs  rs
 
-    ChoiceG : {x,y, fs : _}
-           -> (s : Role rs x)
-           -> (r : Role rs y)
-           -> (type   : Singleton (UNION (field:::fs)))
-           -> (prfM   : Marshable (UNION (field:::fs)))
-           -> (prfR   : Not (REquals rs s r))
-           -> (opties : DList (String,Base)
-                              (Branch (Protocol GLOBAL) ks rs)
-                              (field::fs))
-                     -> Protocol GLOBAL ks rs
+||| Actions on Branch Collections
+namespace Branches
 
-    ChoiceL : {w,rs : _}
-           -> (kind : ChoiceTy)
-           -> (whom : Role rs w)
-           -> (type : Singleton (UNION (field:::fs)))
-           -> (prfM   : Marshable (UNION (field:::fs)))
-           -> (choices : DList (String,Base)
-                               (Branch (Protocol LOCAL) ks rs)
-                               (field::fs))
-                      -> Protocol LOCAL ks rs
+  ||| Are the two given collections equal.
+  |||
+  ||| It is higher order as we do not know what the continuation
+  ||| type is!
+  export
+  decEq : (g : (i,j : c ks rs) -> Dec (Equal i j))
+       -> (as : DList (String,Base)
+                      (Branch c ks rs)
+                      (fs))
+       -> (bs : DList (String,Base)
+                      (Branch c ks rs)
+                      (gs))
+            -> Dec (Equal as bs)
+  decEq g as bs with (shape as bs)
+    decEq g [] [] | Empty = Yes Refl
+    decEq g (x :: xs) [] | LH = No isLeftHeavy
+    decEq g [] (x :: xs) | RH = No isRightHeavy
+    decEq g (B xl xt cx :: xs) (B yl yt cy :: ys) | Same
+      = decDo $ do Refl <- decEq xl yl `otherwise` (\Refl => Refl)
+                   Refl <- decEq xt yt `otherwise` (\Refl => Refl)
+                   Refl <- g cx cy `otherwise` (\Refl => Refl)
+                   Refl <- Branches.decEq g xs ys `otherwise` (\Refl => Refl)
+                   pure Refl
 
-    Crash : CanCrash v -> Protocol v ks rs
 
-    Select : {w     : _}
-          -> {rs,ks : _}
-          -> (whom  : Role rs w)
-          -> (label : String)
-          -> (type  : Base)
-          -> (prf   : Marshable type)
-          -> (cont  : Protocol SYNTH ks rs)
-                   -> Protocol SYNTH ks rs
-
-    -- @TODO merge with ChoiceL
-    Offer : {o       : _}
-         -> {rs,ks   : _}
-         -> (whom    : Role rs o)
-         -> (type    : Singleton (UNION (field:::fs)))
-         -> (prfM    : Marshable (UNION (field:::fs)))
-         -> (choices : DList (String,Base)
-                             (Branch (Protocol SYNTH) ks rs)
-                             (field::fs))
-                    -> Protocol SYNTH ks rs
-
-    Choices : {rs,ks:_}
-           -> (cs : DList (String, Base)
-                          (Branch (Protocol SYNTH) ks rs)
-                          (field::fs))
-                 -> Protocol SYNTH ks rs
-
+||| Pretty printing of Protocols.
 namespace Pretty
 
   export
@@ -196,7 +253,10 @@ namespace Pretty
                                (flatAlt (pretty " }")  (pretty "}"))
                                (flatAlt (pretty "| ") (pretty " | "))
 
-  branch : (Context Kind ks -> Context Ty.Role rs -> Protocol v ks rs -> Doc ())
+  branch : (pretty : Context Kind ks
+                  -> Context Ty.Role rs
+                  -> Protocol v ks rs
+                  -> Doc ())
         -> (kctxt : Context Kind ks)
         -> (rctxt : Context Ty.Role rs)
         -> Branch (Protocol v) ks rs l
@@ -209,8 +269,10 @@ namespace Pretty
     , pretty "." <+> g kctxt rctxt c
     ]
 
-
-  branches : (Context Kind ks -> Context Ty.Role rs -> Protocol v ks rs -> Doc ())
+  branches : (pretty : Context Kind ks
+                    -> Context Ty.Role rs
+                    -> Protocol v ks rs
+                    -> Doc ())
           -> (kctxt : Context Kind ks)
           -> (rctxt : Context Ty.Role rs)
           -> (bs    : DList (String,Base)
@@ -242,7 +304,10 @@ namespace Pretty
       = let cont = pretty (extend kctxt v (R v)) rctxt y
       in group
       $  align
-      $  vsep [ group (pretty "rec" <+> parens (pretty v) <+> pretty ".")
+      $  vsep [ group
+                $ pretty "rec" <+>
+                  parens (pretty v) <+>
+                  pretty "."
               , indent 2 cont]
 
   pretty kctxt rctxt (ChoiceG s r type prfM prfR opties)
@@ -274,48 +339,8 @@ namespace Pretty
         ]
 
 
-  pretty kctxt rctxt (Crash _)
+  pretty kctxt rctxt Crash
     = pretty "Crash"
-
-  pretty kctxt rctxt (Select whom label type prf cont)
-    = group
-    $ parens
-    $ hsep
-      [ hcat
-        [ pretty "sendTo"
-        , brackets
-          $ pretty
-            $ reflect rctxt whom
-        ]
-      , hcat
-        [ pretty label
-        , parens
-          $ pretty type
-        ]
-      , pretty "."
-      , indent 2 (pretty kctxt rctxt cont)
-      ]
-
-  pretty kctxt rctxt (Offer whom type prfM choices)
-    = group
-      $ parens
-        $ hsep
-        [ hcat
-          [ pretty "recvFrom"
-          , brackets
-            $ pretty
-              $ reflect rctxt whom
-          ]
-        , (assert_total $ branches pretty kctxt rctxt choices)
-        ]
-
-  pretty kctxt rctxt (Choices cs)
-    = group
-    $ parens
-    $ hsep
-    [ pretty "Choices"
-    , indent 2 (assert_total $ branches pretty kctxt rctxt cs) ]
-
 
   export
   toString : (kctxt : Context Kind ks)
@@ -331,5 +356,15 @@ namespace Pretty
                      -> String
     toString = toString Nil
 
+
+  namespace Branches
+    export
+    toString : (kctxt : Context Kind ks)
+            -> (rctxt : Context Ty.Role rs)
+            -> (bs    : DList (String,Base)
+                              (Branch (Protocol v) ks rs)
+                              ls)
+                     -> String
+    toString ks rs bs = show (branches pretty ks rs bs)
 
 -- [ EOF ]

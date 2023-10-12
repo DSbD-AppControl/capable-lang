@@ -253,27 +253,6 @@ namespace Env
     lookup env ref
       = Common.lookup (lambda env) ref
 
---  public export
---  data EnvLookup : (gs : List Ty.Method)
---                -> (ls : List Ty.Base)
---                -> Ty.Base -> Type
---    where
---      IsLocal  : IsVar ls type -> EnvLookup gs ls type
---      IsGlobal : IsVar gs type -> EnvLookup gs ls type
---
---  export
---  lookup : {gs,ls : _}
---        -> (ctxt  : Env rs ds ss gs ls)
---        -> (s     : Ref)
---                 -> Capable (DPair Ty.Base (EnvLookup gs ls))
---  lookup env ref
---    = tryCatch (do (ty ** idx) <- Common.lookup (gamma env) ref
---                   pure (_ ** IsGlobal idx))
---
---               (\err => do (ty ** idx) <- Common.lookup (lambda env) ref
---                           pure (_ ** IsLocal idx))
-
-
 prettyCtxt : Pretty a => Context a ls -> List (Doc ann) -> List (Doc ann)
 prettyCtxt [] acc = acc
 prettyCtxt ((I name x) :: rest) acc

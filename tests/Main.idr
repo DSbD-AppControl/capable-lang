@@ -14,18 +14,15 @@ import Test.Golden
 covering
 main : IO ()
 main
-  = runner [ !(mkPool "misc"     "Miscellaneous")
-           , !(mkPool "files"    "File Handling")
-           , !(mkPool "examples" "Working Examples")
-           , !(mkPool "sessions" "Session Types")
-           , !(mkPool "benchmarks" "Programs of interest for benchmarking.")
-           , !(mkPool "paper" "Examples from the paper.")
+  = runner [ !(testsInDir "misc"     "Miscellaneous")
+           , !(testsInDir "files"    "File Handling")
+           , !(testsInDir "examples" "Working Examples")
+           , !(testsInDir "sessions" "Session Types")
+           , !(testsInDir "benchmarks" "Programs of interest for benchmarking.")
+           , !(testsInDir "paper" "Examples from the paper.")
            ]
 
-  where mkPool : (dirName, poolName : String)
-                           -> IO TestPool
-        mkPool d p
-          = testsInDir d (const True)
-                       p [] Nothing
+
+
 
 -- [ EOF ]

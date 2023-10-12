@@ -131,9 +131,9 @@ namespace Prefix
     = Extend x (noChange xs)
 
   public export
-  trans : Subset xs ys
-       -> Subset ys zs
-       -> Subset xs zs
+  trans : Prefix.Subset xs ys
+       -> Prefix.Subset ys zs
+       -> Prefix.Subset xs zs
   trans Empty Empty
     = Empty
   trans Empty (Extend x rest)
@@ -154,7 +154,7 @@ data Closure : Ty.Method
 
     ClosSesh : {whom  : _}
             -> (ctzt  : Context Role rs)
-            -> {l     : Synth.Local Nil rs}
+            -> {l     : Local Nil rs}
             -> (scope : Session roles types globals stack_g (SESH ctzt whom l args ret))
             -> (env_g : DList Ty.Method (Closure)   stack_g)
                      -> Closure (SESH ctzt whom l args ret)
