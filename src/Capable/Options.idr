@@ -25,6 +25,7 @@ record IOpts where
   constructor O
   justLex   : Bool
   showAST   : Bool
+  checkRun  : Bool
   justCheck : Bool
   pprint    : Bool
   ppLaTeX   : Bool
@@ -51,6 +52,8 @@ Options:
   --repl launch the REPL
 
   --check  Only type check
+  --run    Type check and run (noop/default)
+
   --latex  type check and pretty print LaTeX
   --pretty type check and pretty print
 
@@ -67,8 +70,8 @@ Options:
 
 export
 Show IOpts where
-  show (O l a c po p r f cg q)
-    = "O \{show l} \{show a} \{show c} \{show po} \{show p} \{show r} \{show f} \{show cg} \{show q}"
+  show (O l a er c po p r f cg q)
+    = "O \{show l} \{show a} \{show er} \{show c} \{show po} \{show p} \{show r} \{show f} \{show cg} \{show q}"
 
 export
 Eq IOpts where
@@ -82,6 +85,7 @@ Eq IOpts where
     && file x      == file y
     && help x == help y
     && codegen x == codegen y
+    && checkRun x == checkRun y
 
 convOpts : Arg -> IOpts -> Maybe IOpts
 
@@ -109,6 +113,10 @@ convOpts (Flag x) o
 
       "checkOnly"
         => Just $ { justCheck := True} o
+
+      "run"
+        => Just $ { checkRun := True} o
+
       "latex"
         => Just $ { ppLaTeX := True} o
       "pretty"
@@ -122,7 +130,7 @@ convOpts (Flag x) o
 
 
 defOpts : IOpts
-defOpts = O False False False False False False False Nothing Nil
+defOpts = O False False True False False False False False Nothing Nil
 
 
 namespace Options
@@ -141,8 +149,8 @@ namespace Options
     args    : List String
 
 populate : IOpts -> Maybe String -> List String -> Opts
-populate (O l a c po p r f cg _)
-        = O l a c po p r f cg
+populate (O l a _ c po p r f cg _)
+        = O l a   c po p r f cg
 
 process : IOpts -> Capable Opts
 process o

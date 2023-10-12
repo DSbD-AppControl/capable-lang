@@ -13,8 +13,17 @@ BUILDDIR  = ${CURDIR}/build
 TARGETDIR = ${BUILDDIR}/exec
 TARGET    = ${TARGETDIR}/${PROJECT}
 
-BENCHMARKS= --parameter-list benchmark 000,001,002
-RESULTS= --export-json results.json --export-markdown results.md
+null :=
+space := $(null) #
+comma := ,
+
+BMARKS_RAW = $(shell find tests/benchmarks -iname "*.capable" )
+BMARKS     = $(subst $(space),$(comma),$(strip $(strip $(BMARKS_RAW))))
+
+HYPERFINE_PARAMS= --parameter-list benchmark $(BMARKS)
+
+HYPERFINE_RESULTS_EXEC  = --export-json results-exec.json --export-markdown results-exec.md
+HYPERFINE_RESULTS_CHECK = --export-json results-check.json --export-markdown results-check.md
 
 # [ Core Project Definition ]
 
@@ -54,14 +63,17 @@ capable-test-update: capable-test-build
 			 THREADS=1 \
 			 ONLY=$(ONLY)
 
-capable-bench: capable capable-test-build
-	$(HYPERFINE) $(BENCHMARKS) '${MAKE} -C tests benchmark IDRIS2=$(IDRIS2) PROG_BIN=$(TARGET) ONLY={benchmark}'
+capable-bench-exec: capable capable-test-build
+	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) {benchmark}'
 
-capable-bench-record: capable capable-test-build
-	$(HYPERFINE) $(BENCHMARKS) $(RESULTS) '${MAKE} -C tests benchmark IDRIS2=$(IDRIS2) PROG_BIN=$(TARGET) ONLY={benchmark}'
+capable-bench-exec-record: capable capable-test-build
+	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_EXEC) '$(TARGET) {benchmark}'
 
+capable-bench-check: capable capable-test-build
+	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) --check {benchmark}'
 
-#	$(HYPERFINE) --warmup 10 '${MAKE} capable-test-run'
+capable-bench-check-record: capable capable-test-build
+	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_CHECK) '$(TARGET) --check {benchmark}'
 
 # [ Artefact ]
 

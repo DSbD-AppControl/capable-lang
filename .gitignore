@@ -25,5 +25,5 @@ tests/**/output
 .idea
 
 docs/build/
-/results.json
-/results.md
+/results*.json
+/results*.md

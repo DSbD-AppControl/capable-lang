@@ -47,15 +47,6 @@ test-re:
 	--only-file failures      \
 	--only $(ONLY)
 
-# [ Benchmarking ]
-.PHONY: benchmark
-
-benchmark:
-	${TARGET}       \
-	$(PROG_BIN)     \
-	--threads 1     \
-	--only "benchmarks/$(ONLY)"
-
 # [ Housekeeping ]
 
 .PHONY: clobber clean
