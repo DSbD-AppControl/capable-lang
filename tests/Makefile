@@ -40,12 +40,21 @@ test:
 test-re:
 	${TARGET}           \
 	$(PROG_BIN)          \
-	$(UDATE)              \
+	$(UPDATE)             \
 	--timing               \
 	--failure-file failures \
 	--threads $(THREADS)     \
 	--only-file failures      \
 	--only $(ONLY)
+
+# [ Benchmarking ]
+.PHONY: benchmark
+
+benchmark:
+	${TARGET}       \
+	$(PROG_BIN)     \
+	--threads 1     \
+	--only "benchmarks/$(ONLY)"
 
 # [ Housekeeping ]
 

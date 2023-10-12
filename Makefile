@@ -7,16 +7,20 @@
 PROJECT=capable
 IDRIS2=idris2
 KATLA=katla
+HYPERFINE=hyperfine
 
 BUILDDIR  = ${CURDIR}/build
 TARGETDIR = ${BUILDDIR}/exec
 TARGET    = ${TARGETDIR}/${PROJECT}
 
+BENCHMARKS= --parameter-list benchmark 000,001,002
+RESULTS= --export-json results.json --export-markdown results.md
+
 # [ Core Project Definition ]
 
 .PHONY: capable capable-doc capable-srcs
 .PHONY: capable-test-build capable-test-run capable-test-run-re capable-test-update
-#.PHONY: capable-bench
+.PHONY: capable-bench capable-bench-check
 
 capable:
 	$(IDRIS2) --build ${PROJECT}.ipkg
@@ -51,7 +55,11 @@ capable-test-update: capable-test-build
 			 ONLY=$(ONLY)
 
 capable-bench: capable capable-test-build
-	${ECHO} "Todo"
+	$(HYPERFINE) $(BENCHMARKS) '${MAKE} -C tests benchmark IDRIS2=$(IDRIS2) PROG_BIN=$(TARGET) ONLY={benchmark}'
+
+capable-bench-record: capable capable-test-build
+	$(HYPERFINE) $(BENCHMARKS) $(RESULTS) '${MAKE} -C tests benchmark IDRIS2=$(IDRIS2) PROG_BIN=$(TARGET) ONLY={benchmark}'
+
 
 #	$(HYPERFINE) --warmup 10 '${MAKE} capable-test-run'
 
@@ -98,5 +106,6 @@ clobber: clean
 	${RM} -rf build/
 	${RM} -rf artefact-staging/
 	${RM} capable.tar.gz
+	${RM} results.json results.md
 
 # -- [ EOF ]
