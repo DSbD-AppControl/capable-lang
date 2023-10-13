@@ -20,14 +20,17 @@ THREADS ?= $(shell (nproc || sysctl -n hw.ncpu) 2>/dev/null || echo 1)
 
 # [ Testing Targets ]
 
+$(TARGET): Main.idr
+	${IDRIS2} --build ${PROJECT}.ipkg
+
 .PHONY: testbin test test-re
 
 # Build the test suite
-testbin:
-	${IDRIS2} --build ${PROJECT}.ipkg
+testbin: $(TARGET)
+
 
 # Run the test suite storing failures in the failure file.
-test:
+test: testbin
 	${TARGET}               \
 	$(PROG_BIN)             \
 	--timing                \
@@ -37,7 +40,7 @@ test:
 	--only $(ONLY)
 
 # Only re-run the failed tests.
-test-re:
+test-re: testbin
 	${TARGET}           \
 	$(PROG_BIN)          \
 	$(UPDATE)             \

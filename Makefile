@@ -13,6 +13,8 @@ BUILDDIR  = ${CURDIR}/build
 TARGETDIR = ${BUILDDIR}/exec
 TARGET    = ${TARGETDIR}/${PROJECT}
 
+SOURCES = $(shell find src -iname "*.idr")
+
 null :=
 space := $(null) #
 comma := ,
@@ -29,12 +31,16 @@ HYPERFINE_RESULTS_CHECK = $(subst :,check,$(strip $(HYPERFINE_RESULTS_RAW)))
 
 # [ Core Project Definition ]
 
-.PHONY: capable capable-doc capable-srcs
+.PHONY: capable-doc capable-srcs
 .PHONY: capable-test-build capable-test-run capable-test-run-re capable-test-update
-.PHONY: capable-bench capable-bench-check
+.PHONY: capable-bench capable-bench-record
+.PHONY: capable-bench-check capable-bench-check-record
+.PHONY: capable-bench-exec capable-bench-exec-record
 
-capable:
+$(TARGET): $(strip $(SOURCES))
 	$(IDRIS2) --build ${PROJECT}.ipkg
+
+capable: $(TARGET)
 
 capable-doc:
 	$(IDRIS2) --mkdoc ${PROJECT}.ipkg
@@ -45,37 +51,42 @@ capable-srcs:
 capable-test-build:
 	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
 
-capable-test-run: capable-test-build
+capable-test-run: capable
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 UPDATE='' \
 			 ONLY=$(ONLY)
 
-capable-test-run-re: capable-test-build
+capable-test-run-re: capable
 	${MAKE} -C tests test-re \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 ONLY=$(ONLY)
 
-capable-test-update: capable-test-build
+capable-test-update: capable
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 THREADS=1 \
 			 ONLY=$(ONLY)
 
-capable-bench-exec: capable capable-test-build
+capable-bench-exec: capable
 	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) {benchmark}'
+
+capable-bench-check: capable
+	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) --check {benchmark}'
+
+capable-bench: capable-bench-exec capable-bench-check
+
 
 capable-bench-exec-record: capable capable-test-build
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_EXEC) '$(TARGET) {benchmark}'
 
-capable-bench-check: capable capable-test-build
-	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) --check {benchmark}'
-
 capable-bench-check-record: capable capable-test-build
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_CHECK) '$(TARGET) --check {benchmark}'
+
+capable-bench-record: capable-bench-exec-record capable-bench-check-record
 
 # [ Artefact ]
 
