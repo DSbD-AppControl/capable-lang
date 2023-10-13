@@ -18,7 +18,7 @@ space := $(null) #
 comma := ,
 
 BMARKS_RAW = $(shell find tests/benchmarks -iname "*.capable" )
-BMARKS     = $(subst $(space),$(comma),$(strip $(strip $(BMARKS_RAW))))
+BMARKS     = $(subst $(space),$(comma),$(strip $(BMARKS_RAW)))
 
 HYPERFINE_PARAMS= --parameter-list benchmark $(BMARKS)
 

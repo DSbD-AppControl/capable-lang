@@ -1,21 +1,8 @@
 Running Test
-   ______                  __    __
-  / ____/___ _____  ____ _/ /_  / /__
- / /   / __ `/ __ \/ __ `/ __ \/ / _ \
-/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
-\____/\__,_/ .___/\__,_/_.___/_/\___/
-          /_/
-
-  Version 0.0.0-unversioned
-  https://github.com/DSbD-AppControl/capable-lang
-
-  Type :? for help.
-
-Capable> Parsing Error
-File Error: 
-File Not Found
-Capable> Not a bound protocol: twoBuyer
-Capable> Not a bound protocol: twoBuyer
-Capable> Not a bound protocol: twoBuyer
-Capable> Need to load a program first.
-Capable> Exiting the REPL
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+My First Program
+```
+# Finished
