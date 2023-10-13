@@ -22,8 +22,10 @@ BMARKS     = $(subst $(space),$(comma),$(strip $(BMARKS_RAW)))
 
 HYPERFINE_PARAMS= --parameter-list benchmark $(BMARKS)
 
-HYPERFINE_RESULTS_EXEC  = --export-json results-exec.json --export-markdown results-exec.md
-HYPERFINE_RESULTS_CHECK = --export-json results-check.json --export-markdown results-check.md
+HYPERFINE_RESULTS_RAW   = --export-csv results-:.csv --export-json results-:.json --export-markdown results-:.md
+HYPERFINE_RESULTS_EXEC  = $(subst :,exec,$(strip $(HYPERFINE_RESULTS_RAW)))
+
+HYPERFINE_RESULTS_CHECK = $(subst :,check,$(strip $(HYPERFINE_RESULTS_RAW)))
 
 # [ Core Project Definition ]
 
