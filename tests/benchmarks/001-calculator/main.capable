@@ -4,22 +4,22 @@
 role Client
 role Server
 
-type body = struct { x : Int; y : Int }
+struct body  { x : Int; y : Int }
 
-type command
-  = union { adder : body
+union command
+{ adder : body
           ; suber : body
           ; diver : body
           ; muler : body
           }
 
-type responsePure
-  = union { answer : Int}
+union responsePure
+  { answer : Int}
 
-type responseEffect -- this is bad as not all commands cause div by zero
-  = union { divByZero : Unit; answerE : Int}
+union responseEffect -- this is bad as not all commands cause div by zero
+  { divByZero : Unit; answerE : Int}
 
-type MaybeAnswer = union { crashed : Unit; dz : Unit; result : Int }
+union MaybeAnswer { crashed : Unit; dz : Unit; result : Int }
 
 protocol OneShotCalcutron
   = Client ==> Server [ command ]
