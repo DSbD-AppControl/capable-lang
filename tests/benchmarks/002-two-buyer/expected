@@ -32,5 +32,6 @@ Capable> (recvFrom[Alice] { title(String)
                                                        .(recvFrom[Bob] { addr(String)
                                                                          .(sendTo[Bob] { date(String)
                                                                                          .End }) }) }) }) }) })
-Capable> Need to load a program first.
+Capable> My First Program
+()
 Capable> Exiting the REPL
