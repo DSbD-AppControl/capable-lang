@@ -221,6 +221,7 @@ namespace Raw
   check : (r : PROG) -> Capable (Program,State,DPair PROG Prog)
   check p
     = do R p s p' ast <- check empty defaultState (toProg p)
+         let s = setProgram p s
          pure (p,s,(p'**ast))
 
 

@@ -50,6 +50,10 @@ defaultState : State
 defaultState = S Nothing empty empty empty empty empty Nothing
 
 export
+setProgram : Program -> State -> State
+setProgram p = { prog := Just p }
+
+export
 isHoley : State -> Capable Bool
 isHoley = (pure . isNil . SortedMap.toList . holes)
 
