@@ -3,6 +3,7 @@
 test ! -z $1 && set -x # Show commands if first arg is non-zero
 
 mkdir -p build/html
+mkdir -p build/latex
 
 katla_run()
 {
@@ -21,7 +22,9 @@ find src -type f -iname "*.idr" -print0 |\
         FILE_LOCAL=${file#src/} # remove prefix
         FILE_ttm=${FILE_LOCAL%idr}ttm
         FILE_html=${FILE_LOCAL%idr}html
+        FILE_tex=${FILE_LOCAL%idr}tex
         katla_run html "./${file}" ./build/ttc/*/"${FILE_ttm}" "./build/html/${FILE_html}"
+        katla_run latex "./${file}" ./build/ttc/*/"${FILE_ttm}" "./build/latex/${FILE_tex}"
     done
 
 # -- [ EOF ]
