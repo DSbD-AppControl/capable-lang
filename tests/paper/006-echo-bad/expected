@@ -1,0 +1,41 @@
+Running Test
+# Finished Parsing
+# Finished Type Checking
+```
+\begin{Verbatim}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{str} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{print}(\CapableBound{str});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
+\}
+\CapableKeyword{func} \CapableFunction{echo} (\CapableBound{cmd} : \CapableType{String}, \CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{match} \CapableKeyword{popen2}(\CapableBound{cmd})
+  \{
+    \CapableKeyword{when} \CapableBound{left}(\CapableBound{e})
+    \{
+      \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Error running process"})
+    \}
+    \CapableKeyword{when} \CapableBound{right}(\CapableBound{hdl})
+    \{
+      \CapableKeyword{match} \CapableKeyword{read}(\CapableBound{hdl})
+      \{
+        \CapableKeyword{when} \CapableBound{left}(\CapableBound{err})
+        \{
+          \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Error sending line."})
+        \}
+        \CapableKeyword{when} \CapableBound{right}(\CapableBound{res})
+        \{
+          \CapableFunction{\CapableBound{printLn}}(\CapableBound{res})
+        \}
+      \}
+    \}
+  \}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableFunction{\CapableBound{echo}}(\CapableValue{"python3 pingping.py"}, \CapableValue{"hello"})
+\}
+\end{Verbatim}
+
+```

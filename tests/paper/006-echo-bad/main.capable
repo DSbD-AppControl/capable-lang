@@ -1,0 +1,22 @@
+func printLn(str:String) -> Unit { print(str) ; print(toString('\n')) }
+
+func echo(cmd : String, msg : String) -> Unit
+{ match popen2(cmd)
+  { when left(e) { printLn("Error running process") }
+
+    when right(hdl)
+    { match read(hdl)
+      { when left(err) { printLn("Error sending line.") }
+
+        when right(res)
+        { printLn(res)
+        }
+      }
+    }
+  }
+}
+
+main (args : [String])
+{
+  echo("python3 pingping.py", "hello")
+}
