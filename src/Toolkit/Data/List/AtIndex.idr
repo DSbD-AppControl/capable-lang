@@ -1,8 +1,7 @@
 ||| Predicates for reasoning about elements of a list, based on their
 ||| index.
 |||
-||| Module    : AtIndex.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.Data.List.AtIndex

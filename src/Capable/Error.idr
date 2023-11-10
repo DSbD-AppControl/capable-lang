@@ -1,7 +1,6 @@
 ||| What can go wrong!
 |||
-||| Module    : Error.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Error

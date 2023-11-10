@@ -1,3 +1,8 @@
+||| Main entry point.
+|||
+||| Copyright : COPYRIGHT
+||| License   : see LICENSE
+|||
 module Main
 
 import System

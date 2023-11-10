@@ -1,7 +1,6 @@
 ||| Error returning quantifiers for Lists
 |||
-||| Module    : Quantifiers.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.Data.List.Quantifiers

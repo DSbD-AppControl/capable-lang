@@ -1,7 +1,6 @@
+||| Common functions for parsing.
 |||
-|||
-||| Module    : API.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Parser.API

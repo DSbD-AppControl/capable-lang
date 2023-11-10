@@ -1,7 +1,6 @@
 ||| Reasoning about elements in a DList based on their index.
 |||
-||| Module    : DList/AtIndex.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.Data.DList.AtIndex

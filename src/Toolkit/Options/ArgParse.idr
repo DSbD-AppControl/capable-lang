@@ -1,8 +1,8 @@
--- ------------------------------------------------------------ [ ArgParse.idr ]
--- Description :
--- Copyright   : (c) Jan de Muijnck-Hughes
--- License     : see LICENSE
--- --------------------------------------------------------------------- [ EOH ]
+||| Parsing arguments from a list of string.
+|||
+||| Copyright : COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.Options.ArgParse
 
 import Data.List

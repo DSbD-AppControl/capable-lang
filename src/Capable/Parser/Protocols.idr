@@ -1,5 +1,8 @@
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| How to parse global types from the surface language.
+|||
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
+|||
 |||
 module Capable.Parser.Protocols
 

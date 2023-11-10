@@ -1,7 +1,6 @@
 ||| Environments.
 |||
-||| Module    : Environment.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.DeBruijn.Environment

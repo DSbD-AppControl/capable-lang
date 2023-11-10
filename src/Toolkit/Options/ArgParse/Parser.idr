@@ -1,8 +1,8 @@
--- -------------------------------------------------------------- [ Parser.idr ]
--- Description : A simple parser for command options.
--- Copyright   : (c) Jan de Muijnck-Hughes
--- License     : see LICENSE
--- --------------------------------------------------------------------- [ EOH ]
+||| A simple parser for command options
+|||
+||| Copyright : COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.Options.ArgParse.Parser
 
 import Text.Lexer

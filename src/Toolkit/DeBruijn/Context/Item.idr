@@ -1,7 +1,6 @@
 ||| Context items
 |||
-||| Module    : Item.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.DeBruijn.Context.Item

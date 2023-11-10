@@ -1,7 +1,6 @@
+||| Parsing types in the surface language.
 |||
-|||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Parser.Types

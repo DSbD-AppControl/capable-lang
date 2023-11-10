@@ -1,7 +1,6 @@
+||| Collect and present all the terms.
 |||
-|||
-||| Module    : Terms.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Terms

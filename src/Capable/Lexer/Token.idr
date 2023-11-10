@@ -1,7 +1,6 @@
+||| A Token from a String.
 |||
-|||
-||| Module    : Token.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Lexer.Token

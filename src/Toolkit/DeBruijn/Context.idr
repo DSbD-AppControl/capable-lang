@@ -1,7 +1,6 @@
+||| Typing contexts,
 |||
-|||
-||| Module    : Context.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.DeBruijn.Context

@@ -1,7 +1,6 @@
 ||| How to rename things
 |||
-||| Module    : Renaming.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Toolkit.DeBruijn.Renaming

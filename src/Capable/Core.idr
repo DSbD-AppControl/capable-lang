@@ -1,7 +1,6 @@
 ||| The Core Computation Context.
 |||
-||| Module    : Core.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 ||| `TheRug` is defined in the toolkit. Here we establish the synonyms

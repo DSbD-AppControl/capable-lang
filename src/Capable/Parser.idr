@@ -1,7 +1,6 @@
+||| Parsing capable programs.
 |||
-|||
-||| Module    : Parser.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Parser

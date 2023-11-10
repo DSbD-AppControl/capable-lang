@@ -1,8 +1,8 @@
--- --------------------------------------------------------------- [ Model.idr ]
--- Description : The Model
--- Copyright   : (c) Jan de Muijnck-Hughes
--- License     : see LICENSE
--- --------------------------------------------------------------------- [ EOH ]
+||| Underlying model of command line arguments.
+|||
+||| Copyright : COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.Options.ArgParse.Model
 
 %default total

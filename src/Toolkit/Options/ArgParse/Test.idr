@@ -1,8 +1,8 @@
--- ---------------------------------------------------------------- [ Test.idr ]
--- Module    : Test.idr
--- Copyright : (c) Jan de Muijnck-Hughes
--- License   : see LICENSE
--- --------------------------------------------------------------------- [ EOH ]
+||| Testing parsing.
+|||
+||| Copyright : COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.Options.ArgParse.Test
 
 import Data.String

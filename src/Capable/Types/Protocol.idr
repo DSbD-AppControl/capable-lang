@@ -1,6 +1,8 @@
+||| Collect all the core MPST code into a single import.
 |||
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
+|||
 |||
 module Capable.Types.Protocol
 

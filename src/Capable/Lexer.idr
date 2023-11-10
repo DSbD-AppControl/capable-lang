@@ -1,7 +1,6 @@
+||| Tokenise all the strings.
 |||
-|||
-||| Module    : Lexer.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Lexer

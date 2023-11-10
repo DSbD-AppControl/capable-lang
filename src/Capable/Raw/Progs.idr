@@ -1,7 +1,6 @@
 ||| AST for Progs
 |||
-||| Module    : Raw/Progs.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 ||| Let's be smart about the shape of the tree.

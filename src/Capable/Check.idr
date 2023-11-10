@@ -1,7 +1,6 @@
 ||| Type-checker for Programs.
 |||
-||| Module    : Types.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Check

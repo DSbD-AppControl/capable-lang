@@ -1,9 +1,8 @@
--- --------------------------------------------------------------- [ Error.idr ]
--- Module    : Error.idr
--- Copyright : (c) Jan de Muijnck-Hughes
--- License   : see LICENSE
--- --------------------------------------------------------------------- [ EOH ]
-
+||| What can go wrong.
+|||
+||| Copyright : COPYRIGHT
+||| License   : see LICENSE
+|||
 module Toolkit.Options.ArgParse.Error
 
 import Data.String

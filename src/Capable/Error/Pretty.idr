@@ -1,7 +1,6 @@
 ||| Make Error's Pretty.
 |||
-||| Module    : Pretty.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Error.Pretty

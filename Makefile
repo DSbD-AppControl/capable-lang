@@ -128,6 +128,7 @@ clean:
 clobber: clean
 	$(IDRIS2) --clean ${PROJECT}.ipkg
 	${MAKE} -C tests clobber
+	find . -iname "*~" -delete
 	${RM} -rf build/
 	${RM} -rf artefact-staging/
 	${RM} capable.tar.gz

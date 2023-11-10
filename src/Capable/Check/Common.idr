@@ -1,6 +1,6 @@
+||| Shared utilities for elaboration.
 |||
-||| Module    : Common.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Check.Common

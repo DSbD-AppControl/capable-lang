@@ -1,7 +1,6 @@
+||| Roles in a protocol.
 |||
-|||
-||| Module    : Capable.Types.Role
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : COPYRIGHT
 ||| License   : see LICENSE
 |||
 module Capable.Types.Role
