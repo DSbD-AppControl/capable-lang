@@ -30,6 +30,7 @@ import Capable.Terms.Builtins
 import Capable.Terms.Vars
 import Capable.Terms.Exprs
 
+import public Capable.Types.Protocol.Projection
 import public Capable.Types.Protocol.Subset
 import public Capable.Types.Protocol.Merge
 
@@ -219,7 +220,11 @@ data Session : (rs    : List Ty.Role)
   where
     Sesh : {args   : List Ty.Base}
         -> {return : Ty.Base}
-        -> (body   : Expr    roles rs types ss stack args Nil whom l return)
-                  -> Session rs types ss stack    (SESH ctzt whom l args return)
+        -> {local_synth : _}
+        -> (idx  : IsVar ss (S ctzt global))
+        -> (prfProj  : Protocol.Project Nil roles whom global local_proj)
+        -> (prfSub   : Subset local_synth local_proj)
+        -> (body   : Expr    roles rs types ss stack args Nil whom local_synth return)
+                  -> Session rs types ss stack    (SESH ctzt whom local_proj args return)
 
 -- [ EOF ]

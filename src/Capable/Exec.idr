@@ -650,7 +650,7 @@ mutual
         -> (func  : Session roles types globals stack_g (SESH ctzt w l as ret))
         -> (vals  : DList Ty.Base (Value store) as)
                  -> Capable (Session.Exprs.Result rz store ret)
-    eval env_g heap cs (Sesh body) vals
+    eval env_g heap cs (Sesh _ _ _ body) vals
       = Session.Exprs.eval (MkEnv env_g vals) heap Nil cs body
 
 

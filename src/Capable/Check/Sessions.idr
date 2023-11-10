@@ -959,7 +959,7 @@ synth env (Sesh fc prin ref p prf as ret scope)
 
        (tyRET ** ret) <- synth (delta env) ret
 
-       (tyLocal ** tm) <- embedAt fc
+       (tyLocal ** prfProj) <- embedAt fc
                                   (ProjectionError) -- @TODO Error messages.
                                   (Projection.Closed.project principle tyGlobal)
 
@@ -972,7 +972,7 @@ synth env (Sesh fc prin ref p prf as ret scope)
                                     tyLocal
                                     scope
 
-       pure (SESH rh principle tyLocal' tyARGS tyRET ** Sesh tm)
+       pure (SESH rh principle tyLocal tyARGS tyRET ** Sesh prot prfProj prf tm)
 
 namespace Raw
   export
