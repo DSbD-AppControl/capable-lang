@@ -3,7 +3,7 @@ package capable
 version = 2023.11.14
 -- authors =
 -- maintainers =
-license = LICENSE
+license = "LICENSE"
 -- brief =
 -- readme = README.org
 -- homepage =
