@@ -1,0 +1,31 @@
+role Voter
+role Server
+
+
+union token        { token        : String }
+union auth         { ok           : Unit
+                   ; reject       : Unit 
+                   }
+union vote         { yes          : Unit
+                   ; no           : Unit 
+                   }
+union result       { result       : Int }
+
+
+protocol SimpleVoting = 
+    Voter ==> Server [token] { token (String). 
+    Server ==> Voter [auth]{
+        ok (Unit) . Voter ==> Server [vote] { yes (Unit). Server ==> Voter [result] {result (Int) . end }
+                                              | no  (Unit). Server ==> Voter [result] {result (Int) . end }
+                                              } 
+
+    |   reject (Unit) . end
+    }
+    }
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

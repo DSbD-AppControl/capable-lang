@@ -1,0 +1,21 @@
+role A
+role B
+
+union num   { num : Int  }
+
+union cmd   { fibonacci  : Int
+            ; stop    : Unit
+            }
+
+union ack   {ack : String }
+
+protocol Fibonacci  
+    = rec (Loop) . A ==> B [cmd] { fibonacci(Int) . B ==> A [num] { num(Int) . call (Loop)}
+                                 | stop(Unit) . end }
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

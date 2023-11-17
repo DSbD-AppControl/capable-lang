@@ -1,0 +1,24 @@
+Running Test
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+Capable> # Finished Parsing
+# Finished Type Checking
+Capable> rec(Loop).   (sendTo[K] {d(Bool).Call (Loop)})
+Capable> rec(Loop).
+  (recvFrom[DP] { d(Bool)
+                  .(recvFrom[KP] {k(Bool).(sendTo[C] {c(Bool).Call (Loop)})}) })
+Capable> rec(Loop).   (sendTo[K] {k(Bool).Call (Loop)})
+Capable> rec(Loop).   (recvFrom[K] {c(Bool).Call (Loop)})
+Capable> My First Program
+()
+Capable> Exiting the REPL
