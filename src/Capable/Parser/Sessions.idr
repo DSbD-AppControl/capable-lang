@@ -36,6 +36,7 @@ end : Rule (AST EXPRSESH)
 end
   = do s <- Toolkit.location
        keyword "end"
+       commit
        symbol "("
        v <- Exprs.expr
        symbol ")"
@@ -46,6 +47,7 @@ crash : Rule (AST EXPRSESH)
 crash
   = do s <- Toolkit.location
        keyword "crash"
+       commit
        symbol "("
        v <- Exprs.expr
        symbol ")"
@@ -89,6 +91,7 @@ mutual
           case'
             = do s <- Toolkit.location
                  keyword "when"
+                 commit
                  tag <- Capable.ref
                  symbol "("
                  n <- Capable.ref
@@ -118,6 +121,7 @@ mutual
           offer
             = do s <- Toolkit.location
                  keyword "when"
+                 commit
                  tag <- Capable.ref
                  symbol "("
                  n <- Capable.ref
@@ -134,6 +138,7 @@ mutual
   call
     = do s <- Toolkit.location
          keyword "call"
+         commit
          symbol "("
          l <- ref
          symbol ")"

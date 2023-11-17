@@ -15,13 +15,18 @@ union auth { auth : Bool }
 
 protocol oauthSimple
   = Service ==> Client [logon]
-    { login(Unit)
-      .Client ==> Auth    [pword] { pword(String)
-      .Auth   ==> Service [auth]  { auth(Bool)
-      .end}}
-    | cancel(Unit)
-      . Client ==> Auth [quit] { quit(Unit).end}
+    { login(Unit) . Client ==> Auth    [pword] { pword(String)
+                  . Auth   ==> Service [auth]  { auth(Bool)
+                  . end
+      }}
+
+    | cancel(Unit) . Client ==> Auth [quit] { quit(Unit).end }
     }
+
+session auth <oauthSimple as Client> (pwd : String) -> Bool
+{
+  ?asa
+}
 
 main (args : [String])
 {

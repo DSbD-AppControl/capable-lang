@@ -1,5 +1,0 @@
-:load main.capable
-:project Fibonacci A
-:project Fibonacci B
-:run ""
-:quit

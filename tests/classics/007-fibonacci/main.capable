@@ -1,32 +1,28 @@
+func printLn(msg : String) -> Unit { print(msg);  print(toString('\n')) }
+
 role A
 role B
 
 union num   { num : Int  }
 
 union cmd   { fibonacci  : Int
-            ; stop    : Unit
+            ; stop       : Unit
             }
 
-union ack   {ack : String }
+union ack { ack : String }
 
-protocol Fibonacci  
-    = rec (Loop) . A ==> B [cmd] { fibonacci(Int) . B ==> A [num] { num(Int) . call (Loop)}
-                                 | stop(Unit) . end }
-
+protocol Fibonacci
+    = rec(x)
+    . A ==> B [cmd] { fibonacci(Int) . B ==> A [num] { num(Int).call(x) }
+                    | stop(Unit) . end
+                    }
 
 union MaybeAnswer { crashed : Unit; result : Int }
 
-
-func printLn(msg : String) -> Unit
-{
-  print(msg);
-  print(toString('\n'))
-}
-
-
 session fibA <Fibonacci as A>(fib : Int) -> MaybeAnswer
 {
-  loop (X){
+  loop (x){
+
     print("Sending message: ");
     printLn(toString(fib));
 
@@ -37,7 +33,7 @@ session fibA <Fibonacci as A>(fib : Int) -> MaybeAnswer
         {
         print("Received message: ");
         printLn(toString(i));
-        call(X)
+        call(x)
         }
     } catch { printLn("Crashing on Recv"); crash(crashed(unit)) }
   }
@@ -45,19 +41,18 @@ session fibA <Fibonacci as A>(fib : Int) -> MaybeAnswer
 
 session fibB <Fibonacci as B>() -> Bool
 {
-  loop (X){
-    recv[cmd] A {
-        when fibonacci(i)
-        {
-        send[num] A fibonacci(1) catch { printLn("Crashing on Send"); crash(crashed(unit)) }
+  loop(x)
+  {
+    recv[cmd] A
+    {
+      when fibonacci(i)
+      {
+        send[num] A num(1) catch { printLn("Crashing on Send"); crash(false) }
         printLn(toString(1));
-        call(X)
-        }
-        when stop(unit) 
-        {
-          end(true)
-        }
-    } catch { printLn("Crashing on Recv"); crash(crashed(unit)) }
+        call(x)
+      }
+      when stop(u) { end(true) }
+    } catch { printLn("Crashing on Recv"); crash(false) }
   }
 }
 

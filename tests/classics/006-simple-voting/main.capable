@@ -1,0 +1,85 @@
+role Voter
+role Server
+
+
+union token        { token        : String }
+
+union auth         { ok           : Unit
+                   ; reject       : Unit
+                   }
+union vote         { yes          : Unit
+                   ; no           : Unit
+                   }
+union result       { result       : Int }
+
+protocol SimpleVoting
+  = Voter  ==> Server [token] { token(String)
+  . Server ==> Voter  [auth]
+      { ok(Unit) . Voter ==> Server [vote]
+                   { yes(Unit) . Server ==> Voter [result] { result(Int) . end }
+                   | no(Unit)  . Server ==> Voter [result] { result(Int) . end }
+                   }
+      | reject(Unit) . end
+}}
+
+session voter <SimpleVoting as Voter> (pwd : String) -> Bool
+{
+  send[token] Server token(pwd) catch { crash(false) }
+  recv [auth] Server
+  {
+    when ok(u)
+    {
+      send[vote] Server yes(unit) catch { crash(false) }
+      recv[result] Server
+      {
+        when result(i)
+        {
+           end(true)
+        }
+      } catch { crash(false) }
+    }
+    when reject(u)
+    {
+      end(true)
+    }
+  } catch { crash(false) }
+}
+
+
+session vote_server <SimpleVoting as Server> () -> Bool
+{
+  recv[token] Voter
+  {
+    when token(str)
+    {
+      if eq(str,"password")
+      {
+        send [auth] Voter ok(unit) catch { crash(false) }
+        recv [vote] Voter
+        {
+          when yes(u)
+          {
+            send [result] Voter result(1) catch { crash(false) }
+            end(true)
+          }
+          when no(u)
+          {
+            send [result] Voter result(0) catch { crash(false) }
+            end(true)
+          }
+        } catch { crash(false) }
+      } else {
+        send [auth] Voter reject(unit) catch { crash(false) }
+        end(true)
+      }
+    }
+  } catch { crash(false) }
+}
+
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

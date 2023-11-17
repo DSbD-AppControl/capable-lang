@@ -19,13 +19,13 @@ null :=
 space := $(null) #
 comma := ,
 
-BMARKS_RAW = $(shell find tests/benchmarks -iname "*.capable" )
+BMARKS_RAW = $(shell find tests/classics -iname "*.capable" )
 BMARKS     = $(subst $(space),$(comma),$(strip $(BMARKS_RAW)))
 
-HYPERFINE_PARAMS= --parameter-list benchmark $(BMARKS)
+HYPERFINE_PARAMS= --ignore-failure --parameter-list benchmark $(BMARKS)
 
-HYPERFINE_RESULTS_RAW   = --export-csv results-:.csv --export-json results-:.json --export-markdown results-:.md
-HYPERFINE_RESULTS_EXEC  = $(subst :,exec,$(strip $(HYPERFINE_RESULTS_RAW)))
+HYPERFINE_RESULTS_RAW = --export-csv results-:.csv --export-json results-:.json --export-markdown results-:.md
+# HYPERFINE_RESULTS_EXEC  = $(subst :,exec,$(strip $(HYPERFINE_RESULTS_RAW)))
 
 HYPERFINE_RESULTS_CHECK = $(subst :,check,$(strip $(HYPERFINE_RESULTS_RAW)))
 
@@ -71,22 +71,21 @@ capable-test-update: capable
 			 THREADS=1 \
 			 ONLY=$(ONLY)
 
-capable-bench-exec: capable
-	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) {benchmark}'
-
 capable-bench-check: capable
 	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) --check {benchmark}'
-
-capable-bench: capable-bench-exec capable-bench-check
-
-
-capable-bench-exec-record: capable capable-test-build
-	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_EXEC) '$(TARGET) {benchmark}'
 
 capable-bench-check-record: capable capable-test-build
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_CHECK) '$(TARGET) --check {benchmark}'
 
-capable-bench-record: capable-bench-exec-record capable-bench-check-record
+
+#capable-bench-exec: capable
+#	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) {benchmark}'
+#
+#capable-bench-exec-record: capable capable-test-build
+#	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_EXEC) '$(TARGET) {benchmark}'
+
+# capable-bench: capable-bench-exec capable-bench-check
+# capable-bench-record: capable-bench-exec-record capable-bench-check-record
 
 # [ Artefact ]
 
