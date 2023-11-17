@@ -1,0 +1,41 @@
+role Client
+role Agency
+role Service
+
+union request { request : String  }
+union price   { price  : Int }
+
+union cmd   { accept      : Unit
+            ; reject      : Unit
+            ; repeat      : Unit
+            }
+
+union address { address : String }
+
+union date    { date    : String }
+
+union quit    { quit    : Unit }
+
+union ping    { ping    : Unit }
+
+
+
+protocol TravelAgency =   
+    rec(Loop). Client ==> Agency [request] {request(String)
+             . Agency ==> Client [price] {price(Int) 
+             . Client ==> Agency [cmd]{
+                accept (Unit) . Client ==> Service [address] {address(String) 
+                              . Service ==> Client [date] {date(String). end}}  
+
+             |  reject (Unit) . Client ==> Service [quit] {quit(Unit) . end}  
+
+             |  repeat (Unit) . Client ==> Service [ping] {ping(Unit) . call(Loop)}  
+                
+                             }}} 
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

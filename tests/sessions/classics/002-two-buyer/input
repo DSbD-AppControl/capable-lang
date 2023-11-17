@@ -1,0 +1,6 @@
+:load attempt_one.capable
+:project twoBuyer Alice
+:project twoBuyer Bob
+:project twoBuyer Seller
+:run ""
+:quit

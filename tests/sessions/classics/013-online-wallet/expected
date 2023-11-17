@@ -1,0 +1,27 @@
+Running Test
+# Finished Parsing
+Type Checking Error
+main.capable:20:0-0:
+Protocol is not well-formed:
+	Authenticator causes:
+Error generating Offer:
+	Error projecting branch login:
+
+	Error generating Select:
+	Error projecting branch success:
+
+	Error generating Select:
+	Error projecting branch msg:
+
+	Error merging:
+	Error projecting branch account:
+
+	Error generating Rec:
+	Error merging:
+	Branches differ 
+	{pay(struct {payee : String; amount : Int}).Call (Loop) | quit(Unit).End}
+
+
+
+
+

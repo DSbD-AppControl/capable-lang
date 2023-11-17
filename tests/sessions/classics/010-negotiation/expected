@@ -1,0 +1,44 @@
+Running Test
+# Finished Parsing
+Type Checking Error
+main.capable:20:0-0:
+Protocol is not well-formed:
+	A causes:
+Error generating Offer:
+	Error projecting branch request:
+
+	Error generating Select:
+	Error projecting branch connect:
+
+	Error generating Offer:
+	Error projecting branch available:
+
+	Error generating Select:
+	Error projecting branch ack:
+
+	Error generating Select:
+	Error projecting branch terms:
+
+	Error generating Rec:
+	Error generating Offer:
+	Error projecting branch proposition:
+
+	Error generating Select:
+	Error projecting branch accept:
+
+	Error generating Select:
+	Error projecting branch start:
+
+	Error generating Rec:
+	Error merging:
+	Branches differ 
+	{abort(Unit).End | command(String).Call (Y)}
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,67 @@
+role A
+role B
+
+union num   { num : Int  }
+
+union cmd   { fibonacci  : Int
+            ; stop    : Unit
+            }
+
+union ack   {ack : String }
+
+protocol Fibonacci  
+    = rec (Loop) . A ==> B [cmd] { fibonacci(Int) . B ==> A [num] { num(Int) . call (Loop)}
+                                 | stop(Unit) . end }
+
+
+union MaybeAnswer { crashed : Unit; result : Int }
+
+
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+
+session fibA <Fibonacci as A>(fib : Int) -> MaybeAnswer
+{
+  loop (X){
+    print("Sending message: ");
+    printLn(toString(fib));
+
+    send[cmd] B fibonacci(fib) catch { printLn("Crashing on Send"); crash(crashed(unit)) }
+
+    recv[num] B {
+        when num(i)
+        {
+        print("Received message: ");
+        printLn(toString(i));
+        call(X)
+        }
+    } catch { printLn("Crashing on Recv"); crash(crashed(unit)) }
+  }
+}
+
+session fibB <Fibonacci as B>() -> Bool
+{
+  loop (X){
+    recv[cmd] A {
+        when fibonacci(i)
+        {
+        send[num] A fibonacci(1) catch { printLn("Crashing on Send"); crash(crashed(unit)) }
+        printLn(toString(1));
+        call(X)
+        }
+        when stop(unit) 
+        {
+          end(true)
+        }
+    } catch { printLn("Crashing on Recv"); crash(crashed(unit)) }
+  }
+}
+
+main (args : [String])
+{
+  printLn("My First Session-Typed Interaction")
+}

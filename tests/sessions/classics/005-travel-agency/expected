@@ -1,0 +1,22 @@
+Running Test
+# Finished Parsing
+Type Checking Error
+main.capable:22:0-0:
+Protocol is not well-formed:
+	Service causes:
+Error generating Rec:
+	Error merging:
+	Error projecting branch request:
+
+	Error merging:
+	Error projecting branch price:
+
+	Error merging:
+	Branches differ 
+	{ accept(Unit)
+  .(recvFrom[Client] {address(String).(sendTo[Client] {date(String).End})})
+| reject(Unit).(recvFrom[Client] {quit(Unit).End})
+| repeat(Unit).(recvFrom[Client] {ping(Unit).Call (Loop)}) }
+
+
+

@@ -1,0 +1,32 @@
+role B
+role S
+
+
+union cmd     { product : String
+              ; accept  : String
+              ; quit    : Unit  
+              }
+union price   {price    : Int}
+union quote   {quote    : String}
+union payment {payment  : Int}
+
+
+protocol BuyerSeller = 
+    rec(X) . B ==> S [cmd] {
+        product (String) . S ==> B [price] {price (Int) . S ==> B [quote] { quote (String) . call (X) }}
+    |   accept  (String) . B ==> S [payment] {payment (Int) . call (X)}
+    |   quit    (Unit)   . end
+    }
+
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+
+main (args : [String])
+{
+  printLn("My First Program")
+
+}

@@ -1,0 +1,37 @@
+role C  -- Client
+role I  -- Instrument the client wants to use
+role A  -- Agent that negotiates with the client the conditions of use of the instrument
+
+
+union request { request : Unit }
+union connect { connect : Unit }
+union available { available : Unit }
+union ack { ack : Unit }
+
+union terms { terms : String }
+union proposition { proposition : String }
+union reply { accept : Unit ; counter : String}
+union start { start : Unit }
+union result { result : String }
+union wait { wait : Unit }
+
+union cmd { abort : Unit ; command : String }
+
+
+protocol neogiation = 
+    C ==> A [request] {request (Unit) . A ==> I [connect] {connect(Unit) .
+    I ==> A [available] { available (Unit) . A ==> C [ack] {ack(Unit). 
+    A ==> C [terms] {terms (String).
+    rec (X) . C ==> A [proposition] {proposition (String). 
+              A ==> C [reply] { accept  (Unit) . A ==> I [start] {start (Unit).
+                                rec(Y) . C ==> I [cmd] { abort (Unit). end
+                                                       | command (String) . I ==> C [result] {result (String) . call (Y)}} }
+                              | counter (String). A ==> I [wait] {wait  (Unit) . call (X)}
+              }}}}}}}
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

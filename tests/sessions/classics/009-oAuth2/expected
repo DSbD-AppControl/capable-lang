@@ -1,0 +1,12 @@
+Running Test
+# Finished Parsing
+Type Checking Error
+main.capable:15:0-0:
+Protocol is not well-formed:
+	Auth causes:
+Error merging:
+	Branches differ 
+	{ login(Unit)
+  .(recvFrom[Client] {pword(String).(sendTo[Service] {auth(Bool).End})})
+| cancel(Unit).(recvFrom[Client] {quit(Unit).End}) }
+

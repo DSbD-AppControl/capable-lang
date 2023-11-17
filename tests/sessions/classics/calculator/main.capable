@@ -1,0 +1,35 @@
+-- ## Distributed calculator example
+
+
+role S
+role C
+role A
+
+union num1 {num1 : Int}
+union num2 {num2 : Int}
+
+union cmd { sum  : Unit
+              ; diff : Unit
+              }
+
+union result  {result : Int}
+
+
+
+protocol calculator
+  = C ==> S [num1]    { num1(Int).
+    C ==> S [num2]    { num2(Int).
+    C ==> S [cmd]     { 
+      sum(Unit). S ==> C [result] { result(Int)
+      .C ==> A [result]{ result(Int).end }}
+    | diff(Unit). S ==> C [result] { result(Int)
+      .C ==> A [result]{ result(Int).end }}
+    }}}
+
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}
