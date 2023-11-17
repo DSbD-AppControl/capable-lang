@@ -1,6 +1,0 @@
-:load main.capable
-:project circuitBreaker API
-:project circuitBreaker Controller
-:project circuitBreaker Storage
-:project circuitBreaker User
-:q
