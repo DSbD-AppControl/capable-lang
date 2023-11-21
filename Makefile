@@ -25,6 +25,7 @@ BMARKS     = $(subst $(space),$(comma),$(strip $(BMARKS_RAW)))
 HYPERFINE_PARAMS= --ignore-failure --parameter-list benchmark $(BMARKS)
 
 HYPERFINE_RESULTS_RAW = --export-csv results-:.csv --export-json results-:.json --export-markdown results-:.md
+
 # HYPERFINE_RESULTS_EXEC  = $(subst :,exec,$(strip $(HYPERFINE_RESULTS_RAW)))
 
 HYPERFINE_RESULTS_CHECK = $(subst :,check,$(strip $(HYPERFINE_RESULTS_RAW)))
