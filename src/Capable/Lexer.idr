@@ -89,7 +89,7 @@ namespace Capable
              -- Session
              , "rec", "end"
              , "call"
-             , "run", "with"
+             , "run", "with", "aux"
              ]
 
 

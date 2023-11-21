@@ -30,7 +30,7 @@ showToks = map (\(MkBounded t _ _) => show t)
 codegen : Target -> Prog p -> Capable ()
 codegen RUST et
   = do putStrLn "```"
-       putStrLn (Rust.codegen et)
+       putStrLn "Not Yet Realised" -- (Rust.codegen et)
        putStrLn "```"
 
 getFile : Opts -> Capable String

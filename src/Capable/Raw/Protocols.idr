@@ -47,6 +47,11 @@ mutual
       End : (fc : FileContext)
                -> Protocol (Branch STOP fc Nil)
 
+      Aux : (fc : FileContext)
+          -> (r   : Ref)
+          -> (prf : AsRef s fc r)
+               -> Protocol (Branch (AUXP s) fc Nil)
+
       Call : (fc  : FileContext)
           -> (r   : Ref)
           -> (prf : AsRef s fc r)
@@ -85,6 +90,9 @@ mutual
                  -> Protocol r
   toProtocol (Branch STOP fc Nil)
     = End fc
+
+  toProtocol (Branch (AUXP str) fc Nil)
+    = Aux fc (MkRef fc str) R
 
   toProtocol (Branch (CALLP str) fc Nil)
     = Call fc (MkRef fc str) R

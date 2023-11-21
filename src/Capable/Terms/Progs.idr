@@ -36,7 +36,7 @@ data Prog : (roles   : List Ty.Role)
          -> (type    :      Ty.Base)
                   -> Type
   where
-    DefProt : (prot  : Global Nil types roles g)
+    DefProt : (prot  : Global Nil types roles globals g)
            -> (prf   : WellFormed roles g)
            -> (scope : Prog roles types (S ctxt g::globals) stack UNIT)
                     -> Prog roles types            globals  stack UNIT

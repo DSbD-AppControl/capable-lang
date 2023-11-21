@@ -183,14 +183,14 @@ check env state (Def fc PROT n val scope)
              (\_ => throwAt fc (AlreadyBound (MkRef fc n )))
              (!(getProtocol state n))
 
-       (g ** tm) <- synth (delta env) (rho env) val
+       (g ** tm) <- synth (delta env) (rho env) (sigma env) val
 
        prf <- embedAt fc (\((r' ** r),err) => WellFormed "\{reflect (rho env) r} causes:\n\{show err}")
                          (wellFormed g)
 
        let env = Sigma.extend env n (S (rho env) g)
 
-       let state = {protocols $= insert n (P (rho env) g tm)} state
+       let state = {protocols $= insert n (P (rho env) g)} state
 
        R scopeTm state _ scope <- check env state scope
 

@@ -572,6 +572,11 @@ function (Func fc prf as ret scope)
   ]
 
 protocol : Protocol p -> Doc KIND
+
+protocol (Aux fc r prf)
+  = uno "aux" (ref r)
+
+
 protocol (End fc)
   = keyword "end"
 

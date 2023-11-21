@@ -21,7 +21,7 @@ data Protocol : Type where
   P : {rs : _}
    -> (Context Ty.Role rs)
    -> (type : Global Nil rs)
-   -> (Global.Global Nil ts rs type)
+--   -> (Global.Global Nil ts rs type)
    -> Protocol
 
 public export

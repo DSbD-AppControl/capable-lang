@@ -1,0 +1,6 @@
+:load main.capable
+:project pingpongR Alice
+:project pingpongR Bob
+:project pingpong  Alice
+:project pingpong  Bob
+:q

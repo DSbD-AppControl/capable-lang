@@ -22,7 +22,7 @@ import Capable.Check.Roles
 import Capable.Types.Protocol.Global.HasRoles
 
 import Capable.Terms
-import Capable.Terms.Protocols.Projection
+--import Capable.Terms.Protocols.Projection
 import Capable.Exec
 
 import Capable.REPL.Commands
@@ -76,7 +76,7 @@ process o st (Run args)
           (prog st)
 
 process _ st (Project str str1)
-  = do Just (P r g p) <- getProtocol st str
+  = do Just (P r g) <- getProtocol st str
          | Nothing => do putStrLn "Not a bound protocol: \{str}"
                          pure st
 
@@ -86,14 +86,14 @@ process _ st (Project str str1)
                        pure st
 
          Just (_ ** rs) =>
-           case Projection.Closed.project rs p of
+           case Projection.Closed.project rs g of
              No msg _ => do putStrLn "Error projecting on: \{str1}."
                             printLn msg
                             pure st
-             Yes (R l _) => do putStrLn (toString r l)
-                               pure st
+             Yes (l ** _) => do putStrLn (toString r l)
+                                pure st
 process _ st (Roles str)
-  = do Just (P r g p) <- getProtocol st str
+  = do Just (P r g) <- getProtocol st str
          | Nothing => do putStrLn "Not a bound protocol: \{str}"
                          pure st
 

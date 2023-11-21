@@ -31,7 +31,7 @@ import        Capable.Terms.Types
 import        Capable.Terms.Protocols
 
 %default total
-
+{-
 namespace Protocl
 
   public export
@@ -89,7 +89,7 @@ mutual
   project : {rs,ks,w : _}
          -> {global : Global ks rs}
          -> (whom : DeBruijn.Role rs w)
-         -> (type : Global ks ts rs global)
+         -> (type : Global ks ts rs ss global)
                  -> DecInfo Projection.Error
                             (Result ks rs whom global)
   project whom End
@@ -106,7 +106,7 @@ mutual
       = No (Rec msg)
            (\(R (Rec _ a) (Rec this)) => no (R a this))
 
-  project whom (Choice s r noSR t p bs) with (involved whom s r noSR)
+  project whom (Choice s r noSR t p bs) with (involved whom s r)
 
     -- [ NOTE ] Sender
     project whom (Choice s r noSR t p (b::bs)) | (Sends prfS) with (Branches.project s (b::bs))
@@ -148,7 +148,7 @@ mutual
            -> {ks : _}
            -> (whom : DeBruijn.Role rs w)
            -> {g  : Branch Global ks    rs (s,t)}
-           -> (type : Global.Branch ks ts rs g)
+           -> (type : Global.Branch ks ts rs ss g)
                    -> DecInfo Projection.Error
                               (Branch.Result ks rs whom g)
     project whom (B s type choice) with (project whom choice)
@@ -167,7 +167,7 @@ mutual
            -> {w : _}
            -> (  whom : DeBruijn.Role rs w)
            -> {bs   : Global.Branches ks rs lts}
-           -> (type   : Branches ks ts rs bs)
+           -> (type   : Branches ks ts rs ss bs)
                      -> DecInfo Projection.Error
                                 (Branches.Result ks rs whom bs)
     project whom []
@@ -194,7 +194,7 @@ mutual
         -> {b    : Branch Global   ks rs (l,s)}
         -> {bs   : Global.Branches ks rs ls}
         -> (  whom : DeBruijn.Role rs w)
-        -> (  gs   : Branches ks ts rs (b::bs))
+        -> (  gs   : Branches ks ts rs ss (b::bs))
                   -> DecInfo Projection.Error
                              (Same.Result ks rs whom (b::bs))
     same whom gs with (Branches.project whom gs)
@@ -218,11 +218,11 @@ namespace Closed
   project : {w : _} -> {rs : List Role}
          -> {global : Global Nil rs}
          -> (whom : DeBruijn.Role rs w)
-         -> (type : Global Nil ts rs global)
+         -> (type : Global Nil ts rs ss global)
                  -> DecInfo Projection.Error
                             (Result Nil rs whom global)
   project
     = Projection.project
 
-
+-}
 -- [ EOF ]

@@ -42,6 +42,7 @@ import Capable.Raw.Progs
 
 %default total
 
+{-
 binderValue : String -> Doc ()
 binderValue
   = pretty
@@ -915,5 +916,5 @@ codegen : (ast : Prog p) -> String
 codegen
   = (show . everything)
 
-
+-}
 -- [ EOF ]

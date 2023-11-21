@@ -1,0 +1,9 @@
+echo "Running Test"
+
+$1 main.capable --repl < input
+
+# Local Variables:
+# mode: sh
+# End:
+
+# -- [ EOF ]

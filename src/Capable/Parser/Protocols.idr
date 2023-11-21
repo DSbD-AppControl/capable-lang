@@ -41,6 +41,17 @@ call
        e <- Toolkit.location
        pure (null (CALLP (get r)) (newFC s e))
 
+aux : Rule PROT
+aux
+  = do s <- Toolkit.location
+       keyword "aux"
+       symbol "("
+       r <- Capable.ref
+       symbol ")"
+       e <- Toolkit.location
+       pure (null (AUXP (get r)) (newFC s e))
+
+
 mutual
   rec : Rule PROT
   rec
@@ -86,6 +97,7 @@ mutual
   protocol
      =  end
     <|> call
+    <|> aux
     <|> choice
     <|> rec
 
