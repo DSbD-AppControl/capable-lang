@@ -35,6 +35,7 @@ import Capable.Types.Protocol.Selection
 
 %default total
 
+%hide Prefix.Subset
 
 namespace Branch
   public export
