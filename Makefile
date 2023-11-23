@@ -15,28 +15,9 @@ TARGET    = ${TARGETDIR}/${PROJECT}
 
 SOURCES = $(shell find src -iname "*.idr")
 
-null :=
-space := $(null) #
-comma := ,
-
-BMARKS_RAW = $(shell find tests/classics -iname "*.capable" )
-BMARKS     = $(subst $(space),$(comma),$(strip $(BMARKS_RAW)))
-
-HYPERFINE_PARAMS= --ignore-failure --parameter-list benchmark $(BMARKS)
-
-HYPERFINE_RESULTS_RAW = --export-csv results-:.csv --export-json results-:.json --export-markdown results-:.md
-
-# HYPERFINE_RESULTS_EXEC  = $(subst :,exec,$(strip $(HYPERFINE_RESULTS_RAW)))
-
-HYPERFINE_RESULTS_CHECK = $(subst :,check,$(strip $(HYPERFINE_RESULTS_RAW)))
-
 # [ Core Project Definition ]
 
 .PHONY: capable-doc capable-srcs
-.PHONY: capable-test-build capable-test-run capable-test-run-re capable-test-update
-.PHONY: capable-bench capable-bench-record
-.PHONY: capable-bench-check capable-bench-check-record
-.PHONY: capable-bench-exec capable-bench-exec-record
 
 $(TARGET): $(strip $(SOURCES))
 	$(IDRIS2) --build ${PROJECT}.ipkg
@@ -48,6 +29,10 @@ capable-doc:
 
 capable-srcs:
 	bash annotate.sh
+
+# -- [ Testing ]
+
+.PHONY: capable-test-build capable-test-run capable-test-run-re capable-test-update
 
 capable-test-build:
 	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
@@ -72,21 +57,19 @@ capable-test-update: capable
 			 THREADS=1 \
 			 ONLY=$(ONLY)
 
+# [ Benchmarks ]
+
+.PHONY: capable-bench-check capable-bench-check-record
+
+HYPERFINE_PARAMS := --ignore-failure
+
 capable-bench-check: capable
-	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) --check {benchmark}'
+	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_benchmarks,check,tests/classics)
 
 capable-bench-check-record: capable capable-test-build
-	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_CHECK) '$(TARGET) --check {benchmark}'
+	mkdir -p results/
+	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,check) $(call fn_build_benchmarks,check,tests/classics)
 
-
-#capable-bench-exec: capable
-#	$(HYPERFINE) $(HYPERFINE_PARAMS) '$(TARGET) {benchmark}'
-#
-#capable-bench-exec-record: capable capable-test-build
-#	$(HYPERFINE) $(HYPERFINE_PARAMS) $(HYPERFINE_RESULTS_EXEC) '$(TARGET) {benchmark}'
-
-# capable-bench: capable-bench-exec capable-bench-check
-# capable-bench-record: capable-bench-exec-record capable-bench-check-record
 
 # [ Artefact ]
 
@@ -108,7 +91,7 @@ artefact: archive capable capable-doc capable-srcs capable-vm
 	cp artefact/output/capable.box artefact-staging/
 	cp artefact/README.md artefact-staging/
 
-# [ Housekeeping ]
+# -- [ Housekeeping ]
 
 .PHONY: archive
 
@@ -129,9 +112,39 @@ clobber: clean
 	$(IDRIS2) --clean ${PROJECT}.ipkg
 	${MAKE} -C tests clobber
 	find . -iname "*~" -delete
-	${RM} -rf build/
-	${RM} -rf artefact-staging/
+	${RM} -rf build/ artefact-staging/ results/
 	${RM} capable.tar.gz
-	${RM} results.json results.md
+
+
+# -- [ Utilities]
+
+# Need these for pattern substitution.
+null :=
+space := $(null) #
+
+# Find all the benchmarks in a given directory.
+#
+# Args: directory of interest.
+fn_find_bmarks = $(shell find $(1) -iname "*.capable" )
+
+# Generate the Hyperfine alias for the command.
+#
+# Args: file to be used.
+fn_gen_name = $(lastword $(subst -,$(space),$(shell dirname $(1) | xargs basename )))
+
+# Generate the command to be executed.
+#
+# Args: file to be used.
+fn_build_cmd = -n $(call fn_gen_name,$(b)) '$(TARGET) --$(1) $(b)'
+
+# Find and generate the named commands.
+#
+# Args: (1) check or exec; (2) the directory to lookin
+fn_build_benchmarks = $(foreach b,$(call fn_find_bmarks,$(2)),$(call fn_build_cmd,$(1)))
+
+# Generate the locations to record timing information for each run
+#
+# Args: (1) check or exec;
+fn_build_records = --export-csv results/$(1).csv --export-json results/$(1).json --export-markdown results/$(1).md
 
 # -- [ EOF ]
