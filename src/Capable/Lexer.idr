@@ -42,7 +42,7 @@ namespace Capable
   public export
   Keywords : List String
   Keywords = [ -- Keywords
-               "func", "main", "type", "role", "session", "protocol"
+               "func", "main", "type", "newtype", "role", "session", "protocol"
 
              , "as"
 
