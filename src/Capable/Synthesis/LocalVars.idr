@@ -1,4 +1,4 @@
-module Capable.Synthesis.Terms
+module Capable.Synthesis.LocalVars
 
 import Decidable.Equality
 

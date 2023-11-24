@@ -26,7 +26,7 @@ import Capable.Terms.Pretty
 --import Capable.Terms.Protocols.Projection
 import Capable.Exec
 import Capable.Synthesis.Sessions
-import Capable.Synthesis.Terms
+import Capable.Synthesis.LocalVars
 import Capable.REPL.Commands
 import Capable.REPL.Load
 import Capable.State
