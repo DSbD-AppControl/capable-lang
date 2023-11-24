@@ -54,13 +54,15 @@ pipeline opts
               putStrLn $ unlines (showToks toks)
               exitSuccess
 
+       let st : State = { file := Just fname } defaultState
+
        ast <- fromFile fname
        when (showAST opts)
          $ printLn ast
 
        putStrLn "# Finished Parsing"
 
-       (tm, st, (_ ** et)) <- check ast
+       (tm, st, (_ ** et)) <- check st ast
        putStrLn "# Finished Type Checking"
 
        when (justCheck opts)

@@ -31,14 +31,14 @@ data Func = F (Func rs ts ss s type)
 public export
 data Hole
   = HExpr FileContext (Env rs ts ss gs ls) String Base
-  | HSesh FileContext (Env rs ts ss gs ls) (Context Role roles) (Context Kind ks) (Local.Local ks roles) String
+  | HSesh FileContext (Env rs ts ss gs ls) (Context Role roles) (Context Kind ks) (Local.Local ks roles) (DeBruijn.Role roles p) String
 
 export
 prettyHole : Hole -> Capable ()
 prettyHole (HExpr fc x str y)
   = printLn fc >>
     showHole (lambda x) str y
-prettyHole (HSesh fc e er ec ty str)
+prettyHole (HSesh fc e er ec ty _ str)
   = printLn fc >>
     showHoleSession
       (lambda e)

@@ -26,9 +26,9 @@ load st fname
   = tryCatch (do ast <- fromFile fname
                  putStrLn "# Finished Parsing"
 
-                 (_,st,et) <- check ast
+                 (_,st,et) <- check st ast
                  putStrLn "# Finished Type Checking"
-
+                 prettyHoles st
                  pure st
               )
               (\err => do printLn err; pure st)

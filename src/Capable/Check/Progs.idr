@@ -218,9 +218,10 @@ check env state (Def fc SESH n val scope)
 
 namespace Raw
   export
-  check : (r : PROG) -> Capable (Program,State,DPair PROG Prog)
-  check p
-    = do R p s p' ast <- check empty defaultState (toProg p)
+  check : State -> (r : PROG) -> Capable (Program,State,DPair PROG Prog)
+  check st p
+    = do let s : State = { file := file st } defaultState
+         R p s p' ast <- check empty s (toProg p)
          let s = setProgram p s
          pure (p,s,(p'**ast))
 

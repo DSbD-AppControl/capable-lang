@@ -28,15 +28,15 @@ import Capable.Core
 
 import Capable.Types
 
-import Capable.Raw.AST
-import Capable.Raw.Role
-import Capable.Raw.Protocols
-import Capable.Raw.Types
-import Capable.Raw.DTypes
-import Capable.Raw.Exprs
-import Capable.Raw.Funcs
-import Capable.Raw.Sessions
-import Capable.Raw.Progs
+import public Capable.Raw.AST
+import public Capable.Raw.Role
+import public Capable.Raw.Protocols
+import public Capable.Raw.Types
+import public Capable.Raw.DTypes
+import public Capable.Raw.Exprs
+import public Capable.Raw.Funcs
+import public Capable.Raw.Sessions
+import public Capable.Raw.Progs
 
 %default total
 
@@ -630,7 +630,6 @@ protocol (Choice fc s r t prf (B1 (x::xs)))
           ::
           branches y
 
-
 sexpr : Sessions.Expr b -> Doc KIND
 sexpr (Seq fc x y)
   = vcat
@@ -881,10 +880,18 @@ prog (Def fc SESH s val scope)
 program : (p : PROG) -> Doc KIND
 program p = prog (toProg p)
 
-export
-toString : (p : PROG) -> String
-toString
-  = (show . reAnnotate (const ()) . program)
+namespace Session
+  export
+  toString : (p : Sessions.Expr e) -> String
+  toString
+    = (show . reAnnotate (const ()) . sexpr)
+
+namespace Program
+  export
+  toString : (p : PROG) -> String
+  toString
+    = (show . reAnnotate (const ()) . program)
+
 
 
 renderAs : (Char -> String)

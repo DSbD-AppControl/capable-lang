@@ -1,6 +1,4 @@
 Running Test
-# Finished Parsing
-# Finished Type Checking
    ______                  __    __
   / ____/___ _____  ____ _/ /_  / /__
  / /   / __ `/ __ \/ __ `/ __ \/ / _ \
@@ -13,6 +11,8 @@ Running Test
 
   Type :? for help.
 
+# Finished Parsing
+# Finished Type Checking
 Capable> # Finished Parsing
 # Finished Type Checking
 Capable> rec(x).

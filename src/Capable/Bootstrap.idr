@@ -6,7 +6,7 @@ import Data.Nat
 import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 import Toolkit.Data.DList.All
-
+import public Toolkit.Data.Location
 import public Toolkit.DeBruijn.Context
 import public Toolkit.DeBruijn.Context.Item
 import public Toolkit.DeBruijn.Renaming
@@ -18,6 +18,10 @@ import public Toolkit.Data.List.AtIndex
 import Text.PrettyPrint.Prettyprinter
 
 %default total
+
+public export
+emptyRef : String -> Ref
+emptyRef = MkRef emptyFC
 
 export
 vect : List (Doc ann) -> Doc ann
@@ -34,6 +38,19 @@ reflect [] (V _ (There later)) impossible
 
 reflect ((I name x) :: rest) (V 0 prf) = name
 reflect (elem :: rest) (V (S k) (There later)) = reflect rest (V k later)
+
+export
+reflectByValue : DecEq a
+              => (ctxt  : Context a rs)
+              -> (loc   : a)
+                       -> Maybe String
+reflectByValue [] _
+  = Nothing
+reflectByValue (I name value_x :: rest) value_y
+  = case decEq value_x value_y of
+      No _ => reflectByValue rest value_y
+      Yes Refl => Just name
+
 
 export
 rebuild : (a -> String)

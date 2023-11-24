@@ -512,7 +512,7 @@ namespace Utils
                      -> Type
     where
       Empty : AsVect Nil Nil
-      Next : AsVect xs ys
+      Next : {xs : _} -> AsVect xs ys
           -> AsVect (x::xs) (x::ys)
 
   export

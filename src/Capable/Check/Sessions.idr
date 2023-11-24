@@ -911,7 +911,7 @@ namespace Expr
 
     -- [ NOTE ] Holes are only checkable terms as they inherit the checked types.
     check st env er ec princ ret type (Hole ref prf)
-        = do let st = addHole st (get ref) (HSesh (span ref) env er ec type (get ref))
+        = do let st = addHole st (get ref) (HSesh (span ref) env er ec type princ (get ref))
 
              -- Uck.
              prf <- embedAt (span ref)

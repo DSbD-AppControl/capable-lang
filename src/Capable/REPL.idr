@@ -26,6 +26,7 @@ import Capable.Terms.Pretty
 --import Capable.Terms.Protocols.Projection
 import Capable.Exec
 import Capable.Synthesis
+import Capable.Synthesis.Sessions
 import Capable.REPL.Commands
 import Capable.REPL.Load
 import Capable.State
@@ -61,11 +62,21 @@ process o st Quit
 process o st (Load str)
   = load st str
 
+process o st ReLoad
+  = maybe (do putStrLn "Need to load a program first before reloading."
+              pure st)
+          (load st)
+          (file st)
+
 process o st (AskTy str)
   = todo st
 
 process o st Help
   = do putStrLn Commands.helpStr
+       pure st
+
+process o st Holes
+  = do prettyHoles st
        pure st
 
 process o st (Run args)
@@ -122,6 +133,18 @@ process _ st (Roles str)
        traverse_ (\o => putStrLn $ (reflect r o)) os
        pure st
 
+process _ st (Solve str)
+  = do Just h <- getHole st str
+         | Nothing => do putStrLn "Not a hole: \{str}"
+                         pure st
+
+       case h of
+         HExpr fc e s ty => do putStrLn "Expression search is Not yet supported"
+                               pure st
+         HSesh fc e r k ty w _
+           => do (raw ** raw_tm) <- synthesis e r k w str ty
+                 putStrLn (toString raw_tm)
+                 pure st
 covering
 capableREPL : State
            -> (process : State -> Cmd -> Capable State)
@@ -137,15 +160,16 @@ capableREPL st p
 covering
 runREPL : Opts -> State -> Capable ()
 runREPL o st
-  = do putStrLn banner
-       putStrLn "\n  Type :? for help.\n"
-       capableREPL st (process o)
+  = capableREPL st (process o)
 
 export covering
 repl : Opts -> Capable ()
 repl o
-  = maybe (runREPL o defaultState)
-          (\fname => runREPL o !(process o defaultState (Load fname)))
-          (file o)
+  = do putStrLn banner
+       putStrLn "\n  Type :? for help.\n"
+       maybe (runREPL o defaultState)
+             (\fname => do let st : State = {file := Just fname} defaultState
+                           runREPL o !(process o st (Load fname)))
+             (file o)
 
 -- [ EOF ]

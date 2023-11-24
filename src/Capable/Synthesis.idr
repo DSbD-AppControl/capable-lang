@@ -18,6 +18,8 @@ import public Capable.Bootstrap
 import Capable.Types
 
 import Capable.Terms
+import Capable.State
+
 
 mutual
 

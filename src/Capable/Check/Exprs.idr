@@ -798,9 +798,10 @@ mutual
          -> (syn      : Expr e)
                      -> Capable (State, Expr rs ds ss gs ls ty)
     check st fc env ty syn
-      = do (st, (ty' ** expr)) <- Exprs.synth st env syn
-           Refl <- compare fc ty ty'
-           pure (st, expr)
+      = do tm <- reflect (delta env) ty
+           (st, T _ tm) <- check st fc env tm syn
+           pure (st, tm)
+
 
 namespace Raw
   export
