@@ -880,6 +880,12 @@ prog (Def fc SESH s val scope)
 program : (p : PROG) -> Doc KIND
 program p = prog (toProg p)
 
+namespace Expr
+  export
+  toString : (p : Exprs.Expr e) -> String
+  toString
+    = (show . reAnnotate (const ()) . expr)
+
 namespace Session
   export
   toString : (p : Sessions.Expr e) -> String

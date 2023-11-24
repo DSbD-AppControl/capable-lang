@@ -18,7 +18,6 @@ data Cmd = Quit
          | Run String
          | AskTy String
          | Project String String
-         | GenSExpr String String
          | Roles String
          | Solve String
          | ReLoad
@@ -60,11 +59,6 @@ commands
                  (options [REQ "protocol", REQ "role"])
                  Project
                  "Project a global type."
-
-    , newCommand (names ["genSesh"])
-                 (options [REQ "protocol", REQ "role"])
-                 GenSExpr
-                 "Project a global type and generate the local session."
 
     , newCommand (names ["solve", "s"])
                  (options [REQ "hole"])

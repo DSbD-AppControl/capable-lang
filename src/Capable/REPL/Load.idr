@@ -24,6 +24,7 @@ export
 load : State -> String -> Capable State
 load st fname
   = tryCatch (do ast <- fromFile fname
+                 let st : State = { file := Just fname } st
                  putStrLn "# Finished Parsing"
 
                  (_,st,et) <- check st ast

@@ -25,8 +25,8 @@ import Capable.Terms
 import Capable.Terms.Pretty
 --import Capable.Terms.Protocols.Projection
 import Capable.Exec
-import Capable.Synthesis
 import Capable.Synthesis.Sessions
+import Capable.Synthesis.Terms
 import Capable.REPL.Commands
 import Capable.REPL.Load
 import Capable.State
@@ -87,25 +87,6 @@ process o st (Run args)
                     pure st)
           (prog st)
 
-process _ st (GenSExpr str str1)
-  = do Just (P r g) <- getProtocol st str
-         | Nothing => do putStrLn "Not a bound protocol: \{str}"
-                         pure st
-
-
-       case roleCheck' r str1 of
-         Nothing => do putStrLn "Not a bound role: \{str1}"
-                       pure st
-
-         Just (_ ** rs) =>
-           case Projection.Closed.project rs g of
-             No msg _ => do putStrLn "Error projecting on: \{str1}."
-                            printLn msg
-                            pure st
-             Yes (l ** _) => do let tm = sessionStubb r rs l
-                                putStrLn $ (show $ session Nil r tm)
-                                pure st
-
 process _ st (Project pname rawr)
   = do Just (P r g) <- getProtocol st pname
          | Nothing => do putStrLn "Not a bound protocol: \{pname}"
@@ -139,7 +120,8 @@ process _ st (Solve str)
                          pure st
 
        case h of
-         HExpr fc e s ty => do putStrLn "Expression search is Not yet supported"
+         HExpr fc e s ty => do R tm <- synthesis e ty s
+                               putStrLn (toString tm)
                                pure st
          HSesh fc e r k ty w _
            => do (raw ** raw_tm) <- synthesis e r k w str ty

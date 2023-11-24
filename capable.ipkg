@@ -127,7 +127,8 @@ modules = Toolkit.TheRug
 --        , Capable.Terms.Protocols.Projection
         , Capable.Terms.Types
         , Capable.Terms.Pretty
-        , Capable.Synthesis
+        , Capable.Synthesis.Terms
+        , Capable.Synthesis.Sessions
         , Capable.REPL.Load
         , Capable.REPL.Commands
         , Capable.Exec

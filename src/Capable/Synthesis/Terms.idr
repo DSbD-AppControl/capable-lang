@@ -20,23 +20,27 @@ import Capable.Types
 import Capable.State
 import Capable.Check.Common
 
-import Capable.Raw.Expr
+import Capable.Core
+
+import Capable.Raw.AST
+import Capable.Raw.Role
+import Capable.Raw.Types
+import Capable.Raw.Exprs
+import Capable.Terms
+
+public export
+data Result : Type where
+  R : {e : _} -> Expr e -> Result
 
 export
-synthesis : (env : Env rs ts ps gs ls)
-         -> (ty  : Base)
-                -> Expr rs ts ps gs ls ty
-synthesis env CHAR = ?synthesis_rhs_0
-synthesis env STR = ?synthesis_rhs_1
-synthesis env INT = ?synthesis_rhs_2
-synthesis env BOOL = ?synthesis_rhs_3
-synthesis env UNIT = ?synthesis_rhs_4
-synthesis env (HANDLE x) = ?synthesis_rhs_5
-synthesis env (REF x) = ?synthesis_rhs_6
-synthesis env (VECTOR x k) = ?synthesis_rhs_7
-synthesis env (LIST x) = ?synthesis_rhs_8
-synthesis env (TUPLE fields) = ?synthesis_rhs_9
-synthesis env (RECORD fields) = ?synthesis_rhs_10
-synthesis env (UNION fields) = ?synthesis_rhs_11
+synthesis : (env  : Env rs ts ps gs ls)
+         -> (type : Base)
+         -> (str  : String)
+                 -> Capable Result
+synthesis env type str
+  = pure $ maybe (R (Raw.Exprs.Hole (emptyRef str) R))
+                 (\n => R (Raw.Exprs.Var (emptyRef n) R))
+                 (reflectByValue (lambda env) type)
+
 
 -- [ EOF ]
