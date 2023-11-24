@@ -76,7 +76,7 @@ process o st (Run args)
                     pure st)
           (prog st)
 
-process _ st (Project str str1)
+process _ st (GenSExpr str str1)
   = do Just (P r g) <- getProtocol st str
          | Nothing => do putStrLn "Not a bound protocol: \{str}"
                          pure st
@@ -95,7 +95,7 @@ process _ st (Project str str1)
                                 putStrLn $ (show $ session Nil r tm)
                                 pure st
 
-process _ st (GenSExpr pname rawr)
+process _ st (Project pname rawr)
   = do Just (P r g) <- getProtocol st pname
          | Nothing => do putStrLn "Not a bound protocol: \{pname}"
                          pure st

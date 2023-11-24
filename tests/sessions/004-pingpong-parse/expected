@@ -35,7 +35,8 @@ Not enough information to type term.
 
 mainhole.capable
 # Finished Parsing
-Showing first available hole.
+# Finished Type Checking
+mainhole.capable:62:3-0:
 ## Typing Context
 i : Int
 ## Recursion Vars
@@ -45,6 +46,7 @@ i : Int
 + Client
 ---
 aa : (recvFrom[Server] {msg(Int).End})
+
 mainun.capable
 # Finished Parsing
 Type Checking Error

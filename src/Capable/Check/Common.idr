@@ -259,14 +259,14 @@ prettyCtxt ((I name x) :: rest) acc
   = prettyCtxt rest (acc ++ [(hsep [pretty name, colon, pretty x])])
 
 export
-showHoleExit : Context Ty.Base ls
-            -> String
-            -> Base
-            -> Capable e
-showHoleExit g n t
+showHole : Context Ty.Base ls
+        -> String
+        -> Base
+        -> Capable ()
+showHole g n t
     = do let pc = prettyHole g n t
          putStrLn $ (show pc)
-         exitSuccess
+
 
     where
       prettyHole : Context Ty.Base ls
@@ -275,8 +275,7 @@ showHoleExit g n t
                 -> Doc ()
       prettyHole x str y
         = vsep
-        $ [ pretty "Showing first available hole."
-          , vcat
+        $ [ vcat
            $ prettyCtxt x Nil
            ++ [ pretty "---"
               , group
@@ -288,21 +287,20 @@ showHoleExit g n t
           ]
 
 export
-showHoleSessionExit : Context Ty.Base ls
-                   -> Context Ty.Role rs
-                   -> Context Protocol.Kind ks
-                   -> Local.Local ks rs
-                   -> String
-                   -> Capable e
-showHoleSessionExit g r k t x
-  = do putStrLn (show prettyThings)
-       exitSuccess
+showHoleSession : Context Ty.Base ls
+               -> Context Ty.Role rs
+               -> Context Protocol.Kind ks
+               -> Local.Local ks rs
+               -> String
+               -> Capable ()
+showHoleSession g r k t x
+  = putStrLn (show prettyThings)
+
 
   where prettyThings : Doc ()
         prettyThings
           = vsep
-            [ pretty "Showing first available hole."
-            , pretty "## Typing Context"
+            [ pretty "## Typing Context"
             , vcat
               $ prettyCtxt g Nil
             , pretty "## Recursion Vars"

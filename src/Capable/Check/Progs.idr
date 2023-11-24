@@ -72,8 +72,8 @@ check : {p     : PROG}
      -> (prog  : Prog p)
               -> Capable (Result rs ds ss gs)
 check env state (Main fc mo)
-  = do (FUNC [LIST STR] UNIT ** m) <- synth env mo
-         | (ty ** _)
+  = do (state, (FUNC [LIST STR] UNIT ** m)) <- synth state env mo
+         | (st, (ty ** _))
              => throwAt fc (MismatchM ty (FUNC [LIST STR] UNIT))
 
        pure (R (Main m)
@@ -146,8 +146,8 @@ check env state (Def fc TYPE n val {rest} scope)
 check env state (Def fc FUNC n val scope)
   = do exists fc (gamma env) n
 
-       (FUNC as r ** tm) <- synth env val
-         | (ty ** _) => throwAt fc (FunctionExpected ty)
+       (state, (FUNC as r ** tm)) <- synth state env val
+         | (st, (ty ** _)) => throwAt fc (FunctionExpected ty)
 
        let env   = Gamma.extend env n (FUNC as r)
        let state = { funcs $= insert n (F tm)} state
@@ -203,8 +203,8 @@ check env state (Def fc PROT n val scope)
 check env state (Def fc SESH n val scope)
   = do exists fc (gamma env) n
 
-       (SESH ctzt whom l as r ** tm) <- synth env val
-         | (ty ** _) => throwAt fc (SessionExpected ty)
+       (state, (SESH ctzt whom l as r ** tm)) <- synth state env val
+         | (st, (ty ** _)) => throwAt fc (SessionExpected ty)
 
        let env = Gamma.extend env n (SESH ctzt whom l as r)
        -- @ TODO add sessions to state

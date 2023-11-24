@@ -55,7 +55,7 @@ commands
                  "Project a global type."
     , newCommand (names ["genSesh"])
                  (options [REQ "protocol", REQ "role"])
-                 Project
+                 GenSExpr
                  "Project a global type and generate the local session."
 
     , newCommand (names ["roles"])

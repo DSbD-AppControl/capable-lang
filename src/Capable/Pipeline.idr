@@ -60,11 +60,12 @@ pipeline opts
 
        putStrLn "# Finished Parsing"
 
-       (tm, _, (_ ** et)) <- check ast
+       (tm, st, (_ ** et)) <- check ast
        putStrLn "# Finished Type Checking"
 
        when (justCheck opts)
-         $ exitSuccess
+         $ do prettyHoles st
+              exitSuccess
 
        when (pprint opts)
          $ do putStrLn "```"
@@ -77,6 +78,10 @@ pipeline opts
               putStrLn (toLaTeX ast)
               putStrLn "```"
               exitSuccess
+
+       True <- hasNoHoles st
+         | False =>  do prettyHoles st
+                        exitSuccess
 
        case codegen opts of
          Just t => codegen t et
