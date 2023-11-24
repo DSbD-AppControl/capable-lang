@@ -70,7 +70,6 @@ capable-bench-check-record: capable capable-test-build
 	mkdir -p results/
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,check) $(call fn_build_benchmarks,check,tests/classics)
 
-
 # [ Artefact ]
 
 .PHONY: artefact
