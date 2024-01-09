@@ -31,7 +31,8 @@
                        "end"
                        "struct"
                        "union"
-                       "tuple"))
+                       "tuple"
+                       "newtype"))
 
 (defvar capable-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role" "PIPE"))
 
@@ -142,21 +143,23 @@
   (run-hooks 'capable-mode-hook)
 )
 
+
 ;; Customisation options
 
 (defgroup capable nil
   "A language."
   :group 'languages)
 
-;;(defcustom capable-command "capable"
-;;  "The path to the Capable command to run."
-;;  :type 'string
-;;  :group 'capable)
+(defcustom capable-command "capable"
+  "The path to the Capable command to run."
+  :type 'string
+  :group 'capable)
 
 (defcustom capable-options nil
   "Command line options to pass to capable."
   :type 'string
   :group 'capable)
+
 
 (provide 'capable)
 ;;; capable.el ends here

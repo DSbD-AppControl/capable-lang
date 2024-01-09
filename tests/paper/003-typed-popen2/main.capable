@@ -1,4 +1,4 @@
-union MaybeInt { nout : Unit; this : Int}
+union MaybeInt { nout : Unit; this : String}
 
 func printLn(msg : String) -> Unit
 {
@@ -9,18 +9,17 @@ func printLn(msg : String) -> Unit
 role Client
 role Server
 
-union msg { msg : Int }
+newtype msg(String)
 
 protocol Echo
-  = Client ==> Server [msg] { msg(Int)
-  . Server ==> Client [msg] { msg(Int)
+  = Client ==> Server | msg(String)
+  . Server ==> Client | msg(String)
   . end
-  }}
 
-session echoClient <Echo as Client>(i : Int) -> MaybeInt
+session echoClient <Echo as Client>(i : String) -> MaybeInt
 {
   print("Sending message: ");
-  printLn(toString(i));
+  printLn(i);
 
   send[msg] Server msg(i) catch { printLn("Crashing on Send"); crash(nout(unit)) }
 
@@ -28,7 +27,7 @@ session echoClient <Echo as Client>(i : Int) -> MaybeInt
     when msg(i)
     {
        print("Received message: ");
-       printLn(toString(i));
+       printLn(i);
 
        end(this(i))
     }
@@ -38,13 +37,13 @@ session echoClient <Echo as Client>(i : Int) -> MaybeInt
 -- ### Program Entry Point
 main (args : [String])
 {
-  local val = 2;
+  local val = "Hello World";
 
   -- Run a session, assigning processes to roles.
   match run echoClient(val) with [Server as "python3 pingping.py" ]
   {
-    when nout(i) { printLn("Oops we crashed!") }
-    when this(i) { print("We echoed this, successfully: "); printLn(toString(i)) }
+    when nout(val) { printLn("Oops we crashed!") }
+    when this(val) { print("We echoed this, successfully: "); printLn(toString(val)) }
   }
 }
 

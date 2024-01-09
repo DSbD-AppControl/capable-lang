@@ -1,12 +1,7 @@
 echo "Running Test"
 
-$1 main.capable
-
+$1 --checkOnly main.capable
 $1 --latex main.capable
-
-$1 --check main2.capable
-
-$1 --latex main2.capable
 
 # Local Variables:
 # mode: sh
