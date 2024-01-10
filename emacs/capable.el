@@ -49,10 +49,12 @@
                         "add" "sub" "mul" "div"
                         "size" "strCons" "slice"
                         "ord" "chr" "string" "toString"
-                        "the"
+                        "the", "length"
                         "print"
                         "open" "read" "write" "popen" "popen2"
-                        "set" "get" "mut" "project" "replace"
+                        "setV" "getV"
+                        "setL" "getL"
+                        "mut" "project" "replace"
                         ))
 
 (defvar capable-constants '("true" "false" "unit"))

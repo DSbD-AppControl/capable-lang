@@ -370,6 +370,9 @@ expr (OpUn fc (OPEN x y) o)
   = group
   $ (handlekind x <+> tupled [prettyMode y, expr o])
 
+expr (Length fc xs)
+  = uno "length" (expr xs)
+
 expr (MkList fc _ xs)
   = list (args xs)
   where args : Vect.Quantifiers.All.All Exprs.Expr as -> List (Doc KIND)

@@ -61,13 +61,16 @@ namespace Capable
              , "unit", "tuple", "tag"
 
              -- Operations
-             , "get", "set", "mut", "project", "replace"
+             , "getL", "getV"
+             , "setL" , "setV"
+             , "mut", "project", "replace"
              , "and", "not", "or"
              , "lt", "lte", "eq", "gt", "gte"
 
              , "add", "sub", "mul", "div"
 
              , "size", "strCons", "slice"
+             , "length"
 
              , "ord", "chr", "string", "toString"
 

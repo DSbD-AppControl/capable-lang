@@ -1,7 +1,11 @@
 echo "Running Test"
 
 $1 main.capable
-$1 --latex main.capable
+
+$1 main.capable a
+
+$1 main.capable a b
+
 
 # Local Variables:
 # mode: sh

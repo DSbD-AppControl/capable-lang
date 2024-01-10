@@ -1,20 +1,10 @@
 Running Test
 # Finished Parsing
 # Finished Type Checking
-main.capable:47:3-0:
-## Typing Context
-i : String
-## Recursion Vars
-
-## Roles
-+ Server
-+ Client
----
-rhs : rec(x).
-        (sendTo[Server] { msg(union {Msg : String})
-                          .(recvFrom[Server] {Msg(String).Call (x)})
-        | quit(union {Msg : String}).(recvFrom[Server] {Msg(String).End}) })
-
+# Executing
+```
+We echoed successfully.```
+# Finished
 # Finished Parsing
 # Finished Type Checking
 ```
@@ -39,11 +29,11 @@ rhs : rec(x).
   . \CapableKeyword{end}
   \}
   \}
-\CapableKeyword{session} \CapableBound{echoClient1} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{String}) -> \CapableType{Bool}
+\CapableKeyword{session} \CapableBound{echoClientProgram} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{String}) -> \CapableType{Bool}
 \{
   \CapableKeyword{loop}(\CapableBound{x})
   \{
-    \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{msg}(\CapableFunction{\CapableBound{Msg}}(\CapableBound{i}))
+    \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{quit}(\CapableFunction{\CapableBound{Msg}}(\CapableBound{i}))
       \CapableKeyword{catch}
       \{
         \CapableKeyword{crash}(\CapableValue{False})
@@ -52,7 +42,7 @@ rhs : rec(x).
     \{
       \CapableKeyword{when} Msg (Msg\_value)
       \{
-        \CapableKeyword{call}(\CapableBound{x})
+        \CapableKeyword{end}(\CapableValue{True})
       \}
     \} \CapableKeyword{catch}
     \{
@@ -60,14 +50,55 @@ rhs : rec(x).
     \}
   \}
 \}
-\CapableKeyword{session} \CapableBound{echoClient} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{String}) -> \CapableType{Bool}
+\CapableKeyword{session} \CapableBound{echoClientProcess} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{c} : \CapableType{\CapableBound{cmd}}) -> \CapableType{Bool}
 \{
-  \CapableHole{?\CapableBound{rhs}}
+  \CapableKeyword{loop}(\CapableBound{x})
+  \{
+    \CapableKeyword{match} \CapableBound{c}
+    \{
+      \CapableKeyword{when} msg(m)
+      \{
+        \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{msg}(\CapableBound{m})
+          \CapableKeyword{catch}
+          \{
+            \CapableKeyword{crash}(\CapableValue{False})
+          \}
+        \CapableKeyword{recv} [\CapableType{\CapableBound{Msg}}] \CapableRole{Server}
+        \{
+          \CapableKeyword{when} Msg (Msg\_value)
+          \{
+            \CapableKeyword{call}(\CapableBound{x})
+          \}
+        \} \CapableKeyword{catch}
+        \{
+          \CapableKeyword{crash}(\CapableValue{False})
+        \}
+      \}
+      \CapableKeyword{when} quit(m)
+      \{
+        \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{quit}(\CapableBound{m})
+          \CapableKeyword{catch}
+          \{
+            \CapableKeyword{crash}(\CapableValue{False})
+          \}
+        \CapableKeyword{recv} [\CapableType{\CapableBound{Msg}}] \CapableRole{Server}
+        \{
+          \CapableKeyword{when} Msg (Msg\_value)
+          \{
+            \CapableKeyword{end}(\CapableValue{True})
+          \}
+        \} \CapableKeyword{catch}
+        \{
+          \CapableKeyword{crash}(\CapableValue{False})
+        \}
+      \}
+    \}
+  \}
 \}
 \CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
 \{
   \CapableKeyword{local} \CapableBound{val} = \CapableValue{"Hello World"} ;
-  \CapableKeyword{if} \CapableKeyword{run} \CapableFunction{\CapableBound{echoClient}}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]
+  \CapableKeyword{if} \CapableKeyword{run} \CapableFunction{\CapableBound{echoClientProgram}}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]
   \{
     \CapableKeyword{print}(\CapableValue{"We echoed successfully."})
   \} \CapableKeyword{else}

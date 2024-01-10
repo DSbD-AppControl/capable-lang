@@ -328,6 +328,13 @@ mutual
 
   -- ## Lists
 
+  synth st env (Length fc x)
+    = do (st, (ty ** val)) <- synth st env x
+         case ty of
+           (LIST ty) => pure (st, (INT ** CountL val))
+           (VECTOR type n) => pure (st, (INT ** CountV val))
+           type => throwAt fc (IterableExpected type)
+
   synth st env (MkList fc Empty [])
     = unknown fc
 

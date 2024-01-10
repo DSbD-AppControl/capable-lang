@@ -209,7 +209,7 @@ namespace Shape
     LIST  : Shape EXPR n (replicate n EXPR)
     GETL : BIN Shape EXPR EXPR EXPR
     SETL : TRI Shape EXPR EXPR EXPR EXPR
-
+    LENGTH : UN Shape EXPR EXPR
     -- #### Arrays
     VECT  : Shape EXPR n (replicate n EXPR)
 
@@ -367,6 +367,7 @@ namespace Shape
     show (CONST p v)     = "(CONST \{show p})"
     show (BBIN x)        = "(BBIN \{show x})"
     show (BUN x)         = "(BUN \{show x})"
+    show (LENGTH)        = "LENGTH"
     show LIST             = "LIST"
     show GETL             = "GETL"
     show SETL            = "SETL"
