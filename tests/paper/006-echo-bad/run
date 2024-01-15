@@ -1,6 +1,6 @@
 echo "Running Test"
 
-timeout 1 $1 main.capable
+$1 --check main.capable
 
 $1 --latex main.capable
 
