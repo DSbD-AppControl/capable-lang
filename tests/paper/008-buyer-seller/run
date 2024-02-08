@@ -1,0 +1,15 @@
+echo "Running Test"
+
+$1 main.capable
+$1 --latex main.capable
+
+$1 failing.capable
+$1 failing2.capable
+
+$1 weird.capable
+$1 --latex weird.capable
+# Local Variables:
+# mode: sh
+# End:
+
+# -- [ EOF ]

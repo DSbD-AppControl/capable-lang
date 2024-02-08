@@ -1,0 +1,58 @@
+{- Modelling and Realisation of the Two Buyer Protocol.
+
+The protocol allows two people (Alice, Bob) to neogiate buying a book from the 'Seller'.
+
+Informally:
+
+Alice -> Seller | title : String
+Seller -> { Alice, Bob } | quote : Int
+
+Alice -> Bob    | offer : Int (quote / 2)
+Bob   -> Seller | { quit . end
+                  , acceptance . Bob -> Seller | address
+                               . Seller -> Bob | date
+                               , end }
+
+-}
+
+
+role Bob
+role Seller
+role Alice
+
+newtype title(String)
+newtype quote(Int)
+newtype address(String)
+newtype date(String)
+
+union commands { quit   : Unit
+               ; accept : Unit
+               }
+
+union response { dateOK  : Unit
+               ; dateNew : Unit
+               }
+
+-- Fails because we use plain merge.
+protocol twoBuyerRec
+  = Alice  ==> Seller | title(String)
+  . Seller ==> Alice  | quote(Int)
+  . Seller ==> Bob    | quote(Int)
+  . Alice  ==> Bob    | quote(Int)
+  . Bob    ==> Seller [ commands ] { quit(Unit).end
+                                   | accept(Unit)
+                                       . Bob ==> Seller | address(String)
+                                       . rec(X)
+                                         . Seller ==> Bob    | date(String)
+                                         . Bob    ==> Seller [ response ]
+                                           { dateOK(Unit)  . end
+                                           | dateNew(Unit) . call(X)
+                                           }
+                                     }
+
+main (args : [String])
+{
+  unit
+}
+
+-- [ EOF ]

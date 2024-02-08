@@ -1,0 +1,160 @@
+Running Test
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+```
+# Finished
+# Finished Parsing
+# Finished Type Checking
+```
+\begin{Verbatim}
+\CapableKeyword{role} \CapableRole{Bob}
+\CapableKeyword{role} \CapableRole{Seller}
+\CapableKeyword{role} \CapableRole{Alice}
+\CapableKeyword{union} \CapableBound{title} \{\CapableBound{title} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{quote} \{\CapableBound{quote} : \CapableType{Int}\}
+\CapableKeyword{union} \CapableBound{address} \{\CapableBound{address} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{date} \{\CapableBound{date} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{commands} \{\CapableBound{quit} : \CapableType{Unit}; \CapableBound{accept} : \CapableType{Unit}\}
+\CapableKeyword{union} \CapableBound{MaybeDate} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{cancelled} : \CapableType{Unit}; \CapableBound{mdate} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{MaybeSale} \{\CapableBound{noutS} : \CapableType{Unit}; \CapableBound{sale} : \CapableType{String}; \CapableBound{cancelledS} : \CapableType{Unit}\}
+\CapableKeyword{protocol} \CapableProtocol{twoBuyer}
+  = \CapableRole{Alice} ==> \CapableRole{Seller} [\CapableType{\CapableBound{title}}] \{ \CapableBound{title}(\CapableType{String})
+  . \CapableRole{Seller} ==> \CapableRole{Alice} [\CapableType{\CapableBound{quote}}] \{ \CapableBound{quote}(\CapableType{Int})
+  . \CapableRole{Seller} ==> \CapableRole{Bob} [\CapableType{\CapableBound{quote}}] \{ \CapableBound{quote}(\CapableType{Int})
+  . \CapableRole{Alice} ==> \CapableRole{Bob} [\CapableType{\CapableBound{quote}}] \{ \CapableBound{quote}(\CapableType{Int})
+  . \CapableRole{Bob} ==> \CapableRole{Seller} [\CapableType{\CapableBound{commands}}] \{ \CapableBound{quit}(\CapableType{Unit})
+  . \CapableKeyword{end}
+  | \CapableBound{accept}(\CapableType{Unit})
+  . \CapableRole{Bob} ==> \CapableRole{Seller} [\CapableType{\CapableBound{address}}] \{ \CapableBound{address}(\CapableType{String})
+  . \CapableRole{Seller} ==> \CapableRole{Bob} [\CapableType{\CapableBound{date}}] \{ \CapableBound{date}(\CapableType{String})
+  . \CapableKeyword{end}
+  \}
+  \}
+  \}
+  \}
+  \}
+  \}
+  \}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableValue{unit}
+\}
+\end{Verbatim}
+
+```
+# Finished Parsing
+Type Checking Error
+failing.capable:36:0-0:
+Protocol is not well-formed:
+	Alice causes:
+Error generating Select:
+	Error projecting branch title:
+
+	Error generating Offer:
+	Error projecting branch quote:
+
+	Error merging:
+	Error projecting branch quote:
+
+	Error generating Select:
+	Error projecting branch quote:
+
+	Error merging:
+	Error projecting branch accept:
+
+	Error merging:
+	Error projecting branch address:
+
+	Error generating Rec:
+	Error merging:
+	Error projecting branch date:
+
+	Error merging:
+	Branches differ 
+	{dateOK(Unit).End | dateNew(Unit).Call (X)}
+
+
+
+
+
+
+
+
+# Finished Parsing
+Type Checking Error
+failing2.capable:40:0-0:
+Protocol is not well-formed:
+	Bob causes:
+Error merging:
+	Error projecting branch title:
+
+	Error merging:
+	Error projecting branch quote:
+
+	Error generating Offer:
+	Error projecting branch quote:
+
+	Error generating Select:
+	Error projecting branch quote:
+
+	Error merging:
+	Branches differ 
+	{ quit(Unit).(recvFrom[Alice] {terminate(Unit).End})
+| accept(Unit).(recvFrom[Alice] {date(String).End}) }
+
+
+
+
+
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+```
+# Finished
+# Finished Parsing
+# Finished Type Checking
+```
+\begin{Verbatim}
+\CapableKeyword{role} \CapableRole{Bob}
+\CapableKeyword{role} \CapableRole{Seller}
+\CapableKeyword{role} \CapableRole{Alice}
+\CapableKeyword{union} \CapableBound{title} \{\CapableBound{title} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{quote} \{\CapableBound{quote} : \CapableType{Int}\}
+\CapableKeyword{union} \CapableBound{address} \{\CapableBound{address} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{date} \{\CapableBound{date} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{commands} \{\CapableBound{quit} : \CapableType{Unit}; \CapableBound{accept} : \CapableType{Unit}\}
+\CapableKeyword{union} \CapableBound{MaybeDate} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{cancelled} : \CapableType{Unit}; \CapableBound{mdate} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{MaybeSale} \{\CapableBound{noutS} : \CapableType{Unit}; \CapableBound{sale} : \CapableType{String}; \CapableBound{cancelledS} : \CapableType{Unit}\}
+\CapableKeyword{union} \CapableBound{negotiate} \{\CapableBound{bye} : \CapableType{Unit}; \CapableBound{okay} : \CapableType{Unit}\}
+\CapableKeyword{protocol} \CapableProtocol{twoBuyer}
+  = \CapableRole{Alice} ==> \CapableRole{Seller} [\CapableType{\CapableBound{title}}] \{ \CapableBound{title}(\CapableType{String})
+  . \CapableRole{Seller} ==> \CapableRole{Alice} [\CapableType{\CapableBound{quote}}] \{ \CapableBound{quote}(\CapableType{Int})
+  . \CapableRole{Alice} ==> \CapableRole{Bob} [\CapableType{\CapableBound{quote}}] \{ \CapableBound{quote}(\CapableType{Int})
+  . \CapableRole{Bob} ==> \CapableRole{Alice} [\CapableType{\CapableBound{quote}}] \{ \CapableBound{quote}(\CapableType{Int})
+  . \CapableRole{Alice} ==> \CapableRole{Seller} [\CapableType{\CapableBound{commands}}] \{ \CapableBound{quit}(\CapableType{Unit})
+  . \CapableRole{Alice} ==> \CapableRole{Bob} [\CapableType{\CapableBound{date}}] \{ \CapableBound{date}(\CapableType{String})
+  . \CapableKeyword{end}
+  \}
+  | \CapableBound{accept}(\CapableType{Unit})
+  . \CapableRole{Alice} ==> \CapableRole{Seller} [\CapableType{\CapableBound{address}}] \{ \CapableBound{address}(\CapableType{String})
+  . \CapableRole{Seller} ==> \CapableRole{Alice} [\CapableType{\CapableBound{date}}] \{ \CapableBound{date}(\CapableType{String})
+  . \CapableRole{Alice} ==> \CapableRole{Bob} [\CapableType{\CapableBound{date}}] \{ \CapableBound{date}(\CapableType{String})
+  . \CapableKeyword{end}
+  \}
+  \}
+  \}
+  \}
+  \}
+  \}
+  \}
+  \}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableValue{unit}
+\}
+\end{Verbatim}
+
+```
