@@ -2,30 +2,30 @@ Running Test
 # Finished Parsing
 Type Checking Error
 main.capable:23:2-0:
-Error comparing local types: 
+Error comparing local types:
 
- (recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})}) 
+ (recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})})
 
- and 
+and
 
- (sendTo[Client] {msg(Int).End}) 
+ (sendTo[Client] {msg(Int).End})
 
- because:
+because:
 
-Types are wildly different.
+ Types are wildly different.
 
 # Finished Parsing
 Type Checking Error
 main.capable:23:2-0:
-Error comparing local types: 
+Error comparing local types:
 
- (recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})}) 
+ (recvFrom[Client] {msg(Int).(sendTo[Client] {msg(Int).End})})
 
- and 
+and
 
- (sendTo[Client] {msg(Int).End}) 
+ (sendTo[Client] {msg(Int).End})
 
- because:
+because:
 
-Types are wildly different.
+ Types are wildly different.
 

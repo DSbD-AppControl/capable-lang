@@ -4,9 +4,7 @@ Running Test
 main.capable:25:3-0:
 ## Typing Context
 i : Int
-## Recursion Vars
-
-## Roles
+##  Roles
 + Server
 + Client
 ---

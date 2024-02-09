@@ -297,17 +297,32 @@ showHoleSession g r k t x
   = putStrLn (show prettyThings)
 
 
-  where prettyThings : Doc ()
+  where prettyGamma : List (Doc ())
+        prettyGamma
+          = case g of
+              Nil => []
+              (_::_) =>
+                  [ pretty "## Typing Context"
+                  , vcat
+                    $ prettyCtxt g Nil
+                  ]
+
+        prettyList : String -> List String -> List (Doc ())
+        prettyList _ Nil
+          = Nil
+        prettyList t (x::xs)
+          = [ hsep [pretty "## ", pretty t]
+            , vsep $ map (\k => pretty "+ \{k}") (x::xs)
+            ]
+
+        prettyThings : Doc ()
         prettyThings
           = vsep
-            [ pretty "## Typing Context"
-            , vcat
-              $ prettyCtxt g Nil
-            , pretty "## Recursion Vars"
-            , vcat $ map (\k => pretty "+ \{k}") (keys k)
-            , pretty "## Roles"
-            , vcat $ map (\k => pretty "+ \{k}") (keys r)
-            , pretty "---"
-            , hsep [ pretty x, colon, pretty k r t]
-            ]
+            $  prettyGamma
+            ++ prettyList "Recursion Vars" (keys k)
+            ++ prettyList "Roles" (keys r)
+            ++ [ pretty "---"
+               , hsep [ pretty x, colon, pretty k r t]
+               ]
+
 -- [ EOF ]

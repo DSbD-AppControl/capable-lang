@@ -197,10 +197,10 @@ Show (Typing.Error) where
     = "Error projecting global typing, Error message yet to be realised..."
 
   show (MergeError str err)
-    = "Error merging local types: \n \{str} \n errors where:\n\{show err}"
+    = "Error merging local types: \n\{str} \n errors where:\n\{show err}"
 
   show (SubsetError a b err)
-    = "Error comparing local types: \n\n \{a} \n\n and \n\n \{b} \n\n because:\n\n\{show err}"
+    = "Error comparing local types:\n\n \{a}\n\nand\n\n \{b}\n\nbecause:\n\n \{show err}"
 
   show (OOB e g)
     = "Index Out of Bounds: Given \{show g}; Expected: \{show e}."

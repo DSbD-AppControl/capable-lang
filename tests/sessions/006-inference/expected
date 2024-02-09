@@ -2,22 +2,22 @@ Running Test
 # Finished Parsing
 Type Checking Error
 main.capable:62:6-4:
-Error comparing local types: 
+Error comparing local types:
 
  (sendTo[Server] { adder(struct {x : Int; y : Int})
                   .(recvFrom[Server] {answer(Int).End})
 | suber(struct {x : Int; y : Int}).(recvFrom[Server] {answer(Int).End})
 | diver(struct {x : Int; y : Int})
   .(recvFrom[Server] {divByZero(Unit).End | answerE(Int).End})
-| muler(struct {x : Int; y : Int}).(recvFrom[Server] {answer(Int).End}) }) 
+| muler(struct {x : Int; y : Int}).(recvFrom[Server] {answer(Int).End}) })
 
- and 
+and
 
- (recvFrom[Server] {answer(Int).End}) 
+ (recvFrom[Server] {answer(Int).End})
 
- because:
+because:
 
-Types are wildly different.
+ Types are wildly different.
 
 # Finished Parsing
 # Finished Type Checking
