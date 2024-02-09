@@ -78,7 +78,7 @@ urg ctxtk ctxtr (B label type c)
   = group
   $ align
   $ vcat
-  [ pretty label <+> parens (pretty (show type))
+  [ pretty "- " <+> pretty label <+> parens (pretty (show type))
   , pretty "." <+> pretty (toString ctxtk
                                     ctxtr
                                     c)
@@ -86,7 +86,9 @@ urg ctxtk ctxtr (B label type c)
 
 urgh : {rs, ks : _} -> Local.Branches ks rs ls -> Doc ()
 urgh bs
-  = choices $ mapToList (urg (ctxtK bs) (ctxtR bs)) bs
+  = indent 2
+    $ vsep
+    $ mapToList (urg (ctxtK bs) (ctxtR bs)) bs
 
   where
     ctxtR : {rs : _} -> (bs : Local.Branches ks rs ls) -> Context Ty.Role rs
@@ -98,23 +100,23 @@ urgh bs
 export
 Show (Projection.Error) where
   show (NotAllSame bs)
-    = "Branches differ \n\t\{show $ urgh bs}"
+    = "\nbecause branch continutations differ:\n\{show $ urgh bs}"
 
   show (BranchNotProjectionable str x)
-    = unlines ["Error projecting branch \{str}:"
-              , "\n\t\{show x}"]
+    = "\{str}.\{show x}"
+    --"in branch \{str}:\n\{show x}"
 
   show (Skip x)
-    = "Error merging:\n\t\{show x}"
+    = show x
 
   show (Offer x)
-    = "Error generating Offer:\n\t\{show x}"
+    = show x
 
   show (Select x)
-    = "Error generating Select:\n\t\{show x}"
+    = show x
 
   show (Rec x)
-    = "Error generating Rec:\n\t\{show x}"
+    = show x
 
 Show (Subset.Error) where
   show (BranchErr s e)
@@ -184,7 +186,7 @@ Show (Merge.Error) where
 
 Show (Typing.Error) where
   show (WellFormed g)
-    = "Protocol is not well-formed:\n\t\{g}"
+    = "Protocol is not well-formed:\n\{g}"
   show (MismatchK e g)
     = "Recursion variable mismatch:\n\t Expected: \{e}\n\t Given: \{g}"
 

@@ -3,25 +3,9 @@ Running Test
 Type Checking Error
 main.capable:21:0-0:
 Protocol is not well-formed:
-	Authenticator causes:
-Error generating Offer:
-	Error projecting branch login:
-
-	Error generating Select:
-	Error projecting branch success:
-
-	Error generating Select:
-	Error projecting branch msg:
-
-	Error merging:
-	Error projecting branch account:
-
-	Error generating Rec:
-	Error merging:
-	Branches differ 
-	{pay(struct {payee : String; amount : Int}).Call (Loop) | quit(Unit).End}
-
-
-
-
+Authenticator causes error at:
+login.success.msg.account.
+because branch continutations differ:
+  - pay(struct {payee : String; amount : Int}).Call (Loop)
+  - quit(Unit).End
 

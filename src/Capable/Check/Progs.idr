@@ -185,7 +185,7 @@ check env state (Def fc PROT n val scope)
 
        (g ** tm) <- synth (delta env) (rho env) (sigma env) val
 
-       prf <- embedAt fc (\((r' ** r),err) => WellFormed "\{reflect (rho env) r} causes:\n\{show err}")
+       prf <- embedAt fc (\((r' ** r),err) => WellFormed "\{reflect (rho env) r} causes error at:\n\{show err}")
                          (wellFormed g)
 
        let env = Sigma.extend env n (S (rho env) g)
