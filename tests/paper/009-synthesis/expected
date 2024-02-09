@@ -1,0 +1,30 @@
+Running Test
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+# Finished Parsing
+# Finished Type Checking
+main.capable:15:3-0:
+##  Roles
++ C
++ B
++ A
+---
+hole : (sendTo[B] {payload(String).(recvFrom[C] {payload(String).End})})
+
+Capable> send [payload] B payload(?hole_payload)
+  catch
+  {
+    crash(?hole_crash)
+  }
+?hole_body
+Capable> Exiting the REPL

@@ -1,0 +1,24 @@
+role A
+role B
+role C
+
+newtype payload(String)
+
+protocol Blurgh
+  = A ==> B | payload(String)
+  . B ==> C | payload(String)
+  . C ==> A | payload(String)
+  . end
+
+
+session blah <Blurgh as A> () -> Unit
+{
+  ?hole
+}
+
+main (args : [String])
+{
+  unit
+}
+
+-- [ EOF ]
