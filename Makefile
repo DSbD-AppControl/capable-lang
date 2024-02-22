@@ -61,7 +61,7 @@ capable-test-update: capable
 
 .PHONY: capable-bench-check capable-bench-check-record
 
-HYPERFINE_PARAMS := --ignore-failure
+HYPERFINE_PARAMS := --ignore-failure --warmup 10
 
 capable-bench-check: capable
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_benchmarks,check,tests/classics)
