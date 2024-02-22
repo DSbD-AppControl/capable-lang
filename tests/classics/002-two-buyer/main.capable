@@ -1,3 +1,5 @@
+func printLn(msg : String) -> Unit { print(msg); print(toString('\n')) }
+
 {- Modelling and Realisation of the Two Buyer Protocol.
 
 The protocol allows two people (Alice, Bob) to neogiate buying a book from the 'Seller'.
@@ -122,9 +124,20 @@ session twoBuyerSeller <twoBuyer as Seller>() -> MaybeSale
   } catch { crash(noutS(unit)) }
 }
 
+func runAsB(cmdA : String,cmdB : String, threshold : Int, a : String) -> Unit
+{
+  match run twoBuyerBob(threshold,a) with [Alice as cmdA, Seller as cmdB]
+  {
+    when nout(u) { printLn("Failure!") }
+    when cancelled(u) { printLn("Rejected Offer") }
+    when mdate(i) { print("Success: "); printLn(i) }
+  }
+}
+
 main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))
-
+; runAsB("python3 alice.py", "python3 seller.py", 40, "Acde")
+; runAsB("python3 alice.py", "python3 seller.py", 2bre0, "Acde")
 }
