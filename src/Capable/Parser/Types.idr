@@ -93,7 +93,6 @@ mutual
       <|> ref
       <|> varType)
 
-
 export
 datatype : Rule (FileContext, String, DTYPE)
 datatype

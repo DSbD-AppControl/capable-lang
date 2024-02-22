@@ -24,11 +24,12 @@ export
 load : State -> String -> Capable State
 load st fname
   = tryCatch (do ast <- fromFile fname
+                 let st : State = { file := Just fname } st
                  putStrLn "# Finished Parsing"
 
-                 (_,st,et) <- check ast
+                 (_,st,et) <- check st ast
                  putStrLn "# Finished Type Checking"
-
+                 prettyHoles st
                  pure st
               )
               (\err => do printLn err; pure st)

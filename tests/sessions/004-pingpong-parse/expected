@@ -6,17 +6,17 @@ maindeux.capable
 # Finished Parsing
 Type Checking Error
 maindeux.capable:61:2-0:
-Error comparing local types: 
+Error comparing local types:
 
- (sendTo[Server] {msg(Int).(recvFrom[Server] {msg(Int).End})}) 
+ (sendTo[Server] {msg(Int).(recvFrom[Server] {msg(Int).End})})
 
- and 
+and
 
- End 
+ End
 
- because:
+because:
 
-Types are wildly different.
+ Types are wildly different.
 
 mainerr.capable
 # Finished Parsing
@@ -35,16 +35,16 @@ Not enough information to type term.
 
 mainhole.capable
 # Finished Parsing
-Showing first available hole.
+# Finished Type Checking
+mainhole.capable:62:3-0:
 ## Typing Context
 i : Int
-## Recursion Vars
-
-## Roles
+##  Roles
 + Server
 + Client
 ---
 aa : (recvFrom[Server] {msg(Int).End})
+
 mainun.capable
 # Finished Parsing
 Type Checking Error

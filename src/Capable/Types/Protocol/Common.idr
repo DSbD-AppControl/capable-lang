@@ -25,7 +25,7 @@ import public Toolkit.Data.DList.Any
 
 import public Toolkit.DeBruijn.Renaming
 
-import Capable.Bootstrap
+import public Capable.Bootstrap
 import Capable.Types.Role
 import Capable.Types.Base
 
@@ -124,7 +124,8 @@ namespace Protocol
              -> (r : Role rs y)
              -> (type   : Singleton (UNION (field:::fs)))
              -> (prfM   : Marshable (UNION (field:::fs)))
-             -> (prfR   : Not (REquals rs s r))
+             -> (prfR   : VarsNotEQ rs s r)
+ --            -> (prfR   : Not (REquals rs s r))
              -> (opties : DList (String,Base)
                                 (Branch (Protocol GLOBAL) ks rs)
                                 (field::fs))
@@ -366,5 +367,71 @@ namespace Pretty
                               ls)
                      -> String
     toString ks rs bs = show (branches pretty ks rs bs)
+
+namespace RecVar
+    mutual
+      namespace Branches
+
+         public export
+         weaken : {ks : _}
+               -> Subset js ks
+               -> DList (String,Base) (Branch (Protocol v) js xs) ls
+               -> DList (String,Base) (Branch (Protocol v) ks xs) ls
+         weaken prf [] = []
+         weaken prf (B l t ex :: rest)
+           =  (B l t $ weaken prf ex)
+           ::          weaken prf rest
+
+      public export
+      weaken : {ks : _}
+            -> (prf  : Subset js ks)
+            -> (prot : Protocol v js rs)
+                    -> Protocol v ks rs
+      weaken prf End = End
+      weaken prf (Call x) = Call (expand x prf)
+      weaken prf (Rec x y) = Rec x (weaken (Extend x prf) y)
+      weaken prf (ChoiceG s r type prfM prfR opties)
+        = ChoiceG s r type prfM prfR (weaken prf opties)
+      weaken prf (ChoiceL kind whom type prfM choices)
+        = ChoiceL kind whom type prfM (weaken prf choices)
+      weaken prf Crash = Crash
+
+namespace Role
+
+    mutual
+      namespace Branches
+
+         public export
+         weaken : {xs,ys : _}
+               -> Subset xs ys
+               -> DList (String,Base) (Branch (Protocol v) ks xs) ls
+               -> DList (String,Base) (Branch (Protocol v) ks ys) ls
+         weaken prf [] = []
+         weaken prf (B l t ex :: rest)
+           =  (B l t $ weaken prf ex)
+           ::          weaken prf rest
+
+      public export
+      weaken : {xs,ys : _}
+            -> (prf  : Subset xs ys)
+            -> (prot : Protocol v ks xs)
+                    -> Protocol v ks ys
+      weaken prf End
+        = End
+      weaken prf (Call x)
+        = Call x
+      weaken prf (Rec x y)
+        = Rec x (weaken prf y)
+
+      weaken prf (ChoiceG s r type prfM prfR opties)
+        =  let (s' ** sprf) = expand' s prf
+        in let (r' ** rprf) = expand' r prf
+        in ChoiceG s' r' type prfM (expand prfR prf sprf rprf) $ weaken prf opties
+
+      weaken prf (ChoiceL kind whom type prfM choices)
+        = ChoiceL kind (expand whom prf) type prfM (weaken prf choices)
+
+      weaken prf Crash
+        = Crash
 
 -- [ EOF ]

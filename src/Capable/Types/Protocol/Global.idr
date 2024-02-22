@@ -30,30 +30,6 @@ import public Capable.Types.Protocol.Common
 
 %default total
 
-{-
-public export
-data Global : List Kind -> List Role -> Type where
-  End : Global ks rs
-
-  Call : {v,vs : _} -> RecVar vs v -> Global vs rs
-
-  Rec : (v : Kind)
-     -> Global (v::vs) rs
-     -> Global     vs  rs
-
-  Choice : {x,y, fs : _}
-        -> (s : Role rs x)
-        -> (r : Role rs y)
-        -> (type   : Singleton (UNION (field:::fs)))
-        -> (prfM   : Marshable (UNION (field:::fs)))
-        -> (prfR   : Not (REquals rs s r))
-        -> (opties : DList (String,Base)
-                           (Branch Global ks rs)
-                           (field::fs))
-                  -> Global ks rs
-
--}
-
 public export
 Global : List Kind -> List Role -> Type
 Global = Protocol GLOBAL

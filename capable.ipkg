@@ -90,7 +90,7 @@ modules = Toolkit.TheRug
         , Capable.Raw.Types
         , Capable.Lexer
         , Capable.Error
-        , Capable.Codegen.Rust
+--        , Capable.Codegen.Rust
         , Capable.Values
         , Capable.Types.Protocol.Merge.Meet
         , Capable.Types.Protocol.Merge.Concat
@@ -124,8 +124,11 @@ modules = Toolkit.TheRug
         , Capable.Terms.Sessions
         , Capable.Terms.Progs
         , Capable.Terms.Vars
-        , Capable.Terms.Protocols.Projection
+--        , Capable.Terms.Protocols.Projection
         , Capable.Terms.Types
+        , Capable.Terms.Pretty
+        , Capable.Synthesis.LocalVars
+        , Capable.Synthesis.Sessions
         , Capable.REPL.Load
         , Capable.REPL.Commands
         , Capable.Exec

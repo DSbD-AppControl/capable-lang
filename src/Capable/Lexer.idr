@@ -42,7 +42,7 @@ namespace Capable
   public export
   Keywords : List String
   Keywords = [ -- Keywords
-               "func", "main", "type", "role", "session", "protocol"
+               "func", "main", "type", "newtype", "role", "session", "protocol"
 
              , "as"
 
@@ -61,13 +61,16 @@ namespace Capable
              , "unit", "tuple", "tag"
 
              -- Operations
-             , "get", "set", "mut", "project", "replace"
+             , "getL", "getV"
+             , "setL" , "setV"
+             , "mut", "project", "replace"
              , "and", "not", "or"
              , "lt", "lte", "eq", "gt", "gte"
 
              , "add", "sub", "mul", "div"
 
              , "size", "strCons", "slice"
+             , "length"
 
              , "ord", "chr", "string", "toString"
 
@@ -89,7 +92,7 @@ namespace Capable
              -- Session
              , "rec", "end"
              , "call"
-             , "run", "with"
+             , "run", "with", "aux"
              ]
 
 

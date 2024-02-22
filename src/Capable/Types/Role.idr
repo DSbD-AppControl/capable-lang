@@ -64,15 +64,15 @@ involved : {rs : List Role}
         -> (p : Role rs x)
         -> (s : Role rs y)
         -> (r : Role rs z)
-        -> (contra  : Not (REquals rs s r))
+--        -> (contra  : Not (REquals rs s r))
                    -> Involved rs p s r
-involved p s r contra with (Index.decEq p s)
-  involved s s r contra | (Yes (Same Refl Refl))
+involved p s r with (Index.decEq p s)
+  involved s s r | (Yes (Same Refl Refl))
     = Sends Refl
-  involved p s r contra | (No f) with (Index.decEq p r)
-    involved p s p contra | (No f) | (Yes (Same Refl Refl))
+  involved p s r | (No f) with (Index.decEq p r)
+    involved p s p | (No f) | (Yes (Same Refl Refl))
       = Recvs Refl
-    involved p s r contra | (No f) | (No g)
+    involved p s r | (No f) | (No g)
       = Skips f g
 
 public export

@@ -1,0 +1,30 @@
+role Alice
+role Bob
+
+type foo = String
+
+union ping { ping : String }
+union pong { pong : String }
+
+union pongR { pongR : String
+            ; quit  : String
+            }
+
+
+
+protocol pingpong = Alice ==> Bob   [ping] { ping(String)
+                  . Bob   ==> Alice [pong] { pong(String)
+                  . end }}
+
+protocol pingpongR = rec(x)
+                   . Alice ==> Bob   [ping] { ping(String)
+                   . Bob   ==> Alice [pongR] { pongR(String) . call(x)
+                                             | quit(String) . aux(pingpong)
+                                             }}
+
+main (args : [String])
+{
+  print("My First Program")
+; print(toString('\n'))
+
+}

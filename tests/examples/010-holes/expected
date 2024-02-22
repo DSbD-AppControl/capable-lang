@@ -1,7 +1,14 @@
 Running Test
 # Finished Parsing
-Showing first available hole.
+# Finished Type Checking
+main.capable:14:20-21:
 y : Int
 args : [String]
 ---
 a : Int
+
+main.capable:6:3-0:
+str : String
+---
+ergo : Unit
+

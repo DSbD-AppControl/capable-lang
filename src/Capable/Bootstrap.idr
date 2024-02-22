@@ -6,7 +6,7 @@ import Data.Nat
 import public Toolkit.Data.DList
 import public Toolkit.Data.DList.Elem
 import Toolkit.Data.DList.All
-
+import public Toolkit.Data.Location
 import public Toolkit.DeBruijn.Context
 import public Toolkit.DeBruijn.Context.Item
 import public Toolkit.DeBruijn.Renaming
@@ -18,6 +18,10 @@ import public Toolkit.Data.List.AtIndex
 import Text.PrettyPrint.Prettyprinter
 
 %default total
+
+public export
+emptyRef : String -> Ref
+emptyRef = MkRef emptyFC
 
 export
 vect : List (Doc ann) -> Doc ann
@@ -34,6 +38,19 @@ reflect [] (V _ (There later)) impossible
 
 reflect ((I name x) :: rest) (V 0 prf) = name
 reflect (elem :: rest) (V (S k) (There later)) = reflect rest (V k later)
+
+export
+reflectByValue : DecEq a
+              => (ctxt  : Context a rs)
+              -> (loc   : a)
+                       -> Maybe String
+reflectByValue [] _
+  = Nothing
+reflectByValue (I name value_x :: rest) value_y
+  = case decEq value_x value_y of
+      No _ => reflectByValue rest value_y
+      Yes Refl => Just name
+
 
 export
 rebuild : (a -> String)
@@ -80,6 +97,59 @@ export
     decEq x y Refl | (No contra)
       = No (\(Same Refl Refl) => contra Refl)
 
+public export
+data VarsNotEQ : (ctxt : List ty) -> (xs : IsVar ctxt x) -> (ys : IsVar ctxt y) -> Type where
+  HereX : VarsNotEQ (x::ctxt) (V 0 Here) (V (S y) (There later))
+  HereY : VarsNotEQ (y::ctxt) (V (S x) (There later)) (V 0 Here)
+
+  There : VarsNotEQ     ctxt (V    x         lx)  (V    y         ly)
+       -> VarsNotEQ (c::ctxt) (V (S x) (There lx)) (V (S y) (There ly))
+
+
+public export
+Uninhabited (VarsNotEQ (x::ctxt) (V 0 Here) (V 0 Here)) where
+  uninhabited HereX impossible
+  uninhabited HereY impossible
+  uninhabited (There y) impossible
+
+public export
+Uninhabited (VarsNotEQ Nil x y) where
+  uninhabited HereX impossible
+  uninhabited HereY impossible
+  uninhabited (There z) impossible
+
+
+public export
+idxAreSame : (Equals ty (IsVar ctxt) ys ys) -> VarsNotEQ ctxt ys ys -> Void
+idxAreSame (Same Refl Refl) (There x)
+  = idxAreSame (Same Refl Refl) x
+
+export
+areEqualNot : (xs : IsVar ctxt x)
+           -> (ys : IsVar ctxt y)
+           -> Dec (VarsNotEQ ctxt xs ys)
+areEqualNot (V 0 Here) (V 0 Here)
+  = No absurd
+areEqualNot (V 0 Here) (V (S idx) (There later))
+  = Yes HereX
+areEqualNot (V (S k) (There later)) (V 0 Here)
+  = Yes HereY
+areEqualNot (V (S k) (There later)) (V (S idx) (There z)) with (areEqualNot (V k later) (V idx z))
+  areEqualNot (V (S k) (There later)) (V (S idx) (There z)) | (Yes prf)
+    = Yes (There prf)
+  areEqualNot (V (S k) (There later)) (V (S idx) (There z)) | (No contra)
+    = No (\case (There w) => contra w)
+
+
+public export
+notSame : {xs : IsVar ctxt x}
+       -> {ys : IsVar ctxt y}
+       -> (pf : VarsNotEQ ctxt xs ys)
+       -> (eq : Equals ty (IsVar ctxt) xs ys)
+             -> Void
+notSame HereX (Same Refl Refl) impossible
+notSame HereY (Same Refl Refl) impossible
+notSame (There z) (Same Refl Refl) = notSame z (Same Refl Refl)
 
 export
 decidable : Lazy b -> Lazy (a -> b) -> Dec a -> b
@@ -302,5 +372,174 @@ namespace DList.All.Informative
 
     all f (elem :: rest) | (No msg no)
       = No msg (\case (x::later) => no x)
+
+
+
+namespace List
+  public export
+  snoc : (xs : List type)
+      -> (x  :      type)
+            -> List type
+  snoc xs x = xs ++ [x]
+
+namespace DList
+
+
+  public export
+  snoc : {x : type} -> DList type etype xs
+          -> etype x
+          -> DList type etype (Bootstrap.List.snoc xs x)
+  snoc [] z = z :: []
+  snoc (elem :: rest) z = elem :: snoc rest z
+
+namespace Prefix
+  public export
+  data Subset : (this, that : List type) -> Type
+    where
+      Empty : Subset Nil that
+      Extend : (z : type)
+            -> (rest : Subset     this        that)
+                    -> Subset (z::this) (z :: that)
+
+
+  export
+  Uninhabited (Subset (x::xs) Nil) where
+    uninhabited Empty impossible
+    uninhabited (Extend _ rest) impossible
+
+  namespace Context
+    export
+    isSubset : DecEq ty
+            => (xs : Context ty x)
+            -> (ys : Context ty y)
+                  -> Dec (Subset x y)
+    isSubset [] ys
+      = Yes Empty
+    isSubset (elem :: rest) []
+      = No absurd
+    isSubset ((I name x) :: xs) ((I str y) :: ys) with (Equality.decEq x y)
+      isSubset ((I name x) :: xs) ((I str x) :: ys) | (Yes Refl) with (isSubset xs ys)
+        isSubset ((I name x) :: xs) ((I str x) :: ys) | (Yes Refl) | (Yes prf)
+          = Yes (Extend x prf)
+        isSubset ((I name x) :: xs) ((I str x) :: ys) | (Yes Refl) | (No contra)
+          = No $ \case (Extend x rest) => contra rest
+      isSubset ((I name x) :: xs) ((I str y) :: ys) | (No contra)
+        = No $ \case (Extend x rest) => contra Refl
+
+  export
+  isSubset : DecEq type
+          => (xs,ys : List type)
+                   -> Dec (Subset xs ys)
+  isSubset [] ys
+    = Yes Empty
+
+  isSubset (x :: xs) []
+    = No absurd
+
+  isSubset (x :: xs) (y :: ys) with (decEq x y)
+    isSubset (x :: xs) (x :: ys) | (Yes Refl) with (isSubset xs ys)
+      isSubset (x :: xs) (x :: ys) | (Yes Refl) | (Yes prf)
+        = Yes (Extend x prf)
+      isSubset (x :: xs) (x :: ys) | (Yes Refl) | (No contra)
+        = No $ \case (Extend x rest) => contra rest
+
+    isSubset (x :: xs) (y :: ys) | (No contra)
+      = No $ \case (Extend x rest) => contra Refl
+
+
+  public export
+  snoc_elem : {type : Type}
+           -> (xs : List type)
+           -> (x  : type)
+           -> IsVar (xs ++ [x]) x
+  snoc_elem [] x
+    = V 0 Here
+  snoc_elem (y :: ys) x with (snoc_elem ys x)
+    snoc_elem (y :: ys) x | (V pos prf)
+      = V (S pos) (There prf)
+
+
+  public export
+  data Expand : IsVar xs type
+             -> Subset xs ys
+             -> IsVar ys type
+             -> Type
+    where
+      Z : Expand (V 0 Here)  prf          (V 0 Here)
+      S : Expand (V    k         there)            rest  (V pos prf)
+       -> Expand (V (S k) (There there)) (Extend y rest) (V (S pos) (There prf))
+
+  public export
+  expand' : (idx : IsVar xs t)
+         -> (prf : Subset xs ys)
+                -> DPair (IsVar ys t) (Expand idx prf)
+  expand' (V 0 Here) Empty impossible
+  expand' (V 0 (There later)) Empty impossible
+  expand' (V (S _) Here) Empty impossible
+  expand' (V (S _) (There later)) Empty impossible
+  expand' (V 0 Here) (Extend z rest)
+    = (_ ** Z)
+  expand' (V (S idx) (There later)) (Extend z rest)
+    = case (expand' (V idx later) rest) of
+        (V pos ltr ** t) => (V (S pos) (There ltr) ** (S t))
+
+  public export
+  expand : IsVar  xs type
+         -> Subset      xs ys
+         -> IsVar  ys type
+  expand x y with (expand' x y)
+    expand x y | ((fst ** snd)) = fst
+
+--  expand (V 0 Here) (Extend type rest)
+--    = V 0 Here
+--  expand (V (S k) (There later)) (Extend y rest)
+--    = case expand (V k later) rest of
+--        V pos prf => V (S pos) (There prf)
+
+
+  public export
+  snoc_add : (x  : type)
+          -> (xs : List type)
+                -> Subset xs (xs ++ [x])
+  snoc_add x []
+    = Empty
+  snoc_add x (y :: xs)
+    = Extend y (snoc_add x xs)
+
+  public export
+  noChange : (xs : List type)
+                -> Subset xs xs
+  noChange []
+    = Empty
+  noChange (x :: xs)
+    = Extend x (noChange xs)
+
+  public export
+  trans : Prefix.Subset xs ys
+       -> Prefix.Subset ys zs
+       -> Prefix.Subset xs zs
+  trans Empty Empty
+    = Empty
+  trans Empty (Extend x rest)
+    = Empty
+  trans (Extend x rest) (Extend x z)
+    = Extend x (trans rest z)
+
+  namespace NotEQ
+
+    public export
+    expand : VarsNotEQ xs         s              r
+          -> (prf : Subset xs ys )
+          -> Expand s prf s'
+          -> Expand r prf r'
+          -> VarsNotEQ ys s' r'
+    expand HereX Empty _ _ impossible
+    expand HereY Empty _ _ impossible
+    expand (There x) Empty _ _ impossible
+    expand HereX (Extend s rest) Z (S x) = HereX
+    expand HereY (Extend r rest) (S x) Z = HereY
+    expand (There x) (Extend w rest) (S y) (S z)
+      = There (expand x rest y z)
+
 
 -- [ EOF ]

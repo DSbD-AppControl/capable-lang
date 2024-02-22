@@ -2,6 +2,11 @@ struct point { x : Int; y : Int }
 
 union either { left : String; right : Int}
 
+func printLn(str:String) -> Unit
+{
+  ?ergo
+}
+
 
 main (args : [String])
 {

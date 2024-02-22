@@ -30,7 +30,7 @@ showToks = map (\(MkBounded t _ _) => show t)
 codegen : Target -> Prog p -> Capable ()
 codegen RUST et
   = do putStrLn "```"
-       putStrLn (Rust.codegen et)
+       putStrLn "Not Yet Realised" -- (Rust.codegen et)
        putStrLn "```"
 
 getFile : Opts -> Capable String
@@ -54,17 +54,20 @@ pipeline opts
               putStrLn $ unlines (showToks toks)
               exitSuccess
 
+       let st : State = { file := Just fname } defaultState
+
        ast <- fromFile fname
        when (showAST opts)
          $ printLn ast
 
        putStrLn "# Finished Parsing"
 
-       (tm, _, (_ ** et)) <- check ast
+       (tm, st, (_ ** et)) <- check st ast
        putStrLn "# Finished Type Checking"
 
        when (justCheck opts)
-         $ exitSuccess
+         $ do prettyHoles st
+              exitSuccess
 
        when (pprint opts)
          $ do putStrLn "```"
@@ -77,6 +80,10 @@ pipeline opts
               putStrLn (toLaTeX ast)
               putStrLn "```"
               exitSuccess
+
+       True <- hasNoHoles st
+         | False =>  do prettyHoles st
+                        exitSuccess
 
        case codegen opts of
          Just t => codegen t et

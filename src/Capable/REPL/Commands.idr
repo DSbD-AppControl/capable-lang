@@ -19,6 +19,9 @@ data Cmd = Quit
          | AskTy String
          | Project String String
          | Roles String
+         | Solve String
+         | ReLoad
+         | Holes
 
 export
 commands : Commands Cmd
@@ -33,7 +36,7 @@ commands
                  Help
                  "Show the list of available commands."
 
-    , newCommand (names ["r", "run"])
+    , newCommand (names ["e", "exec"])
                  (options [REQ "args"])
                  Run
                  "Run the loaded program, where `args` is a quoted list of args."
@@ -42,6 +45,10 @@ commands
                  (options [REQ "file"])
                  Load
                  "Load a program."
+
+    , newCommand (names ["reload", "r"])
+                 ReLoad
+                 "ReLoad a program."
 
     , newCommand (names ["type", "t"])
                  (options [REQ "name"])
@@ -52,6 +59,16 @@ commands
                  (options [REQ "protocol", REQ "role"])
                  Project
                  "Project a global type."
+
+    , newCommand (names ["solve", "s"])
+                 (options [REQ "hole"])
+                 Solve
+                 "Attempt to solve a hole"
+
+    , newCommand (names ["holes"])
+                 Holes
+                 "List holes"
+
     , newCommand (names ["roles"])
                  (options [REQ "protocol"])
                  Roles

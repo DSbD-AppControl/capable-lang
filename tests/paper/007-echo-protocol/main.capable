@@ -1,0 +1,87 @@
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
+role Client
+role Server
+
+newtype Msg(String)
+
+union cmd { msg  : Msg
+          ; quit : Msg
+          }
+
+protocol Echo
+  = rec(x)
+  . Client ==> Server [cmd]
+    { msg(Msg)  . Server ==> Client | Msg(String) . call(x)
+    | quit(Msg) . Server ==> Client | Msg(String) . end
+    }
+
+session echoClientProgram <Echo as Client>(i : String) -> Bool
+{
+  loop(x)
+  {
+    send [cmd] Server quit(Msg(i))
+    catch
+    {
+      crash(false)
+    }
+    recv [Msg] Server
+    {
+      when Msg (Msg_value)
+      {
+        end(true)
+      }
+    } catch
+    {
+      crash(false)
+    }
+  }
+}
+
+
+session echoClientProcess <Echo as Client>(c : cmd) -> Bool
+{
+  loop(x)
+  {
+    match c
+    {
+      when msg(m)
+      {
+        send [cmd] Server msg(m) catch { crash(false) }
+        recv [Msg] Server
+        {
+          when Msg (Msg_value) { call(x) }
+        } catch { crash(false) }
+      }
+      when quit(m)
+      {
+        send [cmd] Server quit(m) catch { crash(false) }
+        recv [Msg] Server
+        {
+          when Msg (Msg_value) { end(true) }
+        } catch { crash(false) }
+      }
+    }
+  }
+}
+
+-- ### Program Entry Point
+main (args : [String])
+{
+  local val = "Hello World";
+
+  -- Run a session, assigning processes to roles.
+  if run echoClientProgram(val) with [Server as "python3 pingping.py" ]
+  {
+    print("We echoed successfully.")
+  } else
+  {
+    printLn("Oops we crashed!")
+  }
+}
+
+-- [ EOF ]

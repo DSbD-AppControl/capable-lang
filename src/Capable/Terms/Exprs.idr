@@ -115,16 +115,14 @@ mutual
           -> (value : Expr roles types globals stack_g stack_l (     type))
                    -> Expr roles types globals stack_g stack_l (LIST type)
 
+      CountL : {type : _}
+            -> (array : Expr roles types globals stack_g stack_l (LIST type))
+                     -> Expr roles types globals stack_g stack_l INT
       -- ## Arrays
 
       -- ### Constructors
       MkVect : Vect n (Expr roles types globals stack_g stack_l ty)
             -> Expr roles types globals stack_g stack_l (VECTOR ty n)
---      VectorEmpty : Expr roles types globals stack_g stack_l (VECTOR type Z)
---
---      VectorCons : Expr roles types globals stack_g stack_l        type
---               -> Expr roles types globals stack_g stack_l (VECTOR type    n)
---               -> Expr roles types globals stack_g stack_l (VECTOR type (S n))
 
       -- ### Eliminators
 
@@ -139,6 +137,9 @@ mutual
           -> (value : Expr roles types globals stack_g stack_l (       type))
                    -> Expr roles types globals stack_g stack_l (VECTOR type n)
 
+      CountV : {n,type : _}
+            -> (array : Expr roles types globals stack_g stack_l (VECTOR type n))
+                     -> Expr roles types globals stack_g stack_l INT
       -- ## Products
 
       -- ### Constructors

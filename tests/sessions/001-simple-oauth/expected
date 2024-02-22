@@ -15,11 +15,11 @@ Capable> # Finished Parsing
 Type Checking Error
 main.capable:15:0-0:
 Protocol is not well-formed:
-	Auth causes:
-Error merging:
-	Branches differ 
-	{ login(Unit)
+Auth causes error at:
+
+because branch continutations differ:
+  - login(Unit)
   .(recvFrom[Client] {pword(String).(sendTo[Service] {auth(Bool).End})})
-| cancel(Unit).(recvFrom[Client] {quit(Unit).End}) }
+  - cancel(Unit).(recvFrom[Client] {quit(Unit).End})
 
 Capable> Exiting the REPL

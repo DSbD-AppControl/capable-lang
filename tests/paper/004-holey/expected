@@ -1,23 +1,61 @@
 Running Test
 # Finished Parsing
-Showing first available hole.
+# Finished Type Checking
+main.capable:25:3-0:
 ## Typing Context
 i : Int
-## Recursion Vars
-
-## Roles
+##  Roles
 + Server
 + Client
 ---
 next : (recvFrom[Server] {msg(Int).End})
+
 # Finished Parsing
-Showing first available hole.
-## Typing Context
-i : Int
-## Recursion Vars
+# Finished Type Checking
+```
+\begin{Verbatim}
+\CapableKeyword{union} \CapableBound{MaybeInt} \{\CapableBound{nout} : \CapableType{Unit}; \CapableBound{this} : \CapableType{Int}\}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{print}(\CapableBound{msg});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
+\}
+\CapableKeyword{role} \CapableRole{Client}
+\CapableKeyword{role} \CapableRole{Server}
+\CapableKeyword{union} \CapableBound{msg} \{\CapableBound{msg} : \CapableType{Int}\}
+\CapableKeyword{protocol} \CapableProtocol{Echo}
+  = \CapableRole{Client} ==> \CapableRole{Server} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
+  . \CapableRole{Server} ==> \CapableRole{Client} [\CapableType{\CapableBound{msg}}] \{ \CapableBound{msg}(\CapableType{Int})
+  . \CapableKeyword{end}
+  \}
+  \}
+\CapableKeyword{session} \CapableBound{echoClient} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{Int}) -> \CapableType{\CapableBound{MaybeInt}}
+\{
+  \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableBound{i}));
+  \CapableKeyword{send} [\CapableType{\CapableBound{msg}}] \CapableRole{Server} \CapableBound{msg}(\CapableBound{i})
+    \CapableKeyword{catch}
+    \{
+      \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Crashing on Send"});
+      \CapableKeyword{crash}(\CapableFunction{\CapableBound{nout}}(\CapableValue{unit}))
+    \}
+  \CapableHole{?\CapableBound{next}}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{local} \CapableBound{val} = \CapableValue{2} ;
+  \CapableKeyword{match} \CapableKeyword{run} \CapableFunction{\CapableBound{echoClient}}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]
+  \{
+    \CapableKeyword{when} \CapableBound{nout}(\CapableBound{i})
+    \{
+      \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Oops we crashed!"})
+    \}
+    \CapableKeyword{when} \CapableBound{this}(\CapableBound{i})
+    \{
+      \CapableKeyword{print}(\CapableValue{"We echoed this, successfully: "});
+      \CapableFunction{\CapableBound{printLn}}(\CapableKeyword{toString}(\CapableBound{i}))
+    \}
+  \}
+\}
+\end{Verbatim}
 
-## Roles
-+ Server
-+ Client
----
-next : (recvFrom[Server] {msg(Int).End})
+```

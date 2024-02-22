@@ -3,5 +3,5 @@
 :project Streaming K
 :project Streaming KP
 :project Streaming C
-:run ""
+:exec ""
 :quit

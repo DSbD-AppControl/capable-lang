@@ -28,15 +28,15 @@ import Capable.Core
 
 import Capable.Types
 
-import Capable.Raw.AST
-import Capable.Raw.Role
-import Capable.Raw.Protocols
-import Capable.Raw.Types
-import Capable.Raw.DTypes
-import Capable.Raw.Exprs
-import Capable.Raw.Funcs
-import Capable.Raw.Sessions
-import Capable.Raw.Progs
+import public Capable.Raw.AST
+import public Capable.Raw.Role
+import public Capable.Raw.Protocols
+import public Capable.Raw.Types
+import public Capable.Raw.DTypes
+import public Capable.Raw.Exprs
+import public Capable.Raw.Funcs
+import public Capable.Raw.Sessions
+import public Capable.Raw.Progs
 
 %default total
 
@@ -370,6 +370,9 @@ expr (OpUn fc (OPEN x y) o)
   = group
   $ (handlekind x <+> tupled [prettyMode y, expr o])
 
+expr (Length fc xs)
+  = uno "length" (expr xs)
+
 expr (MkList fc _ xs)
   = list (args xs)
   where args : Vect.Quantifiers.All.All Exprs.Expr as -> List (Doc KIND)
@@ -572,6 +575,11 @@ function (Func fc prf as ret scope)
   ]
 
 protocol : Protocol p -> Doc KIND
+
+protocol (Aux fc r prf)
+  = uno "aux" (ref r)
+
+
 protocol (End fc)
   = keyword "end"
 
@@ -624,7 +632,6 @@ protocol (Choice fc s r t prf (B1 (x::xs)))
           , branch x]
           ::
           branches y
-
 
 sexpr : Sessions.Expr b -> Doc KIND
 sexpr (Seq fc x y)
@@ -876,10 +883,24 @@ prog (Def fc SESH s val scope)
 program : (p : PROG) -> Doc KIND
 program p = prog (toProg p)
 
-export
-toString : (p : PROG) -> String
-toString
-  = (show . reAnnotate (const ()) . program)
+namespace Expr
+  export
+  toString : (p : Exprs.Expr e) -> String
+  toString
+    = (show . reAnnotate (const ()) . expr)
+
+namespace Session
+  export
+  toString : (p : Sessions.Expr e) -> String
+  toString
+    = (show . reAnnotate (const ()) . sexpr)
+
+namespace Program
+  export
+  toString : (p : PROG) -> String
+  toString
+    = (show . reAnnotate (const ()) . program)
+
 
 
 renderAs : (Char -> String)

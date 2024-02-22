@@ -39,6 +39,9 @@ import Capable.Terms.Protocols
 
 import Capable.Terms.Sessions
 import Capable.Terms.Funcs
+import Capable.State
+
+%hide Capable.State.State.roles
 
 %default total
 
@@ -60,9 +63,9 @@ namespace Expr
                  -> (ret  : Base)
                          -> Type
         where
-          C : (given : Branch Local.Local ks roles (l,t))
-           -> (expr : Case roles rs ds ss gs ls ks ret p (l,t) given)
-                  -> Result roles rs ds ss gs ks ls p (l,t) expected ret
+          C : (given : Branch Local.Local ks rolez (l,t))
+           -> (expr : Case rolez rs ds ss gs ls ks ret p (l,t) given)
+                  -> Result rolez rs ds ss gs ks ls p (l,t) expected ret
 
     namespace Offer
       public export
@@ -78,13 +81,13 @@ namespace Expr
                  -> (ret  : Base)
                          -> Type
         where
-          O : (given : Branch Local.Local ks roles (l',t'))
-           -> (prf   : Subset ks roles
+          O : (given : Branch Local.Local ks rolez (l',t'))
+           -> (prf   : Subset ks rolez
                               Subset
                               given
                               expected)
-           -> (expr : Offer  roles rs ds ss gs ls ks ret p given)
-                   -> Result roles rs ds ss gs ks ls p expected (l',t') ret
+           -> (expr : Offer  rolez rs ds ss gs ls ks ret p given)
+                   -> Result rolez rs ds ss gs ks ls p expected (l',t') ret
 
     namespace Cases
       public export
@@ -100,9 +103,9 @@ namespace Expr
                  -> (ret  : Base)
                          -> Type
         where
-          CS : (given : Local.Branches ks roles lts)
-            -> (expr  : Cases  roles rs ds ss gs ls ks ret p lts given)
-                     -> Result roles rs ds ss gs ks ls p lts expected ret
+          CS : (given : Local.Branches ks rolez lts)
+            -> (expr  : Cases  rolez rs ds ss gs ls ks ret p lts given)
+                     -> Result rolez rs ds ss gs ks ls p lts expected ret
 
     namespace Offers
       public export
@@ -118,10 +121,10 @@ namespace Expr
                  -> (ret  : Base)
                          -> Type
         where
-          OS : (given  : Local.Branches ks roles ltsA)
-            -> (prf  : Offer.Subset ks roles Protocol.Subset given expected)
-            -> (expr : Offers roles rs ds ss gs ls ks ret p given)
-                    -> Result roles rs ds ss gs ks ls p expected ltsA ret
+          OS : (given  : Local.Branches ks rolez ltsA)
+            -> (prf  : Offer.Subset ks rolez Protocol.Subset given expected)
+            -> (expr : Offers rolez rs ds ss gs ls ks ret p given)
+                    -> Result rolez rs ds ss gs ks ls p expected ltsA ret
 
 namespace Synth
   public export
@@ -135,9 +138,9 @@ namespace Synth
              -> (ret  : Base)
                      -> Type
     where
-      R : (l    : Local ks roles)
-       -> (expr : Expr   roles rs ds ss gs ls ks p l ret)
-               -> Result roles rs ds ss gs ks ls p ret
+      R : (l    : Local ks rolez)
+       -> (expr : Expr   rolez rs ds ss gs ls ks p l ret)
+               -> Result rolez rs ds ss gs ks ls p ret
 
   namespace Case
     public export
@@ -152,9 +155,9 @@ namespace Synth
                -> (ret  : Base)
                        -> Type
       where
-        C : (b    : Branch Local ks roles (s,t))
-         -> (expr : Case roles rs ds ss gs ls ks ret p (s,t) b)
-                -> Result roles rs ds ss gs ks ls p (s,t) ret
+        C : (b    : Branch Local ks rolez (s,t))
+         -> (expr : Case rolez rs ds ss gs ls ks ret p (s,t) b)
+                -> Result rolez rs ds ss gs ks ls p (s,t) ret
 
   namespace Cases
     public export
@@ -170,9 +173,9 @@ namespace Synth
                        -> Type
       where
         CS : {lts : _}
-         -> (bs   : Local.Branches ks roles lts)
-         -> (expr : Cases roles rs ds ss gs ls ks ret p lts bs)
-                 -> Result roles rs ds ss gs ks ls p lts ret
+         -> (bs   : Local.Branches ks rolez lts)
+         -> (expr : Cases rolez rs ds ss gs ls ks ret p lts bs)
+                 -> Result rolez rs ds ss gs ks ls p lts ret
   namespace Offer
     public export
     data Result : (roles, rs : List Ty.Role)
@@ -186,9 +189,9 @@ namespace Synth
                -> (ret  : Base)
                        -> Type
       where
-        O : (b    : Branch Local ks roles (s,t))
-         -> (expr : Offer roles rs ds ss gs ls ks ret p b)
-                -> Result roles rs ds ss gs ks ls p (s,t) ret
+        O : (b    : Branch Local ks rolez (s,t))
+         -> (expr : Offer rolez rs ds ss gs ls ks ret p b)
+                -> Result rolez rs ds ss gs ks ls p (s,t) ret
 
   namespace Offers
     public export
@@ -203,9 +206,9 @@ namespace Synth
                -> (ret  : Base)
                        -> Type
       where
-        OS : (bs   : Local.Branches ks roles lts)
-         -> (expr : Offers roles rs ds ss gs ls ks ret p bs)
-                 -> Result roles rs ds ss gs ks ls p lts ret
+        OS : (bs   : Local.Branches ks rolez lts)
+         -> (expr : Offers rolez rs ds ss gs ls ks ret p bs)
+                 -> Result rolez rs ds ss gs ks ls p lts ret
 
   namespace Check
     public export
@@ -220,27 +223,28 @@ namespace Synth
                -> (ret  : Base)
                        -> Type
       where
-        R : (given  : Local ks roles)
+        R : (given  : Local ks rolez)
          -> (prf    : Subset given expected)
-         -> (expr : Expr   roles rs ds ss gs ls ks p given ret)
-                 -> Result roles rs ds ss gs ks ls p expected ret
+         -> (expr : Expr   rolez rs ds ss gs ls ks p given ret)
+                 -> Result rolez rs ds ss gs ks ls p expected ret
 
 namespace Expr
 
   namespace Synth
     export
-    synth : {e, roles, ls, ks : _}
+    synth : {e, rolez, ls, ks : _}
          -> {rs    : List Ty.Role}
          -> {ds    : List Ty.Base}
          -> {gs    : List Ty.Method}
          -> {ss    : List Ty.Session}
+         -> State
          -> (env   : Env rs ds ss gs ls)
-         -> (enr   : Context Role roles)
+         -> (enr   : Context Role rolez)
          -> (enc   : Context Protocol.Kind ks)
-         -> (princ : DeBruijn.Role roles p')
+         -> (princ : DeBruijn.Role rolez p')
          -> (ret   : Base)
          -> (expr  : Sessions.Expr e)
-                  -> Capable (Synth.Result roles rs ds ss gs ks ls princ ret)
+                  -> Capable (State, Synth.Result rolez rs ds ss gs ks ls princ ret)
 
   namespace Check
     export
@@ -249,6 +253,7 @@ namespace Expr
          -> {ds   : List Ty.Base}
          -> {gs   : List Ty.Method}
          -> {ss   : List Ty.Session}
+         -> State
          -> (env  : Env rs ds ss gs ls)
          -> (enr  : Context Role roles)
          -> (enc  : Context Protocol.Kind ks)
@@ -256,97 +261,101 @@ namespace Expr
          -> (ret  : Base)
          -> (type : Local.Local ks roles)
          -> (expr : Sessions.Expr e)
-                 -> Capable (Check.Result roles rs ds ss gs ks ls princ type ret)
+                 -> Capable (State ,Check.Result roles rs ds ss gs ks ls princ type ret)
 
 
 
     -- [ NOTE ] Session Typed Terms
 
   namespace Synth
-    synth env er ec p ret (Hole ref prf)
+    synth st env er ec p ret (Hole ref prf)
       = unknown (span ref)
 
-    synth env er ec p ret (Call fc ref)
+    synth st env er ec p ret (Call fc ref)
       = do (r ** idx) <- lookup ec (MkRef fc ref)
            -- @TODO change to ref
 
-           pure (R (Call idx) (Call idx))
+           pure (st, (R (Call idx) (Call idx)))
 
-    synth env er ec p ret (Crash fc expr)
-      = do tm <- check fc env ret expr
-           pure (R Crash (Crash tm))
+    synth st env er ec p ret (Crash fc expr)
+      = do (st, tm) <- check st fc env ret expr
+           pure (st, R Crash (Crash tm))
 
-    synth env er ec p ret (End fc expr)
+    synth st env er ec p ret (End fc expr)
 
-      = do tm <- check fc env ret expr
-           pure (R End (End tm))
+      = do (st, tm) <- check st fc env ret expr
+           pure (st, R End (End tm))
 
-    synth env er ec p ret (Cond fc cond tt ff)
-      = do tm <- check fc env BOOL cond
-           R tyT tmT <- synth env er ec p ret tt
-           R tyF tmF <- synth env er ec p ret ff
+    synth st env er ec p ret (Cond fc cond tt ff)
+      = do (st, tm) <- check st fc env BOOL cond
+           (st, R tyT tmT) <- synth st env er ec p ret tt
+           (st, R tyF tmF) <- synth st env er ec p ret ff
 
            (lty ** prfMerge) <- embedAt fc
                                         (MergeError (unlines [toString ec er tyT, toString ec er tyF]))
                                         (Protocol.merge tyT tyF)
 
-           pure (R lty (Cond tm tmT tmF prfMerge))
+           pure (st, R lty (Cond tm tmT tmF prfMerge))
 
-    synth env er ec p ret (Match fc cond prf (c::cs))
-      = do (UNION ((es,et) ::: fs) ** tm) <- synth env cond
-               | (ty ** _) => throwAt fc (UnionExpected ty)
+    synth st env er ec p ret (Match fc cond prf (c::cs))
+      = do (st, (UNION ((es,et) ::: fs) ** tm)) <- synth st env cond
+               | (st, (ty ** _)) => throwAt fc (UnionExpected ty)
 
-           C  b  a  <- case' fc ret es et c
-           CS bs as <- cases fc ret  fs   cs
+           (st, C  b  a)  <- case' st fc ret es et c
+           (st, CS bs as) <- cases st fc ret  fs   cs
 
            (lty ** prfMerge) <- embedAt fc
                                         (MergeError (unlines $ mapToList (\(B _ _ c) => toString ec er c) (b::bs)))
                                         (Many.merge (b::bs))
 
-           pure (R lty
+           pure (st,
+                 R lty
                    (Match tm (a::as) prfMerge)
                    )
 
-      where case' : (fc   : FileContext)
+      where case' : State
+                 -> (fc   : FileContext)
                  -> (ret  : Base)
                  -> (expL : String)
                  -> (et   : Base)
                  -> (o    : Offer oraw)
-                         -> Capable (Case.Result roles rs ds ss gs ks ls p (expL,et) ret)
-            case' fc ret el et (O fc' l' mn cont)
+                         -> Capable (State, Case.Result rolez rs ds ss gs ks ls p (expL,et) ret)
+            case' st fc ret el et (O fc' l' mn cont)
               = do Refl <- embedAt fc' (WrongLabel el l')
                                        (decEq el l')
-                   R local cont <- synth (Lambda.extend env mn et)
+                   (st, R local cont) <- synth st
+                                               (Lambda.extend env mn et)
                                                  er ec p ret cont
-                   pure (C (B el et local) (C el cont))
+                   pure (st, C (B el et local) (C el cont))
 
-            cases : (fc : FileContext)
+            cases : State
+                 -> (fc : FileContext)
                  -> (ret : Base)
                  -> (bs : List (String,Base))
                  -> (os : Vect.Quantifiers.All.All Offer as')
-                       -> Capable (Cases.Result roles rs ds ss gs ks ls p bs ret)
-            cases fc _ Nil Nil
-              = pure (CS Nil Nil)
+                       -> Capable (State, Cases.Result rolez rs ds ss gs ks ls p bs ret)
+            cases st fc _ Nil Nil
+              = pure (st, CS Nil Nil)
 
-            cases fc _ Nil os
+            cases _ fc _ Nil os
               = throwAt fc (RedundantCases (flattern os))
 
-            cases fc _ bs Nil
+            cases _ fc _ bs Nil
               = throwAt fc (CasesMissing bs)
 
-            cases fc ret ((expL,expTy)::bs) (o::os)
-              = do C (B l t b) o' <- case' fc ret expL expTy o
-                   CS bs os <- cases fc ret bs os
+            cases st fc ret ((expL,expTy)::bs) (o::os)
+              = do (st, C (B l t b) o') <- case' st fc ret expL expTy o
+                   (st, CS bs os) <- cases st fc ret bs os
 
-                   pure (CS (B l t b::bs) ((::) o' os))
-
-
-    synth env er ec p ret (LetRec fc s scope)
-      = do (R l tm) <- synth env er (I s (R s) :: ec) p ret scope
-           pure (R (Rec _ l) (LetRec tm))
+                   pure (st, CS (B l t b::bs) ((::) o' os))
 
 
-    synth env er ec p ret (Read fc r ty prf (ofs::offs) onEr)
+    synth st env er ec p ret (LetRec fc s scope)
+      = do (st, R l tm) <- synth st env er (I s (R s) :: ec) p ret scope
+           pure (st, R (Rec _ l) (LetRec tm))
+
+
+    synth st env er ec p ret (Read fc r ty prf (ofs::offs) onEr)
         = do (UNION ((es,et) ::: fs) ** _) <- synth (delta env) ty
                | (ty ** _) => throwAt fc (UnionExpected ty)
 
@@ -355,56 +364,59 @@ namespace Expr
 
              (r' ** target) <- synth er r
 
-             O  b  o    <- offer  fc ret es et ofs
-             OS bs offs <- offers fc ret   fs  offs
+             (st, O  b  o   ) <- offer  st fc ret es et ofs
+             (st, OS bs offs) <- offers st fc ret   fs  offs
 
-             R Crash err  <- synth env er ec p ret onEr
-                | R type _ => throwAt fc (IllTypedSession ("Crash") (toString ec er type))
+             (st, R Crash err)  <- synth st env er ec p ret onEr
+                | (_, R type _) => throwAt fc (IllTypedSession ("Crash") (toString ec er type))
 
-             pure (R (ChoiceL BRANCH
+             pure ( st
+                  , R (ChoiceL BRANCH
                               target
                               (Val (UNION ((es,et) ::: fs)))
                               prfM
                               (b::bs)
                                            )
-                     (Read target prfM (o::offs) err))
+                            (Read target prfM (o::offs) err))
 
-        where offer : (fc   : FileContext)
+        where offer : State
+                   -> (fc   : FileContext)
                    -> (ret  : Base)
                    -> (expL : String)
                    -> (et   : Base)
                    -> (o    : Offer oraw)
-                           -> Capable (Offer.Result roles rs ds ss gs ks ls p (expL,et) ret)
-              offer fc ret expL expTy (O fc' l' mname cont)
+                           -> Capable (State, Offer.Result rolez rs ds ss gs ks ls p (expL,et) ret)
+              offer st fc ret expL expTy (O fc' l' mname cont)
                 = do Refl <- embedAt fc' (WrongLabel expL l')
                                          (decEq expL l')
-                     R local cont <- synth (Lambda.extend env mname expTy)
+                     (st, R local cont) <- synth st (Lambda.extend env mname expTy)
                                                  er ec p ret cont
-                     pure (O (B expL expTy local) (O expL cont))
+                     pure (st, O (B expL expTy local) (O expL cont))
 
 
-              offers : (fc : FileContext)
+              offers : State
+                    -> (fc : FileContext)
                     -> (ret : Base)
                     -> (bs : List (String,Base))
                     -> (os : Vect.Quantifiers.All.All Offer as')
-                          -> Capable (Synth.Offers.Result roles rs ds ss gs ks ls p bs ret)
-              offers fc _ Nil Nil
-                = pure (OS Nil Nil)
+                          -> Capable (State, Synth.Offers.Result rolez rs ds ss gs ks ls p bs ret)
+              offers st fc _ Nil Nil
+                = pure (st, OS Nil Nil)
 
-              offers fc _ Nil os
+              offers st fc _ Nil os
                 = throwAt fc (RedundantCases (flattern os))
 
-              offers fc _ bs Nil
+              offers st fc _ bs Nil
                 = throwAt fc (CasesMissing bs)
 
-              offers fc ret ((expL,expTy)::bs) (o::os)
-                = do O (B l t b) o' <- offer fc ret expL expTy o
-                     OS bs os <- offers fc ret bs os
+              offers st fc ret ((expL,expTy)::bs) (o::os)
+                = do (st, O (B l t b) o') <- offer st fc ret expL expTy o
+                     (st, OS bs os) <- offers st fc ret bs os
 
-                     pure (OS (B l t b::bs) ((::) o' os))
+                     pure (st, OS (B l t b::bs) ((::) o' os))
 
 
-    synth env er ec p ret (Send fc role tyTm label msg scope onErr)
+    synth st env er ec p ret (Send fc role tyTm label msg scope onErr)
       = do -- 1. Check the type of the annotation
 
            (UNION ((es,et) ::: fs) ** cond) <- synth (delta env) tyTm
@@ -414,7 +426,7 @@ namespace Expr
            (r ** target) <- synth er role
 
            -- 3. Get the type of the payload.
-           (tyM' ** tmM) <- synth env msg
+           (st, (tyM' ** tmM)) <- synth st env msg
 
            -- 4. Check if marshable
            prfM <- embedAt fc (NotMarshable tyM')
@@ -423,12 +435,12 @@ namespace Expr
            -- 5. Check is value tag.
            (ty ** loc) <- isElem fc fc label ((es,et)::fs)
 
-           (R lsytn rest) <- synth env er ec p ret scope
+           (st, R lsytn rest) <- synth st env er ec p ret scope
 
-           R Crash err  <- synth env er ec p ret onErr
-              | R type _ => throwAt fc (IllTypedSession "Crash" (toString ec er type))
+           (st, R Crash err)  <- synth st env er ec p ret onErr
+              | (st, R type _) => throwAt fc (IllTypedSession "Crash" (toString ec er type))
 
-           pure (R (ChoiceL SELECT
+           pure (st, R (ChoiceL SELECT
                             target
                             (Val (UNION ((label,tyM'):::Nil)))
                             (UNION [F label prfM])
@@ -437,66 +449,70 @@ namespace Expr
 
     -- [ NOTE ] Non-Session-Typed Terms
 
-    synth env er ec p ret (Seq fc x y)
-      = do tmL <- check fc env UNIT x
-           R l tmR <- synth env er ec p ret y
-           pure (R l (Seq tmL tmR))
+    synth st env er ec p ret (Seq fc x y)
+      = do (st, tmL) <- check st fc env UNIT x
+           (st, R l tmR) <- synth st env er ec p ret y
+           pure (st, R l (Seq tmL tmR))
 
-    synth env er ec p ret (LetTy fc ref st ty val scope)
-      = do (tyVal ** T tyTmVal val) <- check fc env ty val
+    synth st env er ec p ret (LetTy fc ref k ty val scope)
+      = do (st, (tyVal ** T tyTmVal val)) <- check st fc env ty val
 
-           case st of
+           case k of
              HEAP
-               => do (R l scope) <- synth (Lambda.extend env ref (REF tyVal))
+               => do (st, R l scope) <- synth st
+                                              (Lambda.extend env ref (REF tyVal))
                                               er
                                               ec
                                               p
                                               ret
                                               scope
 
-                     pure (R _ (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
+                     pure (st, R _ (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
              STACK
-               => do (R l scope) <- synth (Lambda.extend env ref tyVal)
+               => do (st, R l scope) <- synth st
+                                              (Lambda.extend env ref tyVal)
                                               er
                                               ec
                                               p
                                               ret
                                               scope
 
-                     pure (R _ (Let tyTmVal val scope))
+                     pure (st, R _ (Let tyTmVal val scope))
 
-    synth env er ec p ret (Let fc ref st val scope)
-        = do (tyVal ** T tyTmVal val) <- synthReflect env val
+    synth st env er ec p ret (Let fc ref k val scope)
+        = do (st, (tyVal ** T tyTmVal val)) <- synthReflect st env val
 
-             case st of
+             case k of
                HEAP
-                 => do (R l scope) <- synth (Lambda.extend env ref (REF tyVal))
+                 => do (st, R l scope) <- synth st
+                                                (Lambda.extend env ref (REF tyVal))
                                                  er
                                                  ec
                                                  p
                                                  ret
                                                  scope
 
-                       pure (R l (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
+                       pure (st, R l (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
                STACK
-                 => do (R l scope) <- synth (Lambda.extend env ref tyVal)
+                 => do (st, R l scope) <- synth st
+                                                (Lambda.extend env ref tyVal)
                                                er
                                                ec
                                                p
                                                ret
                                                scope
 
-                       pure (R l (Let tyTmVal val scope))
+                       pure (st, R l (Let tyTmVal val scope))
 
-    synth env er ec p ret (Split fc this val scope)
-        = do (TUPLE (f::s::ts) ** v) <- synth env val
-               | (tyV ** _) => throwAt fc (PairExpected tyV)
+    synth st env er ec p ret (Split fc this val scope)
+        = do (st, (TUPLE (f::s::ts) ** v)) <- synth st env val
+               | (st, (tyV ** _)) => throwAt fc (PairExpected tyV)
 
              envExt <- zip env this (f::s::ts)
 
-             (R l rest) <- synth envExt er ec p ret scope
+             (st, R l rest) <- synth st envExt er ec p ret scope
 
-             pure (R l (Split v rest))
+             pure (st, R l (Split v rest))
 
         where zip : (env : Env rs ds ss gs ls)
                  -> (xs : List String)
@@ -520,17 +536,17 @@ namespace Expr
 
     -- [ NOTE ] Session Typed Terms
     --
-    check e er ec p ret End (End fc expr)
-      = do tm <- check fc e ret expr
-           pure (R End End (End tm))
+    check st e er ec p ret End (End fc expr)
+      = do (st, tm) <- check st fc e ret expr
+           pure (st, R End End (End tm))
 
     --
-    check e er ec p ret Crash (Crash fc expr)
-      = do tm <- check fc e ret expr
-           pure (R Crash Crash (Crash tm))
+    check st e er ec p ret Crash (Crash fc expr)
+      = do (st, tm) <- check st fc e ret expr
+           pure (st, R Crash Crash (Crash tm))
 
     --
-    check e er ec princ ret (Call x) (Call fc ref)
+    check st e er ec princ ret (Call x) (Call fc ref)
       = do (r ** idx) <- lookup ec (MkRef fc ref)
            -- @TODO change to ref
 
@@ -538,12 +554,12 @@ namespace Expr
                                      (MismatchK (reflect ec x) ref)
                                      (Index.decEq x idx)
 
-           pure (R (Call idx) Call (Call idx))
+           pure (st, R (Call idx) Call (Call idx))
 
 
     --
-    check e er ec p ret (Rec l type) (LetRec fc s scope)
-      = do R lsyn prf tm <- check e
+    check st e er ec p ret (Rec l type) (LetRec fc s scope)
+      = do (st, R lsyn prf tm) <- check st e
                                   er
                                   (I s l :: ec)
                                   p
@@ -551,14 +567,14 @@ namespace Expr
                                   type
                                   scope
 
-           pure (R (Rec _ lsyn) (Rec prf) (LetRec tm))
+           pure (st, R (Rec _ lsyn) (Rec prf) (LetRec tm))
 
 
     --
-    check e er ec p ret (ChoiceL BRANCH whom (Val (UNION ((l,t):::fs)))
+    check st e er ec p ret (ChoiceL BRANCH whom (Val (UNION ((l,t):::fs)))
                                                   (UNION (m::ms))
                                                          (B l t c::cs))
-                        (Read fc role tyTm _ (o::os) onErr)
+                           (Read fc role tyTm _ (o::os) onErr)
 
       = do -- 1. Check the type of the annotation
 
@@ -578,14 +594,14 @@ namespace Expr
                                      (Index.decEq whom target)
 
            -- 3. Check the branches
-           O  synO  prfO  o  <- offer  fc ret (B l t c) (lf,tf) o
-           OS synOS prfOS os <- offers fc ret        cs fields  os
+           (st, O  synO  prfO  o)  <- offer  st fc ret (B l t c) (lf,tf) o
+           (st, OS synOS prfOS os) <- offers st fc ret        cs fields  os
 
            -- 4. check the error branch
-           R Crash Crash onErr <- check e er ec p ret Crash onErr
+           (st, R Crash Crash onErr) <- check st e er ec p ret Crash onErr
 
            -- 5. Return Evidence
-           pure (Check.R
+           pure (st, Check.R
                    (ChoiceL BRANCH
                             target
                             (Val (UNION ((lf,tf):::fields)))
@@ -598,13 +614,14 @@ namespace Expr
                          onErr)
                    )
 
-        where offer : (fc  : FileContext)
+        where offer : State
+                   -> (fc  : FileContext)
                    -> (ret : Base)
                    -> (b   : Branch Local.Local ks roles (le,te))
                    -> (e   : (String, Base))
                    -> (o   : Offer oraw)
-                          -> Capable (Check.Offer.Result roles rs ds ss gs ks ls p b e ret)
-              offer fc ret (B lg tg tyC) (l,te) (O fc' l' m cont)
+                          -> Capable (State, Check.Offer.Result roles rs ds ss gs ks ls p b e ret)
+              offer st fc ret (B lg tg tyC) (l,te) (O fc' l' m cont)
                 = do Refl <- embedAt fc' (WrongLabel lg l')
                                          (decEq lg l')
                      Refl <- embedAt fc' (WrongLabel l l')
@@ -612,52 +629,53 @@ namespace Expr
 
                      Refl <- compare fc' tg te
 
-                     R tySyn pU tm <- check (Lambda.extend e m te)
+                     (st, R tySyn pU tm) <- check st (Lambda.extend e m te)
                                             er
                                             ec
                                             p
                                             ret
                                             tyC
                                             cont
-                     pure (Check.Offer.O
+                     pure (st, Check.Offer.O
                              (B l te tySyn)
                              (B Refl Refl pU) -- (B pU)
                              (O l tm) -- (O l tm)
                              )
 
-              offers : (fc  : FileContext)
+              offers : State
+                    -> (fc  : FileContext)
                     -> (ret : Base)
                     -> (bs  : Local.Branches ks roles bs')
                     -> (ls'  : List (String, Base))
                     -> (os  : Vect.Quantifiers.All.All Offer as')
-                           -> Capable (Check.Offers.Result roles rs ds ss gs ks ls p bs ls' ret)
+                           -> Capable (State, Check.Offers.Result roles rs ds ss gs ks ls p bs ls' ret)
 
-              offers fc _ Nil Nil Nil
-                = pure (OS Nil Empty Offers.Nil)
+              offers st fc _ Nil Nil Nil
+                = pure (st, OS Nil Empty Offers.Nil)
 
-              offers fc _ Nil _ os
+              offers _ fc _ Nil _ os
                 = throwAt fc (RedundantCases (flattern os))
 
-              offers fc _ bs _ Nil
+              offers _ fc _ bs _ Nil
                 = do let Val bs = getLTs bs
                      throwAt fc (CasesMissing bs)
 
-              offers fc ret ((B l t b)::bs) (a::as) (o::os)
-                = do O  lSyn  pU  o  <- offer  fc ret (B l t b) a  o
-                     OS lSyns pUs os <- offers fc ret bs        as os
-                     pure (OS (lSyn::lSyns)
+              offers st fc ret ((B l t b)::bs) (a::as) (o::os)
+                = do (st, O  lSyn  pU  o ) <- offer  st fc ret (B l t b) a  o
+                     (st, OS lSyns pUs os) <- offers st fc ret bs        as os
+                     pure (st, OS (lSyn::lSyns)
                               (Next pU pUs)
                               (o::os))
 
-              offers fc _ (b::bs) Nil (o::os)
+              offers _ fc _ (b::bs) Nil (o::os)
                 = do let Val bs = getLTs bs
                      throwAt fc (CasesMissing bs)
 
     --
-    check e er ec p ret (ChoiceL SELECT whom (Val (UNION (f:::fs)))
-                                                  (UNION (m::ms))
-                                                         (c::cs))
-                        (Send fc role tyTm label msg scope onErr)
+    check st e er ec p ret (ChoiceL SELECT whom (Val (UNION (f:::fs)))
+                                                     (UNION (m::ms))
+                                                            (c::cs))
+                           (Send fc role tyTm label msg scope onErr)
 
       = do -- 1. Check the type of the annotation
 
@@ -681,13 +699,13 @@ namespace Expr
                                                                   (map fst $ f::fs))
                                                       (select label (m::ms) (c::cs))
 
-           tmM <- check fc e tyM msg
+           (st, tmM) <- check st fc e tyM msg
 
            -- 4. Get the type(s) for the remainder of the protocol
 
-           R tySyn pU scope <- check e er ec p ret tyC scope
+           (st,  R tySyn pU scope) <- check st e er ec p ret tyC scope
 
-           R Crash Crash onErr <- check e er ec p ret Crash onErr
+           (st, R Crash Crash onErr) <- check st e er ec p ret Crash onErr
 
            -- 5. Is it a valid selection?
 
@@ -704,7 +722,7 @@ namespace Expr
 
            -- 6. Return Evidence
 
-           pure (R (ChoiceL SELECT
+           pure (st, R (ChoiceL SELECT
                             target
                             (Val (UNION ((label,tyM):::Nil)))
                             (UNION (F label prfM::Nil))
@@ -714,19 +732,20 @@ namespace Expr
 
     -- [ NOTE ] Non-Session Typed Terms
 
-    check e er ec p ret type (Seq fc x y)
+    check st e er ec p ret type (Seq fc x y)
 
-      = do tmL <- check fc e UNIT x
-           R lSyn pU tmR <- check e er ec p ret type y
-           pure (R lSyn pU (Seq tmL tmR))
+      = do (st, tmL) <- check st fc e UNIT x
+           (st, R lSyn pU tmR) <- check st e er ec p ret type y
+           pure (st, R lSyn pU (Seq tmL tmR))
 
     --
-    check e er ec p ret type (LetTy fc ref st ty val scope)
-      = do (tyVal ** T tyTmVal val) <- check fc e ty val
+    check st e er ec p ret type (LetTy fc ref k ty val scope)
+      = do (st, (tyVal ** T tyTmVal val)) <- check st fc e ty val
 
-           case st of
+           case k of
              HEAP
-               => do (R lSyn pU scope) <- check (Lambda.extend e ref (REF tyVal))
+               => do (st, R lSyn pU scope) <- check st
+                                              (Lambda.extend e ref (REF tyVal))
                                               er
                                               ec
                                               p
@@ -734,9 +753,9 @@ namespace Expr
                                               type
                                               scope
 
-                     pure (R lSyn pU (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
+                     pure (st, R lSyn pU (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
              STACK
-               => do (R lSyn pU scope) <- check (Lambda.extend e ref tyVal)
+               => do (st, R lSyn pU scope) <- check st (Lambda.extend e ref tyVal)
                                               er
                                               ec
                                               p
@@ -744,14 +763,14 @@ namespace Expr
                                               type
                                               scope
 
-                     pure (R lSyn pU (Let tyTmVal val scope))
+                     pure (st, R lSyn pU (Let tyTmVal val scope))
 
-    check e er ec p ret type (Let fc ref st val scope)
-      = do (tyVal ** T tyTmVal val) <- synthReflect e val
+    check st e er ec p ret type (Let fc ref k val scope)
+      = do (st, (tyVal ** T tyTmVal val)) <- synthReflect st e val
 
-           case st of
+           case k of
              HEAP
-               => do (R l pU scope) <- check (Lambda.extend e ref (REF tyVal))
+               => do (st, R l pU scope) <- check st (Lambda.extend e ref (REF tyVal))
                                                er
                                                ec
                                                p
@@ -759,9 +778,9 @@ namespace Expr
                                                type
                                                scope
 
-                     pure (R l pU (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
+                     pure (st, R l pU (Let (TyRef tyTmVal) (Builtin Alloc [val]) scope))
              STACK
-               => do (R l pU scope) <- check (Lambda.extend e ref tyVal)
+               => do (st, R l pU scope) <- check st (Lambda.extend e ref tyVal)
                                              er
                                              ec
                                              p
@@ -769,18 +788,18 @@ namespace Expr
                                              type
                                              scope
 
-                     pure (R l pU (Let tyTmVal val scope))
+                     pure (st, R l pU (Let tyTmVal val scope))
 
-    check e er ec p ret type (Split fc this val scope)
+    check st e er ec p ret type (Split fc this val scope)
 
-      = do (TUPLE (f::s::ts) ** v) <- synth e val
-             | (tyV ** _) => throwAt fc (PairExpected tyV)
+      = do (st, (TUPLE (f::s::ts) ** v)) <- synth st e val
+             | (st, (tyV ** _)) => throwAt fc (PairExpected tyV)
 
            envExt <- zip e this (f::s::ts)
 
-           (R l p rest) <- check envExt er ec p ret type scope
+           (st, R l p rest) <- check st envExt er ec p ret type scope
 
-           pure (R l p (Split v rest))
+           pure (st, R l p (Split v rest))
 
       where zip : (env : Env rs ds ss gs ls)
                -> (xs  : List String)
@@ -799,11 +818,11 @@ namespace Expr
                    pure (Lambda.extend rest x y)
 
 
-    check env er ec p ret type (Cond fc cond tt ff)
-      = do tm <- check fc env BOOL cond
+    check st env er ec p ret type (Cond fc cond tt ff)
+      = do (st, tm) <- check st fc env BOOL cond
 
-           R tyL _ tmL <- check env er ec p ret type tt
-           R tyR _ tmR <- check env er ec p ret type ff
+           (st, R tyL _ tmL) <- check st env er ec p ret type tt
+           (st, R tyR _ tmR) <- check st env er ec p ret type ff
 
            (lty ** prfMerge) <- embedAt fc
                                         (MergeError (unlines [toString ec er tyL, toString ec er tyR]))
@@ -817,17 +836,17 @@ namespace Expr
                      (subset lty type)
 
 
-           pure (R lty
+           pure (st, R lty
                    prfS
                    (Cond tm tmL tmR prfMerge)
                 )
 
-    check env er ec p ret ptype (Match fc cond prf (c::cs))
-      = do (UNION ((es,et) ::: fs) ** tm) <- synth env cond
-               | (ty ** _) => throwAt fc (UnionExpected ty)
+    check st env er ec p ret ptype (Match fc cond prf (c::cs))
+      = do (st, (UNION ((es,et) ::: fs) ** tm)) <- synth st env cond
+               | (st, (ty ** _)) => throwAt fc (UnionExpected ty)
 
-           C  tyC  c  <- case' fc ret es et c
-           CS tyCS cs <- cases fc ret  fs   cs
+           (st, C  tyC  c ) <- case' st fc ret es et c
+           (st, CS tyCS cs) <- cases st fc ret  fs   cs
 
            (lty ** prfMerge) <- embedAt
                                   fc
@@ -843,7 +862,7 @@ namespace Expr
                                   (toString ec er ptype))
                      (subset lty ptype)
 
-           pure (Check.R
+           pure (st, Check.R
                    lty
                    prfS
                    (Match tm
@@ -852,53 +871,64 @@ namespace Expr
 
                    )
 
-      where case' : (fc   : FileContext)
+      where case' : State
+                 -> (fc   : FileContext)
                  -> (ret  : Base)
                  -> (expL : String)
                  -> (et   : Base)
                  -> (o    : Offer oraw)
-                         -> Capable (Check.Case.Result roles rs ds ss gs ks ls p (expL,et) ptype ret)
-            case' fc ret el et (O fc' l' mn cont)
+                         -> Capable (State, Check.Case.Result roles rs ds ss gs ks ls p (expL,et) ptype ret)
+            case' st fc ret el et (O fc' l' mn cont)
               = do Refl <- embedAt fc' (WrongLabel el l')
                                        (decEq el l')
-                   R tySyn pU cont <- check (Lambda.extend env mn et)
+                   (st, R tySyn pU cont) <- check st (Lambda.extend env mn et)
                                             er ec p ret ptype cont
 
-                   pure (C (B el et tySyn)
+                   pure (st, C (B el et tySyn)
                            (C el cont))
 
-            cases : (fc  : FileContext)
+            cases : State
+                 -> (fc  : FileContext)
                  -> (ret : Base)
                  -> (bs  : List (Pair String Base))
                  -> (os  : Vect.Quantifiers.All.All Offer as')
-                        -> Capable (Check.Cases.Result roles rs ds ss gs ks ls p bs ptype ret)
+                        -> Capable (State, Check.Cases.Result roles rs ds ss gs ks ls p bs ptype ret)
 
-            cases fc _ Nil Nil
-              = pure (CS Nil Cases.Nil)
+            cases st fc _ Nil Nil
+              = pure (st, CS Nil Cases.Nil)
 
-            cases fc _ Nil os
+            cases _ fc _ Nil os
               = throwAt fc (RedundantCases (flattern os))
 
-            cases fc _ bs Nil
+            cases _ fc _ bs Nil
               = throwAt fc (CasesMissing bs)
 
-            cases fc ret (MkPair l t::bs) (o::os)
-              = do C  lSyn  o  <- case' fc ret l t o
-                   CS lSyns os <- cases fc ret bs os
-                   pure (CS (lSyn::lSyns)
+            cases st fc ret (MkPair l t::bs) (o::os)
+              = do (st, C  lSyn  o ) <- case' st fc ret l t o
+                   (st, CS lSyns os) <- cases st fc ret bs os
+                   pure (st, CS (lSyn::lSyns)
                             (o::os))
 
     -- [ NOTE ] Holes are only checkable terms as they inherit the checked types.
-    check env er ec princ ret type (Hole ref prf)
-      = showHoleSessionExit (lambda env)
-                                  er
-                                  ec
-                                  type
-                                  (get ref)
+    check st env er ec princ ret type (Hole ref prf)
+        = do let st = addHole st (get ref) (HSesh (span ref) env er ec type princ (get ref))
 
-    check e er ec p ret type term
+             -- Uck.
+             prf <- embedAt (span ref)
+                            (SubsetError (toString ec er type)
+                                         (toString ec er type))
+                            (subset type type)
 
-      = do R syn tm <- tryCatch (synth e er ec p ret term)
+             pure (st, R type prf $ Hole (get ref))
+--      = showHoleSessionExit (lambda env)
+--                                  er
+--                                  ec
+--                                  type
+--                                  (get ref)
+
+    check st e er ec p ret type term
+
+      = do (st, R syn tm) <- tryCatch (synth st e er ec p ret term)
 
                                 (\eer => throwAt (getFC term)
                                           (IllTypedSession (toString ec er type)
@@ -909,7 +939,7 @@ namespace Expr
                                        (toString ec er syn))
                           (subset syn type)
 
-           pure (R syn prf tm)
+           pure (st, R syn prf tm)
 
 
 
@@ -918,6 +948,7 @@ checkHoles : {e, roles, ls,ks : _}
           -> {ds   : List Ty.Base}
           -> {gs   : List Ty.Method}
           -> {ss   : List Ty.Session}
+          -> State
           -> (env  : Env rs ds ss gs ls)
           -> (enr  : Context Role roles)
           -> (enc  : Context Protocol.Kind ks)
@@ -925,19 +956,19 @@ checkHoles : {e, roles, ls,ks : _}
           -> (ret  : Base)
           -> (type : Local.Local ks roles)
           -> (expr : Sessions.Expr e)
-                  -> Capable (Check.Result roles rs ds ss gs ks ls princ type ret)
-checkHoles e er ec p ret type term
+                  -> Capable (State, Check.Result roles rs ds ss gs ks ls princ type ret)
+checkHoles st e er ec p ret type term
 
-  = tryCatch (do R syn tm <- synth e er ec p ret term
+  = tryCatch (do (st, R syn tm) <- synth st e er ec p ret term
 
                  prf <- embedAt (getFC term)
                                 (SubsetError (toString ec er type)
                                              (toString ec er syn))
                                 (subset syn type)
 
-                 pure (R syn prf tm))
+                 pure (st, R syn prf tm))
 
-             (const $ check e er ec p ret type term)
+             (const $ check st e er ec p ret type term)
 
 
 
@@ -947,10 +978,11 @@ synth : {rs   : List Ty.Role}
      -> {ds   : List Ty.Base}
      -> {gs   : List Ty.Method}
      -> {ss   : List Ty.Session}
+     -> State
      -> (env  : Env rs ds ss gs Nil)
      -> (sesh : Session s)
-             -> Capable (DPair Ty.Method (Session rs ds ss gs))
-synth env (Sesh fc prin ref p prf as ret scope)
+             -> Capable (State, DPair Ty.Method (Session rs ds ss gs))
+synth st env (Sesh fc prin ref p prf as ret scope)
   = do (S rh tyGlobal ** prot) <- Sigma.lookup env ref
 
        (p ** principle) <- synth rh prin
@@ -963,7 +995,7 @@ synth env (Sesh fc prin ref p prf as ret scope)
                                   (ProjectionError) -- @TODO Error messages.
                                   (Projection.Closed.project principle tyGlobal)
 
-       R tyLocal' prf tm <- checkHoles
+       (st, R tyLocal' prf tm) <- checkHoles st
                                     ({ lambda := expand as} env)
                                     rh
                                     Nil
@@ -972,7 +1004,7 @@ synth env (Sesh fc prin ref p prf as ret scope)
                                     tyLocal
                                     scope
 
-       pure (SESH rh principle tyLocal tyARGS tyRET ** Sesh prot prfProj prf tm)
+       pure (st, (SESH rh principle tyLocal tyARGS tyRET ** Sesh prot prfProj prf tm))
 
 namespace Raw
   export
@@ -980,9 +1012,10 @@ namespace Raw
        -> {ds  : List Ty.Base}
        -> {gs  : List Ty.Method}
        -> {ss  : List Ty.Session}
+       -> State
        -> (env : Env rs ds ss gs Nil)
        -> (syn : AST SESH)
-              -> Capable (DPair Ty.Method (Session rs ds ss gs))
-  synth env s
-    = synth env (toSession s)
+              -> Capable (State, DPair Ty.Method (Session rs ds ss gs))
+  synth st env s
+    = synth st env (toSession s)
 -- [ EOF ]

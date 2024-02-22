@@ -1,27 +1,18 @@
 func printLn(str:String) -> Unit { print(str) ; print(toString('\n')) }
 
-main (args : [String])
+func echo (msg : String) -> Unit
 {
-  printLn("My First Program with files")
-; local mfh = popen2("python3 pingping.py")
-; match mfh
+  match popen2("python3 pingping.py")
   { when left(e) { printLn("Error opening") }
 
     when right(fhs)
-    { match write(fhs,"rr")
+    { match write(fhs,msg)
       { when left(err) { printLn("Error sending line.") }
 
         when right(res)
         { match read(fhs)
           { when left(err) { printLn("Error reading line.") }
+            when right(res) { printLn(res) ; close(fhs) }
+          }}}}}}
 
-            when right(res)
-            { printLn(res)
-            ; close(fhs)
-            }
-          }
-        }
-      }
-    }
-  }
-}
+main (args : [String]) { echo("Hello") }

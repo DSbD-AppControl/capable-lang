@@ -1,0 +1,33 @@
+Running Test
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+# Finished Parsing
+# Finished Type Checking
+Capable> # Finished Parsing
+# Finished Type Checking
+Capable> rec(x).
+  (sendTo[Bob] { ping(String)
+                 .(recvFrom[Bob] { pongR(String).Call (x)
+                 | quit(String)
+                   .(sendTo[Bob] { ping(String)
+                                   .(recvFrom[Bob] {pong(String).End}) }) }) })
+Capable> rec(x).
+  (recvFrom[Alice] { ping(String)
+                     .(sendTo[Alice] { pongR(String).Call (x)
+                     | quit(String)
+                       .(recvFrom[Alice] { ping(String)
+                                           .(sendTo[Alice] { pong(String)
+                                                             .End }) }) }) })
+Capable> (sendTo[Bob] {ping(String).(recvFrom[Bob] {pong(String).End})})
+Capable> (recvFrom[Alice] {ping(String).(sendTo[Alice] {pong(String).End})})
+Capable> Exiting the REPL

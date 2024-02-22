@@ -1,0 +1,20 @@
+newtype Foo(String)
+
+role A
+role B
+
+protocol x
+  = A ==> B | Foo(String) . end
+
+main (args : [String])
+{
+  local x = Foo("str");
+
+  match x
+  {
+    when Foo(b)
+    {
+      print(b); print(toString('\n'))
+    }
+  }
+}

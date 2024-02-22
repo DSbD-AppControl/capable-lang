@@ -1,0 +1,32 @@
+func printLn(str:String) -> Unit
+{
+  print(str)
+; print(toString('\n'))
+
+}
+
+union MaybeStr { mStrEmpty : Unit; mStrJust : String }
+
+func safeHeadListStr (arg : [String]) -> MaybeStr
+{
+  if eq(length(arg),0)
+  {
+    mStrEmpty(unit)
+  } else
+  {
+    mStrJust(getL(0,arg))
+  }
+}
+
+main (args : [String])
+{
+  local v : [3;String] = <"a", "b", "c">;
+  printLn(toString(getV(1,v)));
+
+  match safeHeadListStr(args)
+  {
+    when mStrEmpty(u) { printLn("Empty") }
+    when mStrJust(s)  { print("Head is: "); printLn(s) }
+  }
+
+}

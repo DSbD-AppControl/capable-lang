@@ -1,0 +1,59 @@
+{- Modelling and Realisation of the Two Buyer Protocol.
+
+The protocol allows two people (Alice, Bob) to neogiate buying a book from the 'Seller'.
+
+Informally:
+
+Alice -> Seller | title : String
+Seller -> { Alice, Bob } | quote : Int
+
+Alice -> Bob    | offer : Int (quote / 2)
+Bob   -> Seller | { quit . end
+                  , acceptance . Bob -> Seller | address
+                               . Seller -> Bob | date
+                               , end }
+
+-}
+
+
+role Bob
+role Seller
+role Alice
+
+newtype title(String)
+newtype quote(Int)
+newtype address(String)
+newtype date(String)
+
+union commands { quit   : Unit
+               ; accept : Unit
+               }
+
+union MaybeDate { nout : Unit; cancelled : Unit; mdate : String}
+union MaybeSale { noutS : Unit; sale : String; cancelledS : Unit}
+
+union negotiate { bye   : Unit
+                ; okay  : Unit
+                }
+
+newtype terminate(Unit)
+
+protocol twoBuyer
+  = Alice  ==> Seller | title(String)
+  . Seller ==> Alice  | quote(Int)
+  . Alice  ==> Bob    | quote(Int)
+  . Bob    ==> Alice    | quote(Int)
+  . Alice  ==> Seller [ commands ] { quit(Unit). Alice ==> Bob | terminate(Unit) . end
+                                   | accept(Unit)
+                                     . Alice  ==> Seller | address(String)
+                                     . Seller ==> Alice  | date(String)
+                                     . Alice  ==> Bob    | date(String)
+                                     . end
+                                   }
+
+main (args : [String])
+{
+  unit
+}
+
+-- [ EOF ]

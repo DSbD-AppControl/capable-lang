@@ -29,7 +29,7 @@ import Toolkit.Data.DVect
 import Toolkit.Data.List.AtIndex
 import Toolkit.DeBruijn.Renaming
 
-import Capable.Bootstrap
+import public Capable.Bootstrap
 import Capable.Types
 
 import Capable.Terms
@@ -39,107 +39,6 @@ import Capable.Terms
 
 -- Helper functions for working on lists, required for working with the heap.
 
-namespace List
-  public export
-  snoc : (xs : List type)
-      -> (x  :      type)
-            -> List type
-  snoc xs x = xs ++ [x]
-
-namespace DList
-
-
-  public export
-  snoc : {x : type} -> DList type etype xs
-          -> etype x
-          -> DList type etype (Values.List.snoc xs x)
-  snoc [] z = z :: []
-  snoc (elem :: rest) z = elem :: snoc rest z
-
-namespace Prefix
-  public export
-  data Subset : (this, that : List type) -> Type
-    where
-      Empty : Subset Nil that
-      Extend : (x : type)
-            -> (rest : Subset     this        that)
-                    -> Subset (x::this) (x :: that)
-
-
-  export
-  Uninhabited (Subset (x::xs) Nil) where
-    uninhabited Empty impossible
-    uninhabited (Extend _ rest) impossible
-
-  export
-  isSubset : DecEq type
-          => (xs,ys : List type)
-                   -> Dec (Subset xs ys)
-  isSubset [] ys
-    = Yes Empty
-
-  isSubset (x :: xs) []
-    = No absurd
-
-  isSubset (x :: xs) (y :: ys) with (decEq x y)
-    isSubset (x :: xs) (x :: ys) | (Yes Refl) with (isSubset xs ys)
-      isSubset (x :: xs) (x :: ys) | (Yes Refl) | (Yes prf)
-        = Yes (Extend x prf)
-      isSubset (x :: xs) (x :: ys) | (Yes Refl) | (No contra)
-        = No $ \case (Extend x rest) => contra rest
-
-    isSubset (x :: xs) (y :: ys) | (No contra)
-      = No $ \case (Extend x rest) => contra Refl
-
-
-  public export
-  snoc_elem : {type : Type}
-           -> (xs : List type)
-           -> (x  : type)
-           -> IsVar (xs ++ [x]) x
-  snoc_elem [] x
-    = V 0 Here
-  snoc_elem (y :: ys) x with (snoc_elem ys x)
-    snoc_elem (y :: ys) x | (V pos prf)
-      = V (S pos) (There prf)
-
-  public export
-  expand : IsVar  xs type
-         -> Subset      xs ys
-         -> IsVar  ys type
-  expand (V 0 Here) (Extend type rest)
-    = V 0 Here
-  expand (V (S k) (There later)) (Extend y rest) with (expand (V k later) rest)
-    expand (V (S k) (There later)) (Extend y rest) | (V pos prf)
-      = V (S pos) (There prf)
-
-  public export
-  snoc_add : (x  : type)
-          -> (xs : List type)
-                -> Subset xs (xs ++ [x])
-  snoc_add x []
-    = Empty
-  snoc_add x (y :: xs)
-    = Extend y (snoc_add x xs)
-
-  public export
-  noChange : (xs : List type)
-                -> Subset xs xs
-  noChange []
-    = Empty
-  noChange (x :: xs)
-    = Extend x (noChange xs)
-
-  public export
-  trans : Prefix.Subset xs ys
-       -> Prefix.Subset ys zs
-       -> Prefix.Subset xs zs
-  trans Empty Empty
-    = Empty
-  trans Empty (Extend x rest)
-    = Empty
-  trans (Extend x rest) (Extend x z)
-    = Extend x (trans rest z)
 
 ||| We treat closures (global stack elements) seperatly from the local
 ||| stack and heap.

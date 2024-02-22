@@ -3,8 +3,7 @@ Running Test
 # Finished Type Checking
 # Executing
 ```
-My First Program with files
-{"msg": "Expecting value: line 1 column 1 (char 0)", "payload": "rr\n"}
+{"msg": "Expecting value: line 1 column 1 (char 0)", "payload": "Hello\n"}
 
 ```
 # Finished
@@ -17,11 +16,9 @@ My First Program with files
   \CapableKeyword{print}(\CapableBound{str});
   \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
 \}
-\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\CapableKeyword{func} \CapableFunction{echo} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
 \{
-  \CapableFunction{\CapableBound{printLn}}(\CapableValue{"My First Program with files"});
-  \CapableKeyword{local} \CapableBound{mfh} = \CapableKeyword{popen2}(\CapableValue{"python3 pingping.py"}) ;
-  \CapableKeyword{match} \CapableBound{mfh}
+  \CapableKeyword{match} \CapableKeyword{popen2}(\CapableValue{"python3 pingping.py"})
   \{
     \CapableKeyword{when} \CapableBound{left}(\CapableBound{e})
     \{
@@ -29,7 +26,7 @@ My First Program with files
     \}
     \CapableKeyword{when} \CapableBound{right}(\CapableBound{fhs})
     \{
-      \CapableKeyword{match} \CapableKeyword{write}(\CapableBound{fhs}, \CapableValue{"rr"})
+      \CapableKeyword{match} \CapableKeyword{write}(\CapableBound{fhs}, \CapableBound{msg})
       \{
         \CapableKeyword{when} \CapableBound{left}(\CapableBound{err})
         \{
@@ -53,6 +50,53 @@ My First Program with files
       \}
     \}
   \}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableFunction{\CapableBound{echo}}(\CapableValue{"Hello"})
+\}
+\end{Verbatim}
+
+```
+# Finished Parsing
+# Finished Type Checking
+# Finished Parsing
+# Finished Type Checking
+```
+\begin{Verbatim}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{str} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{print}(\CapableBound{str});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
+\}
+\CapableKeyword{func} \CapableFunction{echo} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{match} \CapableKeyword{popen2}(\CapableValue{"python3 echo.py"})
+  \{
+    \CapableKeyword{when} \CapableBound{left}(\CapableBound{e})
+    \{
+      \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Error running process"})
+    \}
+    \CapableKeyword{when} \CapableBound{right}(\CapableBound{hdl})
+    \{
+      \CapableKeyword{match} \CapableKeyword{read}(\CapableBound{hdl})
+      \{
+        \CapableKeyword{when} \CapableBound{left}(\CapableBound{err})
+        \{
+          \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Error sending line."})
+        \}
+        \CapableKeyword{when} \CapableBound{right}(\CapableBound{res})
+        \{
+          \CapableFunction{\CapableBound{printLn}}(\CapableBound{res});
+          \CapableKeyword{close}(\CapableBound{hdl})
+        \}
+      \}
+    \}
+  \}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableFunction{\CapableBound{echo}}(\CapableValue{"hello"})
 \}
 \end{Verbatim}
 

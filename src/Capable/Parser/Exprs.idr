@@ -200,6 +200,17 @@ mutual
          e <- Toolkit.location
          pure (bin THE (newFC s e) t k)
 
+  count : Rule EXPR
+  count
+    = do s <- Toolkit.location
+         keyword "length"
+         commit
+         symbol "("
+         k <- expr
+         symbol ")"
+         e <- Toolkit.location
+         pure (un LENGTH (newFC s e) k)
+
 
   pair : Rule EXPR
   pair
@@ -302,11 +313,11 @@ mutual
                      pure (forget as)
 
 
-
   getV : Rule EXPR
   getV
     = do s <- Toolkit.location
-         keyword "get"
+         keyword "getV"
+         commit
          symbol "("
          i <- int
          symbol ","
@@ -318,7 +329,8 @@ mutual
   getL : Rule EXPR
   getL
     = do s <- Toolkit.location
-         keyword "get"
+         keyword "getL"
+         commit
          symbol "("
          i <- expr
          symbol ","
@@ -327,40 +339,45 @@ mutual
          e <- Toolkit.location
          pure (bin GETL (newFC s e) i t)
 
-
-  getS : Rule EXPR
-  getS
+  project : Rule EXPR
+  project
     = do s <- Toolkit.location
          keyword "project"
          symbol "["
-         i <- ref
-         symbol "]"
-         symbol "("
-         k <- expr
-         symbol ")"
-         e <- Toolkit.location
-         pure (un (GETR (get i)) (newFC s e) k)
+         commit
+         (projectRecord s <|> projectTuple s)
 
-  getI : Rule EXPR
-  getI
-    = do s <- Toolkit.location
-         keyword "project"
-         symbol "["
-         i <- int
-         symbol "]"
-         symbol "("
-         k <- expr
-         symbol ")"
-         e <- Toolkit.location
-         pure (un (GETT i) (newFC s e) k)
+    where
+      projectRecord : Location.Location -> Rule EXPR
+      projectRecord s
+        = do i <- ref
+             commit
+             symbol "]"
+             symbol "("
+             k <- expr
+             symbol ")"
+             e <- Toolkit.location
+             pure (un (GETR (get i)) (newFC s e) k)
+
+      projectTuple : Location.Location -> Rule EXPR
+      projectTuple s
+        = do i <- int
+             commit
+             symbol "]"
+             symbol "("
+             k <- expr
+             symbol ")"
+             e <- Toolkit.location
+             pure (un (GETT i) (newFC s e) k)
 
   get : Rule EXPR
-  get = getV <|> getL <|> getI <|> getS
+  get = getV <|> getL <|> project
 
   setL : Rule EXPR
   setL
     = do s <- Toolkit.location
-         keyword "set"
+         keyword "setL"
+         commit
          symbol "["
          i <- expr
          symbol "]"
@@ -375,7 +392,8 @@ mutual
   setV : Rule EXPR
   setV
     = do s <- Toolkit.location
-         keyword "set"
+         keyword "setV"
+         commit
          symbol "["
          i <- int
          symbol "]"
@@ -570,6 +588,7 @@ mutual
       <|> split
       <|> let_ "local" STACK
       <|> let_ "var"   HEAP
+      <|> count
       <|> unary
       <|> binary
       <|> get

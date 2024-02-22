@@ -424,15 +424,10 @@ mutual
             else decidable (throw (OOB (cast i) s))
                            (\prf => pure $ Value h (List.index {ok = prf} (cast i) xs) (trans p1 p2))
                            (inBounds (cast i) xs)
---        = do Value h'  (I idx) p1 <- eval env heap idx
---             Value h'' arr     p2 <- eval (weaken p1 env) h' array
---             let Val s = size arr
---
---             if idx < 0
---              then throw (OOB idx s)
---              else maybe (throw (OOB idx s))
---                         (\idx => pure (Value h'' (index idx arr) (trans p1 p2)))
---                         (natToFin (cast idx) s)
+
+    eval env heap (CountL array)
+      = do Value h (MkList arr) p <- eval env heap array
+           pure (Value h (I (cast $ List.length arr)) p)
 
     -- ### Array's & Operations
     eval env heap (MkVect xs)
@@ -449,6 +444,9 @@ mutual
       = do Value h (MkVect arr) p <- eval env heap array
            pure (Value h (Vect.index idx arr) p)
 
+    eval env heap (CountV array)
+      = do Value h (MkVect arr) p <- eval env heap array
+           pure (Value h (I (cast $ Vect.length arr)) p)
 
     -- ### Data Structures
 

@@ -28,43 +28,46 @@ namespace Global
     data Branch : (ks : List Kind)
                -> (ts : List Base)
                -> (rs : List Role)
+               -> (ss : List Session)
                -> (b  : Branch Global ks rs (s,t))
                      -> Type
       where
         B : {t : Base}
          -> (label  : String)
          -> (type   : Ty ts t)
-         -> (choice : Global ks ts rs g)
-                   -> Branch ks ts rs (B label t g)
+         -> (choice : Global ks ts rs ss g)
+                   -> Branch ks ts rs ss (B label t g)
 
     public export
     data Branches : (ks : List Kind)
                  -> (ts : List Base)
                  -> (rs : List Role)
+                 -> (ss : List Session)
                  -> (b  : Global.Branches ks rs lts)
                        -> Type
       where
-        Nil  : Branches ks ts rs Nil
-        (::) : (b  : Branch   ks ts rs  b')
-            -> (bs : Branches ks ts rs      bs')
-                  -> Branches ks ts rs (b'::bs')
+        Nil  : Branches ks ts rs ss Nil
+        (::) : (b  : Branch   ks ts rs ss  b')
+            -> (bs : Branches ks ts rs ss      bs')
+                  -> Branches ks ts rs ss (b'::bs')
 
 
     public export
     data Global : (kinds : List Kind)
                -> (types : List Base)
                -> (roles : List Role)
+               -> (ss : List Session)
                -> (type  : Global kinds roles)
                         -> Type
       where
-        End : Global ks ts rs End
+        End : Global ks ts rs ss End
 
         Call : {v : _}
             -> (prf : RecVar ks v)
-                   -> Global ks ts rs (Call prf)
+                   -> Global ks ts ss rs (Call prf)
 
-        Rec : Global (v::ks) ts rs        type
-           -> Global     ks  ts rs (Rec v type)
+        Rec : Global (v::ks) ts rs ss        type
+           -> Global     ks  ts rs ss (Rec v type)
 
         Choice : {s,r : _}
               -> {f : (String,Base) }
@@ -73,11 +76,12 @@ namespace Global
               -> {bs : Global.Branches ks rs (fs)}
               -> (sender   : DeBruijn.Role rs s)
               -> (receiver : DeBruijn.Role rs r)
-              -> (prf      : Not (REquals rs sender receiver))
+              -> (prf      : VarsNotEQ rs sender receiver)
+--              -> (prf      : Not (REquals rs sender receiver))
               -> (type     : Ty ts (UNION (f:::fs)))
               -> (prfM     : Marshable (UNION (f:::fs)))
-              -> (choices  : Branches ks ts rs (b::bs))
-                          -> Global ks ts rs
+              -> (choices  : Branches ks ts rs ss (b::bs))
+                          -> Global ks ts rs ss
                                     (ChoiceG sender
                                              receiver
                                              (Val (UNION (f:::fs)))
@@ -85,9 +89,16 @@ namespace Global
                                              prf
                                              (b::bs))
 
+        -- Call outs
+        ContAux : {ctzt : Context Role rs'}
+               -> (idx  : IsVar ss (S ctzt global))
+               -> (prf  : Prefix.Subset rs' rs)
+                       -> Global ks ts rs ss (RecVar.weaken Empty (Role.weaken prf global))
+
+
 
 export
-getLabels : Branches ks ts rs bs -> List String
+getLabels : Branches ks ts rs ss bs -> List String
 getLabels [] = []
 getLabels ((B s type choice) :: x) = s :: getLabels x
 

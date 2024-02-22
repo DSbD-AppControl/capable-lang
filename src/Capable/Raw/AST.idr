@@ -160,6 +160,7 @@ namespace Shape
 
     -- ## Protocols
     STOP : NULL Shape PROT
+    AUXP : String -> NULL Shape PROT
     CALLP : String -> NULL Shape PROT
     RECP  : String -> UN Shape PROT PROT
     BRANCHP : String -> BIN Shape BRANCH TYPE PROT
@@ -208,7 +209,7 @@ namespace Shape
     LIST  : Shape EXPR n (replicate n EXPR)
     GETL : BIN Shape EXPR EXPR EXPR
     SETL : TRI Shape EXPR EXPR EXPR EXPR
-
+    LENGTH : UN Shape EXPR EXPR
     -- #### Arrays
     VECT  : Shape EXPR n (replicate n EXPR)
 
@@ -339,6 +340,7 @@ namespace Shape
   Show (Shape k n ks) where
     show (ROLE str)      = "(ROLE \{show str})"
     show STOP            = "STOP"
+    show (AUXP str)     = "(AUXP \{show str})"
     show (CALLP str)     = "(CALLP \{show str})"
     show (RECP str)      = "(RECP \{show str})"
     show (BRANCHP str)   = "(BRANCHP \{show str})"
@@ -365,6 +367,7 @@ namespace Shape
     show (CONST p v)     = "(CONST \{show p})"
     show (BBIN x)        = "(BBIN \{show x})"
     show (BUN x)         = "(BUN \{show x})"
+    show (LENGTH)        = "LENGTH"
     show LIST             = "LIST"
     show GETL             = "GETL"
     show SETL            = "SETL"
@@ -510,7 +513,7 @@ namespace Utils
                      -> Type
     where
       Empty : AsVect Nil Nil
-      Next : AsVect xs ys
+      Next : {xs : _} -> AsVect xs ys
           -> AsVect (x::xs) (x::ys)
 
   export

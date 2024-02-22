@@ -28,3 +28,4 @@ docs/build/
 /results*.json
 /results*.md
 /*.csv
+/results/

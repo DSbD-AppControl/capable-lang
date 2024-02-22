@@ -72,8 +72,8 @@ check : {p     : PROG}
      -> (prog  : Prog p)
               -> Capable (Result rs ds ss gs)
 check env state (Main fc mo)
-  = do (FUNC [LIST STR] UNIT ** m) <- synth env mo
-         | (ty ** _)
+  = do (state, (FUNC [LIST STR] UNIT ** m)) <- synth state env mo
+         | (st, (ty ** _))
              => throwAt fc (MismatchM ty (FUNC [LIST STR] UNIT))
 
        pure (R (Main m)
@@ -146,8 +146,8 @@ check env state (Def fc TYPE n val {rest} scope)
 check env state (Def fc FUNC n val scope)
   = do exists fc (gamma env) n
 
-       (FUNC as r ** tm) <- synth env val
-         | (ty ** _) => throwAt fc (FunctionExpected ty)
+       (state, (FUNC as r ** tm)) <- synth state env val
+         | (st, (ty ** _)) => throwAt fc (FunctionExpected ty)
 
        let env   = Gamma.extend env n (FUNC as r)
        let state = { funcs $= insert n (F tm)} state
@@ -183,14 +183,14 @@ check env state (Def fc PROT n val scope)
              (\_ => throwAt fc (AlreadyBound (MkRef fc n )))
              (!(getProtocol state n))
 
-       (g ** tm) <- synth (delta env) (rho env) val
+       (g ** tm) <- synth (delta env) (rho env) (sigma env) val
 
-       prf <- embedAt fc (\((r' ** r),err) => WellFormed "\{reflect (rho env) r} causes:\n\{show err}")
+       prf <- embedAt fc (\((r' ** r),err) => WellFormed "\{reflect (rho env) r} causes error at:\n\{show err}")
                          (wellFormed g)
 
        let env = Sigma.extend env n (S (rho env) g)
 
-       let state = {protocols $= insert n (P (rho env) g tm)} state
+       let state = {protocols $= insert n (P (rho env) g)} state
 
        R scopeTm state _ scope <- check env state scope
 
@@ -203,8 +203,8 @@ check env state (Def fc PROT n val scope)
 check env state (Def fc SESH n val scope)
   = do exists fc (gamma env) n
 
-       (SESH ctzt whom l as r ** tm) <- synth env val
-         | (ty ** _) => throwAt fc (SessionExpected ty)
+       (state, (SESH ctzt whom l as r ** tm)) <- synth state env val
+         | (st, (ty ** _)) => throwAt fc (SessionExpected ty)
 
        let env = Gamma.extend env n (SESH ctzt whom l as r)
        -- @ TODO add sessions to state
@@ -218,9 +218,10 @@ check env state (Def fc SESH n val scope)
 
 namespace Raw
   export
-  check : (r : PROG) -> Capable (Program,State,DPair PROG Prog)
-  check p
-    = do R p s p' ast <- check empty defaultState (toProg p)
+  check : State -> (r : PROG) -> Capable (Program,State,DPair PROG Prog)
+  check st p
+    = do let s : State = { file := file st } defaultState
+         R p s p' ast <- check empty s (toProg p)
          let s = setProgram p s
          pure (p,s,(p'**ast))
 

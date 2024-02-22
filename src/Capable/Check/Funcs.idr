@@ -26,6 +26,8 @@ import Capable.Terms.Types
 import Capable.Terms.Exprs
 import Capable.Terms.Funcs
 
+import Capable.State
+
 %default total
 
 export
@@ -50,8 +52,8 @@ args : {ds    : List Ty.Base}
     -> (args  : All Arg as)
              -> Capable (DPair (List Ty.Base)
                             (Instrs ds args))
-args delta []
-  = pure (_ ** Empty)
+args  delta []
+  = pure ((_ ** Empty))
 
 args delta (A fc ref ty :: y)
   = do (ty ** tm) <- synth delta ty
@@ -74,17 +76,18 @@ synth : {f    : FUNC}
      -> {ds   : List Ty.Base}
      -> {gs   : List Ty.Method}
      -> {ss   : List Ty.Session}
+     -> State
      -> (rho  : Env rs ds ss gs Nil)
      -> (func : Fun f)
-             -> Capable (DPair Ty.Method (Func rs ds ss gs))
-synth env (Func fc prf as ret scope)
+             -> Capable (State, DPair Ty.Method (Func rs ds ss gs))
+synth st env (Func fc prf as ret scope)
   = do (tyAS  ** as)  <- args  (delta env) as
        (tyRet ** ret) <- synth (delta env) ret
 
-       (tyScope ** scope) <- synth ({lambda := expand as} env) scope
-
-       Refl <- compare fc tyRet tyScope
-       pure (FUNC tyAS tyRet ** Fun scope)
+--       (st, (tyScope ** scope)) <- synth st ({lambda := expand as} env) scope
+       (st, T _ scope) <- Exprs.check st fc ({lambda := expand as} env) ret scope
+--       Refl <- compare fc tyRet tyScope
+       pure (st, (FUNC tyAS tyRet ** Fun scope))
 
 
 namespace Raw
@@ -93,11 +96,12 @@ namespace Raw
        -> {ds  : List Ty.Base}
        -> {gs  : List Ty.Method}
        -> {ss  : List Ty.Session}
+       -> State
        -> (env : Env rs ds ss gs Nil)
        -> (syn : FUNC)
-              -> Capable (DPair Ty.Method (Func rs ds ss gs))
-  synth env f
-    = synth env (toFun f)
+              -> Capable (State, DPair Ty.Method (Func rs ds ss gs))
+  synth st env f
+    = synth st env (toFun f)
 
 
 -- [ EOF ]

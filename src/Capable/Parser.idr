@@ -23,8 +23,27 @@ import Capable.Parser.Funcs
 import Capable.Parser.Sessions
 
 %default partial
+{-
+newtype : Rule (FileContext, String, DTYPE)
+newtype
+  = do s <- Toolkit.location
+       k <- gives "newtype" UNION
+       commit
+       r <- Capable.ref
+       symbol "="
+       s' <- Toolkit.location
+       t <- type
+       e <- Toolkit.location
+       let fs = DVect.fromList [(Branch (FIELD (get r)) (newFC s' e) [t])]
 
+       pure ( newFC s e
+            , get r
+            , Branch (DTYPE UNION) (newFC s e) fs
+            )
+
+-}
 data Decl = DeclT FileContext String TYPE
+          | DeclN FileContext String DTYPE
           | DeclD FileContext String DTYPE
           | DeclF FileContext String FUNC
           | DeclR FileContext String
@@ -33,7 +52,7 @@ data Decl = DeclT FileContext String TYPE
 
 decls : RuleEmpty (List Decl)
 decls
-    = many (declSesh <|> declTy <|> declFunc <|> declRole <|> declProt <|> declDTy)
+    = many (declSesh <|> declNTy <|> declTy <|> declFunc <|> declRole <|> declProt <|> declDTy)
   where
     declProt : Rule Decl
     declProt
@@ -59,6 +78,19 @@ decls
            pure (DeclD (fst urgh)
                        (fst (snd urgh))
                        (snd (snd urgh)))
+
+    declNTy : Rule Decl
+    declNTy
+      = do s <- Toolkit.location
+           keyword "newtype"
+           r <- ref
+           symbol "("
+           s' <- Toolkit.location
+           ty <- type
+           symbol ")"
+           e <- Toolkit.location
+           let fs = DVect.fromList [(Branch (FIELD (get r)) (newFC s' e) [ty])]
+           pure (DeclN (newFC s e) (get r) (Branch (DTYPE UNION) (newFC s e) fs))
 
     declTy : Rule Decl
     declTy
@@ -123,6 +155,9 @@ program
 
     fold (DeclT fc r ty)
       = bin (DEF r TYPE) fc ty
+
+    fold (DeclN fc r ty)
+      = bin (DEF r DTYPE) fc ty
 
     fold (DeclD fc r ty)
       = bin (DEF r DTYPE) fc ty

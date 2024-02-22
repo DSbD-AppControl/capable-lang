@@ -41,6 +41,17 @@ call
        e <- Toolkit.location
        pure (null (CALLP (get r)) (newFC s e))
 
+aux : Rule PROT
+aux
+  = do s <- Toolkit.location
+       keyword "aux"
+       symbol "("
+       r <- Capable.ref
+       symbol ")"
+       e <- Toolkit.location
+       pure (null (AUXP (get r)) (newFC s e))
+
+
 mutual
   rec : Rule PROT
   rec
@@ -66,6 +77,28 @@ mutual
          e <- Toolkit.location
          pure (bin (BRANCHP (get l)) (newFC s e) t c)
 
+  send : Rule PROT
+  send
+    = do s <- Toolkit.location
+         a <- role
+         symbol "==>"
+         b <- role
+         symbol "|"
+         commit
+         l <- Capable.ref
+         symbol "("
+         t <- type
+         symbol ")"
+         symbol "."
+         c <- protocol
+         e <- Toolkit.location
+         let nt = (null (VARTY (get l)) (span l))
+         let bs = [bin (BRANCHP (get l)) (newFC s e) t c]
+         pure (Branch CHOICE
+                      (newFC s e) $ a::b::nt::bs)
+
+
+
   choice : Rule PROT
   choice
     = do s <- Toolkit.location
@@ -73,6 +106,7 @@ mutual
          symbol "==>"
          b <- role
          symbol "["
+         commit
          t <- type
          symbol "]"
          symbol "{"
@@ -86,6 +120,8 @@ mutual
   protocol
      =  end
     <|> call
+    <|> aux
+    <|> send
     <|> choice
     <|> rec
 

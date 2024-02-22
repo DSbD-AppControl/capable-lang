@@ -110,6 +110,9 @@ mutual
                  -> Expr (Branch SLICE fc [s,e,t])
 
       -- ## Data
+      Length : (fc : FileContext)
+            -> (this : Expr e)
+                    -> Expr (Branch LENGTH fc [e])
 
       MkList : {as' : Vect n Raw.AST.EXPR}
             -> (fc : FileContext)
@@ -308,6 +311,9 @@ mutual
   toExpr (Branch VECT fc xs)
     = let (as ** prf) = asVect xs
       in MkVect fc prf (assert_total $ args as)
+
+  toExpr (Branch LENGTH fc [x])
+    = Length fc (toExpr x)
 
   toExpr (Branch LIST fc xs)
     = let (as ** prf) = asVect xs

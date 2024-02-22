@@ -1,6 +1,8 @@
 Running Test
 # Finished Parsing
 # Finished Type Checking
+# Finished Parsing
+# Finished Type Checking
 ```
 \begin{Verbatim}
 \CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{str} : \CapableType{String}) -> \CapableType{Unit}

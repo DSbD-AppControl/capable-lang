@@ -1,0 +1,111 @@
+Running Test
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+We echoed successfully.```
+# Finished
+# Finished Parsing
+# Finished Type Checking
+```
+\begin{Verbatim}
+\CapableKeyword{func} \CapableFunction{printLn} (\CapableBound{msg} : \CapableType{String}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{print}(\CapableBound{msg});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
+\}
+\CapableKeyword{role} \CapableRole{Client}
+\CapableKeyword{role} \CapableRole{Server}
+\CapableKeyword{union} \CapableBound{Msg} \{\CapableBound{Msg} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{cmd} \{\CapableBound{msg} : \CapableType{\CapableBound{Msg}}; \CapableBound{quit} : \CapableType{\CapableBound{Msg}}\}
+\CapableKeyword{protocol} \CapableProtocol{Echo}
+  = \CapableKeyword{rec}(\CapableBound{x})
+  . \CapableRole{Client} ==> \CapableRole{Server} [\CapableType{\CapableBound{cmd}}] \{ \CapableBound{msg}(\CapableType{\CapableBound{Msg}})
+  . \CapableRole{Server} ==> \CapableRole{Client} [\CapableType{\CapableBound{Msg}}] \{ \CapableBound{Msg}(\CapableType{String})
+  . \CapableKeyword{call}(\CapableBound{x})
+  \}
+  | \CapableBound{quit}(\CapableType{\CapableBound{Msg}})
+  . \CapableRole{Server} ==> \CapableRole{Client} [\CapableType{\CapableBound{Msg}}] \{ \CapableBound{Msg}(\CapableType{String})
+  . \CapableKeyword{end}
+  \}
+  \}
+\CapableKeyword{session} \CapableBound{echoClientProgram} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{i} : \CapableType{String}) -> \CapableType{Bool}
+\{
+  \CapableKeyword{loop}(\CapableBound{x})
+  \{
+    \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{quit}(\CapableFunction{\CapableBound{Msg}}(\CapableBound{i}))
+      \CapableKeyword{catch}
+      \{
+        \CapableKeyword{crash}(\CapableValue{False})
+      \}
+    \CapableKeyword{recv} [\CapableType{\CapableBound{Msg}}] \CapableRole{Server}
+    \{
+      \CapableKeyword{when} Msg (Msg\_value)
+      \{
+        \CapableKeyword{end}(\CapableValue{True})
+      \}
+    \} \CapableKeyword{catch}
+    \{
+      \CapableKeyword{crash}(\CapableValue{False})
+    \}
+  \}
+\}
+\CapableKeyword{session} \CapableBound{echoClientProcess} <\CapableProtocol{\CapableBound{Echo}} \CapableKeyword{as} \CapableRole{Client}> (\CapableBound{c} : \CapableType{\CapableBound{cmd}}) -> \CapableType{Bool}
+\{
+  \CapableKeyword{loop}(\CapableBound{x})
+  \{
+    \CapableKeyword{match} \CapableBound{c}
+    \{
+      \CapableKeyword{when} msg(m)
+      \{
+        \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{msg}(\CapableBound{m})
+          \CapableKeyword{catch}
+          \{
+            \CapableKeyword{crash}(\CapableValue{False})
+          \}
+        \CapableKeyword{recv} [\CapableType{\CapableBound{Msg}}] \CapableRole{Server}
+        \{
+          \CapableKeyword{when} Msg (Msg\_value)
+          \{
+            \CapableKeyword{call}(\CapableBound{x})
+          \}
+        \} \CapableKeyword{catch}
+        \{
+          \CapableKeyword{crash}(\CapableValue{False})
+        \}
+      \}
+      \CapableKeyword{when} quit(m)
+      \{
+        \CapableKeyword{send} [\CapableType{\CapableBound{cmd}}] \CapableRole{Server} \CapableBound{quit}(\CapableBound{m})
+          \CapableKeyword{catch}
+          \{
+            \CapableKeyword{crash}(\CapableValue{False})
+          \}
+        \CapableKeyword{recv} [\CapableType{\CapableBound{Msg}}] \CapableRole{Server}
+        \{
+          \CapableKeyword{when} Msg (Msg\_value)
+          \{
+            \CapableKeyword{end}(\CapableValue{True})
+          \}
+        \} \CapableKeyword{catch}
+        \{
+          \CapableKeyword{crash}(\CapableValue{False})
+        \}
+      \}
+    \}
+  \}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{local} \CapableBound{val} = \CapableValue{"Hello World"} ;
+  \CapableKeyword{if} \CapableKeyword{run} \CapableFunction{\CapableBound{echoClientProgram}}(\CapableBound{val}) \CapableKeyword{with} [\CapableRole{Server} \CapableKeyword{as} \CapableValue{"python3 pingping.py"}]
+  \{
+    \CapableKeyword{print}(\CapableValue{"We echoed successfully."})
+  \} \CapableKeyword{else}
+  \{
+    \CapableFunction{\CapableBound{printLn}}(\CapableValue{"Oops we crashed!"})
+  \}
+\}
+\end{Verbatim}
+
+```

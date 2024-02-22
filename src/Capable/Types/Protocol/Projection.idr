@@ -143,7 +143,7 @@ mutual
 
     funProject (Select {notsr} (Same Refl Refl) bs)
                (Offer          (Same Refl Refl) w)
-      = void (notsr (Same Refl Refl))
+      = void (notSame notsr (Same Refl Refl))
 
     funProject (Select (Same Refl Refl) bs)
                (Merge prfS prfR z)
@@ -151,7 +151,7 @@ mutual
 
     funProject (Offer          (Same Refl Refl) bs)
                (Select {notsr} (Same Refl Refl) w)
-      = void (notsr (Same Refl Refl))
+      = void (notSame notsr (Same Refl Refl))
 
     funProject (Offer _ p) (Offer _ q)
       = cong (ChoiceL BRANCH _ _ _)
@@ -225,7 +225,7 @@ mutual
         = No (Rec msgWhyNot)
              (\case (Rec v y ** Rec rec) => prfWhyNot (y ** rec))
 
-    project whom (ChoiceG s x type prfM prfR opties) with (involved whom s x prfR)
+    project whom (ChoiceG s x type prfM prfR opties) with (involved whom s x)
 
       -- [ NOTE ] Sender
       project s (ChoiceG s x type prfM prfR (b :: bs)) | (Sends Refl) with (Branches.project s (b::bs))
