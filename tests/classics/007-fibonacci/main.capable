@@ -3,39 +3,56 @@ func printLn(msg : String) -> Unit { print(msg);  print(toString('\n')) }
 role A
 role B
 
-union num   { num : Int  }
+newtype num(Int)
+newtype ack(String)
 
-union cmd   { fibonacci  : Int
-            ; stop       : Unit
-            }
+union cmd {
+  fibonacci  : Int;
+  stop       : Unit
+}
 
-union ack { ack : String }
 
 protocol Fibonacci
     = rec(x)
-    . A ==> B [cmd] { fibonacci(Int) . B ==> A [num] { num(Int).call(x) }
-                    | stop(Unit) . end
-                    }
+    . A ==> B [cmd]
+      { fibonacci(Int)
+        . B ==> A | num(Int)
+        . call(x)
+      | stop(Unit)
+        . end
+      }
 
 union MaybeAnswer { crashed : Unit; result : Int }
 
 session fibA <Fibonacci as A>(fib : Int) -> MaybeAnswer
 {
-  loop (x){
-
-    print("Sending message: ");
-    printLn(toString(fib));
-
-    send[cmd] B fibonacci(fib) catch { printLn("Crashing on Send"); crash(crashed(unit)) }
-
-    recv[num] B {
+  var cnt = 1
+; var payload = fib
+; loop (x)
+  {
+    if eq(!cnt,10)
+    {
+      printLn("Stopping at tenth iteration.")
+    ; send[cmd] B stop(unit)
+        catch { printLn("Crashing on Send"); crash(crashed(unit)) }
+      end(result(!payload))
+    }
+      else
+    {
+      print("Fibbing: ")
+    ; printLn(toString(!payload))
+    ; send[cmd] B fibonacci(!payload)
+        catch { printLn("Crashing on Send"); crash(crashed(unit)) }
+      recv[num] B
+      {
         when num(i)
         {
-        print("Received message: ");
-        printLn(toString(i));
-        call(x)
+          mut(cnt,add(!cnt,1))
+        ; mut(payload,i)
+        ; call(x)
         }
-    } catch { printLn("Crashing on Recv"); crash(crashed(unit)) }
+      } catch { printLn("Crashing on Recv"); crash(crashed(unit)) }
+    }
   }
 }
 
@@ -59,4 +76,9 @@ session fibB <Fibonacci as B>() -> Bool
 main (args : [String])
 {
   printLn("My First Session-Typed Interaction")
+; match run fibA(1) with [B as "python3 fib.py"]
+  {
+    when crashed(u) { printLn("Ooops we crashed!") }
+    when result(i)  { print("Last One was: "); printLn(toString(i)) }
+  }
 }

@@ -1,5 +1,0 @@
-:load main.capable
-:project BuyerSeller B
-:project BuyerSeller S
-:exec ""
-:quit

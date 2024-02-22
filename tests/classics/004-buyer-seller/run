@@ -1,6 +1,6 @@
 echo "Running Test"
 
-$1 --repl < input
+$1 main.capable
 
 # Local Variables:
 # mode: sh

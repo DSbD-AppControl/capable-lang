@@ -18,7 +18,6 @@ main
            , !(testsInDir "files"    "File Handling")
            , !(testsInDir "examples" "Working Examples")
            , !(testsInDir "sessions" "Session Types")
-           , !(testsInDir "benchmarks" "Programs of interest for benchmarking.")
            , !(testsInDir "classics" "Programs of interest for modelling.")
            , !(testsInDir "paper" "Examples from the paper.")
            ]

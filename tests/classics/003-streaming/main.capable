@@ -4,13 +4,17 @@ role KP
 role C
 
 
-union d { d : Bool}
-union k { k : Bool}
-union c { c : Bool}
+newtype d(Bool)
+newtype k(Bool)
+newtype c(Bool)
 
 
-protocol Streaming = 
-    rec (Loop) . DP ==> K [d]{d(Bool). KP ==> K [k]{k(Bool). K ==> C [c] {c(Bool) . call(Loop) }}}
+protocol Streaming
+  = rec(l)
+  . DP ==> K | d(Bool)
+  . KP ==> K | k(Bool)
+  . K  ==> C | c(Bool)
+  . call(l)
 
 
 main (args : [String])

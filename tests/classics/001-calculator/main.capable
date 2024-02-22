@@ -148,18 +148,7 @@ session calcutronClientGeneral
     }
 
   }
---
---  send [ command ] Server adder(body(x,y))
---    catch { crash(crashed(unit)) }
---
---
---  recv [ responsePure ] Server
---  {
---    when answer(i)
---    {
---      end(result(i))
---    }
---  } catch { crash(crashed(unit)) }
+
 }
 main (args : [String])
 {

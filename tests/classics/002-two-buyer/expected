@@ -1,37 +1,8 @@
 Running Test
-   ______                  __    __
-  / ____/___ _____  ____ _/ /_  / /__
- / /   / __ `/ __ \/ __ `/ __ \/ / _ \
-/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
-\____/\__,_/ .___/\__,_/_.___/_/\___/
-          /_/
-
-  Version 0.0.0-unversioned
-  https://github.com/DSbD-AppControl/capable-lang
-
-  Type :? for help.
-
-Capable> # Finished Parsing
+# Finished Parsing
 # Finished Type Checking
-Capable> (sendTo[Seller] { title(String)
-                  .(recvFrom[Seller] { quote(Int)
-                                       .(sendTo[Bob] {quote(Int).End}) }) })
-Capable> (recvFrom[Seller] { quote(Int)
-                    .(recvFrom[Alice] { quote(Int)
-                                        .(sendTo[Seller] { quit(Unit).End
-                                        | accept(Unit)
-                                          .(sendTo[Seller] { addr(String)
-                                                             .(recvFrom[Seller] { date(String)
-                                                                                  .End }) }) }) }) })
-Capable> (recvFrom[Alice] { title(String)
-                   .(sendTo[Alice] { quote(Int)
-                                     .(sendTo[Bob] { quote(Int)
-                                                     .(recvFrom[Bob] { quit(Unit)
-                                                                       .End
-                                                     | accept(Unit)
-                                                       .(recvFrom[Bob] { addr(String)
-                                                                         .(sendTo[Bob] { date(String)
-                                                                                         .End }) }) }) }) }) })
-Capable> My First Program
-()
-Capable> Exiting the REPL
+# Executing
+```
+My First Program
+```
+# Finished

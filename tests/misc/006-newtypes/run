@@ -1,7 +1,7 @@
 echo "Running Test"
 
 $1 main.capable 1 2 3 4 a b c d
-
+$1 smtp.capable
 
 # Local Variables:
 # mode: sh

@@ -1,48 +1,75 @@
+func printLn(msg : String) -> Unit { print(msg);  print(toString('\n')) }
+
 role Voter
 role Server
 
+newtype token(String)
 
-union token        { token        : String }
+union auth {
+ ok     : Unit;
+ reject : Unit
+}
 
-union auth         { ok           : Unit
-                   ; reject       : Unit
-                   }
-union vote         { yes          : Unit
-                   ; no           : Unit
-                   }
-union result       { result       : Int }
+union vote {
+  yes : Unit;
+  no  : Unit
+}
+
+newtype result(Int)
+
+union MaybeResult { crashed : Unit; rej : Unit; res : Int }
 
 protocol SimpleVoting
-  = Voter  ==> Server [token] { token(String)
+  = Voter  ==> Server | token(String)
   . Server ==> Voter  [auth]
-      { ok(Unit) . Voter ==> Server [vote]
-                   { yes(Unit) . Server ==> Voter [result] { result(Int) . end }
-                   | no(Unit)  . Server ==> Voter [result] { result(Int) . end }
-                   }
-      | reject(Unit) . end
-}}
+      { ok(Unit)
+        . Voter ==> Server [vote]
+          { yes(Unit)
+            . Server ==> Voter | result(Int)
+            . end
+          | no(Unit)
+            . Server ==> Voter | result(Int)
+            . end
+          }
+      | reject(Unit)
+        . end
+      }
 
-session voter <SimpleVoting as Voter> (pwd : String) -> Bool
+session voter <SimpleVoting as Voter> (pwd : String,b : Bool) -> MaybeResult
 {
-  send[token] Server token(pwd) catch { crash(false) }
+  send[token] Server token(pwd) catch { crash(crashed(unit)) }
   recv [auth] Server
   {
     when ok(u)
     {
-      send[vote] Server yes(unit) catch { crash(false) }
-      recv[result] Server
+      if b
       {
-        when result(i)
-        {
-           end(true)
-        }
-      } catch { crash(false) }
+         send[vote] Server yes(unit) catch { crash(crashed(unit)) }
+         recv[result] Server
+         {
+           when result(i)
+           {
+              end(res(i))
+           }
+         } catch { crash(crashed(unit)) }
+      }
+      else
+      {
+         send[vote] Server no(unit) catch { crash(crashed(unit)) }
+         recv[result] Server
+         {
+           when result(i)
+           {
+              end(res(i))
+           }
+         } catch { crash(crashed(unit)) }
+      }
     }
     when reject(u)
     {
-      end(true)
+      end(rej(unit))
     }
-  } catch { crash(false) }
+  } catch { crash(crashed(unit)) }
 }
 
 
@@ -76,10 +103,28 @@ session vote_server <SimpleVoting as Server> () -> Bool
   } catch { crash(false) }
 }
 
-
+func runVote(pword : String,b : Bool) -> Unit
+{
+  match run voter(pword,b) with [Server as "python3 server.py"]
+  {
+    when crashed(u) { printLn("Ooops we crashed!") }
+    when rej(u)  { printLn("Rejected") }
+    when res(i)  { print("Result: "); printLn(toString(i)) }
+  }
+}
 main (args : [String])
 {
-  print("My First Program")
-; print(toString('\n'))
+  printLn("My First Program")
 
+; printLn(" Reviewer A True")
+; runVote("Reviewer A", true)
+
+; printLn(" Reviewer A False")
+; runVote("Reviewer A", false)
+
+; printLn(" Reviewer B True")
+; runVote("Reviewer B", true)
+
+; printLn(" Reviewer B False")
+; runVote("Reviewer B", false)
 }

@@ -1,5 +1,0 @@
-:load main.capable
-:project SimpleVoting Voter
-:project SimpleVoting Server
-:exec ""
-:quit

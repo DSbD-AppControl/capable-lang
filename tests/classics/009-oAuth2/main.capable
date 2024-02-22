@@ -2,25 +2,25 @@ role Service
 role Client
 role Auth
 
-union logon
-    { login  : Unit
-    ; cancel : Unit
-    }
+union logon { login  : Unit
+            ; cancel : Unit
+            }
 
-union quit { quit : Unit }
+newtype quit(Unit)
 
-union pword { pword : String }
+newtype pword(String)
 
-union auth { auth : Bool }
+newtype auth(Bool)
 
 protocol oauthSimple
   = Service ==> Client [logon]
-    { login(Unit) . Client ==> Auth    [pword] { pword(String)
-                  . Auth   ==> Service [auth]  { auth(Bool)
-                  . end
-      }}
-
-    | cancel(Unit) . Client ==> Auth [quit] { quit(Unit).end }
+    { login(Unit)
+      . Client ==> Auth    | pword(String)
+      . Auth   ==> Service | auth(Bool)
+      . end
+    | cancel(Unit)
+      . Client ==> Auth | quit(Unit)
+      . end
     }
 
 session auth <oauthSimple as Client> (pwd : String) -> Bool

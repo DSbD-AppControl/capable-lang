@@ -8,56 +8,100 @@
 
 ;; define several class of keywords
 
-(defvar capable-keywords '("func"
-                       "main"
-                       "match"
-                       "catch"
-                       "local"
-                       "var"
-                       "let"
-                       "type"
-                       "loop"
-                       "foreach"
-                       "in"
-                       "role"
-                       "session"
-                       "protocol"
-                       "when"
-                       "run" "with" "as" "recv" "send"
-                       "if"
-                       "else"
-                       "call"
-                       "rec"
-                       "end"
-                       "struct"
-                       "union"
-                       "tuple"
-                       "newtype"))
+(defvar capable-keywords
+  '("func"
+    "main"
+    "match"
+    "catch"
+    "local"
+    "var"
+    "let"
+    "type"
+    "loop"
+    "foreach"
+    "in"
+    "role"
+    "session"
+    "protocol"
+    "when"
+    "run"
+    "with"
+    "as"
+    "recv"
+    "send"
+    "if"
+    "else"
+    "call"
+    "rec"
+    "end"
+    "struct"
+    "union"
+    "tuple"
+    "newtype"
+    )
+  )
 
-(defvar capable-types '("Int" "Bool" "String" "Char" "Unit" "FILE" "PROC" "Role" "PIPE"))
+(defvar capable-types
+  '("Int"
+    "Bool"
+    "String"
+    "Char"
+    "Unit"
+    "FILE"
+    "PROC"
+    "Role"
+    "PIPE"
+    )
+  )
 
-(defvar capable-operators '("?" "!" "+" "|" "&" "."))
+(defvar capable-operators
+  '("?"
+    "!"
+    "+"
+    "|"
+    "&"
+    "."
+    )
+  )
 
-(defvar capable-symbols   '(":" "->" "==>" "="
-                        "[" "]"
-                        "<" ">"
-                        "{" "}"
-                        "(" ")"))
+(defvar capable-symbols
+  '(":"
+    "->"
+    "==>"
+    "="
+    "[" "]"
+    "<" ">"
+    "{" "}"
+    "(" ")"
+    )
+  )
 
-(defvar capable-functions '("and" "not" "or"
-                        "lt" "lte" "eq" "gt" "gte"
-                        "add" "sub" "mul" "div"
-                        "size" "strCons" "slice"
-                        "ord" "chr" "string" "toString"
-                        "the", "length"
-                        "print"
-                        "open" "read" "write" "popen" "popen2"
-                        "setV" "getV"
-                        "setL" "getL"
-                        "mut" "project" "replace"
-                        ))
+(defvar capable-functions
+  '(
+    "and"
+    "not"
+    "or"
+    "lt" "lte" "eq" "gt" "gte"
+    "add" "sub" "mul" "div"
+    "size" "strCons" "slice"
+    "ord" "chr" "string" "toString"
+    "the"
+    "length"
+    "print"
+    "open" "read" "write" "popen" "popen2"
+    "setV" "getV"
+    "setL" "getL"
+    "mut" "project" "replace"
+    )
+  )
 
-(defvar capable-constants '("true" "false" "unit"))
+(defvar capable-constants
+  '(
+    "true"
+    "false"
+    "unit"
+    )
+  )
 
 
 (defvar capable-font-lock-defaults
@@ -81,6 +125,7 @@
 
 ;; syntax table
 (defvar capable-syntax-table nil "Syntax table for `capable-mode'.")
+
 (setq capable-syntax-table
   (let ((synTable (make-syntax-table)))
 

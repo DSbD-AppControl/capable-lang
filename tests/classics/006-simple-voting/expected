@@ -4,5 +4,13 @@ Running Test
 # Executing
 ```
 My First Program
+ Reviewer A True
+Rejected
+ Reviewer A False
+Rejected
+ Reviewer B True
+Result: 1
+ Reviewer B False
+Result: 2
 ```
 # Finished

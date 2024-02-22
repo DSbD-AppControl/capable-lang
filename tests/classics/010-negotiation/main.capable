@@ -2,40 +2,45 @@ role C  -- Client
 role I  -- Instrument the client wants to use
 role A  -- Agent that negotiates with the client the conditions of use of the instrument
 
+newtype request(Unit)
+newtype connect(Unit)
+newtype available(Unit)
+newtype ack(Unit)
+newtype terms(String)
+newtype proposition(String)
 
-union request { request : Unit }
-union connect { connect : Unit }
-union available { available : Unit }
-union ack { ack : Unit }
-
-union terms { terms : String }
-union proposition { proposition : String }
 union reply { accept : Unit ; counter : String}
-union start { start : Unit }
-union result { result : String }
-union wait { wait : Unit }
+
+newtype start(Unit)
+newtype result(String)
+newtype wait(Unit)
 
 union cmd { abort : Unit ; command : String }
 
-protocol neogiation
-  = C ==> A [request]   { request (Unit)
-  . A ==> I [connect]   { connect(Unit)
-  . I ==> A [available] { available (Unit)
-  . A ==> C [ack]       { ack(Unit)
-  . A ==> C [terms]     { terms (String)
-  . rec (X)
-    . C ==> A [proposition] { proposition(String)
+protocol negotiation
+  = C ==> A | request(Unit)
+  . A ==> I | connect(Unit)
+  . I ==> A | available(Unit)
+  . A ==> C | ack(Unit)
+  . A ==> C | terms(String)
+  . rec(X)
+    . C ==> A | proposition(String)
     . A ==> C [reply]
-      { accept(Unit) . A ==> I [start] { start(Unit)
-                     . rec(Y)
-                       . C ==> I [cmd] { abort(Unit) . end
-                                       | command(String)
-                                         . I ==> C [result] { result (String)
-                                         . call(Y)
-                                         }
-                                       } }
-      | counter(String) . A ==> I [wait] { wait(Unit) . call(X) }
-      }}}}}}}
+      { accept(Unit)
+        . A ==> I | start(Unit)
+        . rec(Y)
+          . C ==> I [cmd]
+            { abort(Unit)
+              . end
+            | command(String)
+              . I ==> C | result(String)
+              . call(Y)
+
+            }
+      | counter(String)
+        . A ==> I | wait(Unit)
+        . call(X)
+      }
 
 main (args : [String])
 {

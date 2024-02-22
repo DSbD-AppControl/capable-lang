@@ -4,5 +4,16 @@ Running Test
 # Executing
 ```
 My First Session-Typed Interaction
+Fibbing: 1
+Fibbing: 1
+Fibbing: 2
+Fibbing: 3
+Fibbing: 5
+Fibbing: 8
+Fibbing: 13
+Fibbing: 21
+Fibbing: 34
+Stopping at tenth iteration.
+Last One was: 55
 ```
 # Finished

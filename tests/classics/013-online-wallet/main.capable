@@ -1,41 +1,40 @@
-{- OnlineWallet
-   Fails due to plain merge rather than full merge
--}
-
 role Server
 role Client
 role Authenticator
 
 struct loginDetails { id : String ; password : String }
-union login { login : Unit }
+
+newtype login(Unit)
 
 union authenticate { success : Unit ; error : String }
 
 struct accountDetails { balance : Int ; overdraft : Int }
-union account { account : accountDetails }
+
+newtype account(accountDetails)
 
 struct payDetails { payee : String ; amount : Int }
+
 union cmd { pay : payDetails ; quit : Unit }
 
-union msg { msg : String }
+newtype msg(String)
 
 protocol OnlineWallet
-    = Client        ==> Authenticator [login] { login(Unit)
-    . Authenticator ==> Client        [authenticate]
+    = Client        ==> Authenticator | login(Unit)
+    . Authenticator ==> Client [authenticate]
       { success (Unit)
-        . Authenticator ==> Server [msg]     { msg(String)
-        . Server        ==> Client [account] { account(accountDetails)
+        . Authenticator ==> Server |  msg(String)
+        . Server        ==> Client | account(accountDetails)
           . rec(Loop)
             . Client ==> Server [cmd]
               { pay (payDetails)
                 . call(Loop)
               | quit (Unit)
                 . end
-              }}}
+              }
       | error(String)
-        . Authenticator ==> Server [msg]{ msg(String)
+        . Authenticator ==> Server | msg(String)
         . end
-}}}
+      }
 
 
 main (args : [String])

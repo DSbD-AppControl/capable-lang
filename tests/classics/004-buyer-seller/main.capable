@@ -1,32 +1,151 @@
-role B
-role S
-
-
-union cmd     { product : String
-              ; accept  : String
-              ; quit    : Unit  
-              }
-union price   {price    : Int}
-union quote   {quote    : String}
-union payment {payment  : Int}
-
-
-protocol BuyerSeller = 
-    rec(X) . B ==> S [cmd] {
-        product (String) . S ==> B [price] {price (Int) . S ==> B [quote] { quote (String) . call (X) }}
-    |   accept  (String) . B ==> S [payment] {payment (Int) . call (X)}
-    |   quit    (Unit)   . end
-    }
-
 func printLn(msg : String) -> Unit
 {
   print(msg);
   print(toString('\n'))
 }
 
+role B
+role S
 
+union cmd { product : String
+          ; accept  : String
+          ; quit    : Unit
+          }
+
+newtype price(Int)
+newtype quote(String)
+newtype payment(Int)
+
+
+protocol BuyerSeller
+  = rec(X)
+  . B ==> S [cmd]
+    {
+      product(String)
+      . S ==> B | price(Int)
+      . S ==> B | quote(String)
+      . call(X)
+    | accept(String)
+      . B ==> S | payment(Int)
+      . call(X)
+    | quit(Unit)
+      . end
+    }
+
+union Stage
+{ ask : Unit
+; buy : Unit
+; abort : Unit
+}
+
+session buyerSellerB
+        <BuyerSeller as B>
+        (title : String, threshold : Int, cdeets : Int) -> Bool
+{
+  var st = ask(unit)
+; loop(X)
+  {
+    match !st
+    {
+      when ask(u)
+      {
+        send[cmd] S product(title)
+          catch { printLn("Crashing on Last send"); crash(false) }
+        recv[price] S
+        {
+          when price(p)
+          {
+            recv[quote] S
+            {
+              when quote(q)
+              {
+                if lt(p,threshold)
+                {
+                  print("Can afford:")
+                ; printLn(toString(p))
+                ; mut(st,buy(unit))
+                ; call(X)
+                } else
+                {
+                  print("Costs to much:")
+                ; printLn(toString(p))
+                ; mut(st,abort(unit))
+                ; call(X)
+                }
+              }
+            } catch { printLn("Crashing on quote"); crash(false) }
+          }
+        } catch { printLn("Crashing on price"); crash(false) }
+
+      }
+      when buy(u)
+      {
+        send[cmd] S accept(title)
+          catch { printLn("Crashing on acceptance"); crash(false) }
+
+        send[payment] S payment(cdeets)
+          catch { printLn("Crashing on payment"); crash(false) }
+
+        mut(st,abort(unit))
+      ; call(X)
+      }
+      when abort(u)
+      {
+        send[cmd] S quit(unit) catch { printLn("Crashing on Last send"); crash(false) }
+        end(true)
+      }
+    }
+  }
+}
+
+
+session buyerSellerS <BuyerSeller as S> () -> Bool
+{
+  loop(X)
+  {
+    recv [cmd] B
+    {
+      when product(i)
+      {
+          print("Received product request: ");
+          printLn(toString(i));
+          send [price] B price (1) catch { crash(false) }
+          send [quote] B quote ("4") catch { crash(false) }
+          call (X)
+      }
+      when accept(i)
+      {
+          print("Received message: ");
+          printLn(toString(i));
+          recv[payment] B {
+              when payment(p){
+                  call (X)
+              }
+          } catch { printLn("Crashing on Recv"); crash(false) }
+      }
+      when quit(u)
+      {
+          printLn("Quitting");
+          end(true)
+      }
+    } catch { printLn("Crashing on Recv"); crash(false) }
+  }
+}
+
+
+func runQuery(title : String,b : Int) -> Unit
+{
+  if run buyerSellerB(title,b,123) with [S as "python3 seller.py"]
+  {
+    printLn("Success!")
+  } else
+  {
+    printLn("Failure")
+  }
+}
 main (args : [String])
 {
   printLn("My First Program")
-
+; runQuery("TAPL",50)
+; runQuery("PLFA", 150)
 }

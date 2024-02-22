@@ -1,7 +1,7 @@
 role S
 role C
 
-newtype _220 = String
+newtype _220(String)
 
 union ehlo1 { quit0 : Unit ; ehlo1 : String }
 

@@ -1,7 +1,0 @@
-:load main.capable
-:project Streaming DP
-:project Streaming K
-:project Streaming KP
-:project Streaming C
-:exec ""
-:quit
