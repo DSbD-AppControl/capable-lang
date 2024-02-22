@@ -297,7 +297,7 @@ mutual
                  pure (bin VAL (newFC s e) r ex)
 
           vals : Rule (List1 (AST VAL))
-          vals = symbol "[" *> some val <* symbol "]"
+          vals = symbol "[" *> sepBy1 (symbol ",") val <* symbol "]"
 
   call : Rule EXPR
   call

@@ -1,0 +1,67 @@
+func printLn(msg : String) -> Unit { print(msg); print(toString('\n')) }
+
+role C
+role DA
+role DB
+
+struct Pair { x : Int; y : Int }
+
+newtype query(Pair)
+newtype resp(Int)
+
+protocol mpc
+  = C ==> DA | query(Pair)
+  . C ==> DB | query(Pair)
+  . DA ==> C | resp(Int)
+  . DB ==> C | resp(Int)
+  . end
+
+union MaybeInt { error : Unit; result : Int }
+
+func err() -> MaybeInt { error(unit) }
+
+session conductor
+        <mpc as C>
+        (a : Pair, b : Pair) -> MaybeInt
+{
+
+  send[query] DA query(a)
+    catch { printLn("Error sending to DA"); crash(err()) }
+  send[query] DB query(b)
+    catch { printLn("Error sending to DB"); crash(err()) }
+  recv[resp] DA
+  {
+    when resp(i)
+    {
+      recv[resp] DB
+      {
+        when resp(j)
+        {
+           end(result(add(i,j)))
+        }
+      } catch { printLn("Error receiving from DB"); crash(err()) }
+    }
+  } catch { printLn("Error receiving from DA"); crash(err()) }
+}
+
+func runQuery(cmd1 : String, cmd2 : String, x : Pair, y : Pair) -> Unit
+{
+  match run conductor(x,y) with [DA as cmd1, DB as cmd2]
+  {
+    when error(u) { printLn("Failure!") }
+    when result(i) { print("Success: "); printLn(toString(i)) }
+  }
+}
+
+func runQuerySame(cmd : String, x : Pair, y : Pair) -> Unit
+{
+  runQuery(cmd,cmd,x,y)
+}
+
+main (args : [String])
+{
+  runQuerySame("python3 adder.py", Pair(1,2), Pair(11,12))
+; runQuerySame("python3 multi.py", Pair(1,2), Pair(11,12))
+; runQuery("python3 multi.py", "python3 adder.py", Pair(1,2), Pair(11,12))
+
+}
