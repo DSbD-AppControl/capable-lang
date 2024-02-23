@@ -1,3 +1,5 @@
+func printLn(msg : String) -> Unit { print(msg); print(toString('\n')) }
+
 {- Modelling and Realisation of a Calculator.
 -}
 
@@ -17,7 +19,7 @@ union responsePure
   { answer : Int}
 
 union responseEffect -- this is bad as not all commands cause div by zero
-  { divByZero : Unit; answerE : Int}
+  { divByZero : Unit; answerE : Int }
 
 union MaybeAnswer { crashed : Unit; dz : Unit; result : Int }
 
@@ -150,9 +152,30 @@ session calcutronClientGeneral
   }
 
 }
+
+func addIPC(x : Int, y : Int) -> Unit
+{
+  local res = run calcutronClientAdder(x,y) with [Server as "python3 calculator.py"]
+; match res
+  {
+    when crashed(u) { printLn("Crash") }
+    when dz(u) { printLn("Div by Zero") }
+    when result(i) { print("Success: "); printLn(toString(i)) }
+
+  }
+}
+
+--main (args : [String])
+--{
+--  print("My First Program")
+--; print(toString('\n'))
+--; runAsB("python3 alice.py", "python3 seller.py", 40, "Acde")
+--; runAsB("python3 alice.py", "python3 seller.py", 2bre0, "Acde")
+--}
+
 main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))
-
+; addIPC(1,2)
 }

@@ -1,8 +1,4 @@
 Running Test
-# Finished Parsing
-# Finished Type Checking
-# Executing
-```
-My First Program
-```
-# Finished
+Parsing Error
+main.capable:141:8-9:
+Expected Symbol '}'
