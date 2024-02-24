@@ -1,3 +1,9 @@
+func printLn(msg : String) -> Unit
+{
+  print(msg);
+  print(toString('\n'))
+}
+
 role DP
 role K
 role KP
@@ -16,10 +22,39 @@ protocol Streaming
   . K  ==> C | c(Bool)
   . call(l)
 
+session streamK
+        <Streaming as K>
+        () -> Unit
+{
+  loop(l)
+  {
+    recv[d] DP
+    {
+      when d(b)
+      {
+        recv[k] KP
+        {
+          when k(d)
+          {
+            send[c] C c(or(b,d))
+              catch { printLn("Crash on send!"); crash(unit) }
+            call(l)
+          }
+        } catch { printLn("Crash on recv k!"); crash(unit) }
+      }
+    } catch { printLn("Crash on recv d!"); crash(unit) }
+  }
+}
+
+func coordinate(dp : String, kp : String, c : String) -> Unit
+{
+  run streamK()
+    with [DP as dp, KP as kp, C as c]
+}
 
 main (args : [String])
 {
   print("My First Program")
 ; print(toString('\n'))
-
+; coordinate("python3 dp.py", "python3 kp.py", "python3 c.py")
 }

@@ -774,6 +774,7 @@ mutual
                                                    rvars
                                                    cs
                                                    onErr
+                            printLn err
                             pure (Value h cs v p))
                 (\(Tag s idx val)
                     => do let (_ ** O _ body) = getIndex idx offers
@@ -804,6 +805,7 @@ mutual
                                                   rvars
                                                   cs
                                                   onErr
+                           printLn err
                            pure (Value h cs v (trans prf p)))
                (\val => do Value h cs v p <- Exprs.eval (weaken prf env)
                                                         h
