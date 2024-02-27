@@ -18,7 +18,7 @@ def main():
     """Main method"""
     try:
        for i in [False, True, False, True]:
-           msg = myReadline()
+           msg = myReadLine()
            validMsg("c",msg)
 
     except Exception as ex:

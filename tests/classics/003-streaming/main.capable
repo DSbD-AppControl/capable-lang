@@ -22,27 +22,40 @@ protocol Streaming
   . K  ==> C | c(Bool)
   . call(l)
 
+func inc (counter : &Int) -> Unit
+{
+  mut(counter, add(!counter,1))
+}
+
 session streamK
         <Streaming as K>
         () -> Unit
 {
-  loop(l)
+  var counter = 1
+; loop(l)
   {
     recv[d] DP
     {
       when d(b)
       {
-        recv[k] KP
+        print("Received from DP: ")
+      ; printLn(toString(b))
+      ; recv[k] KP
         {
           when k(d)
           {
-            send[c] C c(or(b,d))
+            print("Received from KP: ")
+          ; printLn(toString(b))
+          ; send[c] C c(or(b,d))
               catch { printLn("Crash on send!"); crash(unit) }
-            call(l)
+            print("Sent to C: ")
+          ; printLn(toString(or(b,d)))
+          ; inc(counter)
+          ; call(l)
           }
         } catch { printLn("Crash on recv k!"); crash(unit) }
       }
-    } catch { printLn("Crash on recv d!"); crash(unit) }
+    } catch { printLn("Crash on recv d!"); print(toString(!counter)); printLn(" iterations performed, failing gracefully"); crash(unit) }
   }
 }
 
@@ -57,4 +70,5 @@ main (args : [String])
   print("My First Program")
 ; print(toString('\n'))
 ; coordinate("python3 dp.py", "python3 kp.py", "python3 c.py")
+; printLn("Exiting normally.")
 }

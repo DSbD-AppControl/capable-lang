@@ -4,8 +4,20 @@ Running Test
 # Executing
 ```
 My First Program
+Received from DP: True
+Received from KP: True
+Sent to C: True
+Received from DP: False
+Received from KP: False
+Sent to C: True
+Received from DP: True
+Received from KP: True
+Sent to C: True
+Received from DP: False
+Received from KP: False
+Sent to C: True
 Crash on recv d!
-Marsh Error
-Not a valid JSON document: ""
+5 iterations performed, failing gracefully
+Exiting normally.
 ```
 # Finished

@@ -24,8 +24,8 @@ def main():
     """Main method"""
     try:
        for i in [True, False, True, False]:
-
            retort(Quote(i).toMSG())
+
     except Exception as ex:
         print(json.dumps({"error" : str(ex), "payload" : payload}))
 
