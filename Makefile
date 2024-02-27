@@ -61,7 +61,7 @@ capable-test-update: capable
 
 .PHONY: capable-bench-check capable-bench-check-record
 
-HYPERFINE_PARAMS := --ignore-failure --warmup 10
+HYPERFINE_PARAMS := --ignore-failure --warmup 10 --sort command
 
 capable-bench-check: capable
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_benchmarks,check,tests/classics)
@@ -76,6 +76,11 @@ capable-bench-exec: capable
 capable-bench-exec-record: capable capable-test-build
 	mkdir -p results/
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,run) $(call fn_build_benchmarks,run,tests/classics)
+
+.PHONY: plot-results
+
+plot-results:
+	make -C results results
 
 # [ Artefact ]
 
@@ -118,9 +123,9 @@ clobber: clean
 	$(IDRIS2) --clean ${PROJECT}.ipkg
 	${MAKE} -C tests clobber
 	find . -iname "*~" -delete
-	${RM} -rf build/ artefact-staging/ results/
+	${RM} -rf build/ artefact-staging/
 	${RM} capable.tar.gz
-
+	make -C results clobber
 
 # -- [ Utilities]
 
@@ -131,7 +136,7 @@ space := $(null) #
 # Find all the benchmarks in a given directory.
 #
 # Args: directory of interest.
-fn_find_bmarks = $(shell find $(1) -iname "*.capable" )
+fn_find_bmarks = $(shell find $(1) -iname "*.capable" | sort -r )
 
 # Generate the Hyperfine alias for the command.
 #

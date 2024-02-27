@@ -25,7 +25,11 @@ tests/**/output
 .idea
 
 docs/build/
-/results*.json
-/results*.md
-/*.csv
-/results/
+results/*.json
+results/*.md
+results/*.csv
+results/*.log
+results/*.pdf
+results/*.aux
+results/*.synctex.gz
+results/auto

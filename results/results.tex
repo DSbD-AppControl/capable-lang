@@ -1,0 +1,58 @@
+\documentclass[tikz]{standalone}
+
+\usepackage{pgf}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+
+\pgfplotsset{compat=newest}
+
+\pgfplotstableread[header=true,col sep=comma]{run.csv}{\tablerun}
+\pgfplotstableread[header=true,col sep=comma]{check.csv}{\tablecheck}
+\begin{document}
+\begin{tikzpicture}
+  \begin{axis}
+    [ width=15cm
+    , height=10cm
+    , ylabel={Benchmark}
+    , yticklabels from table={\tablecheck}{command}
+    , ytick=data
+    , xbar = 2pt
+    , bar width = 6pt
+    , xmajorgrids
+    , xlabel={Time (S)}
+    , xmin=0
+    , xticklabel style={/pgf/number format/fixed},
+    , tick align=inside
+    , nodes near coords
+    , nodes near coords align = {horizontal}
+    , point meta = explicit symbolic
+    , legend style={at={(1,-0.1)}}
+    , anchor=north, legend columns=-1
+    , enlarge y limits = 0.05
+    , enlarge x limits = 0.01
+    , scale only axis
+%    , scatter/position = absolute
+%    , every node near coord/.style =
+%      {
+%        at = {(\pgfkeysvalueof{/data point/x},1.8)}
+%      , anchor = south
+%      }
+    ]
+
+    \addplot
+        plot [error bars/.cd, x dir=both, x explicit]
+        table [y expr=\coordindex, x=mean, x error=stddev] {\tablecheck};
+
+    \addplot
+        plot [error bars/.cd, x dir=both, x explicit]
+        table [y expr=\coordindex, x=mean, x error=stddev] {\tablerun};
+
+    \legend{Type Checking, Interpretation}
+    \end{axis}
+    \end{tikzpicture}
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
