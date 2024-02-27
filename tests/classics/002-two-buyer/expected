@@ -1,4 +1,10 @@
 Running Test
-Parsing Error
-main.capable:141:8-9:
-Expected Symbol '}'
+# Finished Parsing
+# Finished Type Checking
+# Executing
+```
+My First Program
+Success: tomorrow
+Rejected Offer
+```
+# Finished

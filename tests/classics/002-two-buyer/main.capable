@@ -136,8 +136,7 @@ func runAsB(cmdA : String,cmdB : String, threshold : Int, a : String) -> Unit
 
 main (args : [String])
 {
-  print("My First Program")
-; print(toString('\n'))
+  printLn("My First Program")
 ; runAsB("python3 alice.py", "python3 seller.py", 40, "Acde")
-; runAsB("python3 alice.py", "python3 seller.py", 2bre0, "Acde")
+; runAsB("python3 alice.py", "python3 seller.py", 20, "Acde")
 }

@@ -21,14 +21,14 @@ This list was inspired:
 | Fibonacci            | 2  | 1   | 1x2     | 1  | yes      | yes (both) | yes (client) | Pass      |         |
 | oAuth2               | 3  | 3   | 1       | 0  | yes      | no         | no           | Fail      | See [2] |
 | Negotiation          | 3  | 9   | 2x2     | 2  | yes      | no         | no           | Fail      | See [2] |
-| SMTP                 | 2  | 9   | 8x2,1x3 | 3  | yes      | no         | no           | Pass      |         |
+| SMTP                 | 2  | 9   | 8x2,1x3 | 3  | yes      | no         | no           | Pass      | See [0] |
 | Online Wallet        | 3  | 4   | 2x2     | 1  | yes      | no         | no           | Fail      | See [2] |
 |                      |    |     |         |    |          |            |              |           |         |
 
 Notes
 
 0. A basic calculator has been specified, a more extensive calculator
-   *could* be written but what we have is sufficient.
+   *could* be written but what we have is sufficient. Ditto for SMTP
 1. The other two-buyer examples are not worth exploring.
 2. Failing examples are a result of the language's lack of support for
    full merge.

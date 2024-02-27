@@ -70,6 +70,13 @@ capable-bench-check-record: capable capable-test-build
 	mkdir -p results/
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,check) $(call fn_build_benchmarks,check,tests/classics)
 
+capable-bench-exec: capable
+	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_benchmarks,run,tests/classics)
+
+capable-bench-exec-record: capable capable-test-build
+	mkdir -p results/
+	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,run) $(call fn_build_benchmarks,run,tests/classics)
+
 # [ Artefact ]
 
 .PHONY: artefact
@@ -129,12 +136,20 @@ fn_find_bmarks = $(shell find $(1) -iname "*.capable" )
 # Generate the Hyperfine alias for the command.
 #
 # Args: file to be used.
-fn_gen_name = $(lastword $(subst -,$(space),$(shell dirname $(1) | xargs basename )))
+#fn_gen_name = $(lastword $(subst -,$(space),$(shell dirname $(1) | xargs basename )))
+fn_gen_name = $(lastword $(subst /,$(space),$(shell dirname $(1) )))
+
+# Generate location to cd into
+#
+# Args: dir
+fn_get_dir = $(shell dirname $(1))
+
+fn_get_fname = $(shell basename $(1))
 
 # Generate the command to be executed.
 #
 # Args: file to be used.
-fn_build_cmd = -n $(call fn_gen_name,$(b)) '$(TARGET) --$(1) $(b)'
+fn_build_cmd = -n $(call fn_gen_name,$(b)) 'cd $(call fn_get_dir,$(b)) && $(TARGET) --$(1) $(call fn_get_fname,$(b))'
 
 # Find and generate the named commands.
 #
