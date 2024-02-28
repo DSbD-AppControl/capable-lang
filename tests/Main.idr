@@ -1,5 +1,5 @@
 ||| Module    : Main.idr
-||| Copyright : (c) Jan de Muijnck-Hughes
+||| Copyright : (c) CONTRIBUTORS.md
 ||| License   : see LICENSE
 |||
 ||| Borrowed From Idris2 and improved with Test.Unit
