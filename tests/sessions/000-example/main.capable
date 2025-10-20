@@ -6,7 +6,7 @@ type foo = String
 union ping { ping : String }
 union pong { pong : String }
 
-union pongR { pongR : String
+union pongR { pongR : foo
             ; quit  : String
             }
 
@@ -18,10 +18,14 @@ protocol pingpong = Alice ==> Bob   [ping] { ping(String)
 
 protocol pingpongR = rec(x)
                    . Alice ==> Bob   [ping] { ping(String)
-                   . Bob   ==> Alice [pongR] { pongR(String) . call(x)
+                   . Bob   ==> Alice [pongR] { pongR(foo) . call(x)
                                              | quit(String) . end
                                              }}
 
+session p <pingpongR as Alice> () -> Unit
+{
+  ?rhs
+}
 main (args : [String])
 {
   print("My First Program")

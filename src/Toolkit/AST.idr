@@ -50,6 +50,18 @@ namespace Generic
   show k a (Branch kind annot nodes)
     = "(Branch \{k kind} \{a annot} \{showDVect (show k a) nodes})"
 
+namespace Foo
+  export
+  show : {0 node  : (k : kind) -> (n : Nat) -> Vect n kind -> Type}
+      -> (forall k, arity, ms . Show (node k arity ms))
+      => Show a
+      => (ast      : AST node k a)
+                  -> String
+
+
+  show (Branch kind annot nodes)
+    = "(Branch \{show kind} \{show annot} \{showDVect Foo.show nodes})"
+
 namespace Default
   export
    {0 node  : (k : kind) -> (n : Nat) -> Vect n kind -> Type}
@@ -57,7 +69,7 @@ namespace Default
       => Show a
       => Show (AST node k a) where
 
-        show = assert_total $ show show show
+        show = assert_total $ Foo.show
 
 
 public export

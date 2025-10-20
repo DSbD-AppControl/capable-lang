@@ -1,8 +1,78 @@
 Running Test
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
 # Finished Parsing
 # Finished Type Checking
-# Executing
+main.capable:26:3-0:
+##  Roles
++ Bob
++ Alice
+---
+rhs : rec(x).
+        (sendTo[Bob] { ping(String)
+                       .(recvFrom[Bob] { pongR(String).Call (x)
+                       | quit(String).End }) })
+
+Capable> # Finished Parsing
+# Finished Type Checking
+main.capable:26:3-0:
+##  Roles
++ Bob
++ Alice
+---
+rhs : rec(x).
+        (sendTo[Bob] { ping(String)
+                       .(recvFrom[Bob] { pongR(String).Call (x)
+                       | quit(String).End }) })
+
+Capable> rec(x).
+  (sendTo[Bob] { ping(String)
+                 .(recvFrom[Bob] {pongR(String).Call (x) | quit(String).End}) })
+Capable> Exiting the REPL
+# Finished Parsing
+# Finished Type Checking
 ```
-My First Program
+\begin{Verbatim}
+\CapableKeyword{role} \CapableRole{Alice}
+\CapableKeyword{role} \CapableRole{Bob}
+\CapableKeyword{type} \CapableBound{foo} = \CapableType{String}
+\CapableKeyword{union} \CapableBound{ping} \{\CapableBound{ping} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{pong} \{\CapableBound{pong} : \CapableType{String}\}
+\CapableKeyword{union} \CapableBound{pongR} \{\CapableBound{pongR} : \CapableType{\CapableBound{foo}}; \CapableBound{quit} : \CapableType{String}\}
+\CapableKeyword{protocol} \CapableProtocol{pingpong}
+  = \CapableRole{Alice} ==> \CapableRole{Bob} [\CapableType{\CapableBound{ping}}] \{ \CapableBound{ping}(\CapableType{String})
+  . \CapableRole{Bob} ==> \CapableRole{Alice} [\CapableType{\CapableBound{pong}}] \{ \CapableBound{pong}(\CapableType{String})
+  . \CapableKeyword{end}
+  \}
+  \}
+\CapableKeyword{protocol} \CapableProtocol{pingpongR}
+  = \CapableKeyword{rec}(\CapableBound{x})
+  . \CapableRole{Alice} ==> \CapableRole{Bob} [\CapableType{\CapableBound{ping}}] \{ \CapableBound{ping}(\CapableType{String})
+  . \CapableRole{Bob} ==> \CapableRole{Alice} [\CapableType{\CapableBound{pongR}}] \{ \CapableBound{pongR}(\CapableType{\CapableBound{foo}})
+  . \CapableKeyword{call}(\CapableBound{x})
+  | \CapableBound{quit}(\CapableType{String})
+  . \CapableKeyword{end}
+  \}
+  \}
+\CapableKeyword{session} \CapableBound{p} <\CapableProtocol{\CapableBound{pingpongR}} \CapableKeyword{as} \CapableRole{Alice}> () -> \CapableType{Unit}
+\{
+  \CapableHole{?\CapableBound{rhs}}
+\}
+\CapableBound{main} (\CapableBound{args} : \CapableType{[}\CapableType{String}\CapableType{]}) -> \CapableType{Unit}
+\{
+  \CapableKeyword{print}(\CapableValue{"My First Program"});
+  \CapableKeyword{print}(\CapableKeyword{toString}(\CapableValue{'\textbackslash{}n'}))
+\}
+\end{Verbatim}
+
 ```
-# Finished

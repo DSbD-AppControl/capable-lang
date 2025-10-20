@@ -17,40 +17,40 @@ SOURCES = $(shell find src -iname "*.idr")
 
 # [ Core Project Definition ]
 
-.PHONY: capable-doc capable-srcs
+.PHONY: ${PROJECT}-doc ${PROJECT}-srcs
 
 $(TARGET): $(strip $(SOURCES))
 	$(IDRIS2) --build ${PROJECT}.ipkg
 
-capable: $(TARGET)
+${PROJECT}: $(TARGET)
 
-capable-doc:
+${PROJECT}-doc:
 	$(IDRIS2) --mkdoc ${PROJECT}.ipkg
 
-capable-srcs:
+${PROJECT}-srcs:
 	bash annotate.sh
 
 # -- [ Testing ]
 
-.PHONY: capable-test-build capable-test-run capable-test-run-re capable-test-update
+.PHONY: ${PROJECT}-test-build ${PROJECT}-test-run ${PROJECT}-test-run-re ${PROJECT}-test-update
 
-capable-test-build:
+${PROJECT}-test-build:
 	${MAKE} -C tests testbin IDRIS2=$(IDRIS2)
 
-capable-test-run: capable
+${PROJECT}-test-run: ${PROJECT}
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 UPDATE='' \
 			 ONLY=$(ONLY)
 
-capable-test-run-re: capable
+${PROJECT}-test-run-re: ${PROJECT}
 	${MAKE} -C tests test-re \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
 			 ONLY=$(ONLY)
 
-capable-test-update: capable
+${PROJECT}-test-update: ${PROJECT}
 	${MAKE} -C tests test \
 			 IDRIS2=$(IDRIS2) \
 			 PROG_BIN=$(TARGET) \
@@ -59,21 +59,21 @@ capable-test-update: capable
 
 # [ Benchmarks ]
 
-.PHONY: capable-bench-check capable-bench-check-record
+.PHONY: ${PROJECT}-bench-check ${PROJECT}-bench-check-record
 
 HYPERFINE_PARAMS := --ignore-failure --warmup 10 --sort command
 
-capable-bench-check: capable
+${PROJECT}-bench-check: ${PROJECT}
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_benchmarks,check,tests/classics)
 
-capable-bench-check-record: capable capable-test-build
+${PROJECT}-bench-check-record: ${PROJECT} ${PROJECT}-test-build
 	mkdir -p results/
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,check) $(call fn_build_benchmarks,check,tests/classics)
 
-capable-bench-exec: capable
+${PROJECT}-bench-exec: ${PROJECT}
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_benchmarks,run,tests/classics)
 
-capable-bench-exec-record: capable capable-test-build
+${PROJECT}-bench-exec-record: ${PROJECT} ${PROJECT}-test-build
 	mkdir -p results/
 	$(HYPERFINE) $(HYPERFINE_PARAMS) $(call fn_build_records,run) $(call fn_build_benchmarks,run,tests/classics)
 
@@ -86,20 +86,20 @@ plot-results:
 
 .PHONY: artefact
 
-capable-vm:
+${PROJECT}-vm:
 	${MAKE} -C artefact artefact
 
-artefact: archive capable capable-doc capable-srcs capable-vm
+artefact: archive ${PROJECT} ${PROJECT}-doc ${PROJECT}-srcs ${PROJECT}-vm
 
 	mkdir -p artefact-staging
 
-	cp capable.tar.gz artefact-staging/capable.tar.gz
+	cp ${PROJECT}.tar.gz artefact-staging/${PROJECT}.tar.gz
 
-	tar -zcvf artefact-staging/capable_doc.tar.gz -C ${BUILDDIR} docs
+	tar -zcvf artefact-staging/${PROJECT}_doc.tar.gz -C ${BUILDDIR} docs
 
-	tar -zcvf artefact-staging/capable_html.tar.gz -C ${BUILDDIR} html
+	tar -zcvf artefact-staging/${PROJECT}_html.tar.gz -C ${BUILDDIR} html
 
-	cp artefact/output/capable.box artefact-staging/
+	cp artefact/output/${PROJECT}.box artefact-staging/
 	cp artefact/README.md artefact-staging/
 
 # -- [ Housekeeping ]
@@ -108,10 +108,10 @@ artefact: archive capable capable-doc capable-srcs capable-vm
 
 archive:
 	git archive \
-	  --prefix=capable/ \
+	  --prefix=${PROJECT}/ \
 	  --format=tar.gz \
 	  HEAD \
-	  > capable.tar.gz
+	  > ${PROJECT}.tar.gz
 
 .PHONY: clobber clean
 
@@ -124,7 +124,7 @@ clobber: clean
 	${MAKE} -C tests clobber
 	find . -iname "*~" -delete
 	${RM} -rf build/ artefact-staging/
-	${RM} capable.tar.gz
+	${RM} ${PROJECT}.tar.gz
 	make -C results clobber
 
 # -- [ Utilities]

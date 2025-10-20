@@ -119,17 +119,17 @@ namespace Ty
     L : Iterable (LIST ty)     ty
     V : {s : _} -> Iterable (VECTOR ty s) ty
 
+  Uninhabited ((Iterable CHAR        y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable STR         y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable INT         y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable BOOL        y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable UNIT        y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable (HANDLE k)  y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable (REF f)     y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable (RECORD fs) y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable (UNION fs)  y)) where uninhabited (L) impossible
+  Uninhabited ((Iterable (TUPLE fs)  y)) where uninhabited (L) impossible
 
-  Uninhabited (DPair Base (Iterable CHAR       )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable STR        )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable INT        )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable BOOL       )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable UNIT       )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable (HANDLE k) )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable (REF f)    )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable (RECORD fs))) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable (UNION fs) )) where uninhabited (typw ** L) impossible
-  Uninhabited (DPair Base (Iterable (TUPLE fs) )) where uninhabited (typw ** L) impossible
 
   export
   isIterable : (ty : Base)
@@ -140,25 +140,25 @@ namespace Ty
     = Yes (x ** L)
 
   isIterable CHAR
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable STR
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable INT
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable BOOL
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable UNIT
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable (HANDLE x)
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable (REF x)
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable (TUPLE fields)
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable (RECORD fields)
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
   isIterable (UNION fields)
-    = No absurd
+    = No $ \case (fst ** snd) => absurd snd
 
 namespace Diag
   data Diag : (a,b : Base)
