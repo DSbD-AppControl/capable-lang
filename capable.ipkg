@@ -140,6 +140,8 @@ modules = Toolkit.TheRug
         , Capable.Check.Common
         , Capable.Check.Roles
         , Capable.Check.Funcs
+        , Capable.Check.Sessions.Expr.Check
+        , Capable.Check.Sessions.Expr.Synth
         , Capable.Check.Sessions
         , Capable.Check.Progs
         , Capable.Check.Elab
