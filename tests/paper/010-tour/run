@@ -1,0 +1,14 @@
+echo "Running Test"
+
+$1 --repl  main0.capable < input0
+$1 --check main1.capable
+$1 --repl  main1.capable < input1
+$1 --repl  main2.capable < input1
+$1 --repl main3.capable  < input1
+$1 --check main4.capable
+
+# Local Variables:
+# mode: sh
+# End:
+
+# -- [ EOF ]

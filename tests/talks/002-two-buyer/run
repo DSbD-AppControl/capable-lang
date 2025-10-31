@@ -1,0 +1,9 @@
+echo "Running Test"
+
+$1 main.capable
+
+# Local Variables:
+# mode: sh
+# End:
+
+# -- [ EOF ]

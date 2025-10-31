@@ -1,0 +1,116 @@
+func printLn(msg : String) -> Unit { print(msg); print(toString('\n')) }
+
+{- Modelling and Realisation of the Two Buyer Protocol.
+
+The protocol allows two people (Alice, Bob) to neogiate buying a book from the 'Seller'.
+
+Informally:
+
+Alice -> Seller | title : String
+Seller -> { Alice, Bob } | quote : Int
+
+Alice -> Bob    | offer : Int (quote / 2)
+Bob   -> Seller | { quit . end
+                  , acceptance . Bob -> Seller | address
+                               . Seller -> Bob | date
+                               , end }
+
+-}
+
+
+role Bob
+role Seller
+role Alice
+
+newtype title(String)
+newtype quote(Int)
+newtype address(String)
+newtype date(String)
+
+union commands
+{ quit   : Unit
+; accept : Unit
+}
+
+union MaybeDate { nout : Unit; cancelled : Unit; mdate : String}
+union MaybeSale { noutS : Unit; sale : String; cancelledS : Unit}
+
+protocol twoBuyer
+  = Alice  ==> Seller | title(String)
+  . Seller ==> Alice  | quote(Int)
+  . Alice  ==> Bob    | quote(Int)
+  . Bob    ==> Alice  | quote(Int)
+  . Bob    ==> Seller [ commands ]
+  { quit(Unit)
+    . end
+  | accept(Unit)
+    . Bob ==> Seller | address(String)
+    . Seller ==> Bob | date(String)
+    . end
+  }
+{-
+session twoBuyerAliceStep1 <twoBuyer as Alice>( title : String ) -> Bool
+{
+  ?rhs
+}
+
+session twoBuyerAliceStep2a <twoBuyer as Alice>( title : String ) -> Bool
+{
+  recv [title] Seller
+  {
+    when title(title)
+    {
+      send [title] Seller title(title)
+        catch { crash(?rhs_crash) }
+      end(?rhs_end)
+    }
+  } catch { crash(?rhs_crash) }
+}
+
+session twoBuyerAliceStep2b <twoBuyer as Alice>( title : String ) -> Bool
+{
+  send [title] Seller title(title)
+    catch { crash(?rhs_crash) }
+  ?rhs_body
+}
+-}
+session twoBuyerAliceStep3 <twoBuyer as Alice>( title : String ) -> Bool
+{
+  send [title] Seller title(title) catch { crash(false) }
+  recv [quote] Seller
+  {
+    when quote(q)
+    {
+      local newQuote = div(q,2);
+      send [quote] Bob quote(newQuote) catch { crash(false) }
+      recv [quote] Bob
+      {
+        when quote(q)
+        {
+          end(true)
+        }
+      } catch { crash(false) }
+    }
+  } catch { crash(false) }
+}
+
+
+func runAlice(cmdS : String, cmdB : String, title : String) -> Unit
+{
+  local res = run twoBuyerAliceStep3(title) with [Seller as cmdS,Bob as cmdB];
+  if res
+  {
+    printLn("Success!")
+  } else
+  {
+    printLn("Failure!")
+  }
+}
+
+main (args : [String])
+{
+  printLn("My First Program")
+; runAlice( "python3 Seller.py"
+          , "python3 Bob.py"
+          , "Katie Morag")
+}

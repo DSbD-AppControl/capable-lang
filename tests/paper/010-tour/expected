@@ -1,0 +1,133 @@
+Running Test
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+# Finished Parsing
+# Finished Type Checking
+Capable> rec(x).
+  (sendTo[Server] { msg(union {Msg : String})
+                    .(recvFrom[Server] {Msg(String).Call (x)})
+  | quit(union {Msg : String}).(recvFrom[Server] {Msg(String).End}) })
+Capable> Exiting the REPL
+# Finished Parsing
+# Finished Type Checking
+main1.capable:24:5-0:
+## Typing Context
+i : String
+##  Roles
++ Server
++ Client
+---
+rhs : rec(x).
+        (sendTo[Server] { msg(union {Msg : String})
+                          .(recvFrom[Server] {Msg(String).Call (x)})
+        | quit(union {Msg : String}).(recvFrom[Server] {Msg(String).End}) })
+
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+# Finished Parsing
+# Finished Type Checking
+main1.capable:24:5-0:
+## Typing Context
+i : String
+##  Roles
++ Server
++ Client
+---
+rhs : rec(x).
+        (sendTo[Server] { msg(union {Msg : String})
+                          .(recvFrom[Server] {Msg(String).Call (x)})
+        | quit(union {Msg : String}).(recvFrom[Server] {Msg(String).End}) })
+
+Capable> loop(rhs)
+{
+  ?rhs
+}
+Capable> Exiting the REPL
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+# Finished Parsing
+# Finished Type Checking
+main2.capable:24:13-17:
+## Typing Context
+i : String
+##  Recursion Vars
++ w
+##  Roles
++ Server
++ Client
+---
+rhs : (sendTo[Server] { msg(union {Msg : String})
+                        .(recvFrom[Server] {Msg(String).Call (w)})
+| quit(union {Msg : String}).(recvFrom[Server] {Msg(String).End}) })
+
+Capable> send [cmd] Server msg(?rhs_payload)
+  catch
+  {
+    crash(?rhs_crash)
+  }
+?rhs_body
+Capable> Exiting the REPL
+   ______                  __    __
+  / ____/___ _____  ____ _/ /_  / /__
+ / /   / __ `/ __ \/ __ `/ __ \/ / _ \
+/ /___/ /_/ / /_/ / /_/ / /_/ / /  __/
+\____/\__,_/ .___/\__,_/_.___/_/\___/
+          /_/
+
+  Version 0.0.0-unversioned
+  https://github.com/DSbD-AppControl/capable-lang
+
+  Type :? for help.
+
+# Finished Parsing
+Type Checking Error
+main3.capable:26:4-2:
+Error comparing local types:
+
+ (sendTo[Server] { msg(union {Msg : String})
+                  .(recvFrom[Server] {Msg(String).Call (x)})
+| quit(union {Msg : String}).(recvFrom[Server] {Msg(String).End}) })
+
+and
+
+ (recvFrom[Server] { msg(union {Msg : String}).End
+| quit(union {Msg : String}).End })
+
+because:
+
+ Types are wildly different.
+
+Capable> Not a hole: rhs
+Capable> Exiting the REPL
+# Finished Parsing
+# Finished Type Checking
